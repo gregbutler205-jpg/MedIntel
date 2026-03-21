@@ -1,5 +1,77 @@
 import INTELLITRAX_LOGO from "../../assets/logo.png";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import * as pdfjsLib from "pdfjs-dist";
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.mjs",
+  import.meta.url
+).href;
+
+// Extract all text from a PDF File object
+async function extractPdfText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return text;
+}
+
+// Call Claude API to parse health data from PDF text
+async function parseWithClaude(text, apiKey) {
+  const prompt = `You are a medical record parser. Extract structured health data from the following medical record text and return ONLY valid JSON with no markdown, no explanation.
+
+Return this exact structure (omit arrays that have no data):
+{
+  "readings": [{"date":"Mar 10","ts":"2026-03-10","bp_s":131,"bp_d":71,"weight":184.2}],
+  "meds": [{"name":"Tacrolimus 3 mg","refillDate":"Apr 5","status":"ok","flag":false}],
+  "labs": [{"date":"2026-03-10","name":"Creatinine","value":1.2,"unit":"mg/dL","refRange":"0.6-1.2","flag":false}],
+  "upcoming": [{"label":"Nephrology Follow-up","date":"Apr 15","urgency":"med","doctor":"Ari Cohen MD"}],
+  "alerts": [{"type":"warn","text":"Creatinine elevated above range","time":"Mar 10"}],
+  "source": "Ochsner Health",
+  "totalRecords": 12
+}
+
+Rules:
+- ts must be ISO date string YYYY-MM-DD
+- date must be human-readable like "Mar 10" or "Mar 10, 2026"
+- bp_s and bp_d are integers (systolic/diastolic)
+- weight is a float in lbs
+- med status is "ok", "refill", or "warn"
+- flag is true if a value is outside normal range or clinically significant
+- urgency is "high", "med", or "low"
+- alert type is "warn", "info", or "ok"
+- Only include data you find in the text — do not invent data
+- For medications, extract refill dates only if explicitly stated; otherwise omit refillDate
+
+Medical record text:
+${text.slice(0, 12000)}`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-6",
+      max_tokens: 2048,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message ?? `API error ${res.status}`);
+  }
+  const data = await res.json();
+  const raw = data.content?.[0]?.text ?? "{}";
+  return JSON.parse(raw);
+}
 
 const SOURCES = [
   {
@@ -108,12 +180,17 @@ const DATA_TYPES = [
   { label: "Clinical Notes", icon: "✦", checked: false },
 ];
 
-export default function ImportTab() {
-  const [syncing, setSyncing] = useState(null);
-  const [syncDone, setSyncDone] = useState({});
-  const [dragOver, setDragOver] = useState(false);
-  const [dataTypes, setDataTypes] = useState(DATA_TYPES);
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+export default function ImportTab({ onImport }) {
+  const [syncing, setSyncing]       = useState(null);
+  const [syncDone, setSyncDone]     = useState({});
+  const [dragOver, setDragOver]     = useState(false);
+  const [dataTypes, setDataTypes]   = useState(DATA_TYPES);
+  const [uploadedFiles, setUploadedFiles] = useState([]);  // {file, name, size, status, parsed}
+  const [processing, setProcessing] = useState(false);
+  const [preview, setPreview]       = useState(null);   // parsed data awaiting confirmation
+  const [error, setError]           = useState(null);
+  const [saved, setSaved]           = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleSync = (id) => {
     setSyncing(id);
@@ -136,14 +213,66 @@ export default function ImportTab() {
     );
   };
 
+  const addFiles = (files) => {
+    const pdfs = Array.from(files).filter(f => f.type === "application/pdf" || f.name.endsWith(".pdf"));
+    if (!pdfs.length) { setError("Only PDF files are supported for AI parsing."); return; }
+    setError(null);
+    setUploadedFiles((prev) => [
+      ...prev,
+      ...pdfs.map((f) => ({ file: f, name: f.name, size: f.size, status: "queued" })),
+    ]);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    setUploadedFiles((prev) => [
-      ...prev,
-      ...files.map((f) => ({ name: f.name, size: f.size, status: "queued" })),
-    ]);
+    addFiles(e.dataTransfer.files);
+  };
+
+  const handleProcess = async () => {
+    const apiKey = localStorage.getItem("mi_ak");
+    if (!apiKey) { setError("No API key found. Add your Anthropic key in localStorage under 'mi_ak'."); return; }
+    setProcessing(true);
+    setError(null);
+    setPreview(null);
+
+    const combined = { readings: [], meds: [], labs: [], upcoming: [], alerts: [], source: "PDF Import", totalRecords: 0 };
+
+    for (let i = 0; i < uploadedFiles.length; i++) {
+      const f = uploadedFiles[i];
+      setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "reading…" } : u));
+      try {
+        const text = await extractPdfText(f.file);
+        setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "parsing…" } : u));
+        const parsed = await parseWithClaude(text, apiKey);
+        setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "done ✓" } : u));
+        if (parsed.readings)  combined.readings.push(...parsed.readings);
+        if (parsed.meds)      combined.meds.push(...parsed.meds);
+        if (parsed.labs)      combined.labs.push(...parsed.labs);
+        if (parsed.upcoming)  combined.upcoming.push(...parsed.upcoming);
+        if (parsed.alerts)    combined.alerts.push(...parsed.alerts);
+        combined.source = parsed.source ?? combined.source;
+        combined.totalRecords += parsed.totalRecords ?? 0;
+      } catch (err) {
+        setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: `error: ${err.message}` } : u));
+        setError(`Failed to parse ${f.name}: ${err.message}`);
+      }
+    }
+
+    setProcessing(false);
+    if (combined.readings.length || combined.meds.length || combined.labs.length) {
+      setPreview(combined);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (preview && onImport) {
+      onImport(preview);
+      setSaved(true);
+      setPreview(null);
+      setUploadedFiles([]);
+      setTimeout(() => setSaved(false), 3000);
+    }
   };
 
   return (
@@ -266,19 +395,35 @@ export default function ImportTab() {
 
           {/* Manual Upload */}
           <div className="imp-card" style={{ padding: "20px", marginBottom: 16, animationDelay: "80ms" }}>
-            <div className="section-label">Manual File Import</div>
+            <div className="section-label">PDF Import — AI Powered</div>
+
+            {error && (
+              <div style={{ marginBottom: 12, padding: "10px 14px", background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 8, fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>
+                {error}
+              </div>
+            )}
+            {saved && (
+              <div style={{ marginBottom: 12, padding: "10px 14px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, fontSize: 11, color: "#10b981", fontFamily: "'DM Mono',monospace" }}>
+                ✓ Data saved — dashboard updated
+              </div>
+            )}
+
+            <input ref={fileInputRef} type="file" accept=".pdf" multiple style={{ display:"none" }}
+              onChange={e => addFiles(e.target.files)} />
+
             <div
               className={`drop-zone${dragOver ? " over" : ""}`}
+              onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
             >
               <div style={{ fontSize: 24, marginBottom: 10, color: dragOver ? "#4f8ef7" : "#1e3550" }}>↓</div>
               <div style={{ fontSize: 13, color: dragOver ? "#7eb8d8" : "#3d5a7a", fontWeight: 500, marginBottom: 6 }}>
-                Drop files here or click to browse
+                Drop PDF files here or click to browse
               </div>
               <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
-                PDF · CSV · HL7 · CCD/CDA · FHIR JSON · XLSX
+                Ochsner · Iris · SCRMC · any medical PDF
               </div>
             </div>
 
@@ -287,15 +432,68 @@ export default function ImportTab() {
                 {uploadedFiles.map((f, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#080c14", borderRadius: 8, border: "1px solid #0d1a28", marginBottom: 6 }}>
                     <div style={{ fontSize: 11, color: "#7eb8d8", flex: 1 }}>{f.name}</div>
-                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
-                      {(f.size / 1024).toFixed(1)} KB
+                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>{(f.size / 1024).toFixed(1)} KB</div>
+                    <div style={{ fontSize: 10, fontFamily: "'DM Mono',monospace",
+                      color: f.status === "done ✓" ? "#10b981" : f.status.startsWith("error") ? "#ef4444" : "#f59e0b" }}>
+                      {f.status}
                     </div>
-                    <div style={{ fontSize: 10, color: "#f59e0b", fontFamily: "'DM Mono',monospace" }}>{f.status}</div>
                   </div>
                 ))}
-                <button className="imp-btn imp-btn-primary" style={{ marginTop: 8, width: "100%", justifyContent: "center" }}>
-                  Process {uploadedFiles.length} File{uploadedFiles.length > 1 ? "s" : ""}
+                <button
+                  className="imp-btn imp-btn-primary"
+                  style={{ marginTop: 8, width: "100%", justifyContent: "center" }}
+                  onClick={handleProcess}
+                  disabled={processing}
+                >
+                  {processing ? <><span className="spin">↻</span> Parsing with AI…</> : <>✦ Process {uploadedFiles.length} File{uploadedFiles.length > 1 ? "s" : ""} with AI</>}
                 </button>
+              </div>
+            )}
+
+            {/* Preview panel */}
+            {preview && (
+              <div style={{ marginTop: 16, padding: "14px", background: "#080c14", borderRadius: 10, border: "1px solid #1a2f4a" }}>
+                <div style={{ fontSize: 11, color: "#7eb8d8", fontWeight: 600, marginBottom: 10 }}>
+                  ✦ AI found the following data — confirm to save:
+                </div>
+                {preview.readings?.length > 0 && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>VITALS ({preview.readings.length})</div>
+                    {preview.readings.map((r, i) => (
+                      <div key={i} style={{ fontSize: 11, color: "#a8c4dc", padding: "3px 0", fontFamily: "'DM Mono',monospace" }}>
+                        {r.date} — BP {r.bp_s}/{r.bp_d}{r.weight ? ` · Weight ${r.weight} lbs` : ""}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {preview.labs?.length > 0 && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>LABS ({preview.labs.length})</div>
+                    {preview.labs.slice(0, 6).map((l, i) => (
+                      <div key={i} style={{ fontSize: 11, color: l.flag ? "#ef4444" : "#a8c4dc", padding: "3px 0", fontFamily: "'DM Mono',monospace" }}>
+                        {l.name}: {l.value} {l.unit}{l.refRange ? ` (ref: ${l.refRange})` : ""}{l.flag ? " ▲" : ""}
+                      </div>
+                    ))}
+                    {preview.labs.length > 6 && <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>+{preview.labs.length - 6} more</div>}
+                  </div>
+                )}
+                {preview.meds?.length > 0 && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>MEDICATIONS ({preview.meds.length})</div>
+                    {preview.meds.slice(0, 4).map((m, i) => (
+                      <div key={i} style={{ fontSize: 11, color: "#a8c4dc", padding: "3px 0", fontFamily: "'DM Mono',monospace" }}>{m.name}</div>
+                    ))}
+                    {preview.meds.length > 4 && <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>+{preview.meds.length - 4} more</div>}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <button className="imp-btn imp-btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={handleConfirm}>
+                    ✓ Save to Dashboard
+                  </button>
+                  <button className="imp-btn imp-btn-ghost" style={{ justifyContent: "center" }} onClick={() => setPreview(null)}>
+                    Discard
+                  </button>
+                </div>
               </div>
             )}
           </div>
