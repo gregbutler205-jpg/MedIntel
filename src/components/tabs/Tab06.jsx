@@ -1,0 +1,706 @@
+import INTELLITRAX_LOGO from "../../assets/logo.png";
+import { useState, useEffect } from "react";
+
+const NAV = [
+  { id: "dashboard", icon: "⬡", label: "Dashboard" },
+  { id: "profile", icon: "◯", label: "Profile" },
+  { id: "records", icon: "▤", label: "Records" },
+  { id: "medications", icon: "⬡", label: "Medications" },
+  { id: "labs", icon: "◈", label: "Labs & Trends" },
+  { id: "vitals", icon: "♡", label: "Vitals" },
+  { id: "symptoms", icon: "◎", label: "Symptoms" },
+  { id: "careplan", icon: "◷", label: "Care Plan" },
+  { id: "documents", icon: "▣", label: "Documents" },
+  { id: "notes", icon: "◻", label: "Notes" },
+  { id: "ai", icon: "✦", label: "AI Analysis" },
+  { id: "import", icon: "↓", label: "Import Records" },
+  { id: "backup", icon: "◈", label: "Data & Backup" },
+];
+
+// Manual / sporadic readings (BP, Weight, Temp, Glucose, O2, Sleep)
+const MANUAL_READINGS = [
+  { date:"Mar 10", ts:"2026-03-10", bp_s:131,bp_d:71, hr:64, o2:99,  weight:184.2, temp:98.4, glucose:98,  sleep:6.5 },
+  { date:"Mar 7",  ts:"2026-03-07", bp_s:138,bp_d:74, hr:67, o2:99,  weight:184.8, temp:98.2, glucose:101, sleep:7.0 },
+  { date:"Mar 5",  ts:"2026-03-05", bp_s:143,bp_d:79, hr:71, o2:98,  weight:185.1, temp:98.5, glucose:103, sleep:5.8 },
+  { date:"Mar 3",  ts:"2026-03-03", bp_s:164,bp_d:88, hr:59, o2:100, weight:185.6, temp:98.3, glucose:99,  sleep:7.2, flag:true },
+  { date:"Feb 28", ts:"2026-02-28", bp_s:136,bp_d:76, hr:66, o2:99,  weight:185.0, temp:98.6, glucose:96,  sleep:6.8 },
+  { date:"Feb 25", ts:"2026-02-25", bp_s:141,bp_d:78, hr:69, o2:98,  weight:185.4, temp:98.4, glucose:102, sleep:6.2 },
+  { date:"Feb 22", ts:"2026-02-22", bp_s:133,bp_d:72, hr:63, o2:99,  weight:186.1, temp:98.2, glucose:94,  sleep:7.5 },
+  { date:"Feb 18", ts:"2026-02-18", bp_s:148,bp_d:82, hr:72, o2:97,  weight:186.5, temp:98.7, glucose:108, sleep:5.5, flag:true },
+  { date:"Feb 14", ts:"2026-02-14", bp_s:139,bp_d:75, hr:68, o2:99,  weight:186.2, temp:98.3, glucose:97,  sleep:7.0 },
+  { date:"Feb 10", ts:"2026-02-10", bp_s:155,bp_d:84, hr:74, o2:98,  weight:186.8, temp:98.4, glucose:105, sleep:6.0, flag:true },
+  { date:"Feb 6",  ts:"2026-02-06", bp_s:134,bp_d:73, hr:65, o2:99,  weight:187.0, temp:98.2, glucose:99,  sleep:6.8 },
+  { date:"Feb 2",  ts:"2026-02-02", bp_s:140,bp_d:77, hr:70, o2:98,  weight:187.3, temp:98.5, glucose:101, sleep:7.2 },
+  { date:"Jan 28", ts:"2026-01-28", bp_s:148,bp_d:78, hr:74, o2:96,  weight:187.8, temp:98.6, glucose:103, sleep:6.5 },
+];
+
+// Apple Watch daily data — denser (every day or nearly so for last ~35 days)
+const WATCH_DAILY = [
+  { date:"Mar 10", ts:"2026-03-10", resting_hr:58, hr_min:52, hr_max:128 },
+  { date:"Mar 9",  ts:"2026-03-09", resting_hr:60, hr_min:54, hr_max:142 },
+  { date:"Mar 8",  ts:"2026-03-08", resting_hr:59, hr_min:53, hr_max:135 },
+  { date:"Mar 7",  ts:"2026-03-07", resting_hr:61, hr_min:55, hr_max:138 },
+  { date:"Mar 6",  ts:"2026-03-06", resting_hr:60, hr_min:54, hr_max:130 },
+  { date:"Mar 5",  ts:"2026-03-05", resting_hr:62, hr_min:56, hr_max:141 },
+  { date:"Mar 4",  ts:"2026-03-04", resting_hr:59, hr_min:53, hr_max:129 },
+  { date:"Mar 3",  ts:"2026-03-03", resting_hr:58, hr_min:51, hr_max:122 },
+  { date:"Mar 2",  ts:"2026-03-02", resting_hr:61, hr_min:55, hr_max:144 },
+  { date:"Mar 1",  ts:"2026-03-01", resting_hr:60, hr_min:54, hr_max:136 },
+  { date:"Feb 28", ts:"2026-02-28", resting_hr:62, hr_min:56, hr_max:133 },
+  { date:"Feb 27", ts:"2026-02-27", resting_hr:63, hr_min:57, hr_max:145 },
+  { date:"Feb 26", ts:"2026-02-26", resting_hr:61, hr_min:55, hr_max:131 },
+  { date:"Feb 25", ts:"2026-02-25", resting_hr:64, hr_min:58, hr_max:148 },
+  { date:"Feb 24", ts:"2026-02-24", resting_hr:60, hr_min:54, hr_max:127 },
+  { date:"Feb 23", ts:"2026-02-23", resting_hr:59, hr_min:53, hr_max:139 },
+  { date:"Feb 22", ts:"2026-02-22", resting_hr:61, hr_min:55, hr_max:134 },
+  { date:"Feb 21", ts:"2026-02-21", resting_hr:62, hr_min:56, hr_max:142 },
+  { date:"Feb 20", ts:"2026-02-20", resting_hr:60, hr_min:54, hr_max:128 },
+  { date:"Feb 19", ts:"2026-02-19", resting_hr:63, hr_min:57, hr_max:151, flag:true },
+  { date:"Feb 18", ts:"2026-02-18", resting_hr:65, hr_min:59, hr_max:149, flag:true },
+  { date:"Feb 17", ts:"2026-02-17", resting_hr:62, hr_min:56, hr_max:136 },
+  { date:"Feb 16", ts:"2026-02-16", resting_hr:60, hr_min:54, hr_max:130 },
+  { date:"Feb 15", ts:"2026-02-15", resting_hr:59, hr_min:53, hr_max:126 },
+  { date:"Feb 14", ts:"2026-02-14", resting_hr:61, hr_min:55, hr_max:138 },
+  { date:"Feb 13", ts:"2026-02-13", resting_hr:60, hr_min:54, hr_max:132 },
+  { date:"Feb 12", ts:"2026-02-12", resting_hr:62, hr_min:56, hr_max:140 },
+  { date:"Feb 11", ts:"2026-02-11", resting_hr:64, hr_min:58, hr_max:147 },
+  { date:"Feb 10", ts:"2026-02-10", resting_hr:66, hr_min:60, hr_max:152, flag:true },
+  { date:"Feb 9",  ts:"2026-02-09", resting_hr:63, hr_min:57, hr_max:143 },
+  { date:"Feb 8",  ts:"2026-02-08", resting_hr:61, hr_min:55, hr_max:134 },
+  { date:"Feb 7",  ts:"2026-02-07", resting_hr:60, hr_min:54, hr_max:128 },
+  { date:"Feb 6",  ts:"2026-02-06", resting_hr:59, hr_min:53, hr_max:131 },
+  { date:"Feb 5",  ts:"2026-02-05", resting_hr:62, hr_min:56, hr_max:139 },
+  { date:"Feb 4",  ts:"2026-02-04", resting_hr:61, hr_min:55, hr_max:136 },
+  { date:"Feb 3",  ts:"2026-02-03", resting_hr:60, hr_min:54, hr_max:129 },
+  { date:"Feb 2",  ts:"2026-02-02", resting_hr:63, hr_min:57, hr_max:144 },
+  { date:"Feb 1",  ts:"2026-02-01", resting_hr:62, hr_min:56, hr_max:137 },
+];
+
+function filterByMonths(arr, months) {
+  const cutoff = new Date("2026-03-10");
+  cutoff.setMonth(cutoff.getMonth() - months);
+  return arr.filter(r => new Date(r.ts) >= cutoff);
+}
+
+const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+// ── Chart components ──────────────────────────────────────────────────────────
+
+function LineChart({ data, keys, colors, yMin, yMax, refLines = [], height = 150, dateKey = "date" }) {
+  const reversed = [...data].reverse();
+  if (reversed.length < 2) return <div style={{ height }} />;
+  const W = 520, H = height, PL = 40, PR = 10, PT = 14, PB = 26;
+  const cW = W - PL - PR, cH = H - PT - PB;
+  const n = reversed.length;
+  const toX = i => PL + (i / Math.max(n - 1, 1)) * cW;
+  const toY = v => v == null ? null : PT + cH - ((v - yMin) / (yMax - yMin)) * cH;
+
+  const yTicks = 4;
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+      {Array.from({ length: yTicks + 1 }, (_, i) => {
+        const v = yMin + (i / yTicks) * (yMax - yMin);
+        const y = toY(v);
+        return (
+          <g key={i}>
+            <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#142030" fontFamily="DM Mono">{Number.isInteger(v) ? v : v.toFixed(1)}</text>
+          </g>
+        );
+      })}
+      {refLines.map(({ val, color }) => {
+        const y = toY(val);
+        return y != null ? <line key={val} x1={PL} y1={y} x2={PL + cW} y2={y} stroke={color} strokeWidth={1} strokeDasharray="4,3" opacity={0.45} /> : null;
+      })}
+      {keys.map((key, ki) => {
+        const color = colors[ki];
+        const pts = reversed.map((r, i) => ({ x: toX(i), y: toY(r[key]), v: r[key] })).filter(p => p.y != null);
+        if (pts.length < 2) return null;
+        const poly = pts.map(p => `${p.x},${p.y}`).join(" ");
+        const area = `${pts[0].x},${PT + cH} ${poly} ${pts[pts.length - 1].x},${PT + cH}`;
+        return (
+          <g key={key}>
+            <polygon points={area} fill={`${color}12`} />
+            <polyline points={poly} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+            {pts.map((p, pi) => (
+              <circle key={pi} cx={p.x} cy={p.y} r={pi === pts.length - 1 ? 4.5 : 2.5} fill={color} />
+            ))}
+          </g>
+        );
+      })}
+      {reversed.map((r, i) => {
+        const step = Math.ceil(n / 7);
+        if (i % step !== 0 && i !== n - 1) return null;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{r[dateKey]}</text>;
+      })}
+    </svg>
+  );
+}
+
+function BandChart({ data, minKey, maxKey, restingKey, color, yMin, yMax, height = 150 }) {
+  const reversed = [...data].reverse();
+  if (reversed.length < 2) return <div style={{ height }} />;
+  const W = 520, H = height, PL = 40, PR = 10, PT = 14, PB = 26;
+  const cW = W - PL - PR, cH = H - PT - PB;
+  const n = reversed.length;
+  const toX = i => PL + (i / Math.max(n - 1, 1)) * cW;
+  const toY = v => PT + cH - ((v - yMin) / (yMax - yMin)) * cH;
+
+  const topPoly = reversed.map((r, i) => `${toX(i)},${toY(r[maxKey])}`).join(" ");
+  const botPoly = reversed.map((r, i) => `${toX(i)},${toY(r[minKey])}`).join(" ");
+  const botPolyRev = [...reversed].reverse().map((r, i) => `${toX(n - 1 - i)},${toY(r[minKey])}`).join(" ");
+  const bandArea = `${topPoly} ${botPolyRev}`;
+  const restPts = reversed.map((r, i) => `${toX(i)},${toY(r[restingKey])}`).join(" ");
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+      {[0, 0.25, 0.5, 0.75, 1].map(p => {
+        const v = yMin + p * (yMax - yMin);
+        const y = toY(v);
+        return (
+          <g key={p}>
+            <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#142030" fontFamily="DM Mono">{Math.round(v)}</text>
+          </g>
+        );
+      })}
+      {/* HR band */}
+      <polygon points={bandArea} fill={`${color}18`} />
+      <polyline points={topPoly} fill="none" stroke={`${color}50`} strokeWidth={1} strokeLinejoin="round" />
+      <polyline points={botPoly} fill="none" stroke={`${color}50`} strokeWidth={1} strokeLinejoin="round" />
+      {/* Resting HR line */}
+      <polyline points={restPts} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      {reversed.map((r, i) => (
+        <circle key={i} cx={toX(i)} cy={toY(r[restingKey])} r={i === n - 1 ? 4.5 : 2} fill={color} />
+      ))}
+      {/* X labels */}
+      {reversed.map((r, i) => {
+        const step = Math.ceil(n / 7);
+        if (i % step !== 0 && i !== n - 1) return null;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{r.date}</text>;
+      })}
+    </svg>
+  );
+}
+
+function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, height = 150 }) {
+  const reversed = [...data].reverse();
+  if (!reversed.length) return <div style={{ height }} />;
+  const W = 520, H = height, PL = 40, PR = 10, PT = 14, PB = 26;
+  const cW = W - PL - PR, cH = H - PT - PB;
+  const n = reversed.length;
+  const barW = Math.max(4, Math.min(18, (cW / n) * 0.6));
+  const toX = i => PL + (i / Math.max(n - 1, 1)) * cW;
+  const toY = v => PT + cH - ((v - yMin) / (yMax - yMin)) * cH;
+  const baseY = toY(yMin);
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+      {[0, 0.25, 0.5, 0.75, 1].map(p => {
+        const v = yMin + p * (yMax - yMin);
+        const y = toY(v);
+        return (
+          <g key={p}>
+            <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#142030" fontFamily="DM Mono">{v.toFixed(1)}</text>
+          </g>
+        );
+      })}
+      {/* Target band */}
+      {targetMin != null && targetMax != null && (
+        <rect x={PL} y={toY(targetMax)} width={cW} height={toY(targetMin) - toY(targetMax)} fill="rgba(16,185,129,0.07)" />
+      )}
+      {targetMin != null && <line x1={PL} y1={toY(targetMin)} x2={PL + cW} y2={toY(targetMin)} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.45} />}
+      {targetMax != null && <line x1={PL} y1={toY(targetMax)} x2={PL + cW} y2={toY(targetMax)} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.45} />}
+      {reversed.map((r, i) => {
+        const v = r[valueKey];
+        if (v == null) return null;
+        const x = toX(i);
+        const y = toY(v);
+        const inRange = (targetMin == null || v >= targetMin) && (targetMax == null || v <= targetMax);
+        const barColor = inRange ? color : "#ef4444";
+        return (
+          <g key={i}>
+            <rect x={x - barW / 2} y={y} width={barW} height={baseY - y} fill={barColor} opacity={0.75} rx={2} />
+            {i === n - 1 && <circle cx={x} cy={y} r={4} fill={barColor} />}
+          </g>
+        );
+      })}
+      {reversed.map((r, i) => {
+        const step = Math.ceil(n / 7);
+        if (i % step !== 0 && i !== n - 1) return null;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{r.date}</text>;
+      })}
+    </svg>
+  );
+}
+
+// Compact range bar for sidebar cards
+function MiniRangeBar({ value, yMin, yMax, goodMin, goodMax }) {
+  if (value == null) return null;
+  const total = yMax - yMin || 1;
+  const lowPct  = ((goodMin - yMin) / total) * 100;
+  const highPct = ((goodMax - yMin) / total) * 100;
+  const valPct  = Math.min(97, Math.max(3, ((value - yMin) / total) * 100));
+  const inRange = value >= goodMin && value <= goodMax;
+  const bc = inRange ? "#10b981" : "#ef4444";
+  return (
+    <div style={{ position: "relative", paddingTop: 16, marginTop: 4 }}>
+      <div style={{ position: "absolute", top: 0, left: `${valPct}%`, transform: "translateX(-50%)", background: bc, color: "#fff", fontSize: 7.5, fontWeight: 700, fontFamily: "'DM Mono',monospace", padding: "1px 4px", borderRadius: 20, whiteSpace: "nowrap", lineHeight: 1.4 }}>{value}</div>
+      <div style={{ position: "absolute", top: 12, left: `${valPct}%`, transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "3px solid transparent", borderRight: "3px solid transparent", borderTop: `3px solid ${bc}` }} />
+      <div style={{ height: 4, borderRadius: 4, position: "relative", overflow: "hidden", background: "rgba(239,68,68,0.25)" }}>
+        <div style={{ position: "absolute", left: `${lowPct}%`, width: `${highPct - lowPct}%`, height: "100%", background: "#10b981" }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Vital definitions ─────────────────────────────────────────────────────────
+
+const VITALS = [
+  {
+    id: "bp", label: "Blood Pressure", unit: "mmHg", color: "#4f8ef7", source: "manual",
+    goodMin: 90, goodMax: 130, yMin: 50, yMax: 180,
+    latestFn: r => `${r.bp_s}/${r.bp_d}`,
+    latestNum: r => r.bp_s,
+    statusFn: r => r.bp_s >= 140 || r.bp_d >= 90 ? { label: "High", color: "#ef4444" } : r.bp_s >= 130 ? { label: "Elevated", color: "#f59e0b" } : { label: "Normal", color: "#10b981" },
+    chartType: "line", chartKeys: ["bp_s", "bp_d"], chartColors: ["#4f8ef7", "#a78bfa"],
+    chartLabels: ["Systolic", "Diastolic"],
+    refLines: [{ val: 120, color: "#4f8ef7" }, { val: 80, color: "#a78bfa" }],
+    chartYMin: 50, chartYMax: 180,
+    data: "manual",
+  },
+  {
+    id: "hr", label: "Heart Rate", unit: "bpm", color: "#ef4444", source: "manual",
+    goodMin: 60, goodMax: 100, yMin: 40, yMax: 120,
+    latestFn: r => `${r.hr}`,
+    latestNum: r => r.hr,
+    statusFn: r => r.hr < 50 ? { label: "Low", color: "#f59e0b" } : r.hr > 100 ? { label: "High", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
+    chartType: "line", chartKeys: ["hr"], chartColors: ["#ef4444"],
+    chartLabels: ["Heart Rate"],
+    refLines: [{ val: 60, color: "#f59e0b" }, { val: 100, color: "#ef4444" }],
+    chartYMin: 40, chartYMax: 120,
+    data: "manual",
+  },
+  {
+    id: "resting_hr", label: "Resting Heart Rate", unit: "bpm", color: "#f87171", source: "watch",
+    goodMin: 50, goodMax: 70, yMin: 40, yMax: 90,
+    latestFn: r => `${r.resting_hr}`,
+    latestNum: r => r.resting_hr,
+    statusFn: r => r.resting_hr > 70 ? { label: "Elevated", color: "#f59e0b" } : r.resting_hr < 50 ? { label: "Low", color: "#4f8ef7" } : { label: "Good", color: "#10b981" },
+    chartType: "band",
+    chartLabels: ["Daily Range", "Resting HR"],
+    chartYMin: 30, chartYMax: 170,
+    data: "watch",
+  },
+  {
+    id: "o2", label: "O2 Saturation", unit: "%", color: "#10b981", source: "manual",
+    goodMin: 95, goodMax: 100, yMin: 88, yMax: 102,
+    latestFn: r => r.o2 != null ? `${r.o2}%` : "—",
+    latestNum: r => r.o2,
+    statusFn: r => r.o2 == null ? { label: "No data", color: "#2d4d6a" } : r.o2 >= 98 ? { label: "Excellent", color: "#10b981" } : r.o2 >= 95 ? { label: "Normal", color: "#7eb8d8" } : { label: "Low", color: "#ef4444" },
+    chartType: "line", chartKeys: ["o2"], chartColors: ["#10b981"],
+    chartLabels: ["SpO2"],
+    refLines: [{ val: 95, color: "#ef4444" }],
+    chartYMin: 88, chartYMax: 102,
+    data: "manual",
+  },
+  {
+    id: "weight", label: "Weight", unit: "lbs", color: "#f59e0b", source: "manual",
+    goodMin: 180, goodMax: 190, yMin: 170, yMax: 200,
+    latestFn: r => `${r.weight}`,
+    latestNum: r => r.weight,
+    statusFn: (r, prev) => {
+      if (!prev) return { label: "No prior", color: "#2d4d6a" };
+      const d = (r.weight - prev.weight).toFixed(1);
+      return { label: d > 0 ? `+${d} lb` : `${d} lb`, color: Math.abs(d) < 1 ? "#10b981" : "#f59e0b" };
+    },
+    chartType: "line", chartKeys: ["weight"], chartColors: ["#f59e0b"],
+    chartLabels: ["Weight"],
+    refLines: [{ val: 185, color: "#f59e0b" }],
+    chartYMin: 178, chartYMax: 196,
+    data: "manual",
+  },
+  {
+    id: "temp", label: "Temperature", unit: "°F", color: "#7eb8d8", source: "manual",
+    goodMin: 97, goodMax: 99.5, yMin: 96, yMax: 101,
+    latestFn: r => `${r.temp}°`,
+    latestNum: r => r.temp,
+    statusFn: r => r.temp < 97 ? { label: "Low", color: "#4f8ef7" } : r.temp > 99.5 ? { label: "Fever", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
+    chartType: "line", chartKeys: ["temp"], chartColors: ["#7eb8d8"],
+    chartLabels: ["Temp"],
+    refLines: [{ val: 97, color: "#4f8ef7" }, { val: 99.5, color: "#ef4444" }],
+    chartYMin: 96, chartYMax: 101,
+    data: "manual",
+  },
+  {
+    id: "glucose", label: "Blood Glucose", unit: "mg/dL", color: "#a78bfa", source: "manual",
+    goodMin: 70, goodMax: 100, yMin: 60, yMax: 130,
+    latestFn: r => `${r.glucose}`,
+    latestNum: r => r.glucose,
+    statusFn: r => r.glucose > 125 ? { label: "High", color: "#ef4444" } : r.glucose > 100 ? { label: "Pre-diabetic", color: "#f59e0b" } : r.glucose < 70 ? { label: "Low", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
+    chartType: "line", chartKeys: ["glucose"], chartColors: ["#a78bfa"],
+    chartLabels: ["Fasting Glucose"],
+    refLines: [{ val: 100, color: "#f59e0b" }, { val: 126, color: "#ef4444" }],
+    chartYMin: 60, chartYMax: 130,
+    data: "manual",
+  },
+  {
+    id: "sleep", label: "Sleep", unit: "hrs", color: "#60a5fa", source: "manual",
+    goodMin: 7, goodMax: 9, yMin: 3, yMax: 11,
+    latestFn: r => `${r.sleep}h`,
+    latestNum: r => r.sleep,
+    statusFn: r => r.sleep < 6 ? { label: "Poor", color: "#ef4444" } : r.sleep < 7 ? { label: "Below goal", color: "#f59e0b" } : { label: "Good", color: "#10b981" },
+    chartType: "bar",
+    chartLabels: ["Sleep Hours"],
+    chartYMin: 0, chartYMax: 11,
+    data: "manual",
+  },
+];
+
+// Log form
+function LogPanel({ onClose, onSave }) {
+  const [form, setForm] = useState({ bp_s: "", bp_d: "", hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const fields = [
+    { label: "Blood Pressure", inputs: [{ k: "bp_s", ph: "Systolic" }, { k: "bp_d", ph: "Diastolic" }], unit: "mmHg" },
+    { label: "Heart Rate", inputs: [{ k: "hr", ph: "BPM" }], unit: "bpm" },
+    { label: "O2 Saturation", inputs: [{ k: "o2", ph: "SpO2" }], unit: "%" },
+    { label: "Weight", inputs: [{ k: "weight", ph: "lbs" }], unit: "lbs" },
+    { label: "Temperature", inputs: [{ k: "temp", ph: "°F" }], unit: "°F" },
+    { label: "Blood Glucose", inputs: [{ k: "glucose", ph: "mg/dL (fasting)" }], unit: "mg/dL" },
+    { label: "Sleep Hours", inputs: [{ k: "sleep", ph: "e.g. 7.5" }], unit: "hrs" },
+  ];
+
+  return (
+    <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #0d1a28", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
+      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
+          <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Log Vitals</div>
+        </div>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#3d5a7a", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
+        <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
+        {fields.map(({ label, inputs, unit }) => (
+          <div key={label} style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>
+              {label} <span style={{ color: "#142030" }}>· {unit}</span>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {inputs.map(({ k, ph }) => (
+                <input key={k} type="number" placeholder={ph} value={form[k]} onChange={e => set(k, e.target.value)}
+                  style={{ flex: 1, padding: "9px 12px", background: "#0b1220", border: `1px solid ${form[k] ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 14, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "10px 12px", marginTop: 4 }}>
+          <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>WATCH DATA</div>
+          <div style={{ fontSize: 11, color: "#2d4d6a", lineHeight: 1.6 }}>Resting HR and Daily HR Range are auto-synced from Apple Watch via HealthKit.</div>
+        </div>
+      </div>
+      <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
+        <button onClick={() => { onSave(form); onClose(); }}
+          style={{ flex: 1, padding: "11px", background: "#10b981", border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
+          Save Entry
+        </button>
+        <button onClick={onClose}
+          style={{ padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#3d5a7a", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [activeNav, setActiveNav] = useState("vitals");
+  const [selectedId, setSelectedId] = useState("bp");
+  const [timeRange, setTimeRange] = useState(1);
+  const [showLog, setShowLog] = useState(false);
+  const [manualReadings, setManualReadings] = useState(MANUAL_READINGS);
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
+  const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const fmtDate = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const config = VITALS.find(v => v.id === selectedId);
+  const isWatch = config.data === "watch";
+  const sourceData = isWatch ? WATCH_DAILY : manualReadings;
+  const filteredData = filterByMonths(sourceData, timeRange);
+  const latest = manualReadings[0];
+  const latestWatch = WATCH_DAILY[0];
+  const prev = manualReadings[1];
+
+  const handleSave = form => {
+    const r = {
+      date: "Mar 18", ts: "2026-03-18",
+      bp_s: +form.bp_s || null, bp_d: +form.bp_d || null,
+      hr: +form.hr || null, o2: +form.o2 || null,
+      weight: +form.weight || null, temp: +form.temp || null,
+      glucose: +form.glucose || null, sleep: +form.sleep || null,
+    };
+    setManualReadings(prev => [r, ...prev]);
+  };
+
+  const flaggedManual = manualReadings.filter(r => r.flag).length;
+
+  return (
+    <div style={{ display: "flex", height: "100vh", background: "#07090f", color: "#d4e2f0", fontFamily: "'Sora',sans-serif", overflow: "hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
+        * { box-sizing:border-box; margin:0; padding:0; }
+        ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#1a2840;border-radius:4px}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:#3d5a7a;border-left:2px solid transparent;transition:all .15s;user-select:none}
+        .nav-item:hover{color:#7eb8d8;background:rgba(79,142,247,.04)}
+        .nav-item.active{color:#4f8ef7;background:rgba(79,142,247,.08);border-left-color:#4f8ef7}
+        .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+        .live-dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;flex-shrink:0}
+        .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#1e3550;font-family:'DM Mono',monospace;margin-bottom:10px}
+        .vcard{background:#0b1220;border:1px solid #111e30;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;animation:fadeUp .3s ease both}
+        .vcard:hover{border-color:#1a2f4a}
+        .vcard.sel{border-color:#4f8ef7;background:rgba(79,142,247,.07)}
+        .time-btn{padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;background:#0f1e30;color:#7eb8d8;font-weight:500}
+        .time-btn:hover{background:#162840}
+        .time-btn.on{background:#4f8ef7;color:#fff}
+        .hist-row{display:grid;grid-template-columns:72px 88px 54px 54px 62px 54px 64px 52px;gap:0;padding:8px 0;border-bottom:1px solid #0d1a28;align-items:center;font-size:11px}
+        .hist-row:last-child{border-bottom:none}
+      `}</style>
+
+      {/* Sidebar */}
+      <aside style={{ width:210, minWidth:210, background:"#080c14", borderRight:"1px solid #0d1a28", display:"flex", flexDirection:"column", height:"100vh" }}>
+        <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+        </div>
+        <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
+          <div style={{ fontSize:10, color:"#1e3550", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
+          <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>Greg Butler</div>
+          <div style={{ fontSize:11, color:"#2d4d6a", marginTop:2 }}>Transplant · Immunosuppressed</div>
+        </div>
+        <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
+          <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#142030", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
+          {NAV.slice(0,8).map(({id,icon,label}) => (
+            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
+              <span className="nav-icon">{icon}</span><span>{label}</span>
+            </div>
+          ))}
+          <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#142030", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
+          {NAV.slice(8).map(({id,icon,label}) => (
+            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
+              <span className="nav-icon">{icon}</span><span>{label}</span>
+              {id==="ai" && <span style={{marginLeft:"auto",fontSize:8,background:"#4f8ef7",color:"#fff",padding:"1px 5px",borderRadius:8,fontFamily:"'DM Mono',monospace"}}>AI</span>}
+            </div>
+          ))}
+        </nav>
+        <div style={{ padding:"12px 16px", borderTop:"1px solid #0d1a28" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:7, fontSize:10, color:"#1e4030", fontFamily:"'DM Mono',monospace" }}>
+            <div className="live-dot"/>All systems nominal
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        {/* Topbar */}
+        <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
+          <div style={{ flex:1, display:"flex", alignItems:"center", gap:8 }}>
+            <div className="live-dot"/>
+            <span style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+          </div>
+          <button onClick={()=>setShowLog(true)}
+            style={{ padding:"7px 16px", background:"#10b981", border:"none", borderRadius:8, color:"#fff", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer" }}>
+            + Log Vitals
+          </button>
+          <div style={{ width:32, height:32, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>G</div>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex:1, display:"flex", overflow:"hidden", position:"relative" }}>
+
+          {/* Left — vital selector */}
+          <div style={{ width:234, minWidth:234, borderRight:"1px solid #0d1a28", overflowY:"auto", padding:"18px 12px" }}>
+            <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:21, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px", marginBottom:3 }}>Vitals</h1>
+            <p style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace", marginBottom:14 }}>{manualReadings.length} readings · {flaggedManual} flagged</p>
+
+            {/* Summary chips */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7, marginBottom:14 }}>
+              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"9px 11px" }}>
+                <div style={{ fontSize:17, fontWeight:700, color:"#ef4444", lineHeight:1, marginBottom:2 }}>{flaggedManual}</div>
+                <div style={{ fontSize:9, color:"#7eb8d8", fontWeight:600 }}>Flagged</div>
+              </div>
+              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"9px 11px" }}>
+                <div style={{ fontSize:17, fontWeight:700, color:"#4f8ef7", lineHeight:1, marginBottom:2 }}>{manualReadings.length}</div>
+                <div style={{ fontSize:9, color:"#7eb8d8", fontWeight:600 }}>Readings</div>
+              </div>
+            </div>
+
+            {/* Vital cards */}
+            {VITALS.map((vc, i) => {
+              const isWatch = vc.data === "watch";
+              const latestR = isWatch ? latestWatch : latest;
+              const val = latestR ? vc.latestNum(latestR) : null;
+              const status = latestR ? vc.statusFn(latestR, prev) : null;
+              const isSelected = selectedId === vc.id;
+              return (
+                <div key={vc.id} className={`vcard ${isSelected?"sel":""}`} style={{ animationDelay:`${i*40}ms` }} onClick={()=>setSelectedId(vc.id)}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+                    <div style={{ fontSize:9.5, fontWeight:600, color:vc.color, textTransform:"uppercase", letterSpacing:"0.5px", fontFamily:"'DM Mono',monospace" }}>{vc.label}</div>
+                    {isWatch && <span style={{ fontSize:7.5, background:"rgba(79,142,247,.15)", color:"#4f8ef7", padding:"1px 5px", borderRadius:8, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>WATCH</span>}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:5, marginBottom:2 }}>
+                    <span style={{ fontSize:19, fontWeight:700, color: status && status.color === "#ef4444" ? "#ef4444" : "#dde8f5", lineHeight:1 }}>
+                      {latestR ? vc.latestFn(latestR) : "—"}
+                    </span>
+                    <span style={{ fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
+                  </div>
+                  {status && <div style={{ fontSize:10, color:status.color, fontWeight:600, marginBottom: vc.id !== "resting_hr" ? 6 : 0 }}>{status.label}</div>}
+                  {/* Range bar — skip band chart types */}
+                  {vc.id !== "resting_hr" && val != null && (
+                    <MiniRangeBar value={val} yMin={vc.yMin} yMax={vc.yMax} goodMin={vc.goodMin} goodMax={vc.goodMax} />
+                  )}
+                  {vc.id === "resting_hr" && val != null && (
+                    <MiniRangeBar value={val} yMin={40} yMax={90} goodMin={50} goodMax={70} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Center — chart + detail */}
+          <div style={{ flex:1, overflowY:"auto", padding:"22px 26px", minWidth:0 }}>
+            <div style={{ animation:"fadeUp .3s ease both" }}>
+
+              {/* Header */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+                <div>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:3 }}>
+                    <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px" }}>{config.label}</h2>
+                    {isWatch && (
+                      <span style={{ fontSize:9, background:"rgba(79,142,247,.15)", color:"#4f8ef7", padding:"3px 8px", borderRadius:5, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>AUTO · APPLE WATCH</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>
+                    {filteredData.length} readings in view
+                    {isWatch && " · Daily sync via HealthKit"}
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:4 }}>
+                  {[1,3,6].map(m => (
+                    <button key={m} className={`time-btn ${timeRange===m?"on":""}`} onClick={()=>setTimeRange(m)}>{m}mo</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stat strip */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:16 }}>
+                {(() => {
+                  const latestR = isWatch ? latestWatch : latest;
+                  const status = latestR ? config.statusFn(latestR, prev) : null;
+                  const vals = filteredData.map(r => config.latestNum(r)).filter(v => v != null);
+                  const avgVal = avg(vals);
+                  const flagged = filteredData.filter(r => {
+                    const v = config.latestNum(r);
+                    return v != null && (v < config.goodMin || v > config.goodMax);
+                  }).length;
+                  return [
+                    { label:"Latest", value: latestR ? config.latestFn(latestR) : "—", sub: isWatch ? latestWatch?.date : latest?.date, color: status?.color ?? "#dde8f5" },
+                    { label:"Avg (period)", value: avgVal ? avgVal.toFixed(1) : "—", sub: config.unit, color:"#c4d8ee" },
+                    { label:"Out of Range", value: flagged, sub:`of ${filteredData.length} readings`, color: flagged > 0 ? "#ef4444" : "#10b981" },
+                    { label:"Data Source", value: isWatch ? "Watch" : "Manual", sub: isWatch ? "HealthKit daily" : "Sporadic entry", color: isWatch ? "#4f8ef7" : "#7eb8d8" },
+                  ];
+                })().map(({ label, value, sub, color }) => (
+                  <div key={label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"12px 14px" }}>
+                    <div style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
+                    <div style={{ fontSize:16, fontWeight:700, color, marginBottom:2 }}>{value}</div>
+                    <div style={{ fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Chart */}
+              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"16px 14px 10px", marginBottom:14 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                  <div className="section-label" style={{ marginBottom:0 }}>{timeRange}-Month Trend</div>
+                  <div style={{ display:"flex", gap:12 }}>
+                    {config.chartLabels.map((lbl, i) => (
+                      <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>
+                        <div style={{ width:14, height:2, background: config.chartType === "band" ? (i===0?"rgba(248,113,113,0.4)":config.color) : (config.chartColors?.[i] ?? config.color), borderRadius:2 }}/>
+                        {lbl}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {config.chartType === "line" && (
+                  <LineChart data={filteredData} keys={config.chartKeys} colors={config.chartColors} yMin={config.chartYMin} yMax={config.chartYMax} refLines={config.refLines ?? []} />
+                )}
+                {config.chartType === "band" && (
+                  <BandChart data={filteredData} minKey="hr_min" maxKey="hr_max" restingKey="resting_hr" color={config.color} yMin={config.chartYMin} yMax={config.chartYMax} />
+                )}
+                {config.chartType === "bar" && (
+                  <BarChart data={filteredData} valueKey="sleep" color={config.color} yMin={config.chartYMin} yMax={config.chartYMax} targetMin={7} targetMax={9} />
+                )}
+              </div>
+
+              {/* History table — manual readings only */}
+              {!isWatch && (
+                <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"14px 18px" }}>
+                  <div className="section-label">Reading History</div>
+                  <div className="hist-row" style={{ borderBottom:"1px solid #0d1a28", paddingBottom:7, marginBottom:2 }}>
+                    {["Date","BP","HR","O2","Weight","Temp","Glucose","Sleep"].map(h => (
+                      <div key={h} style={{ fontSize:8.5, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{h}</div>
+                    ))}
+                  </div>
+                  {filterByMonths(manualReadings, timeRange).map(r => {
+                    const bpF = r.bp_s >= 140 || r.bp_d >= 90;
+                    const gF  = r.glucose > 100;
+                    const slF = r.sleep < 7;
+                    const o2F = r.o2 != null && r.o2 < 95;
+                    return (
+                      <div key={r.ts} className="hist-row">
+                        <div style={{ color:"#2d4d6a", fontFamily:"'DM Mono',monospace", fontSize:10 }}>
+                          {r.date}{r.flag && <span style={{ marginLeft:3, fontSize:8, color:"#ef4444" }}>▲</span>}
+                        </div>
+                        <div style={{ fontWeight:600, color:bpF?"#ef4444":"#c4d8ee", fontSize:11 }}>{r.bp_s}/{r.bp_d}</div>
+                        <div style={{ color:"#7eb8d8" }}>{r.hr}</div>
+                        <div style={{ color:o2F?"#ef4444":r.o2==null?"#1e3550":"#10b981" }}>{r.o2!=null?`${r.o2}%`:"—"}</div>
+                        <div style={{ color:"#a8c4dc" }}>{r.weight}</div>
+                        <div style={{ color:r.temp>99.5?"#ef4444":"#3d5a7a", fontFamily:"'DM Mono',monospace" }}>{r.temp}°</div>
+                        <div style={{ color:gF?"#f59e0b":"#a8c4dc" }}>{r.glucose??'—'}</div>
+                        <div style={{ color:slF?"#f59e0b":"#7eb8d8" }}>{r.sleep?`${r.sleep}h`:"—"}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Watch history — resting HR */}
+              {isWatch && (
+                <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"14px 18px" }}>
+                  <div className="section-label">Daily Watch Data</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:6 }}>
+                    {filteredData.slice(0,28).map(r => (
+                      <div key={r.ts} style={{ background:"#080c14", borderRadius:8, border:"1px solid #0d1a28", padding:"8px 10px" }}>
+                        <div style={{ fontSize:8.5, color:"#1e3550", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{r.date}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:9, color:"#2d4d6a" }}>bpm</span></div>
+                        <div style={{ fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {showLog && <LogPanel onClose={()=>setShowLog(false)} onSave={handleSave} />}
+        </div>
+      </div>
+    </div>
+  );
+}
