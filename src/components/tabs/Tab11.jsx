@@ -461,6 +461,7 @@ export default function AIAnalysis() {
         .modal-input:focus { border-color:#1a2f4a; }
         .new-conv-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:transparent; border:1px solid #111e30; border-radius:12px; color:#2d4d6a; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; }
         .new-conv-btn:hover { border-color:#1a2f4a; color:#3d5a7a; }
+        @media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }
       `}</style>
 
       {/* Topbar */}
@@ -474,6 +475,10 @@ export default function AIAnalysis() {
             <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
+        {/* Print button */}
+        <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          ⎙ Print
+        </button>
         {/* API key indicator + gear */}
         <div style={{ position: "relative" }}>
           <button className="icon-btn" onClick={() => setShowKeyPopover(p => !p)} title="API Key settings" style={{ gap: 5, width: "auto", padding: "0 10px", color: hasKey ? "#10b981" : "#f59e0b", borderColor: hasKey ? "rgba(16,185,129,.25)" : "rgba(245,158,11,.25)" }}>

@@ -1,6 +1,7 @@
 import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
+import { getPendingMeds, setPendingMeds } from "../../store.js";
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.mjs",
   import.meta.url
@@ -180,6 +181,95 @@ const DATA_TYPES = [
   { label: "Clinical Notes", icon: "✦", checked: false },
 ];
 
+// ── C-CDA XML parser (Epic export format) ────────────────────────────────────
+function parseCCDA(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, "text/xml");
+  const ns = "urn:hl7-org:v3";
+  const q = (el, tag) => Array.from(el.getElementsByTagNameNS(ns, tag));
+
+  const result = { readings: [], meds: [], labs: [], upcoming: [], alerts: [], source: "Epic C-CDA", totalRecords: 0 };
+
+  // --- Medications ---
+  q(doc, "substanceAdministration").forEach(sa => {
+    try {
+      const statusCode = sa.querySelector("[code]")?.getAttribute("code") ?? "";
+      if (statusCode === "aborted" || statusCode === "cancelled") return;
+      const nameEl = sa.getElementsByTagNameNS(ns, "name")[0];
+      const name = nameEl?.textContent?.trim() ?? "";
+      if (!name) return;
+      const doseEl = sa.getElementsByTagNameNS(ns, "value")[0];
+      const dose = doseEl ? `${doseEl.getAttribute("value") ?? ""} ${doseEl.getAttribute("unit") ?? ""}`.trim() : "";
+      const freqEl = sa.getElementsByTagNameNS(ns, "period")[0];
+      const freqVal = freqEl?.getAttribute("value");
+      const freqUnit = freqEl?.getAttribute("unit");
+      const frequency = freqVal && freqUnit ? `Every ${freqVal} ${freqUnit}` : "Once daily";
+      const prescriberEl = sa.getElementsByTagNameNS(ns, "assignedPerson")[0];
+      const prescriber = prescriberEl?.getElementsByTagNameNS(ns, "given")[0]?.textContent?.trim() ?? "";
+      const familyName = prescriberEl?.getElementsByTagNameNS(ns, "family")[0]?.textContent?.trim() ?? "";
+      result.meds.push({
+        _pendingId: Math.random().toString(36).slice(2),
+        name: name.split(" ").slice(0,2).join(" "),
+        dose, frequency,
+        prescriber: [prescriber, familyName].filter(Boolean).join(" ") || "Unknown",
+        pharmacy: "", refillDate: "", renewalDate: "", status: "ok", flag: false, color: "#4f8ef7",
+      });
+      result.totalRecords++;
+    } catch {}
+  });
+
+  // --- Labs / Results ---
+  q(doc, "observation").forEach(obs => {
+    try {
+      const code = obs.getElementsByTagNameNS(ns, "code")[0];
+      const name = code?.getAttribute("displayName") ?? code?.getAttribute("code") ?? "";
+      if (!name) return;
+      const valueEl = obs.getElementsByTagNameNS(ns, "value")[0];
+      const value = valueEl?.getAttribute("value");
+      const unit  = valueEl?.getAttribute("unit") ?? "";
+      if (!value) return;
+      const timeEl = obs.getElementsByTagNameNS(ns, "effectiveTime")[0];
+      const rawDate = timeEl?.getAttribute("value") ?? timeEl?.querySelector("[value]")?.getAttribute("value") ?? "";
+      const ts = rawDate ? `${rawDate.slice(0,4)}-${rawDate.slice(4,6)}-${rawDate.slice(6,8)}` : new Date().toISOString().split("T")[0];
+      const dateLabel = ts ? new Date(ts + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "";
+      const refEl = obs.getElementsByTagNameNS(ns, "referenceRange")[0];
+      const refRange = refEl?.getElementsByTagNameNS(ns, "originalText")[0]?.textContent?.trim() ?? "";
+      const interpretEl = obs.getElementsByTagNameNS(ns, "interpretationCode")[0];
+      const flag = interpretEl ? ["H","HH","L","LL","A"].includes(interpretEl.getAttribute("code") ?? "") : false;
+      result.labs.push({ date: dateLabel, ts, name: name.slice(0,60), value: parseFloat(value), unit, refRange, flag });
+      result.totalRecords++;
+    } catch {}
+  });
+
+  return result;
+}
+
+// ── Apple Health JSON import (from iOS Shortcut) ──────────────────────────────
+function parseAppleHealthJSON(jsonText) {
+  try {
+    const data = JSON.parse(jsonText);
+    const result = { readings: [], source: "Apple Health", totalRecords: 0 };
+    const entries = Array.isArray(data) ? data : data.readings ?? data.vitals ?? [];
+    entries.forEach(r => {
+      const ts = r.ts ?? r.date ?? r.startDate?.split("T")[0] ?? "";
+      if (!ts) return;
+      const dateLabel = new Date(ts + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" });
+      result.readings.push({
+        date: dateLabel, ts,
+        bp_s:  r.bp_s  ?? r.systolic   ?? undefined,
+        bp_d:  r.bp_d  ?? r.diastolic  ?? undefined,
+        hr:    r.hr    ?? r.heartRate   ?? undefined,
+        o2:    r.o2    ?? r.oxygenSaturation ?? undefined,
+        weight: r.weight ?? undefined,
+      });
+      result.totalRecords++;
+    });
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 export default function ImportTab({ onImport }) {
   const [syncing, setSyncing]       = useState(null);
   const [syncDone, setSyncDone]     = useState({});
@@ -214,12 +304,14 @@ export default function ImportTab({ onImport }) {
   };
 
   const addFiles = (files) => {
-    const pdfs = Array.from(files).filter(f => f.type === "application/pdf" || f.name.endsWith(".pdf"));
-    if (!pdfs.length) { setError("Only PDF files are supported for AI parsing."); return; }
+    const supported = Array.from(files).filter(f =>
+      f.name.endsWith(".pdf") || f.name.endsWith(".xml") || f.name.endsWith(".json")
+    );
+    if (!supported.length) { setError("Supported formats: PDF, XML (Epic C-CDA), JSON (Apple Health)"); return; }
     setError(null);
     setUploadedFiles((prev) => [
       ...prev,
-      ...pdfs.map((f) => ({ file: f, name: f.name, size: f.size, status: "queued" })),
+      ...supported.map((f) => ({ file: f, name: f.name, size: f.size, status: "queued" })),
     ]);
   };
 
@@ -231,7 +323,6 @@ export default function ImportTab({ onImport }) {
 
   const handleProcess = async () => {
     const apiKey = localStorage.getItem("mi_ak");
-    if (!apiKey) { setError("No API key found. Add your Anthropic key in localStorage under 'mi_ak'."); return; }
     setProcessing(true);
     setError(null);
     setPreview(null);
@@ -242,9 +333,27 @@ export default function ImportTab({ onImport }) {
       const f = uploadedFiles[i];
       setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "reading…" } : u));
       try {
-        const text = await extractPdfText(f.file);
-        setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "parsing…" } : u));
-        const parsed = await parseWithClaude(text, apiKey);
+        const text = await f.file.text();
+        let parsed = null;
+
+        if (f.name.endsWith(".xml")) {
+          // C-CDA — parse directly, no AI needed
+          setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "parsing…" } : u));
+          parsed = parseCCDA(text);
+        } else if (f.name.endsWith(".json")) {
+          // Apple Health JSON from Shortcut
+          setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "parsing…" } : u));
+          parsed = parseAppleHealthJSON(text);
+        } else {
+          // PDF — use Claude AI
+          if (!apiKey) { setError("No API key found for PDF parsing. Add your Anthropic key in localStorage as 'mi_ak'."); break; }
+          const pdfText = await extractPdfText(f.file);
+          setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "parsing…" } : u));
+          parsed = await parseWithClaude(pdfText, apiKey);
+        }
+
+        if (!parsed) { setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "error: unreadable" } : u)); continue; }
+
         setUploadedFiles(prev => prev.map((u, idx) => idx === i ? { ...u, status: "done ✓" } : u));
         if (parsed.readings)  combined.readings.push(...parsed.readings);
         if (parsed.meds)      combined.meds.push(...parsed.meds);
@@ -266,13 +375,21 @@ export default function ImportTab({ onImport }) {
   };
 
   const handleConfirm = () => {
-    if (preview && onImport) {
-      onImport(preview);
-      setSaved(true);
-      setPreview(null);
-      setUploadedFiles([]);
-      setTimeout(() => setSaved(false), 3000);
+    if (!preview || !onImport) return;
+
+    // Separate meds — they go to pending approval queue
+    if (preview.meds?.length) {
+      const current = getPendingMeds();
+      const updated = [...preview.meds, ...(current || [])];
+      setPendingMeds(updated);
     }
+
+    // Everything else goes directly to the dashboard
+    onImport({ ...preview, meds: [] }); // meds handled separately via pending queue
+    setSaved(true);
+    setPreview(null);
+    setUploadedFiles([]);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
@@ -395,7 +512,7 @@ export default function ImportTab({ onImport }) {
 
           {/* Manual Upload */}
           <div className="imp-card" style={{ padding: "20px", marginBottom: 16, animationDelay: "80ms" }}>
-            <div className="section-label">PDF Import — AI Powered</div>
+            <div className="section-label">File Import — PDF (AI) · XML · JSON</div>
 
             {error && (
               <div style={{ marginBottom: 12, padding: "10px 14px", background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 8, fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>
@@ -408,7 +525,7 @@ export default function ImportTab({ onImport }) {
               </div>
             )}
 
-            <input ref={fileInputRef} type="file" accept=".pdf" multiple style={{ display:"none" }}
+            <input ref={fileInputRef} type="file" accept=".pdf,.xml,.json" multiple style={{ display:"none" }}
               onChange={e => addFiles(e.target.files)} />
 
             <div
@@ -423,7 +540,7 @@ export default function ImportTab({ onImport }) {
                 Drop PDF files here or click to browse
               </div>
               <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
-                Ochsner · Iris · SCRMC · any medical PDF
+                PDF (AI) · XML — Epic C-CDA · JSON — Apple Health
               </div>
             </div>
 
@@ -445,7 +562,7 @@ export default function ImportTab({ onImport }) {
                   onClick={handleProcess}
                   disabled={processing}
                 >
-                  {processing ? <><span className="spin">↻</span> Parsing with AI…</> : <>✦ Process {uploadedFiles.length} File{uploadedFiles.length > 1 ? "s" : ""} with AI</>}
+                  {processing ? <><span className="spin">↻</span> Parsing…</> : <>✦ Process {uploadedFiles.length} File{uploadedFiles.length > 1 ? "s" : ""}</>}
                 </button>
               </div>
             )}

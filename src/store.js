@@ -38,6 +38,9 @@ const DEFAULTS = {
   labs: [],
   lastImport: null,
   importLog: [],
+  meds_full: [],
+  meds_pending: [],
+  watch_daily: [],
 };
 
 export function getStore(key) {
@@ -83,6 +86,35 @@ export function mergeLabs(newLabs) {
   setStore('labs', merged);
   return merged;
 }
+
+const MEDS_FULL_SEED = [
+  { id:1,  name:"Tacrolimus",         brand:"Prograf",      dose:"3 mg",    frequency:"Twice daily",  schedule:"8:00 AM · 8:00 PM", category:"Immunosuppressant",          refillDate:"Mar 28", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:true,  flagNote:"Trough level borderline — recheck at next labs", color:"#a78bfa" },
+  { id:2,  name:"Mycophenolate",      brand:"CellCept",     dose:"500 mg",  frequency:"Twice daily",  schedule:"8:00 AM · 8:00 PM", category:"Immunosuppressant",          refillDate:"Apr 2",  renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#a78bfa" },
+  { id:3,  name:"Prednisone",         brand:"Deltasone",    dose:"5 mg",    frequency:"Once daily",   schedule:"8:00 AM",           category:"Corticosteroid",             refillDate:"Mar 16", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"refill", flag:true,  flagNote:"Refill due in 4 days", color:"#f59e0b" },
+  { id:4,  name:"Amlodipine",         brand:"Norvasc",      dose:"10 mg",   frequency:"Once daily",   schedule:"8:00 AM",           category:"Blood Pressure",             refillDate:"Apr 10", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#4f8ef7" },
+  { id:5,  name:"Metoprolol",         brand:"Lopressor",    dose:"25 mg",   frequency:"Twice daily",  schedule:"8:00 AM · 8:00 PM", category:"Blood Pressure",             refillDate:"Apr 5",  renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#4f8ef7" },
+  { id:6,  name:"Furosemide",         brand:"Lasix",        dose:"40 mg",   frequency:"Once daily",   schedule:"8:00 AM",           category:"Diuretic",                   refillDate:"Mar 22", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#7eb8d8" },
+  { id:7,  name:"Pantoprazole",       brand:"Protonix",     dose:"40 mg",   frequency:"Once daily",   schedule:"8:00 AM",           category:"GI / Protective",            refillDate:"Apr 12", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#10b981" },
+  { id:8,  name:"Trimethoprim-SMX",   brand:"Bactrim",      dose:"SS",      frequency:"Once daily",   schedule:"8:00 AM",           category:"Antibiotic / Prophylaxis",   refillDate:"May 1",  renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#10b981" },
+  { id:9,  name:"Valganciclovir",     brand:"Valcyte",      dose:"450 mg",  frequency:"Once daily",   schedule:"8:00 AM",           category:"Antiviral / Prophylaxis",    refillDate:"Apr 8",  renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:true,  flagNote:"Monitor CBC — bone marrow suppression risk", color:"#10b981" },
+  { id:10, name:"Atorvastatin",       brand:"Lipitor",      dose:"40 mg",   frequency:"Once daily",   schedule:"8:00 PM",           category:"Cholesterol",                refillDate:"Apr 15", renewalDate:"", prescriber:"Dr. Jonathan Hand",  pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#f59e0b" },
+  { id:11, name:"Calcium Carbonate",  brand:"OTC",          dose:"500 mg",  frequency:"With meals",   schedule:"With meals",        category:"Supplement",                 refillDate:"May 20", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"OTC",       status:"ok",     flag:false, color:"#7eb8d8" },
+  { id:12, name:"Vitamin D3",         brand:"OTC",          dose:"2000 IU", frequency:"Once daily",   schedule:"8:00 AM",           category:"Supplement",                 refillDate:"May 20", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"OTC",       status:"ok",     flag:false, color:"#7eb8d8" },
+  { id:13, name:"Magnesium Oxide",    brand:"Mag-Ox",       dose:"400 mg",  frequency:"Once daily",   schedule:"8:00 PM",           category:"Supplement",                 refillDate:"Apr 20", renewalDate:"", prescriber:"Dr. Ari Cohen",      pharmacy:"CVS #5777", status:"ok",     flag:false, color:"#7eb8d8" },
+  { id:14, name:"Aspirin",            brand:"Bayer / OTC",  dose:"81 mg",   frequency:"Once daily",   schedule:"8:00 AM",           category:"Antiplatelet",               refillDate:"Jun 1",  renewalDate:"", prescriber:"Dr. Jonathan Hand",  pharmacy:"OTC",       status:"ok",     flag:false, color:"#ef4444" },
+];
+
+// For Tab04: get/set the rich medication list
+export function getMedsFull() {
+  const stored = getStore('meds_full');
+  if (stored && stored.length > 0) return stored;
+  // Fall back to rich seed data if nothing stored yet
+  return MEDS_FULL_SEED;
+}
+export function setMedsFull(meds) { setStore('meds_full', meds); }
+
+export function getPendingMeds() { return getStore('meds_pending'); }
+export function setPendingMeds(meds) { setStore('meds_pending', meds); }
 
 // Add an import log entry
 export function addImportLog(entry) {

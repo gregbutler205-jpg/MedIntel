@@ -1,5 +1,6 @@
 import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
+import { getStore, setStore, mergeReadings } from "../../store.js";
 
 const NAV = [
   { id: "dashboard", icon: "⬡", label: "Dashboard" },
@@ -18,7 +19,7 @@ const NAV = [
 ];
 
 // Manual / sporadic readings (BP, Weight, Temp, Glucose, O2, Sleep)
-const MANUAL_READINGS = [
+const MANUAL_READINGS_SEED = [
   { date:"Mar 10", ts:"2026-03-10", bp_s:131,bp_d:71, hr:64, o2:99,  weight:184.2, temp:98.4, glucose:98,  sleep:6.5 },
   { date:"Mar 7",  ts:"2026-03-07", bp_s:138,bp_d:74, hr:67, o2:99,  weight:184.8, temp:98.2, glucose:101, sleep:7.0 },
   { date:"Mar 5",  ts:"2026-03-05", bp_s:143,bp_d:79, hr:71, o2:98,  weight:185.1, temp:98.5, glucose:103, sleep:5.8 },
@@ -421,8 +422,13 @@ export default function App() {
   const [selectedId, setSelectedId] = useState("bp");
   const [timeRange, setTimeRange] = useState(1);
   const [showLog, setShowLog] = useState(false);
-  const [manualReadings, setManualReadings] = useState(MANUAL_READINGS);
+  const [manualReadings, setManualReadings] = useState(() => {
+    const stored = getStore('readings');
+    return stored && stored.length > 0 ? stored : MANUAL_READINGS_SEED;
+  });
   const [time, setTime] = useState(new Date());
+  const [showEntryForm, setShowEntryForm] = useState(false);
+  const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -445,6 +451,27 @@ export default function App() {
       glucose: +form.glucose || null, sleep: +form.sleep || null,
     };
     setManualReadings(prev => [r, ...prev]);
+  };
+
+  const handleSaveReading = () => {
+    const today = new Date();
+    const ts = newReading.ts || today.toISOString().split('T')[0];
+    const dateLabel = newReading.date || today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+    const reading = {
+      date: dateLabel, ts,
+      bp_s: newReading.bp_s ? parseInt(newReading.bp_s) : undefined,
+      bp_d: newReading.bp_d ? parseInt(newReading.bp_d) : undefined,
+      hr:   newReading.hr   ? parseInt(newReading.hr)   : undefined,
+      o2:   newReading.o2   ? parseFloat(newReading.o2) : undefined,
+      weight: newReading.weight ? parseFloat(newReading.weight) : undefined,
+      temp:   newReading.temp   ? parseFloat(newReading.temp)   : undefined,
+      glucose: newReading.glucose ? parseInt(newReading.glucose) : undefined,
+      flag: newReading.bp_s >= 160 || newReading.bp_s >= 160,
+    };
+    const merged = mergeReadings([reading]);
+    setManualReadings(merged);
+    setShowEntryForm(false);
+    setNewReading({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
   };
 
   const flaggedManual = manualReadings.filter(r => r.flag).length;
@@ -472,6 +499,7 @@ export default function App() {
         .time-btn.on{background:#4f8ef7;color:#fff}
         .hist-row{display:grid;grid-template-columns:72px 88px 54px 54px 62px 54px 64px 52px;gap:0;padding:8px 0;border-bottom:1px solid #0d1a28;align-items:center;font-size:11px}
         .hist-row:last-child{border-bottom:none}
+        @media print { .no-print { display:none !important; } body { background:white !important; } }
       `}</style>
 
       {/* Sidebar */}
@@ -517,6 +545,9 @@ export default function App() {
           <button onClick={()=>setShowLog(true)}
             style={{ padding:"7px 16px", background:"#10b981", border:"none", borderRadius:8, color:"#fff", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer" }}>
             + Log Vitals
+          </button>
+          <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+            ⎙ Print
           </button>
           <div style={{ width:32, height:32, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>G</div>
         </div>
@@ -575,6 +606,45 @@ export default function App() {
 
           {/* Center — chart + detail */}
           <div style={{ flex:1, overflowY:"auto", padding:"22px 26px", minWidth:0 }}>
+            {/* Log Reading button */}
+            <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:16 }}>
+              <button onClick={() => setShowEntryForm(o => !o)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
+                + Log Reading
+              </button>
+            </div>
+
+            {showEntryForm && (
+              <div style={{ marginBottom:20, padding:"18px", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:12 }}>
+                <div style={{ fontSize:10, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:14 }}>NEW VITAL READING</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:12 }}>
+                  {[
+                    { label:"DATE", key:"date", placeholder:"Mar 21" },
+                    { label:"BP SYSTOLIC", key:"bp_s", placeholder:"131" },
+                    { label:"BP DIASTOLIC", key:"bp_d", placeholder:"71" },
+                    { label:"HEART RATE", key:"hr", placeholder:"64" },
+                    { label:"O2 SAT %", key:"o2", placeholder:"99" },
+                    { label:"WEIGHT (lbs)", key:"weight", placeholder:"184.2" },
+                    { label:"TEMP (°F)", key:"temp", placeholder:"98.4" },
+                    { label:"GLUCOSE", key:"glucose", placeholder:"98" },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
+                      <input
+                        style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
+                        placeholder={f.placeholder}
+                        value={newReading[f.key]}
+                        onChange={e => setNewReading(prev => ({ ...prev, [f.key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={handleSaveReading} style={{ padding:"8px 18px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Save Reading</button>
+                  <button onClick={() => setShowEntryForm(false)} style={{ padding:"8px 14px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#3d5a7a", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Cancel</button>
+                </div>
+              </div>
+            )}
+
             <div style={{ animation:"fadeUp .3s ease both" }}>
 
               {/* Header */}
