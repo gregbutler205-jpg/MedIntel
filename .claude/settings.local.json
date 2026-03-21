@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Documents\\\\Medical\\\\IntelliTrax\" /a)",
+      "Bash(cat \"C:\\\\Documents\\\\Medical\\\\IntelliTrax\\\\Code\\\\.github\\\\workflows/\"*.yml)"
+    ]
+  }
+}

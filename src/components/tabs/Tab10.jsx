@@ -1,0 +1,473 @@
+import INTELLITRAX_LOGO from "../../assets/logo.png";
+import { useState, useEffect } from "react";
+
+const TAG_STYLES = {
+  Appt:     { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
+  Labs:     { bg: "rgba(245,158,11,.1)",   color: "#f59e0b", border: "rgba(245,158,11,.25)" },
+  Meds:     { bg: "rgba(167,139,250,.1)",  color: "#a78bfa", border: "rgba(167,139,250,.25)" },
+  Symptoms: { bg: "rgba(16,185,129,.1)",   color: "#10b981", border: "rgba(16,185,129,.25)" },
+  General:  { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
+  Urgent:   { bg: "rgba(239,68,68,.1)",    color: "#ef4444", border: "rgba(239,68,68,.25)" },
+};
+
+const FILTERS = ["All", "Appt", "Labs", "Meds", "Symptoms", "General", "Urgent"];
+
+const INITIAL_NOTES = [
+  {
+    id: 1, pinned: true, tag: "Appt", date: "Mar 18, 2026",
+    title: "Ochsner appt prep — Apr 22",
+    preview: "Questions for Dr. Zapata: tacrolimus taper schedule, lymph node follow-up...",
+    linked: { label: "Ochsner Transplant / Orthopedics", date: "Apr 22, 2026 · New Orleans" },
+    sections: [
+      {
+        id: "s1", type: "checklist", header: "Questions for Dr. Zapata (Transplant)",
+        items: [
+          { id: "c1", done: true,  text: "Tacrolimus taper timeline — when will levels drop below 5?" },
+          { id: "c2", done: false, text: "Status of 3 cm necrotic porta hepatic lymph node — does Apr 22 imaging address this?" },
+          { id: "c3", done: false, text: "Persistent thrombocytopenia (Plt 119) — is this expected to resolve or chronic?" },
+          { id: "c4", done: false, text: "Splenomegaly / varices — any intervention planned or just monitoring?" },
+          { id: "c5", done: false, text: "Primary hyperparathyroidism — 24-hr urine Ca 159 mg/day, still below threshold. Re-check?" },
+        ]
+      },
+      {
+        id: "s2", type: "checklist", header: "Questions for Orthopedics (Akhtar / Chimento)",
+        items: [
+          { id: "c6", done: false, text: "Left hip DJD — what's the management plan? PT vs. injection vs. eventual replacement?" },
+          { id: "c7", done: false, text: "Cervical arthritis — is this connected to shoulder/arm symptoms?" },
+        ]
+      },
+      {
+        id: "s3", type: "text", header: "Logistics",
+        body: "Drive to New Orleans night before. Appointments start 10 AM, run through ~3 PM. Imaging last at 2:45 PM with Dr. Barr. Bring insurance card + medication list."
+      }
+    ]
+  },
+  {
+    id: 2, pinned: true, tag: "Meds", date: "Mar 10, 2026",
+    title: "Tacrolimus dose log",
+    preview: "Tracking daily AM/PM doses + trough levels at each draw...",
+    sections: [
+      { id: "s1", type: "text", header: "Overview", body: "Tracking tacrolimus 5.8 ng/mL as of 02/24/2026 — therapeutic range. AM dose with food, PM dose at consistent time. Next trough draw with April labs." }
+    ]
+  },
+  {
+    id: 3, pinned: true, tag: "Urgent", date: "Feb 11, 2026",
+    title: "Preauricular biopsy — pending",
+    preview: "02/11 biopsy left cheek. DDx SCC vs irritated SK. Path results expected...",
+    sections: [
+      { id: "s1", type: "text", header: "Details", body: "Shave biopsy left superior preauricular cheek on 02/11/2026. Order #118015. DDx: SCC vs irritated seborrheic keratosis. Provider noted immunosuppression as explicit SCC risk factor. Path results expected within 2 weeks." }
+    ]
+  },
+  {
+    id: 4, pinned: false, tag: "Symptoms", date: "Feb 5, 2026",
+    title: "Cervical spine — symptoms onset",
+    preview: "Pain started left shoulder radiating to arm. Worse after extended...",
+    sections: [
+      { id: "s1", type: "text", header: "Symptom Log", body: "Pain started left shoulder radiating down left arm. Worse after extended sitting or driving. New Dx 02/02/2026: degenerative arthritis of cervical spine. Discussing with Ochsner ortho at April visit." }
+    ]
+  },
+  {
+    id: 5, pinned: false, tag: "General", date: "Dec 17, 2025",
+    title: "Post-transplant 1-year reflections",
+    preview: "One year out. Energy levels much improved since Dec. Weight down to...",
+    sections: [
+      { id: "s1", type: "text", header: "Notes", body: "One year post liver transplant (12/17/2024). Energy levels dramatically improved. Weight down from 294 lb peak to 232 lb as of Dec 2025. Prednisone taper complete. C. diff cleared. Tacrolimus stable. Feeling cautiously optimistic." }
+    ]
+  },
+  {
+    id: 6, pinned: false, tag: "Labs", date: "Feb 24, 2026",
+    title: "Labs 02/24 — what to watch",
+    preview: "Platelets still low at 119. Anion gap 4 flagged low — ask about significance...",
+    sections: [
+      {
+        id: "s1", type: "checklist", header: "Flagged Values",
+        items: [
+          { id: "c1", done: false, text: "Platelets 119 (L) — persistent, consistent with immunosuppression + splenomegaly" },
+          { id: "c2", done: false, text: "Anion gap 4 (L) — ask Zapata if this is clinically significant" },
+          { id: "c3", done: false, text: "Lymphocytes 19% (L) — expected on tacrolimus + mycophenolate" },
+          { id: "c4", done: true,  text: "Tacrolimus 5.8 ✅ — therapeutic" },
+          { id: "c5", done: true,  text: "Creatinine 0.74, eGFR 103 ✅ — kidney function excellent" },
+        ]
+      }
+    ]
+  },
+];
+
+function TagBadge({ tag }) {
+  const s = TAG_STYLES[tag] || TAG_STYLES.General;
+  return (
+    <span style={{ background: s.bg, color: s.color, borderRadius: 4, padding: "2px 7px", fontSize: 9, fontFamily: "'DM Mono', monospace" }}>
+      {tag}
+    </span>
+  );
+}
+
+function NoteItem({ note, active, onClick }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        padding: "11px 14px", cursor: "pointer", borderBottom: "1px solid #0d1a28",
+        borderLeft: `2px solid ${active ? "#4f8ef7" : "transparent"}`,
+        background: active ? "rgba(79,142,247,.07)" : "transparent",
+        transition: "background .12s",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: active ? "#c4d8ee" : "#7eb8d8", lineHeight: 1.3, flex: 1, marginRight: 6 }}>
+          {note.title}
+        </div>
+        {note.pinned && <span style={{ fontSize: 10, color: "#f59e0b", flexShrink: 0 }}>📌</span>}
+      </div>
+      <div style={{ fontSize: 10, color: "#2d4d6a", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+        {note.preview}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <TagBadge tag={note.tag} />
+        <span style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{note.date}</span>
+      </div>
+    </div>
+  );
+}
+
+function ChecklistSection({ section, onToggle }) {
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
+        {section.header}
+      </div>
+      {section.items.map(item => (
+        <div key={item.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+          <div
+            onClick={() => onToggle(section.id, item.id)}
+            style={{
+              width: 15, height: 15, border: `1px solid ${item.done ? "#10b981" : "#111e30"}`,
+              borderRadius: 3, background: item.done ? "rgba(16,185,129,.1)" : "#0b1220",
+              flexShrink: 0, marginTop: 2, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s",
+            }}
+          >
+            {item.done && <span style={{ fontSize: 9, color: "#10b981" }}>✓</span>}
+          </div>
+          <div style={{ fontSize: 13, color: item.done ? "#3d5a7a" : "#a8c4dc", lineHeight: 1.55, textDecoration: item.done ? "line-through" : "none", transition: "color .15s" }}>
+            {item.text}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TextSection({ section, onEdit }) {
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
+        {section.header}
+      </div>
+      <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
+        <textarea
+          value={section.body}
+          onChange={e => onEdit(section.id, e.target.value)}
+          rows={Math.max(3, section.body.split("\n").length + 1)}
+          style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#a8c4dc", fontFamily: "'Sora', sans-serif", fontSize: 13, lineHeight: 1.75, resize: "none" }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
+  if (!note) return (
+    <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+      <div style={{ fontSize: 32, opacity: 0.15 }}>◻</div>
+      <div style={{ fontSize: 13, color: "#1e3550", fontFamily: "'DM Mono', monospace" }}>Select a note or create a new one</div>
+    </div>
+  );
+
+  function toggleCheck(sectionId, itemId) {
+    const updated = {
+      ...note,
+      sections: note.sections.map(s =>
+        s.id === sectionId ? { ...s, items: s.items.map(i => i.id === itemId ? { ...i, done: !i.done } : i) } : s
+      )
+    };
+    onUpdate(updated);
+  }
+
+  function editText(sectionId, val) {
+    const updated = { ...note, sections: note.sections.map(s => s.id === sectionId ? { ...s, body: val } : s) };
+    onUpdate(updated);
+  }
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#07090f" }}>
+      {/* Toolbar */}
+      <div style={{ height: 50, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 20px", gap: 14, flexShrink: 0 }}>
+        <select
+          value={note.tag}
+          onChange={e => onUpdate({ ...note, tag: e.target.value })}
+          style={{ background: "#0b1220", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", outline: "none", cursor: "pointer" }}
+        >
+          {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
+        </select>
+        <span style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace" }}>{note.date}</span>
+        <div style={{ flex: 1 }} />
+        <span onClick={() => onPin(note.id)} style={{ fontSize: 13, color: note.pinned ? "#f59e0b" : "#2d4d6a", cursor: "pointer" }} title={note.pinned ? "Unpin" : "Pin"}>📌</span>
+        <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
+        <span onClick={() => onAI(note)} style={{ fontSize: 10, color: "#2d4d6a", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
+          onMouseEnter={e => e.target.style.color = "#7eb8d8"} onMouseLeave={e => e.target.style.color = "#2d4d6a"}>✦ AI</span>
+        <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
+        <span onClick={() => onDelete(note.id)} style={{ fontSize: 10, color: "#2d4d6a", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
+          onMouseEnter={e => e.target.style.color = "#ef4444"} onMouseLeave={e => e.target.style.color = "#2d4d6a"}>Delete</span>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "24px 30px" }}>
+        <input
+          value={note.title}
+          onChange={e => onUpdate({ ...note, title: e.target.value })}
+          style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#dde8f5", fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.3px", marginBottom: 4 }}
+        />
+        <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{note.date}</div>
+
+        {note.linked && (
+          <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 14 }}>📅</span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8" }}>{note.linked.label}</div>
+              <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace" }}>{note.linked.date}</div>
+            </div>
+            <span style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", marginLeft: "auto", cursor: "pointer" }}>View →</span>
+          </div>
+        )}
+
+        {note.sections.map(s =>
+          s.type === "checklist"
+            ? <ChecklistSection key={s.id} section={s} onToggle={toggleCheck} />
+            : <TextSection key={s.id} section={s} onEdit={editText} />
+        )}
+
+        <div style={{ background: "linear-gradient(135deg,rgba(79,142,247,.08),rgba(167,139,250,.05))", border: "1px solid rgba(79,142,247,.2)", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginTop: 20 }}>
+          <span style={{ color: "#4f8ef7", fontSize: 14 }}>✦</span>
+          <div style={{ fontSize: 12, color: "#4f8ef7", flex: 1 }}>AI can summarize this note into a pre-visit brief or suggest questions from your labs.</div>
+          <button onClick={() => onAI(note)} style={{ fontSize: 11, color: "#4f8ef7", border: "1px solid rgba(79,142,247,.35)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Generate →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewNoteModal({ onSave, onClose }) {
+  const [title, setTitle] = useState("");
+  const [tag, setTag] = useState("General");
+  const [body, setBody] = useState("");
+
+  function save() {
+    if (!title.trim()) return;
+    const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    onSave({
+      id: Date.now(), pinned: false, tag, date: dateStr,
+      title: title.trim(),
+      preview: body.slice(0, 80) + (body.length > 80 ? "..." : ""),
+      sections: [{ id: "s1", type: "text", header: "Notes", body }]
+    });
+    onClose();
+  }
+
+  const inputStyle = { width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "9px 12px", color: "#dde8f5", fontFamily: "'Sora', sans-serif", fontSize: 13, outline: "none", marginBottom: 12 };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 480 }}>
+        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 18 }}>New Note</div>
+        <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} />
+        <select value={tag} onChange={e => setTag(e.target.value)} style={{ ...inputStyle, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>
+          {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
+        </select>
+        <textarea placeholder="Start writing..." value={body} onChange={e => setBody(e.target.value)} rows={5}
+          style={{ ...inputStyle, color: "#a8c4dc", resize: "vertical", lineHeight: 1.65 }} />
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={save} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Note</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AIPanel({ note, onClose }) {
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function generate() {
+    setLoading(true); setError(""); setResult("");
+    const apiKey = localStorage.getItem("mi_ak") || "";
+    const noteText = note.sections.map(s =>
+      s.type === "text"
+        ? `${s.header}:\n${s.body}`
+        : `${s.header}:\n${s.items.map(i => `[${i.done ? "✓" : " "}] ${i.text}`).join("\n")}`
+    ).join("\n\n");
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514", max_tokens: 700,
+          system: "You are a medical note assistant for Greg Butler, a 61-year-old liver transplant recipient (12/17/2024) on tacrolimus immunosuppression. Summarize the note concisely, highlight any urgent items, and suggest 2–3 follow-up questions or actions. Use plain language. Keep your response under 250 words.",
+          messages: [{ role: "user", content: `Note title: ${note.title}\n\n${noteText}\n\nProvide a brief pre-visit summary and action suggestions.` }]
+        })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      setResult(data.content[0].text);
+    } catch (e) {
+      setError(e.message || "Request failed. Check your API key in Data & Backup settings.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { generate(); }, []);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 520, maxHeight: "70vh", overflow: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <span style={{ color: "#4f8ef7", fontSize: 16 }}>✦</span>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#dde8f5", flex: 1 }}>AI Note Summary</div>
+          <span onClick={onClose} style={{ color: "#2d4d6a", cursor: "pointer", fontSize: 16 }}>✕</span>
+        </div>
+        <div style={{ fontSize: 11, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{note.title}</div>
+        {loading && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "20px 0" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981", animation: "pulse 2s infinite" }} />
+            <span style={{ fontSize: 12, color: "#2d4d6a", fontFamily: "'DM Mono', monospace" }}>Analyzing note...</span>
+          </div>
+        )}
+        {error && <div style={{ fontSize: 12, color: "#ef4444", lineHeight: 1.6, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
+        {result && <div style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{result}</div>}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18, gap: 10 }}>
+          {error && <button onClick={generate} style={{ padding: "7px 16px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Retry</button>}
+          <button onClick={onClose} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Notes() {
+  const [notes, setNotes] = useState(INITIAL_NOTES);
+  const [selectedId, setSelectedId] = useState(1);
+  const [filter, setFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [aiNote, setAiNote] = useState(null);
+
+  const filtered = notes.filter(n => {
+    const matchFilter = filter === "All" || n.tag === filter;
+    const matchSearch = !search || n.title.toLowerCase().includes(search.toLowerCase()) || n.preview.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  const pinned = filtered.filter(n => n.pinned);
+  const recent = filtered.filter(n => !n.pinned);
+  const selected = notes.find(n => n.id === selectedId) || null;
+
+  function updateNote(updated) { setNotes(notes.map(n => n.id === updated.id ? updated : n)); }
+  function deleteNote(id) {
+    const remaining = notes.filter(n => n.id !== id);
+    setNotes(remaining);
+    setSelectedId(remaining.length > 0 ? remaining[0].id : null);
+  }
+  function pinNote(id) { setNotes(notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n)); }
+  function addNote(note) { setNotes([note, ...notes]); setSelectedId(note.id); }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+
+      {/* Topbar */}
+      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
+        <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+      </div>
+
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+
+      {/* Left list panel */}
+      <div style={{ width: 290, minWidth: 290, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #0d1a28" }}>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 2 }}>Notes</div>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#1e3550", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+            {notes.length} entries · {notes.filter(n => n.pinned).length} pinned
+          </div>
+        </div>
+
+        {/* Search */}
+        <div style={{ padding: "10px 12px", borderBottom: "1px solid #0d1a28" }}>
+          <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: "#2d4d6a", fontSize: 13 }}>⌕</span>
+            <input
+              placeholder="Search notes..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ background: "transparent", border: "none", outline: "none", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, width: "100%" }}
+            />
+          </div>
+        </div>
+
+        {/* Filter pills */}
+        <div style={{ padding: "8px 12px", display: "flex", gap: 5, flexWrap: "wrap", borderBottom: "1px solid #0d1a28" }}>
+          {FILTERS.map(f => (
+            <div
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                background: filter === f ? "rgba(79,142,247,.15)" : "#0b1220",
+                border: `1px solid ${filter === f ? "rgba(79,142,247,.35)" : "#111e30"}`,
+                borderRadius: 20, padding: "3px 10px", fontSize: 10,
+                color: filter === f ? "#4f8ef7" : "#3d5a7a",
+                fontFamily: "'DM Mono', monospace", cursor: "pointer", transition: "all .12s",
+              }}
+            >{f}</div>
+          ))}
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {pinned.length > 0 && (
+            <>
+              <div style={{ padding: "8px 14px 3px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>PINNED</div>
+              {pinned.map(n => <NoteItem key={n.id} note={n} active={selectedId === n.id} onClick={() => setSelectedId(n.id)} />)}
+            </>
+          )}
+          {recent.length > 0 && (
+            <>
+              <div style={{ padding: "10px 14px 3px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>RECENT</div>
+              {recent.map(n => <NoteItem key={n.id} note={n} active={selectedId === n.id} onClick={() => setSelectedId(n.id)} />)}
+            </>
+          )}
+          {filtered.length === 0 && (
+            <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 12, color: "#1e3550", fontFamily: "'DM Mono', monospace" }}>No notes found</div>
+          )}
+        </div>
+
+        {/* New note button */}
+        <div style={{ padding: 12, borderTop: "1px solid #0d1a28" }}>
+          <button
+            onClick={() => setShowNew(true)}
+            style={{ width: "100%", padding: 10, background: "linear-gradient(135deg,rgba(79,142,247,.15),rgba(167,139,250,.1))", border: "1px solid rgba(79,142,247,.3)", borderRadius: 10, color: "#7eb8d8", fontFamily: "'Sora', sans-serif", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            <span style={{ color: "#4f8ef7", fontSize: 18, lineHeight: 1 }}>+</span> New Note
+          </button>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <EditorPanel note={selected} onUpdate={updateNote} onDelete={deleteNote} onPin={pinNote} onAI={n => setAiNote(n)} />
+
+      {showNew && <NewNoteModal onSave={addNote} onClose={() => setShowNew(false)} />}
+      {aiNote && <AIPanel note={aiNote} onClose={() => setAiNote(null)} />}
+    </div>
+      </div>
+  );
+}
