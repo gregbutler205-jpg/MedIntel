@@ -360,24 +360,24 @@ export default function App() {
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #1a2840; border-radius: 4px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#3d5a7a; border-left:2px solid transparent; transition:all .15s; user-select:none; }
+        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#b0c4d8; border-left:2px solid transparent; transition:all .15s; user-select:none; }
         .nav-item:hover { color:#7eb8d8; background:rgba(79,142,247,.04); }
         .nav-item.active { color:#4f8ef7; background:rgba(79,142,247,.08); border-left-color:#4f8ef7; }
         .nav-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
         .live-dot { width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981; animation:pulse 2s infinite; flex-shrink:0; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#1e3550; font-family:'DM Mono', monospace; margin-bottom:12px; }
+        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
         .stat-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; padding:18px 20px; animation:fadeUp .35s ease both; transition:border-color .2s; }
         .stat-card:hover { border-color:#1a2f4a; }
         .med-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #111e30; margin-bottom:6px; cursor:pointer; transition:all .15s; animation:fadeUp .35s ease both; }
         .med-row:hover { border-color:#1a2f4a; }
         .med-row.selected { border-color:#4f8ef7; background:rgba(79,142,247,.06); }
-        .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#3d5a7a; transition:all .15s; white-space:nowrap; }
+        .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; white-space:nowrap; }
         .filter-pill:hover { color:#7eb8d8; border-color:#1a2f4a; }
         .filter-pill.active { background:rgba(79,142,247,.1); border-color:#4f8ef7; color:#4f8ef7; }
         .search-input { background:#0b1220; border:1px solid #111e30; border-radius:8px; padding:8px 12px; font-size:12px; font-family:'Sora',sans-serif; color:#c4d8ee; outline:none; width:100%; transition:border-color .15s; }
         .search-input:focus { border-color:#4f8ef7; }
-        .search-input::placeholder { color:#2d4d6a; }
-        .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#3d5a7a; transition:all .15s; }
+        .search-input::placeholder { color:#98afc4; }
+        .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
         .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#ef4444; }
         .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #0d1a28; }
         .detail-row:last-child { border-bottom:none; }
@@ -395,19 +395,19 @@ export default function App() {
           <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
-          <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
+          <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize: 11, color: "#2d4d6a", marginTop: 2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>Transplant · Immunosuppressed</div>
         </div>
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-          <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
+          <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
           {NAV.slice(0, 8).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
               <span className="nav-icon">{icon}</span>
               <span>{label}</span>
             </div>
           ))}
-          <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
+          <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
           {NAV.slice(8).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
               <span className="nav-icon">{icon}</span>
@@ -430,9 +430,9 @@ export default function App() {
         <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
             <div className="live-dot" />
-            <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
-          <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
+          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
             Last import: Mar 12, 2026
           </div>
           <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
@@ -448,7 +448,7 @@ export default function App() {
           <div style={{ marginBottom: 24, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>Medications</h1>
-              <p style={{ fontSize: 12, color: "#2d4d6a", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>14 active · {flaggedCount} flagged · {refillSoon} refill{refillSoon !== 1 ? "s" : ""} due soon</p>
+              <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>14 active · {flaggedCount} flagged · {refillSoon} refill{refillSoon !== 1 ? "s" : ""} due soon</p>
             </div>
             <button style={{ padding: "8px 16px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: "#4f8ef7" }}>✦</span> AI Interaction Check
@@ -467,7 +467,7 @@ export default function App() {
                 <div style={{ width: 28, height: 3, background: color, borderRadius: 2, marginBottom: 14, boxShadow: `0 0 10px ${color}60` }} />
                 <div style={{ fontSize: 24, fontWeight: 700, color: "#dde8f5", letterSpacing: "-0.5px", lineHeight: 1, marginBottom: 5 }}>{value}</div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8", marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
+                <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
               </div>
             ))}
           </div>
@@ -518,10 +518,10 @@ export default function App() {
                     <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"9px 12px", background:"#080c14", borderRadius:8, border:"1px solid #1a2f4a", marginBottom:6 }}>
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{m.name} {m.dose}</div>
-                        <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{m.frequency} · {m.prescriber}</div>
+                        <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.frequency} · {m.prescriber}</div>
                       </div>
                       <button onClick={() => handleApprovePending(m)} style={{ padding:"5px 12px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:6, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Add</button>
-                      <button onClick={() => handleRejectPending(m)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:6, color:"#3d5a7a", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✗ Skip</button>
+                      <button onClick={() => handleRejectPending(m)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:6, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✗ Skip</button>
                     </div>
                   ))}
                 </div>
@@ -530,7 +530,7 @@ export default function App() {
               {/* Medication rows */}
               <div>
                 {filtered.length === 0 && (
-                  <div style={{ textAlign: "center", padding: "40px 0", color: "#2d4d6a", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>No medications match filters</div>
+                  <div style={{ textAlign: "center", padding: "40px 0", color: "#98afc4", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>No medications match filters</div>
                 )}
                 {filtered.map((med, i) => (
                   <div
@@ -546,20 +546,20 @@ export default function App() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>{med.name}</span>
-                        <span style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{med.brand}</span>
+                        <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.brand}</span>
                         {med.flag && (
                           <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>REVIEW</span>
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}</div>
+                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}</div>
                     </div>
 
                     {/* Refill badge */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: med.daysLeft <= 10 ? "#f59e0b" : "#2d4d6a", fontFamily: "'DM Mono',monospace", fontWeight: med.daysLeft <= 10 ? 600 : 400 }}>
+                      <div style={{ fontSize: 11, color: med.daysLeft <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace", fontWeight: med.daysLeft <= 10 ? 600 : 400 }}>
                         {med.daysLeft <= 10 ? `⚠ ${med.daysLeft}d` : `${med.daysLeft}d`}
                       </div>
-                      <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{med.refillDate}</div>
+                      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{med.refillDate}</div>
                     </div>
 
                     {/* Status dot */}
@@ -577,11 +577,11 @@ export default function App() {
                       {ix.drugs.map((d, j) => (
                         <span key={d}>
                           <span style={{ fontSize: 11, fontWeight: 600, color: "#a8c4dc" }}>{d}</span>
-                          {j < ix.drugs.length - 1 && <span style={{ fontSize: 10, color: "#1e3550", margin: "0 4px" }}>+</span>}
+                          {j < ix.drugs.length - 1 && <span style={{ fontSize: 10, color: "#a0b4c8", margin: "0 4px" }}>+</span>}
                         </span>
                       ))}
                     </div>
-                    <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{ix.note}</div>
+                    <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{ix.note}</div>
                   </div>
                 ))}
               </div>
@@ -597,7 +597,7 @@ export default function App() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #0d1a28" }}>
                       <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Edit — {editingMed.name}</div>
                       <button onClick={() => { setEditingMed(null); setDeleteConfirm(false); }}
-                        style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#3d5a7a", fontSize: 13, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+                        style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 13, cursor: "pointer", padding: "4px 8px" }}>✕</button>
                     </div>
 
                     {[
@@ -612,7 +612,7 @@ export default function App() {
                       { label: "Days Remaining", key: "daysLeft", type: "number" },
                     ].map(({ label, key, type }) => (
                       <div key={key} style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
+                        <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
                         <input
                           type={type || "text"}
                           value={editingMed[key] ?? ""}
@@ -624,7 +624,7 @@ export default function App() {
 
                     {/* Category */}
                     <div style={{ marginBottom: 18 }}>
-                      <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Category</div>
+                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Category</div>
                       <select value={editingMed.category}
                         onChange={e => setEditingMed(prev => ({ ...prev, category: e.target.value }))}
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}>
@@ -634,7 +634,7 @@ export default function App() {
 
                     {/* Renewal Date */}
                     <div style={{ marginBottom: 18 }}>
-                      <label style={{ fontSize:10, color:"#3d5a7a", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>RENEWAL DATE (manual)</label>
+                      <label style={{ fontSize:10, color:"#b0c4d8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>RENEWAL DATE (manual)</label>
                       <input className="search-input" value={editingMed?.renewalDate ?? ""} onChange={e => setEditingMed(prev => ({ ...prev, renewalDate: e.target.value }))} placeholder="e.g. Jun 15" />
                     </div>
 
@@ -645,7 +645,7 @@ export default function App() {
                         Save Changes
                       </button>
                       <button onClick={() => { setEditingMed(null); setDeleteConfirm(false); }}
-                        style={{ padding: "10px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+                        style={{ padding: "10px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
                         Cancel
                       </button>
                     </div>
@@ -685,7 +685,7 @@ export default function App() {
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
                       <div>
                         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", letterSpacing: "-0.3px" }}>{selectedMed.name}</div>
-                        <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>{selectedMed.brand} · {selectedMed.category}</div>
+                        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>{selectedMed.brand} · {selectedMed.category}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <button onClick={() => { setEditingMed({ ...selectedMed }); setDeleteConfirm(false); }}
@@ -713,7 +713,7 @@ export default function App() {
                     ["Last Taken", selectedMed.lastTaken],
                   ].map(([k, v]) => (
                     <div className="detail-row" key={k}>
-                      <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{k}</span>
+                      <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
                       <span style={{ fontSize: 12, color: "#a8c4dc", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>{v}</span>
                     </div>
                   ))}
@@ -726,7 +726,7 @@ export default function App() {
                     ["Days Remaining", `${selectedMed.daysLeft} days`],
                   ].map(([k, v]) => (
                     <div className="detail-row" key={k}>
-                      <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{k}</span>
+                      <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
                       <span style={{ fontSize: 12, color: selectedMed.daysLeft <= 10 && k === "Days Remaining" ? "#f59e0b" : "#a8c4dc", fontWeight: selectedMed.daysLeft <= 10 && k === "Days Remaining" ? 600 : 500, textAlign: "right" }}>{v}</span>
                     </div>
                   ))}
@@ -734,8 +734,8 @@ export default function App() {
                   {/* Refill progress */}
                   <div style={{ marginTop: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <span style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
-                      <span style={{ fontSize: 10, color: selectedMed.daysLeft <= 10 ? "#f59e0b" : "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{Math.min(100, Math.round(selectedMed.daysLeft / 90 * 100))}%</span>
+                      <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
+                      <span style={{ fontSize: 10, color: selectedMed.daysLeft <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{Math.min(100, Math.round(selectedMed.daysLeft / 90 * 100))}%</span>
                     </div>
                     <div style={{ height: 4, background: "#0d1a28", borderRadius: 4, overflow: "hidden" }}>
                       <div style={{

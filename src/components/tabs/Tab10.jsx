@@ -119,12 +119,12 @@ function NoteItem({ note, active, onClick }) {
         </div>
         {note.pinned && <span style={{ fontSize: 10, color: "#f59e0b", flexShrink: 0 }}>📌</span>}
       </div>
-      <div style={{ fontSize: 10, color: "#2d4d6a", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+      <div style={{ fontSize: 10, color: "#98afc4", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
         {note.preview}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <TagBadge tag={note.tag} />
-        <span style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{note.date}</span>
+        <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{note.date}</span>
       </div>
     </div>
   );
@@ -133,7 +133,7 @@ function NoteItem({ note, active, onClick }) {
 function ChecklistSection({ section, onToggle }) {
   return (
     <div style={{ marginBottom: 4 }}>
-      <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
+      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
         {section.header}
       </div>
       {section.items.map(item => (
@@ -149,7 +149,7 @@ function ChecklistSection({ section, onToggle }) {
           >
             {item.done && <span style={{ fontSize: 9, color: "#10b981" }}>✓</span>}
           </div>
-          <div style={{ fontSize: 13, color: item.done ? "#3d5a7a" : "#a8c4dc", lineHeight: 1.55, textDecoration: item.done ? "line-through" : "none", transition: "color .15s" }}>
+          <div style={{ fontSize: 13, color: item.done ? "#b0c4d8" : "#a8c4dc", lineHeight: 1.55, textDecoration: item.done ? "line-through" : "none", transition: "color .15s" }}>
             {item.text}
           </div>
         </div>
@@ -161,7 +161,7 @@ function ChecklistSection({ section, onToggle }) {
 function TextSection({ section, onEdit }) {
   return (
     <div style={{ marginBottom: 4 }}>
-      <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
+      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
         {section.header}
       </div>
       <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
@@ -180,7 +180,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
   if (!note) return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
       <div style={{ fontSize: 32, opacity: 0.15 }}>◻</div>
-      <div style={{ fontSize: 13, color: "#1e3550", fontFamily: "'DM Mono', monospace" }}>Select a note or create a new one</div>
+      <div style={{ fontSize: 13, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>Select a note or create a new one</div>
     </div>
   );
 
@@ -210,15 +210,15 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         >
           {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
         </select>
-        <span style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace" }}>{note.date}</span>
+        <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>{note.date}</span>
         <div style={{ flex: 1 }} />
-        <span onClick={() => onPin(note.id)} style={{ fontSize: 13, color: note.pinned ? "#f59e0b" : "#2d4d6a", cursor: "pointer" }} title={note.pinned ? "Unpin" : "Pin"}>📌</span>
+        <span onClick={() => onPin(note.id)} style={{ fontSize: 13, color: note.pinned ? "#f59e0b" : "#98afc4", cursor: "pointer" }} title={note.pinned ? "Unpin" : "Pin"}>📌</span>
         <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
-        <span onClick={() => onAI(note)} style={{ fontSize: 10, color: "#2d4d6a", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
-          onMouseEnter={e => e.target.style.color = "#7eb8d8"} onMouseLeave={e => e.target.style.color = "#2d4d6a"}>✦ AI</span>
+        <span onClick={() => onAI(note)} style={{ fontSize: 10, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
+          onMouseEnter={e => e.target.style.color = "#7eb8d8"} onMouseLeave={e => e.target.style.color = "#98afc4"}>✦ AI</span>
         <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
-        <span onClick={() => onDelete(note.id)} style={{ fontSize: 10, color: "#2d4d6a", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
-          onMouseEnter={e => e.target.style.color = "#ef4444"} onMouseLeave={e => e.target.style.color = "#2d4d6a"}>Delete</span>
+        <span onClick={() => onDelete(note.id)} style={{ fontSize: 10, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
+          onMouseEnter={e => e.target.style.color = "#ef4444"} onMouseLeave={e => e.target.style.color = "#98afc4"}>Delete</span>
       </div>
 
       {/* Content */}
@@ -228,14 +228,14 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
           onChange={e => onUpdate({ ...note, title: e.target.value })}
           style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#dde8f5", fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.3px", marginBottom: 4 }}
         />
-        <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{note.date}</div>
+        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{note.date}</div>
 
         {note.linked && (
           <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 14 }}>📅</span>
             <div>
               <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8" }}>{note.linked.label}</div>
-              <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace" }}>{note.linked.date}</div>
+              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{note.linked.date}</div>
             </div>
             <span style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", marginLeft: "auto", cursor: "pointer" }}>View →</span>
           </div>
@@ -287,7 +287,7 @@ function NewNoteModal({ onSave, onClose }) {
         <textarea placeholder="Start writing..." value={body} onChange={e => setBody(e.target.value)} rows={5}
           style={{ ...inputStyle, color: "#a8c4dc", resize: "vertical", lineHeight: 1.65 }} />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
-          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={save} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Note</button>
         </div>
       </div>
@@ -336,20 +336,20 @@ function AIPanel({ note, onClose }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <span style={{ color: "#4f8ef7", fontSize: 16 }}>✦</span>
           <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#dde8f5", flex: 1 }}>AI Note Summary</div>
-          <span onClick={onClose} style={{ color: "#2d4d6a", cursor: "pointer", fontSize: 16 }}>✕</span>
+          <span onClick={onClose} style={{ color: "#98afc4", cursor: "pointer", fontSize: 16 }}>✕</span>
         </div>
-        <div style={{ fontSize: 11, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{note.title}</div>
+        <div style={{ fontSize: 11, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{note.title}</div>
         {loading && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "20px 0" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981", animation: "pulse 2s infinite" }} />
-            <span style={{ fontSize: 12, color: "#2d4d6a", fontFamily: "'DM Mono', monospace" }}>Analyzing note...</span>
+            <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>Analyzing note...</span>
           </div>
         )}
         {error && <div style={{ fontSize: 12, color: "#ef4444", lineHeight: 1.6, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
         {result && <div style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{result}</div>}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18, gap: 10 }}>
           {error && <button onClick={generate} style={{ padding: "7px 16px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Retry</button>}
-          <button onClick={onClose} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Close</button>
+          <button onClick={onClose} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Close</button>
         </div>
       </div>
     </div>
@@ -402,7 +402,7 @@ export default function Notes() {
       <div style={{ width: 290, minWidth: 290, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #0d1a28" }}>
           <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 2 }}>Notes</div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#1e3550", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#a0b4c8", letterSpacing: "1.5px", textTransform: "uppercase" }}>
             {notes.length} entries · {notes.filter(n => n.pinned).length} pinned
           </div>
         </div>
@@ -410,7 +410,7 @@ export default function Notes() {
         {/* Search */}
         <div style={{ padding: "10px 12px", borderBottom: "1px solid #0d1a28" }}>
           <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: "#2d4d6a", fontSize: 13 }}>⌕</span>
+            <span style={{ color: "#98afc4", fontSize: 13 }}>⌕</span>
             <input
               placeholder="Search notes..."
               value={search}
@@ -430,7 +430,7 @@ export default function Notes() {
                 background: filter === f ? "rgba(79,142,247,.15)" : "#0b1220",
                 border: `1px solid ${filter === f ? "rgba(79,142,247,.35)" : "#111e30"}`,
                 borderRadius: 20, padding: "3px 10px", fontSize: 10,
-                color: filter === f ? "#4f8ef7" : "#3d5a7a",
+                color: filter === f ? "#4f8ef7" : "#b0c4d8",
                 fontFamily: "'DM Mono', monospace", cursor: "pointer", transition: "all .12s",
               }}
             >{f}</div>
@@ -441,18 +441,18 @@ export default function Notes() {
         <div style={{ flex: 1, overflowY: "auto" }}>
           {pinned.length > 0 && (
             <>
-              <div style={{ padding: "8px 14px 3px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>PINNED</div>
+              <div style={{ padding: "8px 14px 3px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>PINNED</div>
               {pinned.map(n => <NoteItem key={n.id} note={n} active={selectedId === n.id} onClick={() => setSelectedId(n.id)} />)}
             </>
           )}
           {recent.length > 0 && (
             <>
-              <div style={{ padding: "10px 14px 3px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>RECENT</div>
+              <div style={{ padding: "10px 14px 3px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>RECENT</div>
               {recent.map(n => <NoteItem key={n.id} note={n} active={selectedId === n.id} onClick={() => setSelectedId(n.id)} />)}
             </>
           )}
           {filtered.length === 0 && (
-            <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 12, color: "#1e3550", fontFamily: "'DM Mono', monospace" }}>No notes found</div>
+            <div style={{ padding: "30px 20px", textAlign: "center", fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>No notes found</div>
           )}
         </div>
 

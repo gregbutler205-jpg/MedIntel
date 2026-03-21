@@ -24,7 +24,7 @@ function ConfirmModal({ title, body, confirmLabel, confirmStyle, onConfirm, onCa
         <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 10 }}>{title}</div>
         <div style={{ fontSize: 13, color: "#7eb8d8", lineHeight: 1.65, marginBottom: 22 }}>{body}</div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onCancel} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onCancel} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={onConfirm} style={{ padding: "8px 18px", borderRadius: 8, fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12, ...confirmStyle }}>{confirmLabel}</button>
         </div>
       </div>
@@ -38,7 +38,7 @@ function ApiKeyModal({ current, onSave, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 440 }}>
         <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 6 }}>Anthropic API Key</div>
-        <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono', monospace", marginBottom: 16 }}>Stored locally in your browser · never transmitted to any server</div>
+        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 16 }}>Stored locally in your browser · never transmitted to any server</div>
         <input
           value={val}
           onChange={e => setVal(e.target.value)}
@@ -47,7 +47,7 @@ function ApiKeyModal({ current, onSave, onClose }) {
           style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Key</button>
         </div>
       </div>
@@ -66,15 +66,15 @@ function ExportTile({ icon, label, sub, onClick }) {
     >
       <div style={{ fontSize: 22, marginBottom: 10 }}>{icon}</div>
       <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.55 }}>{sub}</div>
+      <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55 }}>{sub}</div>
     </div>
   );
 }
 
 const cardStyle = { background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px" };
-const sectionLbl = { fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 14 };
+const sectionLbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 14 };
 const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
-const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
+const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
 
 export default function DataBackup() {
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem("mi_ak") || "");
@@ -140,7 +140,7 @@ export default function DataBackup() {
 
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Data & Backup</h1>
-        <p style={{ fontSize: 11, color: "#2d4d6a", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>Manage exports, connections, storage, and app settings</p>
+        <p style={{ fontSize: 11, color: "#98afc4", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>Manage exports, connections, storage, and app settings</p>
       </div>
 
       {/* Row 1: Sources + Storage */}
@@ -160,7 +160,7 @@ export default function DataBackup() {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee" }}>{src.name}</div>
-                <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace" }}>{src.sub}</div>
+                <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{src.sub}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: src.statusColor, boxShadow: src.statusColor === "#10b981" ? `0 0 6px ${src.statusColor}60` : "none" }} />
@@ -182,11 +182,11 @@ export default function DataBackup() {
             ].map(s => (
               <div key={s.label} style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: 12 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.val}</div>
-                <div style={{ fontSize: 10, color: "#3d5a7a", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
+                <div style={{ fontSize: 10, color: "#b0c4d8", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
             <span>Local storage used</span><span style={{ color: "#7eb8d8" }}>1.2 MB / 5 MB</span>
           </div>
           <div style={{ height: 4, background: "#0d1a28", borderRadius: 2, overflow: "hidden" }}>
@@ -216,17 +216,17 @@ export default function DataBackup() {
             <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #0d1a28" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: 12, color: "#7eb8d8" }}>{b.type}</div>
-              <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace" }}>{b.date}</div>
+              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{b.date}</div>
               <div style={{ fontSize: 9, color: "#10b981", fontFamily: "'DM Mono', monospace", minWidth: 44, textAlign: "right" }}>{b.size}</div>
               <span
                 onClick={() => { setRestoreId(b.id); setModal("restore"); }}
-                style={{ fontSize: 10, color: "#3d5a7a", fontFamily: "'DM Mono', monospace", cursor: "pointer", marginLeft: 8 }}
+                style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", cursor: "pointer", marginLeft: 8 }}
                 title="Restore this backup"
               >↩</span>
             </div>
           ))}
           {backups.length === 0 && (
-            <div style={{ fontSize: 12, color: "#1e3550", fontFamily: "'DM Mono', monospace", padding: "10px 0" }}>No backups yet</div>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", padding: "10px 0" }}>No backups yet</div>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button style={{ ...btnPrimary, flex: 1 }} onClick={handleBackupNow}>Backup Now</button>
@@ -241,12 +241,12 @@ export default function DataBackup() {
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Anthropic API Key</div>
             <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono', monospace", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-                {apiKey ? maskedKey : <span style={{ color: "#1e3550" }}>Not set</span>}
+              <div style={{ flex: 1, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                {apiKey ? maskedKey : <span style={{ color: "#a0b4c8" }}>Not set</span>}
               </div>
               <button style={btnPrimary} onClick={() => setModal("apikey")}>Edit</button>
             </div>
-            <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono', monospace", marginTop: 5 }}>Stored locally · never sent to any server</div>
+            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginTop: 5 }}>Stored locally · never sent to any server</div>
           </div>
 
           <div style={{ marginBottom: 16 }}>
@@ -262,7 +262,7 @@ export default function DataBackup() {
 
           <div>
             <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Data since</div>
-            <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#3d5a7a", fontFamily: "'DM Mono', monospace" }}>
+            <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
               January 2020 (oldest record)
             </div>
           </div>
@@ -275,12 +275,12 @@ export default function DataBackup() {
         <div style={{ display: "flex", gap: 10 }}>
           <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(239,68,68,.15)", borderRadius: 8, padding: "12px 14px" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#ef4444", marginBottom: 4 }}>Clear All Data</div>
-            <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Permanently removes all locally stored records, notes, and settings. Cannot be undone.</div>
+            <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Permanently removes all locally stored records, notes, and settings. Cannot be undone.</div>
             <button onClick={() => setModal("clear")} style={{ padding: "6px 14px", border: "1px solid rgba(239,68,68,.3)", borderRadius: 6, fontSize: 11, color: "#ef4444", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Clear Data</button>
           </div>
           <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(245,158,11,.15)", borderRadius: 8, padding: "12px 14px" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#f59e0b", marginBottom: 4 }}>Reset to Demo</div>
-            <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Restore the app to the original demo state with sample data. Clears any personal entries.</div>
+            <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Restore the app to the original demo state with sample data. Clears any personal entries.</div>
             <button onClick={() => setModal("reset")} style={{ padding: "6px 14px", border: "1px solid rgba(245,158,11,.3)", borderRadius: 6, fontSize: 11, color: "#f59e0b", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Reset</button>
           </div>
         </div>

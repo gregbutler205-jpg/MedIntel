@@ -105,7 +105,7 @@ function LineChart({ data, keys, colors, yMin, yMax, refLines = [], height = 150
         return (
           <g key={i}>
             <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
-            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#142030" fontFamily="DM Mono">{Number.isInteger(v) ? v : v.toFixed(1)}</text>
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#a0b4c8" fontFamily="DM Mono">{Number.isInteger(v) ? v : v.toFixed(1)}</text>
           </g>
         );
       })}
@@ -132,7 +132,7 @@ function LineChart({ data, keys, colors, yMin, yMax, refLines = [], height = 150
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{r[dateKey]}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{r[dateKey]}</text>;
       })}
     </svg>
   );
@@ -161,7 +161,7 @@ function BandChart({ data, minKey, maxKey, restingKey, color, yMin, yMax, height
         return (
           <g key={p}>
             <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
-            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#142030" fontFamily="DM Mono">{Math.round(v)}</text>
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#a0b4c8" fontFamily="DM Mono">{Math.round(v)}</text>
           </g>
         );
       })}
@@ -178,7 +178,7 @@ function BandChart({ data, minKey, maxKey, restingKey, color, yMin, yMax, height
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{r.date}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{r.date}</text>;
       })}
     </svg>
   );
@@ -203,7 +203,7 @@ function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, hei
         return (
           <g key={p}>
             <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
-            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#142030" fontFamily="DM Mono">{v.toFixed(1)}</text>
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#a0b4c8" fontFamily="DM Mono">{v.toFixed(1)}</text>
           </g>
         );
       })}
@@ -230,7 +230,7 @@ function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, hei
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{r.date}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{r.date}</text>;
       })}
     </svg>
   );
@@ -299,7 +299,7 @@ const VITALS = [
     goodMin: 95, goodMax: 100, yMin: 88, yMax: 102,
     latestFn: r => r.o2 != null ? `${r.o2}%` : "—",
     latestNum: r => r.o2,
-    statusFn: r => r.o2 == null ? { label: "No data", color: "#2d4d6a" } : r.o2 >= 98 ? { label: "Excellent", color: "#10b981" } : r.o2 >= 95 ? { label: "Normal", color: "#7eb8d8" } : { label: "Low", color: "#ef4444" },
+    statusFn: r => r.o2 == null ? { label: "No data", color: "#98afc4" } : r.o2 >= 98 ? { label: "Excellent", color: "#10b981" } : r.o2 >= 95 ? { label: "Normal", color: "#7eb8d8" } : { label: "Low", color: "#ef4444" },
     chartType: "line", chartKeys: ["o2"], chartColors: ["#10b981"],
     chartLabels: ["SpO2"],
     refLines: [{ val: 95, color: "#ef4444" }],
@@ -312,7 +312,7 @@ const VITALS = [
     latestFn: r => `${r.weight}`,
     latestNum: r => r.weight,
     statusFn: (r, prev) => {
-      if (!prev) return { label: "No prior", color: "#2d4d6a" };
+      if (!prev) return { label: "No prior", color: "#98afc4" };
       const d = (r.weight - prev.weight).toFixed(1);
       return { label: d > 0 ? `+${d} lb` : `${d} lb`, color: Math.abs(d) < 1 ? "#10b981" : "#f59e0b" };
     },
@@ -381,14 +381,14 @@ function LogPanel({ onClose, onSave }) {
           <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Log Vitals</div>
         </div>
-        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#3d5a7a", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
-        <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
+        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
         {fields.map(({ label, inputs, unit }) => (
           <div key={label} style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>
-              {label} <span style={{ color: "#142030" }}>· {unit}</span>
+            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>
+              {label} <span style={{ color: "#a0b4c8" }}>· {unit}</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               {inputs.map(({ k, ph }) => (
@@ -399,8 +399,8 @@ function LogPanel({ onClose, onSave }) {
           </div>
         ))}
         <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "10px 12px", marginTop: 4 }}>
-          <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>WATCH DATA</div>
-          <div style={{ fontSize: 11, color: "#2d4d6a", lineHeight: 1.6 }}>Resting HR and Daily HR Range are auto-synced from Apple Watch via HealthKit.</div>
+          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>WATCH DATA</div>
+          <div style={{ fontSize: 11, color: "#98afc4", lineHeight: 1.6 }}>Resting HR and Daily HR Range are auto-synced from Apple Watch via HealthKit.</div>
         </div>
       </div>
       <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
@@ -409,7 +409,7 @@ function LogPanel({ onClose, onSave }) {
           Save Entry
         </button>
         <button onClick={onClose}
-          style={{ padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#3d5a7a", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+          style={{ padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
           Cancel
         </button>
       </div>
@@ -485,12 +485,12 @@ export default function App() {
         @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-        .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:#3d5a7a;border-left:2px solid transparent;transition:all .15s;user-select:none}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:#b0c4d8;border-left:2px solid transparent;transition:all .15s;user-select:none}
         .nav-item:hover{color:#7eb8d8;background:rgba(79,142,247,.04)}
         .nav-item.active{color:#4f8ef7;background:rgba(79,142,247,.08);border-left-color:#4f8ef7}
         .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
         .live-dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;flex-shrink:0}
-        .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#1e3550;font-family:'DM Mono',monospace;margin-bottom:10px}
+        .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
         .vcard{background:#0b1220;border:1px solid #111e30;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;animation:fadeUp .3s ease both}
         .vcard:hover{border-color:#1a2f4a}
         .vcard.sel{border-color:#4f8ef7;background:rgba(79,142,247,.07)}
@@ -508,18 +508,18 @@ export default function App() {
           <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
-          <div style={{ fontSize:10, color:"#1e3550", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
+          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
           <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize:11, color:"#2d4d6a", marginTop:2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize:11, color:"#98afc4", marginTop:2 }}>Transplant · Immunosuppressed</div>
         </div>
         <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
-          <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#142030", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
+          <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
           {NAV.slice(0,8).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
-          <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#142030", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
+          <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
           {NAV.slice(8).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
@@ -540,7 +540,7 @@ export default function App() {
         <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
           <div style={{ flex:1, display:"flex", alignItems:"center", gap:8 }}>
             <div className="live-dot"/>
-            <span style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
           <button onClick={()=>setShowLog(true)}
             style={{ padding:"7px 16px", background:"#10b981", border:"none", borderRadius:8, color:"#fff", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer" }}>
@@ -558,7 +558,7 @@ export default function App() {
           {/* Left — vital selector */}
           <div style={{ width:234, minWidth:234, borderRight:"1px solid #0d1a28", overflowY:"auto", padding:"18px 12px" }}>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:21, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px", marginBottom:3 }}>Vitals</h1>
-            <p style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace", marginBottom:14 }}>{manualReadings.length} readings · {flaggedManual} flagged</p>
+            <p style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:14 }}>{manualReadings.length} readings · {flaggedManual} flagged</p>
 
             {/* Summary chips */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7, marginBottom:14 }}>
@@ -589,7 +589,7 @@ export default function App() {
                     <span style={{ fontSize:19, fontWeight:700, color: status && status.color === "#ef4444" ? "#ef4444" : "#dde8f5", lineHeight:1 }}>
                       {latestR ? vc.latestFn(latestR) : "—"}
                     </span>
-                    <span style={{ fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
+                    <span style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
                   </div>
                   {status && <div style={{ fontSize:10, color:status.color, fontWeight:600, marginBottom: vc.id !== "resting_hr" ? 6 : 0 }}>{status.label}</div>}
                   {/* Range bar — skip band chart types */}
@@ -615,7 +615,7 @@ export default function App() {
 
             {showEntryForm && (
               <div style={{ marginBottom:20, padding:"18px", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:12 }}>
-                <div style={{ fontSize:10, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:14 }}>NEW VITAL READING</div>
+                <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:14 }}>NEW VITAL READING</div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:12 }}>
                   {[
                     { label:"DATE", key:"date", placeholder:"Mar 21" },
@@ -628,7 +628,7 @@ export default function App() {
                     { label:"GLUCOSE", key:"glucose", placeholder:"98" },
                   ].map(f => (
                     <div key={f.key}>
-                      <label style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
+                      <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
                       <input
                         style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
                         placeholder={f.placeholder}
@@ -640,7 +640,7 @@ export default function App() {
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   <button onClick={handleSaveReading} style={{ padding:"8px 18px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Save Reading</button>
-                  <button onClick={() => setShowEntryForm(false)} style={{ padding:"8px 14px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#3d5a7a", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Cancel</button>
+                  <button onClick={() => setShowEntryForm(false)} style={{ padding:"8px 14px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Cancel</button>
                 </div>
               </div>
             )}
@@ -656,7 +656,7 @@ export default function App() {
                       <span style={{ fontSize:9, background:"rgba(79,142,247,.15)", color:"#4f8ef7", padding:"3px 8px", borderRadius:5, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>AUTO · APPLE WATCH</span>
                     )}
                   </div>
-                  <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>
+                  <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                     {filteredData.length} readings in view
                     {isWatch && " · Daily sync via HealthKit"}
                   </div>
@@ -687,9 +687,9 @@ export default function App() {
                   ];
                 })().map(({ label, value, sub, color }) => (
                   <div key={label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"12px 14px" }}>
-                    <div style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
+                    <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
                     <div style={{ fontSize:16, fontWeight:700, color, marginBottom:2 }}>{value}</div>
-                    <div style={{ fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{sub}</div>
+                    <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{sub}</div>
                   </div>
                 ))}
               </div>
@@ -700,7 +700,7 @@ export default function App() {
                   <div className="section-label" style={{ marginBottom:0 }}>{timeRange}-Month Trend</div>
                   <div style={{ display:"flex", gap:12 }}>
                     {config.chartLabels.map((lbl, i) => (
-                      <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>
+                      <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                         <div style={{ width:14, height:2, background: config.chartType === "band" ? (i===0?"rgba(248,113,113,0.4)":config.color) : (config.chartColors?.[i] ?? config.color), borderRadius:2 }}/>
                         {lbl}
                       </div>
@@ -724,7 +724,7 @@ export default function App() {
                   <div className="section-label">Reading History</div>
                   <div className="hist-row" style={{ borderBottom:"1px solid #0d1a28", paddingBottom:7, marginBottom:2 }}>
                     {["Date","BP","HR","O2","Weight","Temp","Glucose","Sleep"].map(h => (
-                      <div key={h} style={{ fontSize:8.5, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{h}</div>
+                      <div key={h} style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{h}</div>
                     ))}
                   </div>
                   {filterByMonths(manualReadings, timeRange).map(r => {
@@ -734,14 +734,14 @@ export default function App() {
                     const o2F = r.o2 != null && r.o2 < 95;
                     return (
                       <div key={r.ts} className="hist-row">
-                        <div style={{ color:"#2d4d6a", fontFamily:"'DM Mono',monospace", fontSize:10 }}>
+                        <div style={{ color:"#98afc4", fontFamily:"'DM Mono',monospace", fontSize:10 }}>
                           {r.date}{r.flag && <span style={{ marginLeft:3, fontSize:8, color:"#ef4444" }}>▲</span>}
                         </div>
                         <div style={{ fontWeight:600, color:bpF?"#ef4444":"#c4d8ee", fontSize:11 }}>{r.bp_s}/{r.bp_d}</div>
                         <div style={{ color:"#7eb8d8" }}>{r.hr}</div>
-                        <div style={{ color:o2F?"#ef4444":r.o2==null?"#1e3550":"#10b981" }}>{r.o2!=null?`${r.o2}%`:"—"}</div>
+                        <div style={{ color:o2F?"#ef4444":r.o2==null?"#a0b4c8":"#10b981" }}>{r.o2!=null?`${r.o2}%`:"—"}</div>
                         <div style={{ color:"#a8c4dc" }}>{r.weight}</div>
-                        <div style={{ color:r.temp>99.5?"#ef4444":"#3d5a7a", fontFamily:"'DM Mono',monospace" }}>{r.temp}°</div>
+                        <div style={{ color:r.temp>99.5?"#ef4444":"#b0c4d8", fontFamily:"'DM Mono',monospace" }}>{r.temp}°</div>
                         <div style={{ color:gF?"#f59e0b":"#a8c4dc" }}>{r.glucose??'—'}</div>
                         <div style={{ color:slF?"#f59e0b":"#7eb8d8" }}>{r.sleep?`${r.sleep}h`:"—"}</div>
                       </div>
@@ -757,9 +757,9 @@ export default function App() {
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:6 }}>
                     {filteredData.slice(0,28).map(r => (
                       <div key={r.ts} style={{ background:"#080c14", borderRadius:8, border:"1px solid #0d1a28", padding:"8px 10px" }}>
-                        <div style={{ fontSize:8.5, color:"#1e3550", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{r.date}</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:9, color:"#2d4d6a" }}>bpm</span></div>
-                        <div style={{ fontSize:9, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>
+                        <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{r.date}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:9, color:"#98afc4" }}>bpm</span></div>
+                        <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>
                       </div>
                     ))}
                   </div>

@@ -110,19 +110,19 @@ export default function Records() {
         .rec-row { padding: 13px 16px; border-bottom: 1px solid #0d1a28; cursor: pointer; transition: background .1s; border-left: 2px solid transparent; }
         .rec-row:hover { background: #0b1220; }
         .rec-row.active { background: #0d1525; border-left-color: #4f8ef7; }
-        .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #3d5a7a; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
+        .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .filter-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .filter-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
-        .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #3d5a7a; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
+        .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .type-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .type-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
         .detail-line { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #0d1a28; font-size: 12px; }
         .detail-line:last-child { border-bottom: none; }
         .search-input { background: #0b1220; border: 1px solid #111e30; color: #c4d8ee; padding: 7px 12px 7px 32px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; width: 220px; transition: border-color .15s; }
-        .search-input::placeholder { color: #2d4d6a; }
+        .search-input::placeholder { color: #98afc4; }
         .search-input:focus { border-color: #1a2f4a; }
         .modal-input { width: 100%; background: #07090f; border: 1px solid #111e30; color: #c4d8ee; padding: 8px 12px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; transition: border-color .15s; }
-        .modal-input::placeholder { color: #1e3550; }
+        .modal-input::placeholder { color: #a0b4c8; }
         .modal-input:focus { border-color: #1a2f4a; }
         .epic-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 8px; color: #4f8ef7; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; text-decoration: none; }
         .epic-btn:hover { background: rgba(79,142,247,.15); border-color: rgba(79,142,247,.4); }
@@ -141,7 +141,7 @@ export default function Records() {
         </button>
         <div style={{ flex: 1 }} />
         <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-          <span style={{ position: "absolute", left: 10, fontSize: 13, color: "#2d4d6a" }}>⌕</span>
+          <span style={{ position: "absolute", left: 10, fontSize: 13, color: "#98afc4" }}>⌕</span>
           <input
             className="search-input"
             placeholder="Search records…"
@@ -149,7 +149,7 @@ export default function Records() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
+        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
           {RECORDS.length} records · Epic FHIR
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function Records() {
         {/* Record list */}
         <div style={{ width: 320, minWidth: 320, borderRight: "1px solid #0d1a28", overflowY: "auto" }}>
           {filtered.length === 0 && (
-            <div style={{ padding: 32, textAlign: "center", fontSize: 12, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>
+            <div style={{ padding: 32, textAlign: "center", fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
               No records found
             </div>
           )}
@@ -185,10 +185,10 @@ export default function Records() {
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7, gap: 8 }}>
                 <Badge type={r.type} />
-                <span style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{r.date}</span>
+                <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{r.date}</span>
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee", marginBottom: 3, lineHeight: 1.3 }}>{r.title}</div>
-              <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{r.facility}</div>
+              <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{r.facility}</div>
             </div>
           ))}
         </div>
@@ -201,14 +201,14 @@ export default function Records() {
             <div style={{ marginBottom: 22 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <Badge type={selected.type} />
-                <span style={{ fontSize: 10, color: "#3d5a7a", fontFamily: "'DM Mono',monospace" }}>{selected.date}</span>
+                <span style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.date}</span>
               </div>
               <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px", marginBottom: 10 }}>
                 {selected.title}
               </h2>
               <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 11, color: "#3d5a7a", fontFamily: "'DM Mono',monospace" }}>{selected.facility}</div>
-                <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{selected.provider}</div>
+                <div style={{ fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.facility}</div>
+                <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{selected.provider}</div>
                 {selected.epicId && (
                   <a className="epic-btn" href={`https://mychart.example.com/record/${selected.epicId}`} target="_blank" rel="noreferrer">
                     <span style={{ fontSize: 10 }}>↗</span> Open in Epic
@@ -219,7 +219,7 @@ export default function Records() {
 
             {/* Summary */}
             <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
+              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                 Summary
               </div>
               <p style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.65 }}>{selected.summary}</p>
@@ -227,14 +227,14 @@ export default function Records() {
 
             {/* Key details */}
             <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
+              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                 Key Details
               </div>
               {selected.details.map((d, i) => {
                 const isFlag = d.includes("(H)") || d.includes("(L)");
                 return (
                   <div key={i} className="detail-line">
-                    <span style={{ width: 4, height: 4, borderRadius: "50%", background: isFlag ? "#f59e0b" : "#1e3550", flexShrink: 0, marginTop: 5 }} />
+                    <span style={{ width: 4, height: 4, borderRadius: "50%", background: isFlag ? "#f59e0b" : "#a0b4c8", flexShrink: 0, marginTop: 5 }} />
                     <span style={{ color: isFlag ? "#f5c97a" : "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{d}</span>
                   </div>
                 );
@@ -244,14 +244,14 @@ export default function Records() {
             {/* Tags */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {selected.tags.map(t => (
-                <span key={t} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", color: "#2d4d6a", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
+                <span key={t} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", color: "#98afc4", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
                   #{t}
                 </span>
               ))}
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#1e3550", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#a0b4c8", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
             Select a record
           </div>
         )}
@@ -276,13 +276,13 @@ export default function Records() {
               { label: "Date",     placeholder: "e.g. Mar 19, 2026" },
             ].map(({ label, placeholder }) => (
               <div key={label} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
                 <input className="modal-input" placeholder={placeholder} />
               </div>
             ))}
 
             <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Record Type</div>
+              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Record Type</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {FILTERS.filter(f => f !== "All").map(f => (
                   <button
@@ -299,7 +299,7 @@ export default function Records() {
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setShowAdd(false)}
-                style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
+                style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
               >
                 Cancel
               </button>

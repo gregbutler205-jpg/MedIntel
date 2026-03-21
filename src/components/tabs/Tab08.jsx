@@ -237,11 +237,11 @@ const REFERENCE = [
 ];
 
 function SL({ children, mb = 12, style = {} }) {
-  return <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#1e3550", fontFamily:mono, marginBottom:mb, ...style }}>{children}</div>;
+  return <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:mb, ...style }}>{children}</div>;
 }
 
 function TypeBadge({ type }) {
-  const map = { appointment:["#4f8ef7","Appt"], lab:["#10b981","Lab"], imaging:["#a78bfa","Imaging"], other:["#3d5a7a","Other"] };
+  const map = { appointment:["#4f8ef7","Appt"], lab:["#10b981","Lab"], imaging:["#a78bfa","Imaging"], other:["#b0c4d8","Other"] };
   const [c, l] = map[type] || ["#4f8ef7","Appt"];
   return <span style={{ fontSize:9, fontFamily:mono, background:`${c}18`, color:c, border:`1px solid ${c}28`, padding:"2px 7px", borderRadius:4, letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{l}</span>;
 }
@@ -284,7 +284,7 @@ function Timeline() {
         <button className="add-badge-btn" onClick={() => setShowAdd(true)}>+ Add Event</button>
       </div>
       {appts.map((a, i) => {
-        const c = { appointment:"#4f8ef7", lab:"#10b981", imaging:"#a78bfa", other:"#3d5a7a" }[a.type];
+        const c = { appointment:"#4f8ef7", lab:"#10b981", imaging:"#a78bfa", other:"#b0c4d8" }[a.type];
         const isDone = !!done[a.id];
         return (
           <div key={a.id} style={{ display:"flex", gap:14, marginBottom:14 }}>
@@ -300,29 +300,29 @@ function Timeline() {
                   <TypeBadge type={a.type} />
                   {a.urgency === "high" && <span style={{ width:6, height:6, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", display:"inline-block" }} />}
                 </div>
-                <span style={{ fontSize:10, color: a.urgency === "high" ? "#ef4444" : "#2d4d6a", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{a.date}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
+                <span style={{ fontSize:10, color: a.urgency === "high" ? "#ef4444" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{a.date}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{a.title}</div>
-              <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:mono, marginBottom: a.prep.length ? 10 : 0 }}>{a.doctor}{a.facility ? ` · ${a.facility}` : ""}</div>
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: a.prep.length ? 10 : 0 }}>{a.doctor}{a.facility ? ` · ${a.facility}` : ""}</div>
               {a.prep.length > 0 && (
                 <div style={{ borderTop:"1px solid #0d1a28", paddingTop:8 }}>
                   <SL mb={6}>Prep Notes</SL>
                   {a.prep.map((p, j) => (
                     <div key={j} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4 }}>
-                      <span style={{ color:"#1e3550", fontSize:10, flexShrink:0 }}>▸</span>
+                      <span style={{ color:"#a0b4c8", fontSize:10, flexShrink:0 }}>▸</span>
                       {editingPrep === `${a.id}-${j}` ? (
                         <input value={editVal} onChange={e => setEditVal(e.target.value)} onBlur={() => savePrep(a.id, j)} onKeyDown={e => e.key === "Enter" && savePrep(a.id, j)} autoFocus style={{ flex:1, background:"#07090f", border:"1px solid #1a2f4a", color:"#c4d8ee", borderRadius:6, padding:"3px 8px", fontFamily:mono, fontSize:11, outline:"none" }} />
                       ) : (
-                        <span onClick={() => startEditPrep(a.id, j, p)} style={{ flex:1, fontSize:11, color:"#3d5a7a", fontFamily:mono, cursor:"text" }}>{p || <span style={{ color:"#1e3550" }}>Click to edit…</span>}</span>
+                        <span onClick={() => startEditPrep(a.id, j, p)} style={{ flex:1, fontSize:11, color:"#b0c4d8", fontFamily:mono, cursor:"text" }}>{p || <span style={{ color:"#a0b4c8" }}>Click to edit…</span>}</span>
                       )}
-                      <span onClick={() => removePrep(a.id, j)} style={{ fontSize:10, color:"#1e3550", cursor:"pointer", paddingLeft:4 }}>✕</span>
+                      <span onClick={() => removePrep(a.id, j)} style={{ fontSize:10, color:"#a0b4c8", cursor:"pointer", paddingLeft:4 }}>✕</span>
                     </div>
                   ))}
-                  <button onClick={() => addPrepLine(a.id)} style={{ marginTop:4, fontSize:10, color:"#1e3550", fontFamily:mono, background:"transparent", border:"none", cursor:"pointer", padding:0 }}>+ add note</button>
+                  <button onClick={() => addPrepLine(a.id)} style={{ marginTop:4, fontSize:10, color:"#a0b4c8", fontFamily:mono, background:"transparent", border:"none", cursor:"pointer", padding:0 }}>+ add note</button>
                 </div>
               )}
               {a.prep.length === 0 && (
-                <button onClick={() => addPrepLine(a.id)} style={{ fontSize:10, color:"#1e3550", fontFamily:mono, background:"transparent", border:"none", cursor:"pointer", padding:0, marginTop:4 }}>+ add prep note</button>
+                <button onClick={() => addPrepLine(a.id)} style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono, background:"transparent", border:"none", cursor:"pointer", padding:0, marginTop:4 }}>+ add prep note</button>
               )}
             </div>
           </div>
@@ -356,7 +356,7 @@ function Timeline() {
               </div>
             </div>
             <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
-              <button onClick={() => setShowAdd(false)} style={{ padding:"7px 16px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#3d5a7a", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
+              <button onClick={() => setShowAdd(false)} style={{ padding:"7px 16px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
               <button onClick={addAppt} style={{ padding:"7px 16px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Save</button>
             </div>
           </div>
@@ -382,7 +382,7 @@ function Goals() {
                 </span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:5, lineHeight:1.3 }}>{g.label}</div>
-              <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:mono, lineHeight:1.5 }}>{g.note}</div>
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{g.note}</div>
             </div>
           );
         })}
@@ -403,12 +403,12 @@ function CareTeam() {
             </div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:2 }}>{t.name}</div>
-              <div style={{ fontSize:11, color:"#3d5a7a" }}>{t.role}</div>
-              <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
+              <div style={{ fontSize:11, color:"#b0c4d8" }}>{t.role}</div>
+              <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
             </div>
             <div style={{ textAlign:"right", flexShrink:0 }}>
-              <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:mono, marginBottom:4 }}>{t.phone}</div>
-              <div style={{ fontSize:10, color:"#1e3550", fontFamily:mono }}>Next: {t.next}</div>
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:4 }}>{t.phone}</div>
+              <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>
             </div>
           </div>
         ))}
@@ -426,7 +426,7 @@ function Preventive() {
       <div key={p.label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"12px 14px", marginBottom:8, display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
         <div style={{ flex:1 }}>
           <div style={{ fontSize:13, fontWeight:600, color: p.status === "never" ? "#ef4444" : "#c4d8ee", marginBottom:4 }}>{p.label}</div>
-          <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:mono, lineHeight:1.5 }}>{p.note}</div>
+          <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{p.note}</div>
         </div>
         <span style={{ fontSize:9, fontFamily:mono, color:sm.color, background:`${sm.color}15`, border:`1px solid ${sm.color}28`, padding:"2px 8px", borderRadius:4, textTransform:"uppercase", letterSpacing:"0.5px", flexShrink:0, marginTop:2 }}>{sm.label}</span>
       </div>
@@ -478,17 +478,17 @@ function Milestones() {
       {MILESTONES.map((m, i) => (
         <div key={m.label} style={{ display:"flex", gap:14, marginBottom:14 }}>
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:20, flexShrink:0 }}>
-            <div style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${m.done ? "#10b981" : "#2d4d6a"}`, background: m.done ? "#10b981" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", flexShrink:0 }}>
+            <div style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${m.done ? "#10b981" : "#98afc4"}`, background: m.done ? "#10b981" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", flexShrink:0 }}>
               {m.done ? "✓" : ""}
             </div>
             {i < MILESTONES.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
           </div>
           <div style={{ flex:1, background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"12px 16px" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:5, gap:8 }}>
-              <div style={{ fontSize:13, fontWeight:600, color: m.done ? "#3d5a7a" : "#c4d8ee" }}>{m.label}</div>
-              <span style={{ fontSize:10, color: m.done ? "#1e3550" : "#f59e0b", fontFamily:mono, flexShrink:0 }}>{m.date}</span>
+              <div style={{ fontSize:13, fontWeight:600, color: m.done ? "#b0c4d8" : "#c4d8ee" }}>{m.label}</div>
+              <span style={{ fontSize:10, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono, flexShrink:0 }}>{m.date}</span>
             </div>
-            <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:mono, lineHeight:1.5 }}>{m.note}</div>
+            <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{m.note}</div>
           </div>
         </div>
       ))}
@@ -505,12 +505,12 @@ function Reference() {
         <div key={sec.title} style={{ marginBottom:10 }}>
           <div onClick={() => setOpen(o => o === sec.title ? null : sec.title)} style={{ background:"#0b1220", border:`1px solid ${open === sec.title ? sec.color + "40" : "#111e30"}`, borderLeft:`3px solid ${sec.color}`, borderRadius: open === sec.title ? "12px 12px 0 0" : 12, padding:"12px 16px", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{sec.title}</div>
-            <span style={{ fontSize:11, color:"#3d5a7a" }}>{open === sec.title ? "▲" : "▼"}</span>
+            <span style={{ fontSize:11, color:"#b0c4d8" }}>{open === sec.title ? "▲" : "▼"}</span>
           </div>
           {open === sec.title && (
             <div style={{ background:"#0b1220", border:`1px solid ${sec.color}28`, borderLeft:`3px solid ${sec.color}`, borderTop:"none", borderRadius:"0 0 12px 12px", padding:"12px 16px 14px" }}>
               {sec.items.map((item, i) => (
-                <div key={i} style={{ display:"flex", gap:8, fontSize:11.5, color: item.startsWith("  •") ? "#2d4d6a" : "#7eb8d8", fontFamily:mono, marginBottom:5, alignItems:"flex-start", lineHeight:1.6 }}>
+                <div key={i} style={{ display:"flex", gap:8, fontSize:11.5, color: item.startsWith("  •") ? "#98afc4" : "#7eb8d8", fontFamily:mono, marginBottom:5, alignItems:"flex-start", lineHeight:1.6 }}>
                   {!item.startsWith("  •") && <span style={{ color:sec.color, flexShrink:0, marginTop:1 }}>▸</span>}
                   {item.startsWith("  •") && <span style={{ width:16, flexShrink:0 }} />}
                   <span>{item.replace(/^  •\s*/,"")}</span>
@@ -532,16 +532,16 @@ export default function CarePlan() {
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
         ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#1a2840;border-radius:4px;}
-        .tab-btn{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid transparent;background:transparent;color:#3d5a7a;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
+        .tab-btn{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid transparent;background:transparent;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
         .tab-btn:hover{color:#7eb8d8;}
         .tab-btn.active{color:#4f8ef7;border-color:#4f8ef7;background:rgba(79,142,247,.08);}
-        .filter-chip{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid #111e30;background:#0b1220;color:#3d5a7a;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
+        .filter-chip{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid #111e30;background:#0b1220;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
         .filter-chip:hover{color:#7eb8d8;border-color:#1a2f4a;}
         .filter-chip.active{color:#4f8ef7;border-color:#4f8ef7;background:rgba(79,142,247,.08);}
         .add-badge-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:12px;color:#4f8ef7;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;}
         .add-badge-btn:hover{background:rgba(79,142,247,.16);border-color:rgba(79,142,247,.45);}
         .modal-input{width:100%;background:#07090f;border:1px solid #111e30;color:#c4d8ee;padding:8px 12px;border-radius:8px;font-family:'Sora',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
-        .modal-input::placeholder{color:#1e3550;}
+        .modal-input::placeholder{color:#a0b4c8;}
         .modal-input:focus{border-color:#1a2f4a;}
       `}</style>
 
@@ -552,7 +552,7 @@ export default function CarePlan() {
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {TABS.map(t => <button key={t} className={`tab-btn${tab===t?" active":""}`} onClick={() => setTab(t)}>{t}</button>)}
         </div>
-        <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:mono, background:"#0b1220", border:"1px solid #111e30", padding:"5px 12px", borderRadius:6, flexShrink:0 }}>
+        <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, background:"#0b1220", border:"1px solid #111e30", padding:"5px 12px", borderRadius:6, flexShrink:0 }}>
           {APPTS_INIT.length} events · {GOALS.length} goals
         </div>
       </div>
