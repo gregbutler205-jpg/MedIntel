@@ -217,6 +217,8 @@ export default function App() {
   const [alerts, setAlerts]       = useState(() => getStore('alerts'));
   const [upcoming, setUpcoming]   = useState(() => getStore('upcoming'));
   const [lastImport, setLastImport] = useState(() => getStore('lastImport'));
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [quickReading, setQuickReading] = useState({ bp_s:"", bp_d:"", weight:"", date:"" });
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -248,6 +250,24 @@ export default function App() {
     addImportLog({ ts, source: parsed.source ?? "PDF Import", records: parsed.totalRecords ?? 0 });
     setLastImport(ts);
   }, []);
+
+  const handleQuickSave = () => {
+    const today = new Date();
+    const ts = today.toISOString().split('T')[0];
+    const dateLabel = today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+    const reading = {
+      date: quickReading.date || dateLabel,
+      ts,
+      bp_s:   quickReading.bp_s   ? parseInt(quickReading.bp_s)   : undefined,
+      bp_d:   quickReading.bp_d   ? parseInt(quickReading.bp_d)   : undefined,
+      weight: quickReading.weight ? parseFloat(quickReading.weight) : undefined,
+      flag: parseInt(quickReading.bp_s) >= 160,
+    };
+    const merged = mergeReadings([reading]);
+    setReadings(merged);
+    setShowQuickEntry(false);
+    setQuickReading({ bp_s:"", bp_d:"", weight:"", date:"" });
+  };
 
   const fmt     = (d) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = (d) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -331,6 +351,36 @@ export default function App() {
                       <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>Good afternoon, Greg.</h1>
                       <p style={{ fontSize: 12, color: "#2d4d6a", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>3 upcoming events · 2 alerts need attention</p>
                     </div>
+
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                      <div /> {/* spacer */}
+                      <button onClick={() => setShowQuickEntry(o => !o)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                        + Log Vitals
+                      </button>
+                    </div>
+
+                    {showQuickEntry && (
+                      <div style={{ marginBottom:16, padding:"16px", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:12, display:"grid", gridTemplateColumns:"repeat(4,1fr) auto auto", gap:10, alignItems:"flex-end" }}>
+                        {[
+                          { label:"DATE", key:"date", placeholder:"Mar 21" },
+                          { label:"BP SYSTOLIC", key:"bp_s", placeholder:"131" },
+                          { label:"BP DIASTOLIC", key:"bp_d", placeholder:"71" },
+                          { label:"WEIGHT (lbs)", key:"weight", placeholder:"184.2" },
+                        ].map(f => (
+                          <div key={f.key}>
+                            <label style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
+                            <input
+                              style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
+                              placeholder={f.placeholder}
+                              value={quickReading[f.key]}
+                              onChange={e => setQuickReading(prev => ({ ...prev, [f.key]: e.target.value }))}
+                            />
+                          </div>
+                        ))}
+                        <button onClick={handleQuickSave} style={{ padding:"7px 14px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, cursor:"pointer", whiteSpace:"nowrap" }}>Save</button>
+                        <button onClick={() => setShowQuickEntry(false)} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#3d5a7a", fontSize:12, cursor:"pointer" }}>✕</button>
+                      </div>
+                    )}
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
                       <StatusCard meds={meds} readings={readings} />

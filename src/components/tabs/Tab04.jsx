@@ -1,5 +1,6 @@
 import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
+import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds } from "../../store.js";
 
 const NAV = [
   { id: "dashboard", icon: "⬡", label: "Dashboard" },
@@ -283,14 +284,16 @@ const CATEGORIES = ["All", "Immunosuppressant", "Blood Pressure", "Corticosteroi
 
 export default function App() {
   const [activeNav, setActiveNav] = useState("medications");
-  const [meds, setMeds] = useState(MEDS_SEED);
-  const [selectedMed, setSelectedMed] = useState(MEDS_SEED[0]);
+  const [meds, setMeds] = useState(() => getMedsFull());
+  const [selectedMed, setSelectedMed] = useState(() => getMedsFull()[0]);
   const [editingMed, setEditingMed] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [filterCat, setFilterCat] = useState("All");
   const [search, setSearch] = useState("");
   const [showFlagged, setShowFlagged] = useState(false);
   const [time, setTime] = useState(new Date());
+  const [pendingMeds, setPendingMedsState] = useState(() => getPendingMeds());
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -314,16 +317,39 @@ export default function App() {
   const statusColor = (s) => ({ ok: "#10b981", refill: "#f59e0b", warn: "#ef4444" }[s] || "#4f8ef7");
 
   const handleSaveMed = (updated) => {
-    setMeds(prev => prev.map(m => m.id === updated.id ? updated : m));
-    setSelectedMed(updated);
+    const newMeds = updated.id
+      ? meds.map(m => m.id === updated.id ? updated : m)
+      : [...meds, { ...updated, id: Date.now() }];
+    setMeds(newMeds);
+    setMedsFull(newMeds);
+    setSelectedMed(updated.id ? updated : newMeds[newMeds.length - 1]);
     setEditingMed(null);
+    setShowAddForm(false);
   };
 
   const handleDeleteMed = (id) => {
-    setMeds(prev => prev.filter(m => m.id !== id));
+    const newMeds = meds.filter(m => m.id !== id);
+    setMeds(newMeds);
+    setMedsFull(newMeds);
     setSelectedMed(null);
     setEditingMed(null);
     setDeleteConfirm(false);
+  };
+
+  const handleApprovePending = (med) => {
+    const newMed = { ...med, id: Date.now(), status: "ok", flag: false };
+    const newMeds = [...meds, newMed];
+    setMeds(newMeds);
+    setMedsFull(newMeds);
+    const remaining = pendingMeds.filter(m => m._pendingId !== med._pendingId);
+    setPendingMedsState(remaining);
+    setPendingMeds(remaining);
+  };
+
+  const handleRejectPending = (med) => {
+    const remaining = pendingMeds.filter(m => m._pendingId !== med._pendingId);
+    setPendingMedsState(remaining);
+    setPendingMeds(remaining);
   };
 
   return (
@@ -356,6 +382,11 @@ export default function App() {
         .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #0d1a28; }
         .detail-row:last-child { border-bottom:none; }
         .interaction-row { padding:10px 14px; border-radius:8px; background:#0b1220; border:1px solid #111e30; margin-bottom:6px; animation:fadeUp .35s ease both; }
+        @media print {
+          body { background: white !important; color: black !important; }
+          .no-print { display: none !important; }
+          .med-row { border: 1px solid #ccc !important; color: black !important; }
+        }
       `}</style>
 
       {/* Sidebar */}
@@ -404,6 +435,9 @@ export default function App() {
           <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
             Last import: Mar 12, 2026
           </div>
+          <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+            ⎙ Print
+          </button>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
         </div>
 
@@ -455,6 +489,9 @@ export default function App() {
                 <button className={`toggle-btn ${showFlagged ? "on" : ""}`} onClick={() => setShowFlagged(!showFlagged)}>
                   {showFlagged ? "▲ Flagged only" : "▲ Show flagged"}
                 </button>
+                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", prescriber:"", pharmacy:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                  + Add Med
+                </button>
               </div>
 
               {/* Category filters */}
@@ -472,6 +509,23 @@ export default function App() {
                   );
                 })}
               </div>
+
+              {/* Pending meds section */}
+              {pendingMeds.length > 0 && (
+                <div style={{ marginBottom:16, padding:"14px", background:"rgba(245,158,11,.05)", border:"1px solid rgba(245,158,11,.2)", borderRadius:10 }}>
+                  <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:10 }}>IMPORTED — PENDING APPROVAL ({pendingMeds.length})</div>
+                  {pendingMeds.map((m, i) => (
+                    <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"9px 12px", background:"#080c14", borderRadius:8, border:"1px solid #1a2f4a", marginBottom:6 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{m.name} {m.dose}</div>
+                        <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{m.frequency} · {m.prescriber}</div>
+                      </div>
+                      <button onClick={() => handleApprovePending(m)} style={{ padding:"5px 12px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:6, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Add</button>
+                      <button onClick={() => handleRejectPending(m)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:6, color:"#3d5a7a", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✗ Skip</button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Medication rows */}
               <div>
@@ -576,6 +630,12 @@ export default function App() {
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}>
                         {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
+                    </div>
+
+                    {/* Renewal Date */}
+                    <div style={{ marginBottom: 18 }}>
+                      <label style={{ fontSize:10, color:"#3d5a7a", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>RENEWAL DATE (manual)</label>
+                      <input className="search-input" value={editingMed?.renewalDate ?? ""} onChange={e => setEditingMed(prev => ({ ...prev, renewalDate: e.target.value }))} placeholder="e.g. Jun 15" />
                     </div>
 
                     {/* Save / Cancel */}
