@@ -231,8 +231,8 @@ function RangeBar({ value, low, high, compact = false }) {
       {/* Labels */}
       {!compact && (
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-          <span style={{ fontSize: 8, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{low}</span>
-          <span style={{ fontSize: 8, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{high}</span>
+          <span style={{ fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{low}</span>
+          <span style={{ fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{high}</span>
         </div>
       )}
     </div>
@@ -286,7 +286,7 @@ function TrendChart({ lab, color, monthLabels }) {
       })}
       {/* X labels */}
       {monthLabels.map((m, i) => (
-        <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#1e3550" fontFamily="DM Mono">{m}</text>
+        <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{m}</text>
       ))}
     </svg>
   );
@@ -336,12 +336,12 @@ export default function App() {
         @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
         @keyframes slideInRight { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#3d5a7a; border-left:2px solid transparent; transition:all .15s; user-select:none; }
+        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#b0c4d8; border-left:2px solid transparent; transition:all .15s; user-select:none; }
         .nav-item:hover { color:#7eb8d8; background:rgba(79,142,247,.04); }
         .nav-item.active { color:#4f8ef7; background:rgba(79,142,247,.08); border-left-color:#4f8ef7; }
         .nav-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
         .live-dot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:pulse 2s infinite; flex-shrink:0; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#1e3550; font-family:'DM Mono',monospace; margin-bottom:10px; }
+        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
         .lab-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:9px; background:#0b1220; border:1px solid #111e30; margin-bottom:5px; cursor:pointer; transition:all .12s; animation:fadeUp .3s ease both; }
         .lab-row:hover { border-color:#1a2f4a; }
         .lab-row.sel { border-color:#4f8ef7; background:rgba(79,142,247,.07); }
@@ -361,18 +361,18 @@ export default function App() {
           <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
-          <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
+          <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize: 11, color: "#2d4d6a", marginTop: 2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>Transplant · Immunosuppressed</div>
         </div>
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-          <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
+          <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
           {NAV.slice(0, 8).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
-          <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
+          <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
           {NAV.slice(8).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
@@ -393,9 +393,9 @@ export default function App() {
         <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
             <div className="live-dot" />
-            <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
-          <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>Last import: Mar 12, 2026</div>
+          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>Last import: Mar 12, 2026</div>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#fff" }}>G</div>
         </div>
 
@@ -405,19 +405,19 @@ export default function App() {
           {/* Left column — lab list */}
           <div style={{ width: 292, minWidth: 292, borderRight: "1px solid #0d1a28", overflowY: "auto", padding: "20px 14px 20px 16px" }}>
             <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px", marginBottom: 4 }}>Labs & Trends</h1>
-            <p style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>{allLabs.length} markers · {flagged} flagged · Mar 10 draw</p>
+            <p style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>{allLabs.length} markers · {flagged} flagged · Mar 10 draw</p>
 
             {/* Summary chips */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
               <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: "#ef4444", lineHeight: 1, marginBottom: 3 }}>{flagged}</div>
                 <div style={{ fontSize: 10, color: "#7eb8d8", fontWeight: 600 }}>Flagged</div>
-                <div style={{ fontSize: 9, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>out of range</div>
+                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>out of range</div>
               </div>
               <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: "#10b981", lineHeight: 1, marginBottom: 3 }}>{allLabs.length - flagged}</div>
                 <div style={{ fontSize: 10, color: "#7eb8d8", fontWeight: 600 }}>Normal</div>
-                <div style={{ fontSize: 9, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>within range</div>
+                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>within range</div>
               </div>
             </div>
 
@@ -439,7 +439,7 @@ export default function App() {
                         <div style={{ width: 6, height: 6, borderRadius: "50%", background: status === "ok" ? "#10b981" : "#ef4444", flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee" }}>{lab.name}</div>
-                          <div style={{ fontSize: 9, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", marginTop: 1 }}>{lab.unit} · {lab.lastDate}</div>
+                          <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 1 }}>{lab.unit} · {lab.lastDate}</div>
                         </div>
                         <div style={{ fontSize: 11, color: tc, fontWeight: 700, flexShrink: 0 }}>{TREND_ARROW[trend]}</div>
                       </div>
@@ -467,7 +467,7 @@ export default function App() {
                         <span style={{ fontSize: 9, background: "rgba(245,158,11,.12)", color: "#f59e0b", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>FLAGGED</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>
+                    <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
                       Range: {selectedLab.low}–{selectedLab.high} {selectedLab.unit} · Last drawn {selectedLab.lastDate}
                     </div>
                   </div>
@@ -489,15 +489,15 @@ export default function App() {
                 {/* Metric strip */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 10, marginBottom: 18 }}>
                   <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
-                    <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Latest Value</div>
+                    <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Latest Value</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: statusOf(selectedLab) === "ok" ? "#dde8f5" : "#ef4444" }}>{latestVal(selectedLab)} {selectedLab.unit}</div>
                   </div>
                   <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
-                    <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Trend</div>
+                    <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Trend</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: trendColor(selectedLab.id, trendOf(selectedLab)) }}>{TREND_ARROW[trendOf(selectedLab)]} {trendOf(selectedLab)}</div>
                   </div>
                   <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 18px 10px" }}>
-                    <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 2 }}>Position in Range</div>
+                    <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 2 }}>Position in Range</div>
                     <RangeBar value={latestVal(selectedLab)} low={selectedLab.low} high={selectedLab.high} />
                   </div>
                 </div>
@@ -512,7 +512,7 @@ export default function App() {
                       { dot: "#ef4444", label: "Out of range" },
                       { dot: selectedPanelColor, label: "In range" },
                     ].map(({ dot, line, label }) => (
-                      <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
+                      <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                         {dot ? <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot }} /> : <div style={{ width: 14, height: 1, borderTop: "1px dashed #10b981" }} />}
                         {label}
                       </div>
@@ -529,8 +529,8 @@ export default function App() {
                       const bad = val !== null && (val < selectedLab.low || val > selectedLab.high);
                       return (
                         <div key={m} style={{ textAlign: "center", padding: "7px 3px", background: "#080c14", borderRadius: 6, border: bad ? "1px solid rgba(239,68,68,.3)" : "1px solid #0d1a28" }}>
-                          <div style={{ fontSize: 7.5, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{m}</div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: val == null ? "#1e3550" : bad ? "#ef4444" : "#a8c4dc" }}>{val ?? "—"}</div>
+                          <div style={{ fontSize: 7.5, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{m}</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: val == null ? "#a0b4c8" : bad ? "#ef4444" : "#a8c4dc" }}>{val ?? "—"}</div>
                         </div>
                       );
                     })}
@@ -548,7 +548,7 @@ export default function App() {
                   <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>✦ AI REFERENCE</div>
                   <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 17, color: "#dde8f5" }}>{selectedLab.name}</div>
                 </div>
-                <button onClick={() => setAiOpen(false)} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#3d5a7a", fontSize: 14, cursor: "pointer", padding: "4px 8px", lineHeight: 1 }}>✕</button>
+                <button onClick={() => setAiOpen(false)} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px", lineHeight: 1 }}>✕</button>
               </div>
               <div style={{ padding: "16px", overflowY: "auto", flex: 1 }}>
                 {[
@@ -564,10 +564,10 @@ export default function App() {
 
                 {/* Value in context bar */}
                 <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "14px", marginBottom: 16 }}>
-                  <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", marginBottom: 8 }}>GREG'S CURRENT VALUE</div>
+                  <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", marginBottom: 8 }}>GREG'S CURRENT VALUE</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
                     <span style={{ fontSize: 22, fontWeight: 700, color: statusOf(selectedLab) === "ok" ? "#dde8f5" : "#ef4444" }}>{latestVal(selectedLab)}</span>
-                    <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{selectedLab.unit}</span>
+                    <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{selectedLab.unit}</span>
                   </div>
                   <div style={{ height: 5, background: "#0d1a28", borderRadius: 3, overflow: "hidden", marginBottom: 5 }}>
                     <div style={{
@@ -577,7 +577,7 @@ export default function App() {
                       borderRadius: 3,
                     }} />
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8.5, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8.5, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                     <span>Low {selectedLab.low}</span><span>High {selectedLab.high}</span>
                   </div>
                 </div>

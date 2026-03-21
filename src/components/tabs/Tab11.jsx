@@ -286,7 +286,7 @@ function TypingIndicator() {
       <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</div>
       <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: "4px 12px 12px 12px", padding: "14px 18px", display: "flex", gap: 5, alignItems: "center" }}>
         {[0, 150, 300].map(d => (
-          <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#3d5a7a", display: "inline-block", animation: `dotBlink 1.2s ease ${d}ms infinite` }} />
+          <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#b0c4d8", display: "inline-block", animation: `dotBlink 1.2s ease ${d}ms infinite` }} />
         ))}
       </div>
     </div>
@@ -445,7 +445,7 @@ export default function AIAnalysis() {
         @keyframes fadeUp   { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
         @keyframes dotBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-        .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #111e30; border-radius:8px; color:#3d5a7a; font-size:11.5px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
+        .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; font-size:11.5px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
         .preset-btn:hover { border-color:#1a2f4a; color:#7eb8d8; background:#0d1828; }
         .send-btn { padding:0 18px; height:40px; background:rgba(79,142,247,.12); border:1px solid rgba(79,142,247,.3); border-radius:8px; color:#4f8ef7; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; flex-shrink:0; }
         .send-btn:hover { background:rgba(79,142,247,.2); border-color:rgba(79,142,247,.5); }
@@ -453,14 +453,14 @@ export default function AIAnalysis() {
         .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#ef4444; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
         .stop-btn:hover { background:rgba(239,68,68,.15); }
         .chat-input { flex:1; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; }
-        .chat-input::placeholder { color:#2d4d6a; }
+        .chat-input::placeholder { color:#98afc4; }
         .chat-input:focus { border-color:#1a2f4a; }
-        .icon-btn { background:transparent; border:1px solid #111e30; border-radius:8px; color:#3d5a7a; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; font-size:13px; flex-shrink:0; }
+        .icon-btn { background:transparent; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; font-size:13px; flex-shrink:0; }
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .modal-input { width:100%; background:#07090f; border:1px solid #111e30; color:#c4d8ee; padding:9px 12px; border-radius:8px; font-family:'DM Mono',monospace; font-size:12px; outline:none; transition:border-color .15s; letter-spacing:0.5px; }
         .modal-input:focus { border-color:#1a2f4a; }
-        .new-conv-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:transparent; border:1px solid #111e30; border-radius:12px; color:#2d4d6a; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; }
-        .new-conv-btn:hover { border-color:#1a2f4a; color:#3d5a7a; }
+        .new-conv-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:transparent; border:1px solid #111e30; border-radius:12px; color:#98afc4; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; }
+        .new-conv-btn:hover { border-color:#1a2f4a; color:#b0c4d8; }
         @media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }
       `}</style>
 
@@ -488,7 +488,7 @@ export default function AIAnalysis() {
 
           {showKeyPopover && (
             <div style={{ position: "absolute", right: 0, top: 40, width: 320, background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 12, padding: 18, zIndex: 50, animation: "fadeUp .2s ease both", boxShadow: "0 8px 32px rgba(0,0,0,.5)" }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Anthropic API Key</div>
+              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Anthropic API Key</div>
               {hasKey && (
                 <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                   ✓ Key saved · {apiKey.slice(0, 8)}••••••••
@@ -506,11 +506,11 @@ export default function AIAnalysis() {
                 <button onClick={saveApiKey} style={{ flex: 1, padding: "7px 0", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#4f8ef7", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
                   Save Key
                 </button>
-                <button onClick={() => setShowKeyPopover(false)} style={{ padding: "7px 14px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#3d5a7a", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+                <button onClick={() => setShowKeyPopover(false)} style={{ padding: "7px 14px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
                   Cancel
                 </button>
               </div>
-              <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginTop: 10 }}>
+              <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 10 }}>
                 Stored in localStorage under mi_ak · never transmitted except to api.anthropic.com
               </div>
             </div>
@@ -518,7 +518,7 @@ export default function AIAnalysis() {
         </div>
 
         <div style={{ fontSize: 10, color: "#1e4030", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: hasKey ? "#10b981" : "#3d5a7a", display: "inline-block" }} />
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: hasKey ? "#10b981" : "#b0c4d8", display: "inline-block" }} />
           claude-sonnet-4-6
         </div>
       </div>
@@ -528,7 +528,7 @@ export default function AIAnalysis() {
 
         {/* Sidebar */}
         <div style={{ width: 236, minWidth: 236, borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", padding: "16px 12px", overflowY: "auto" }}>
-          <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Quick Prompts</div>
+          <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Quick Prompts</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
             {PRESETS.map((p, i) => (
               <button key={i} className="preset-btn" onClick={() => setInput(p.prompt)} disabled={streaming}>
@@ -539,9 +539,9 @@ export default function AIAnalysis() {
           </div>
 
           <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Context Loaded</div>
+            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Context Loaded</div>
             {CONTEXT_ITEMS.map(({ label, color }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#3d5a7a", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
                 {label}
               </div>
@@ -553,7 +553,7 @@ export default function AIAnalysis() {
               ↺ New Conversation
             </button>
             {messages.length > 0 && (
-              <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 8 }}>
+              <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 8 }}>
                 {messages.length} message{messages.length !== 1 ? "s" : ""} · auto-saved
               </div>
             )}
@@ -568,8 +568,8 @@ export default function AIAnalysis() {
             {messages.length === 0 && (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
                 <div style={{ fontSize: 32, color: "#1a2840" }}>✦</div>
-                <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#2d4d6a", fontWeight: 400 }}>How can I help today?</div>
-                <div style={{ fontSize: 12, color: "#1e3550", fontFamily: "'DM Mono',monospace", textAlign: "center", maxWidth: 320, lineHeight: 1.6 }}>
+                <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#98afc4", fontWeight: 400 }}>How can I help today?</div>
+                <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", maxWidth: 320, lineHeight: 1.6 }}>
                   {hasKey
                     ? "Ask anything about your health data, labs, medications, or upcoming appointments."
                     : "Set your Anthropic API key using the ⚙ button above to get started."}
@@ -609,7 +609,7 @@ export default function AIAnalysis() {
                 : <button className="send-btn" onClick={() => sendMessage(input)} disabled={!input.trim() || !hasKey}>Send ↑</button>
               }
             </div>
-            <div style={{ marginTop: 8, fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between" }}>
               <span>Shift+Enter for new line · Enter to send</span>
               <span>Powered by Claude · data stays local</span>
             </div>

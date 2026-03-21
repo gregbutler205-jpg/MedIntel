@@ -96,7 +96,7 @@ function StatusCard({ meds, readings }) {
         <div style={{ background:cfg.bg, border:`1px solid ${cfg.border}`, borderRadius:20, padding:"2px 8px", fontSize:9, color:cfg.color, fontFamily:"'DM Mono',monospace" }}>AI</div>
       </div>
       <div style={{ fontSize:11, fontWeight:600, color:"#7eb8d8", marginBottom:3 }}>Status</div>
-      <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>Updated {updated}</div>
+      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Updated {updated}</div>
     </div>
   );
 }
@@ -114,19 +114,19 @@ function RefillsCard({ meds }) {
         <div>
           <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:5 }}>{refills.length}</div>
           <div style={{ fontSize:11, fontWeight:600, color:"#7eb8d8", marginBottom:3 }}>Refills This Week</div>
-          <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{fmt(mon)} – {fmt(sun)}</div>
+          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmt(mon)} – {fmt(sun)}</div>
         </div>
         <div style={{ fontSize:14, color:"#f59e0b", marginTop:2, transition:"transform .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>▾</div>
       </div>
       {open && (
         <div style={{ marginTop:12, paddingTop:10, borderTop:"1px solid #0d1a28" }}>
           {refills.length === 0
-            ? <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>No refills due this week</div>
+            ? <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>No refills due this week</div>
             : refills.map((r, i) => (
               <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", borderBottom:i<refills.length-1?"1px solid #0d1a28":"none" }}>
                 <div style={{ width:5, height:5, borderRadius:"50%", background:"#f59e0b", flexShrink:0 }} />
                 <div style={{ flex:1, fontSize:11, color:"#c4d8ee" }}>{r.name}</div>
-                <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{r.refillDate}</div>
+                <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{r.refillDate}</div>
               </div>
             ))
           }
@@ -142,7 +142,7 @@ function BPCard({ readings }) {
       <div style={{ width:28, height:3, background:"#4f8ef7", borderRadius:2, marginBottom:14, boxShadow:"0 0 10px #4f8ef760" }} />
       <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:5 }}>{r.bp_s ?? "--"}/{r.bp_d ?? "--"}</div>
       <div style={{ fontSize:11, fontWeight:600, color:"#7eb8d8", marginBottom:3 }}>Blood Pressure</div>
-      <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>Recorded {r.date ?? "--"}</div>
+      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Recorded {r.date ?? "--"}</div>
     </div>
   );
 }
@@ -162,7 +162,7 @@ function WeightCard({ readings }) {
         {diff != null && <div style={{ fontSize:16, color:tcolor, fontWeight:700 }}>{arrow}</div>}
       </div>
       <div style={{ fontSize:11, fontWeight:600, color:"#7eb8d8", marginBottom:3 }}>Weight</div>
-      <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>
+      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
         Recorded {readings[0]?.date ?? "--"}{tlabel ? <> · <span style={{ color:tcolor }}>{tlabel}</span></> : null}
       </div>
     </div>
@@ -177,19 +177,19 @@ function AppSidebar({ activeNav, setActiveNav }) {
         <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
       </div>
       <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
-        <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
+        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
         <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>Greg Butler</div>
-        <div style={{ fontSize: 11, color: "#2d4d6a", marginTop: 2 }}>Transplant · Immunosuppressed</div>
+        <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>Transplant · Immunosuppressed</div>
       </div>
       <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-        <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
+        <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
         {NAV.slice(0, 8).map(({ id, icon, label }) => (
           <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
             <span className="nav-icon">{icon}</span>
             <span>{label}</span>
           </div>
         ))}
-        <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#142030", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
+        <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
         {NAV.slice(8).map(({ id, icon, label }) => (
           <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
             <span className="nav-icon">{icon}</span>
@@ -283,7 +283,7 @@ export default function App() {
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #1a2840; border-radius: 4px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#3d5a7a; border-left:2px solid transparent; transition:all .15s; user-select:none; }
+        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#b0c4d8; border-left:2px solid transparent; transition:all .15s; user-select:none; }
         .nav-item:hover { color:#7eb8d8; background:rgba(79,142,247,.04); }
         .nav-item.active { color:#4f8ef7; background:rgba(79,142,247,.08); border-left-color:#4f8ef7; }
         .nav-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
@@ -295,7 +295,7 @@ export default function App() {
         .upcoming-row:hover { border-color:#1a2f4a; }
         .vital-row { display:grid; grid-template-columns:80px 100px 50px 60px; gap:0; padding:10px 0; border-bottom:1px solid #0d1a28; align-items:center; font-size:12px; }
         .vital-row:last-child { border-bottom:none; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#1e3550; font-family:'DM Mono', monospace; margin-bottom:12px; }
+        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
         .badge-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px; }
         .ai-btn { width:100%; padding:12px; background:linear-gradient(135deg, rgba(79,142,247,.15), rgba(167,139,250,.1)); border:1px solid rgba(79,142,247,.3); border-radius:10px; color:#7eb8d8; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
         .ai-btn:hover { background:linear-gradient(135deg, rgba(79,142,247,.25), rgba(167,139,250,.18)); border-color:rgba(79,142,247,.5); color:#b8d4f0; }
@@ -327,9 +327,9 @@ export default function App() {
               <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
                   <div className="live-dot" />
-                  <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+                  <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
                 </div>
-                <div style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
+                <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
                   Last import: {lastImport ? new Date(lastImport).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "Mar 12, 2026"}
                 </div>
                 <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
@@ -349,7 +349,7 @@ export default function App() {
                   <>
                     <div style={{ marginBottom: 26 }}>
                       <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>Good afternoon, Greg.</h1>
-                      <p style={{ fontSize: 12, color: "#2d4d6a", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>3 upcoming events · 2 alerts need attention</p>
+                      <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>3 upcoming events · 2 alerts need attention</p>
                     </div>
 
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
@@ -368,7 +368,7 @@ export default function App() {
                           { label:"WEIGHT (lbs)", key:"weight", placeholder:"184.2" },
                         ].map(f => (
                           <div key={f.key}>
-                            <label style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
+                            <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
                             <input
                               style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
                               placeholder={f.placeholder}
@@ -378,7 +378,7 @@ export default function App() {
                           </div>
                         ))}
                         <button onClick={handleQuickSave} style={{ padding:"7px 14px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, cursor:"pointer", whiteSpace:"nowrap" }}>Save</button>
-                        <button onClick={() => setShowQuickEntry(false)} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#3d5a7a", fontSize:12, cursor:"pointer" }}>✕</button>
+                        <button onClick={() => setShowQuickEntry(false)} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontSize:12, cursor:"pointer" }}>✕</button>
                       </div>
                     )}
 
@@ -397,7 +397,7 @@ export default function App() {
                             <div style={{ width: 8, height: 8, borderRadius: "50%", background: urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981", flexShrink: 0, boxShadow: `0 0 8px ${urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981"}80` }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 13, fontWeight: 500, color: "#c4d8ee", marginBottom: 2 }}>{label}</div>
-                              <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{doctor}</div>
+                              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doctor}</div>
                             </div>
                             <div style={{ fontSize: 11, color: urgency === "high" ? "#ef4444" : "#7eb8d8", fontWeight: 600, fontFamily: "'DM Mono',monospace" }}>{date}</div>
                           </div>
@@ -412,7 +412,7 @@ export default function App() {
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.45 }}>{text}</div>
                             </div>
-                            <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{t}</div>
+                            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{t}</div>
                           </div>
                         ))}
                       </div>
@@ -420,7 +420,7 @@ export default function App() {
                       <div>
                         <div className="section-label">AI Analysis</div>
                         <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: 16 }}>
-                          <div style={{ fontSize: 11, color: "#2d4d6a", marginBottom: 12, lineHeight: 1.5, fontFamily: "'DM Mono',monospace" }}>Cross-references all your data automatically.</div>
+                          <div style={{ fontSize: 11, color: "#98afc4", marginBottom: 12, lineHeight: 1.5, fontFamily: "'DM Mono',monospace" }}>Cross-references all your data automatically.</div>
                           {["Analyze my current health status", "Review my medications for interactions", "Prep questions for nephrology appt"].map((q, i) => (
                             <button key={i} className="ai-btn" onClick={() => setActiveNav("ai")} style={{ marginBottom: 8, animationDelay: `${320 + i * 50}ms`, justifyContent: "flex-start", textAlign: "left" }}>
                               <span style={{ color: "#4f8ef7", fontSize: 14 }}>✦</span>
@@ -441,12 +441,12 @@ export default function App() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "80px 100px 50px 60px", gap: 0, padding: "0 0 8px", borderBottom: "1px solid #0d1a28", marginBottom: 4 }}>
                         {["DATE", "BP", "HR", "O2"].map(h => (
-                          <div key={h} style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px" }}>{h}</div>
+                          <div key={h} style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px" }}>{h}</div>
                         ))}
                       </div>
                       {readings.slice(0, 4).map(r => ({ date:r.date, bp:`${r.bp_s}/${r.bp_d}`, hr:r.hr??"--", o2:r.o2??"--", flag:!!r.flag })).map(({ date, bp, hr, o2, flag }) => (
                         <div className="vital-row" key={date}>
-                          <div style={{ color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{date}</div>
+                          <div style={{ color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{date}</div>
                           <div style={{ fontWeight: 600, color: flag ? "#ef4444" : "#c4d8ee", display: "flex", alignItems: "center", gap: 5 }}>
                             {bp} {flag && <span style={{ fontSize: 9, color: "#ef4444" }}>▲</span>}
                           </div>

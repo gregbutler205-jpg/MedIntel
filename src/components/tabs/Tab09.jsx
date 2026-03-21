@@ -208,7 +208,7 @@ export default function DocumentsTab() {
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; }
         @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-        .doc-cat { display:flex; align-items:center; gap:9px; padding:7px 12px; border-radius:8px; cursor:pointer; transition:all .15s; font-size:12px; color:#3d5a7a; user-select:none; }
+        .doc-cat { display:flex; align-items:center; gap:9px; padding:7px 12px; border-radius:8px; cursor:pointer; transition:all .15s; font-size:12px; color:#b0c4d8; user-select:none; }
         .doc-cat:hover { background:rgba(79,142,247,.05); color:#7eb8d8; }
         .doc-cat.active { background:rgba(79,142,247,.08); color:#4f8ef7; border-left: 2px solid #4f8ef7; }
         .doc-row { padding:12px 14px; border-radius:10px; border:1px solid #0d1a28; background:#080c14; cursor:pointer; transition:all .15s; margin-bottom:6px; animation:fadeUp .3s ease both; }
@@ -218,10 +218,10 @@ export default function DocumentsTab() {
         .tag.urgent { background:rgba(239,68,68,.1); color:#ef4444; border-color:rgba(239,68,68,.2); }
         .doc-search { background:#080c14; border:1px solid #111e30; border-radius:8px; padding:8px 12px; color:#a8c4dc; font-family:'Sora',sans-serif; font-size:12px; width:100%; outline:none; transition:border-color .15s; }
         .doc-search:focus { border-color:#1a2f4a; }
-        .doc-search::placeholder { color:#1e3550; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#1e3550; font-family:'DM Mono',monospace; margin-bottom:10px; }
-        .preview-area { font-family:'DM Mono',monospace; font-size:11px; color:#3d5a7a; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #0d1a28; border-radius:10px; padding:18px; overflow-y:auto; flex:1; }
-        .filter-chip { padding:5px 12px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #111e30; background:transparent; color:#3d5a7a; }
+        .doc-search::placeholder { color:#a0b4c8; }
+        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
+        .preview-area { font-family:'DM Mono',monospace; font-size:11px; color:#b0c4d8; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #0d1a28; border-radius:10px; padding:18px; overflow-y:auto; flex:1; }
+        .filter-chip { padding:5px 12px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #111e30; background:transparent; color:#b0c4d8; }
         .filter-chip.active { border-color:rgba(79,142,247,.4); background:rgba(79,142,247,.08); color:#7eb8d8; }
         ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:#1a2840; border-radius:4px; }
         @media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }
@@ -250,7 +250,7 @@ export default function DocumentsTab() {
           >
             <span style={{ fontSize: 12, width: 14, textAlign: "center", flexShrink: 0 }}>{cat.icon}</span>
             <span style={{ flex: 1 }}>{cat.label}</span>
-            <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: selectedCategory === cat.id ? "#4f8ef7" : "#1e3550" }}>
+            <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: selectedCategory === cat.id ? "#4f8ef7" : "#a0b4c8" }}>
               {cat.count}
             </span>
           </div>
@@ -288,11 +288,11 @@ export default function DocumentsTab() {
 
         {/* List */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 10px" }}>
-          <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 10, paddingLeft: 4 }}>
+          <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10, paddingLeft: 4 }}>
             {filtered.length} document{filtered.length !== 1 ? "s" : ""}
           </div>
           {filtered.length === 0 && (
-            <div style={{ padding: 20, textAlign: "center", color: "#1e3550", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
+            <div style={{ padding: 20, textAlign: "center", color: "#a0b4c8", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
               No documents found
             </div>
           )}
@@ -313,8 +313,8 @@ export default function DocumentsTab() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: doc.sourceColor, flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{doc.source}</span>
-                <span style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{doc.date}</span>
+                <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doc.source}</span>
+                <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{doc.date}</span>
               </div>
               <div>
                 {doc.tags.slice(0, 3).map((t) => (
@@ -338,7 +338,7 @@ export default function DocumentsTab() {
                   {selectedDoc.title}
                 </h2>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 16 }}>
-                  <button style={{ padding: "6px 14px", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#3d5a7a", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>
+                  <button style={{ padding: "6px 14px", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>
                     ↓ Export
                   </button>
                   <button style={{ padding: "6px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 7, color: "#7eb8d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>
@@ -357,7 +357,7 @@ export default function DocumentsTab() {
                   { label: "Pages", value: selectedDoc.pages },
                 ].map((m) => (
                   <div key={m.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{m.label}</span>
+                    <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{m.label}</span>
                     <span style={{ fontSize: 11, color: m.color || "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{m.value}</span>
                   </div>
                 ))}
@@ -389,7 +389,7 @@ export default function DocumentsTab() {
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#1e3550", fontFamily: "'DM Mono',monospace", fontSize: 12 }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", fontSize: 12 }}>
             Select a document to preview
           </div>
         )}

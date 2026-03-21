@@ -410,13 +410,13 @@ export default function ImportTab({ onImport }) {
         .imp-btn { display:flex; align-items:center; gap:7px; padding:8px 16px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; border:1px solid; }
         .imp-btn-primary { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.35); color:#7eb8d8; }
         .imp-btn-primary:hover { background:rgba(79,142,247,.25); border-color:rgba(79,142,247,.6); color:#b8d4f0; }
-        .imp-btn-ghost { background:transparent; border-color:#111e30; color:#3d5a7a; }
+        .imp-btn-ghost { background:transparent; border-color:#111e30; color:#b0c4d8; }
         .imp-btn-ghost:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .imp-btn-success { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.3); color:#10b981; }
         .source-row { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:10px; background:#080c14; border:1px solid #0d1a28; margin-bottom:8px; transition:border-color .15s; }
         .source-row:hover { border-color:#111e30; }
         .spin { animation: spin 0.8s linear infinite; display:inline-block; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#1e3550; font-family:'DM Mono',monospace; margin-bottom:12px; }
+        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:12px; }
         .log-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; background:#080c14; border:1px solid #0d1a28; margin-bottom:6px; font-size:12px; transition:border-color .15s; }
         .log-row:hover { border-color:#111e30; }
         .checkbox { width:16px; height:16px; border-radius:4px; border:1px solid #1a2f4a; background:#080c14; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all .15s; }
@@ -432,7 +432,7 @@ export default function ImportTab({ onImport }) {
           <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>
             Import Records
           </h1>
-          <p style={{ fontSize: 12, color: "#2d4d6a", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>
+          <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>
             3 sources connected · Last sync Mar 19, 2026
           </p>
         </div>
@@ -462,19 +462,19 @@ export default function ImportTab({ onImport }) {
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee", marginBottom: 2 }}>{src.name}</div>
-                  <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>{src.subtitle}</div>
+                  <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{src.subtitle}</div>
                 </div>
 
                 {/* Stats */}
                 <div style={{ textAlign: "right", flexShrink: 0, marginRight: 12 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: src.color }}>{src.recordCount}</div>
-                  <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>records</div>
+                  <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>records</div>
                 </div>
 
                 {/* Last sync */}
                 <div style={{ textAlign: "right", flexShrink: 0, marginRight: 14 }}>
-                  <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace" }}>Last sync</div>
-                  <div style={{ fontSize: 10, color: "#3d5a7a", fontFamily: "'DM Mono',monospace" }}>{src.lastSync}</div>
+                  <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>Last sync</div>
+                  <div style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{src.lastSync}</div>
                 </div>
 
                 {/* Sync button */}
@@ -504,7 +504,7 @@ export default function ImportTab({ onImport }) {
               <button className="imp-btn imp-btn-ghost" style={{ fontSize: 11 }}>
                 + Connect New Source
               </button>
-              <span style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
+              <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                 Epic, Cerner, Athena, CommonWell supported
               </span>
             </div>
@@ -535,11 +535,11 @@ export default function ImportTab({ onImport }) {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
             >
-              <div style={{ fontSize: 24, marginBottom: 10, color: dragOver ? "#4f8ef7" : "#1e3550" }}>↓</div>
-              <div style={{ fontSize: 13, color: dragOver ? "#7eb8d8" : "#3d5a7a", fontWeight: 500, marginBottom: 6 }}>
+              <div style={{ fontSize: 24, marginBottom: 10, color: dragOver ? "#4f8ef7" : "#a0b4c8" }}>↓</div>
+              <div style={{ fontSize: 13, color: dragOver ? "#7eb8d8" : "#b0c4d8", fontWeight: 500, marginBottom: 6 }}>
                 Drop PDF files here or click to browse
               </div>
-              <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
+              <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                 PDF (AI) · XML — Epic C-CDA · JSON — Apple Health
               </div>
             </div>
@@ -549,7 +549,7 @@ export default function ImportTab({ onImport }) {
                 {uploadedFiles.map((f, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#080c14", borderRadius: 8, border: "1px solid #0d1a28", marginBottom: 6 }}>
                     <div style={{ fontSize: 11, color: "#7eb8d8", flex: 1 }}>{f.name}</div>
-                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>{(f.size / 1024).toFixed(1)} KB</div>
+                    <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>{(f.size / 1024).toFixed(1)} KB</div>
                     <div style={{ fontSize: 10, fontFamily: "'DM Mono',monospace",
                       color: f.status === "done ✓" ? "#10b981" : f.status.startsWith("error") ? "#ef4444" : "#f59e0b" }}>
                       {f.status}
@@ -575,7 +575,7 @@ export default function ImportTab({ onImport }) {
                 </div>
                 {preview.readings?.length > 0 && (
                   <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>VITALS ({preview.readings.length})</div>
+                    <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>VITALS ({preview.readings.length})</div>
                     {preview.readings.map((r, i) => (
                       <div key={i} style={{ fontSize: 11, color: "#a8c4dc", padding: "3px 0", fontFamily: "'DM Mono',monospace" }}>
                         {r.date} — BP {r.bp_s}/{r.bp_d}{r.weight ? ` · Weight ${r.weight} lbs` : ""}
@@ -585,22 +585,22 @@ export default function ImportTab({ onImport }) {
                 )}
                 {preview.labs?.length > 0 && (
                   <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>LABS ({preview.labs.length})</div>
+                    <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>LABS ({preview.labs.length})</div>
                     {preview.labs.slice(0, 6).map((l, i) => (
                       <div key={i} style={{ fontSize: 11, color: l.flag ? "#ef4444" : "#a8c4dc", padding: "3px 0", fontFamily: "'DM Mono',monospace" }}>
                         {l.name}: {l.value} {l.unit}{l.refRange ? ` (ref: ${l.refRange})` : ""}{l.flag ? " ▲" : ""}
                       </div>
                     ))}
-                    {preview.labs.length > 6 && <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>+{preview.labs.length - 6} more</div>}
+                    {preview.labs.length > 6 && <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>+{preview.labs.length - 6} more</div>}
                   </div>
                 )}
                 {preview.meds?.length > 0 && (
                   <div style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>MEDICATIONS ({preview.meds.length})</div>
+                    <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>MEDICATIONS ({preview.meds.length})</div>
                     {preview.meds.slice(0, 4).map((m, i) => (
                       <div key={i} style={{ fontSize: 11, color: "#a8c4dc", padding: "3px 0", fontFamily: "'DM Mono',monospace" }}>{m.name}</div>
                     ))}
-                    {preview.meds.length > 4 && <div style={{ fontSize: 10, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>+{preview.meds.length - 4} more</div>}
+                    {preview.meds.length > 4 && <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>+{preview.meds.length - 4} more</div>}
                   </div>
                 )}
                 <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -625,7 +625,7 @@ export default function ImportTab({ onImport }) {
             {/* Table header */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 80px 60px 60px", gap: 8, padding: "0 14px 8px", borderBottom: "1px solid #0d1a28", marginBottom: 6 }}>
               {["SOURCE", "TYPE", "DATE", "RECORDS", "STATUS"].map((h) => (
-                <div key={h} style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px" }}>{h}</div>
+                <div key={h} style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px" }}>{h}</div>
               ))}
             </div>
 
@@ -635,8 +635,8 @@ export default function ImportTab({ onImport }) {
                   <div className="status-dot" style={{ background: entry.color }} />
                   <span style={{ color: "#a8c4dc", fontWeight: 500, fontSize: 12 }}>{entry.source}</span>
                 </div>
-                <div style={{ color: "#3d5a7a", fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{entry.type}</div>
-                <div style={{ color: "#2d4d6a", fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{entry.date}</div>
+                <div style={{ color: "#b0c4d8", fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{entry.type}</div>
+                <div style={{ color: "#98afc4", fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{entry.date}</div>
                 <div style={{ color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{entry.records.toLocaleString()}</div>
                 <div style={{ color: "#10b981", fontFamily: "'DM Mono',monospace", fontSize: 10 }}>✓ done</div>
               </div>
@@ -658,8 +658,8 @@ export default function ImportTab({ onImport }) {
                 <div className={`checkbox${dt.checked ? " checked" : ""}`}>
                   {dt.checked && <span style={{ color: "#4f8ef7", fontSize: 10 }}>✓</span>}
                 </div>
-                <span style={{ fontSize: 11, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", width: 14 }}>{dt.icon}</span>
-                <span style={{ fontSize: 12, color: dt.checked ? "#a8c4dc" : "#3d5a7a", fontWeight: dt.checked ? 500 : 400 }}>{dt.label}</span>
+                <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", width: 14 }}>{dt.icon}</span>
+                <span style={{ fontSize: 12, color: dt.checked ? "#a8c4dc" : "#b0c4d8", fontWeight: dt.checked ? 500 : 400 }}>{dt.label}</span>
               </div>
             ))}
           </div>
@@ -676,7 +676,7 @@ export default function ImportTab({ onImport }) {
               { label: "Immunizations", value: "7", color: "#10b981" },
             ].map((s) => (
               <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #0d1a28" }}>
-                <span style={{ fontSize: 12, color: "#3d5a7a" }}>{s.label}</span>
+                <span style={{ fontSize: 12, color: "#b0c4d8" }}>{s.label}</span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: s.color, fontFamily: "'DM Mono',monospace" }}>{s.value}</span>
               </div>
             ))}
@@ -692,7 +692,7 @@ export default function ImportTab({ onImport }) {
               { label: "Notifications", value: "New labs only" },
             ].map((r) => (
               <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #0d1a28" }}>
-                <span style={{ fontSize: 11, color: "#2d4d6a" }}>{r.label}</span>
+                <span style={{ fontSize: 11, color: "#98afc4" }}>{r.label}</span>
                 <span style={{ fontSize: 11, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{r.value}</span>
               </div>
             ))}

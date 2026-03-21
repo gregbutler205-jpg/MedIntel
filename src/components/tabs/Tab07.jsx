@@ -116,7 +116,7 @@ function LogPanel({ onClose, onSave }) {
             {step === 1 ? "Select Symptom" : selected ? selected.label : custom}
           </div>
         </div>
-        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#3d5a7a", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
       </div>
 
       {/* Step 1 — symptom picker */}
@@ -133,11 +133,11 @@ function LogPanel({ onClose, onSave }) {
           <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 14px" }}>
             {categories.map(cat => (
               <div key={cat} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>{cat}</div>
+                <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>{cat}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {filtered.filter(s => s.category === cat).map(s => (
                     <button key={s.id} onClick={() => setSelected(selected?.id === s.id ? null : s)}
-                      style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${selected?.id === s.id ? "#4f8ef7" : "#111e30"}`, background: selected?.id === s.id ? "rgba(79,142,247,.15)" : "#0b1220", color: selected?.id === s.id ? "#7eb8d8" : "#3d5a7a", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
+                      style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${selected?.id === s.id ? "#4f8ef7" : "#111e30"}`, background: selected?.id === s.id ? "rgba(79,142,247,.15)" : "#0b1220", color: selected?.id === s.id ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
                       {s.label}
                     </button>
                   ))}
@@ -147,7 +147,7 @@ function LogPanel({ onClose, onSave }) {
 
             {/* Custom */}
             <div style={{ marginTop: 4 }}>
-              <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>Or describe in your own words</div>
+              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>Or describe in your own words</div>
               <input
                 placeholder="e.g. Tingling in left hand..."
                 value={custom}
@@ -158,7 +158,7 @@ function LogPanel({ onClose, onSave }) {
           </div>
           <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", flexShrink: 0 }}>
             <button onClick={() => canProceed && setStep(2)}
-              style={{ width: "100%", padding: "11px", background: canProceed ? "#4f8ef7" : "#0f1e30", border: "none", borderRadius: 9, color: canProceed ? "#fff" : "#2d4d6a", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: canProceed ? "pointer" : "default", transition: "all .15s" }}>
+              style={{ width: "100%", padding: "11px", background: canProceed ? "#4f8ef7" : "#0f1e30", border: "none", borderRadius: 9, color: canProceed ? "#fff" : "#98afc4", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: canProceed ? "pointer" : "default", transition: "all .15s" }}>
               Next →
             </button>
           </div>
@@ -172,7 +172,7 @@ function LogPanel({ onClose, onSave }) {
 
             {/* Severity slider */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Severity</div>
+              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Severity</div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <span style={{ fontSize: 28, fontWeight: 700, color: severityColor(severity), lineHeight: 1 }}>{severity}</span>
                 <span style={{ fontSize: 12, color: severityColor(severity), fontWeight: 600 }}>{SEVERITY_LABELS[severity]}</span>
@@ -182,7 +182,7 @@ function LogPanel({ onClose, onSave }) {
                 <input type="range" min={1} max={10} value={severity} onChange={e => setSeverity(+e.target.value)}
                   style={{ width: "100%", accentColor: severityColor(severity), cursor: "pointer" }} />
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8.5, color: "#1e3550", fontFamily: "'DM Mono',monospace" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8.5, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                 <span>1 — Minimal</span><span>10 — Severe</span>
               </div>
               {/* Color bar */}
@@ -193,11 +193,11 @@ function LogPanel({ onClose, onSave }) {
 
             {/* Body location */}
             <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Body Location</div>
+              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Body Location</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {BODY_LOCATIONS.map(loc => (
                   <button key={loc} onClick={() => setLocation(location === loc ? "" : loc)}
-                    style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${location === loc ? "#4f8ef7" : "#111e30"}`, background: location === loc ? "rgba(79,142,247,.15)" : "#0b1220", color: location === loc ? "#7eb8d8" : "#3d5a7a", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
+                    style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${location === loc ? "#4f8ef7" : "#111e30"}`, background: location === loc ? "rgba(79,142,247,.15)" : "#0b1220", color: location === loc ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
                     {loc}
                   </button>
                 ))}
@@ -206,7 +206,7 @@ function LogPanel({ onClose, onSave }) {
 
             {/* Notes */}
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Notes <span style={{ color: "#142030" }}>· optional</span></div>
+              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Notes <span style={{ color: "#a0b4c8" }}>· optional</span></div>
               <textarea
                 placeholder="Any context — when it started, what makes it better or worse..."
                 value={note} onChange={e => setNote(e.target.value)} rows={4}
@@ -217,7 +217,7 @@ function LogPanel({ onClose, onSave }) {
 
           <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8, flexShrink: 0 }}>
             <button onClick={() => setStep(1)}
-              style={{ padding: "11px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#3d5a7a", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+              style={{ padding: "11px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
               ← Back
             </button>
             <button onClick={handleSave}
@@ -255,15 +255,15 @@ function DetailPanel({ entry, onClose, onResolve }) {
             {entry.status === "active" ? "● ACTIVE" : "✓ RESOLVED"}
           </div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", lineHeight: 1.2 }}>{entry.symptom}</div>
-          <div style={{ fontSize: 10, color: "#2d4d6a", fontFamily: "'DM Mono',monospace", marginTop: 5 }}>{entry.date} · {entry.location}</div>
+          <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 5 }}>{entry.date} · {entry.location}</div>
         </div>
-        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#3d5a7a", fontSize: 14, cursor: "pointer", padding: "4px 8px", flexShrink: 0 }}>✕</button>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px", flexShrink: 0 }}>✕</button>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
         {/* Severity */}
         <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px", marginBottom: 14 }}>
-          <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Severity</div>
+          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Severity</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 700, color: severityColor(entry.severity), lineHeight: 1 }}>{entry.severity}</span>
             <span style={{ fontSize: 13, color: severityColor(entry.severity), fontWeight: 600 }}>{SEVERITY_LABELS[entry.severity]}</span>
@@ -271,7 +271,7 @@ function DetailPanel({ entry, onClose, onResolve }) {
           <div style={{ height: 6, borderRadius: 4, background: "linear-gradient(to right,#10b981,#f59e0b,#f97316,#ef4444)", position: "relative" }}>
             <div style={{ position: "absolute", top: -4, left: `${((entry.severity - 1) / 9) * 100}%`, transform: "translateX(-50%)", width: 14, height: 14, borderRadius: "50%", background: severityColor(entry.severity), border: "2px solid #080c14" }} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: "#142030", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>
             <span>1</span><span>5</span><span>10</span>
           </div>
         </div>
@@ -279,7 +279,7 @@ function DetailPanel({ entry, onClose, onResolve }) {
         {/* Notes */}
         {entry.note && (
           <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "14px", marginBottom: 14 }}>
-            <div style={{ fontSize: 9, color: "#1e3550", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Notes</div>
+            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Notes</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.7 }}>{entry.note}</div>
           </div>
         )}
@@ -361,16 +361,16 @@ export default function App() {
         @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-        .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:#3d5a7a;border-left:2px solid transparent;transition:all .15s;user-select:none}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:#b0c4d8;border-left:2px solid transparent;transition:all .15s;user-select:none}
         .nav-item:hover{color:#7eb8d8;background:rgba(79,142,247,.04)}
         .nav-item.active{color:#4f8ef7;background:rgba(79,142,247,.08);border-left-color:#4f8ef7}
         .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
         .live-dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;flex-shrink:0}
-        .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#1e3550;font-family:'DM Mono',monospace;margin-bottom:10px}
+        .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
         .entry-row{background:#0b1220;border:1px solid #111e30;border-radius:11px;padding:14px 16px;cursor:pointer;transition:all .15s;animation:fadeUp .3s ease both;margin-bottom:7px}
         .entry-row:hover{border-color:#1a2f4a}
         .entry-row.sel{border-color:#4f8ef7;background:rgba(79,142,247,.06)}
-        .filter-btn{padding:5px 13px;border-radius:20px;border:1px solid #111e30;background:transparent;color:#3d5a7a;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .12s}
+        .filter-btn{padding:5px 13px;border-radius:20px;border:1px solid #111e30;background:transparent;color:#b0c4d8;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .12s}
         .filter-btn:hover{color:#7eb8d8;border-color:#1a2f4a}
         .filter-btn.on{background:rgba(79,142,247,.12);border-color:#4f8ef7;color:#7eb8d8}
       `}</style>
@@ -381,18 +381,18 @@ export default function App() {
           <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
-          <div style={{ fontSize:10, color:"#1e3550", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
+          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
           <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize:11, color:"#2d4d6a", marginTop:2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize:11, color:"#98afc4", marginTop:2 }}>Transplant · Immunosuppressed</div>
         </div>
         <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
-          <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#142030", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
+          <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
           {NAV.slice(0,8).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
-          <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#142030", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
+          <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
           {NAV.slice(8).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
@@ -413,7 +413,7 @@ export default function App() {
         <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
           <div style={{ flex:1, display:"flex", alignItems:"center", gap:8 }}>
             <div className="live-dot"/>
-            <span style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
           <button onClick={()=>{ setShowLog(true); setSelectedEntry(null); }}
             style={{ padding:"9px 20px", background:"#4f8ef7", border:"none", borderRadius:8, color:"#fff", fontSize:13, fontFamily:"'Sora',sans-serif", fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:8, boxShadow:"0 0 18px rgba(79,142,247,.35)" }}>
@@ -430,7 +430,7 @@ export default function App() {
             <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:20 }}>
               <div>
                 <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:26, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px", marginBottom:4 }}>Symptoms</h1>
-                <p style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>{entries.length} logged · {active.length} active</p>
+                <p style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{entries.length} logged · {active.length} active</p>
               </div>
               <div style={{ display:"flex", gap:6 }}>
                 {[["all","All"],["active","Active"],["resolved","Resolved"]].map(([v,l]) => (
@@ -448,7 +448,7 @@ export default function App() {
                 { label:"Peak Severity", value: maxSeverity || "—", color: severityColor(maxSeverity || 5) },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 16px", animation:"fadeUp .3s ease both" }}>
-                  <div style={{ fontSize:9, color:"#1e3550", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
+                  <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
                   <div style={{ fontSize:24, fontWeight:700, color, lineHeight:1 }}>{value}</div>
                 </div>
               ))}
@@ -465,7 +465,7 @@ export default function App() {
                 <div style={{ width:38, height:38, borderRadius:"50%", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#4f8ef7", lineHeight:1, flexShrink:0 }}>+</div>
                 <div>
                   <div style={{ fontSize:14, fontWeight:600, color:"#7eb8d8", marginBottom:3 }}>Log a new symptom</div>
-                  <div style={{ fontSize:11, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>Quick-select or describe in your own words · takes 30 seconds</div>
+                  <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Quick-select or describe in your own words · takes 30 seconds</div>
                 </div>
               </div>
               <div style={{ fontSize:18, color:"#4f8ef7", opacity:0.6 }}>→</div>
@@ -477,7 +477,7 @@ export default function App() {
                 {/* Date header with timeline dot */}
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
                   <div style={{ width:8, height:8, borderRadius:"50%", background:"#1a2840", flexShrink:0 }}/>
-                  <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace", letterSpacing:"0.5px", fontWeight:600 }}>{date}</div>
+                  <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", letterSpacing:"0.5px", fontWeight:600 }}>{date}</div>
                   <div style={{ flex:1, height:1, background:"#0d1a28" }}/>
                 </div>
 
@@ -498,14 +498,14 @@ export default function App() {
                               {entry.status === "active" ? "ACTIVE" : "RESOLVED"}
                             </span>
                           </div>
-                          <div style={{ fontSize:10, color:"#2d4d6a", fontFamily:"'DM Mono',monospace" }}>
+                          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                             {entry.location}
                           </div>
                         </div>
                       </div>
                       <SeverityBar value={entry.severity} />
                       {entry.note && (
-                        <div style={{ fontSize:11, color:"#3d5a7a", marginTop:9, lineHeight:1.55, borderTop:"1px solid #0d1a28", paddingTop:9 }}>
+                        <div style={{ fontSize:11, color:"#b0c4d8", marginTop:9, lineHeight:1.55, borderTop:"1px solid #0d1a28", paddingTop:9 }}>
                           {entry.note}
                         </div>
                       )}
@@ -516,7 +516,7 @@ export default function App() {
             ))}
 
             {displayed.length === 0 && (
-              <div style={{ textAlign:"center", padding:"60px 0", color:"#1e3550", fontFamily:"'DM Mono',monospace", fontSize:12 }}>
+              <div style={{ textAlign:"center", padding:"60px 0", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontSize:12 }}>
                 No symptoms logged yet.
               </div>
             )}
