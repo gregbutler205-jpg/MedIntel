@@ -134,7 +134,7 @@ export default function DataBackup() {
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
-        <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+        
       </div>
       <div style={{ overflowY: "auto", padding: "24px 28px", flex: 1 }}>
 

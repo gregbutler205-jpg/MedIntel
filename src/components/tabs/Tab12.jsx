@@ -395,7 +395,7 @@ export default function ImportTab({ onImport }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
-        <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+        
       </div>
       <div style={{ padding: "28px 28px", overflowY: "auto", flex: 1 }}>
       <style>{`
