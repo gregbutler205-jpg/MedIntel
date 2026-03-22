@@ -16,6 +16,8 @@ import TabAI          from './components/tabs/Tab11.jsx';
 import TabImport       from './components/tabs/Tab12.jsx';
 import TabBackup       from './components/tabs/Tab13.jsx';
 import TabAppointments from './components/tabs/Tab14.jsx';
+import TabConditions   from './components/tabs/Tab15.jsx';
+import TabSurgeries    from './components/tabs/Tab16.jsx';
 
 // ── Routing maps ─────────────────────────────────────────────────────────────
 // These 4 tabs are full standalone apps (own sidebar + own topbar + height:100vh).
@@ -37,6 +39,8 @@ const TAB_COMPONENTS = {
   import:       TabImport,
   backup:       TabBackup,
   appointments: TabAppointments,
+  conditions:   TabConditions,
+  surgeries:    TabSurgeries,
 };
 
 // ── Assets & static data ──────────────────────────────────────────────────────
@@ -46,6 +50,8 @@ const NAV = [
   { id: "dashboard",   icon: "⬡", label: "Dashboard" },
   { id: "profile",     icon: "◯", label: "Profile" },
   { id: "records",     icon: "▤", label: "Records" },
+  { id: "conditions",  icon: "◎", label: "Conditions" },
+  { id: "surgeries",   icon: "✦", label: "Surgeries" },
   { id: "medications", icon: "⬡", label: "Medications" },
   { id: "labs",        icon: "◈", label: "Labs & Trends" },
   { id: "vitals",      icon: "♡", label: "Vitals" },
@@ -239,6 +245,13 @@ export default function App() {
     return getStore('upcoming');
   });
   const [lastImport, setLastImport] = useState(() => getStore('lastImport'));
+  const [activeConditions, setActiveConditions] = useState(() => {
+    try {
+      const raw = localStorage.getItem("mi_conditions");
+      if (raw) return JSON.parse(raw).filter(c => c.status === "active");
+    } catch {}
+    return [];
+  });
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [quickReading, setQuickReading] = useState({ bp_s:"", bp_d:"", weight:"", date:"" });
 
@@ -455,6 +468,23 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Active Conditions */}
+                    {activeConditions.length > 0 && (
+                      <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                          <div className="section-label" style={{ marginBottom:0 }}>Active Conditions</div>
+                          <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("conditions")}>Manage →</div>
+                        </div>
+                        <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                          {activeConditions.map(c => (
+                            <div key={c.id} style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", borderRadius:20, padding:"4px 12px", fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace" }}>
+                              {c.name}{c.icd10 ? ` · ${c.icd10}` : ""}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
