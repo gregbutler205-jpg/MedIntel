@@ -313,7 +313,7 @@ export default function App({ onNavChange }) {
 
   const flaggedCount = meds.filter((m) => m.flag).length;
   const refillSoon = meds.filter((m) => m.daysLeft <= 10).length;
-  const nextRefill = meds.reduce((min, m) => (m.daysLeft < min.daysLeft ? m : min), meds[0]);
+  const nextRefill = meds.length > 0 ? meds.reduce((min, m) => (m.daysLeft < min.daysLeft ? m : min), meds[0]) : null;
 
   const statusColor = (s) => ({ ok: "#10b981", refill: "#f59e0b", warn: "#ef4444" }[s] || "#4f8ef7");
 
@@ -459,10 +459,10 @@ export default function App({ onNavChange }) {
           {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 22 }}>
             {[
-              { label: "Active Medications", value: "14", sub: "across 8 categories", color: "#4f8ef7" },
+              { label: "Active Medications", value: String(meds.length), sub: "across categories", color: "#4f8ef7" },
               { label: "Flagged for Review", value: String(flaggedCount), sub: "requires attention", color: "#ef4444" },
               { label: "Refills Due Soon", value: String(refillSoon), sub: "within 10 days", color: "#f59e0b" },
-              { label: "Next Refill", value: nextRefill.name.split(" ")[0], sub: `Due ${nextRefill.refillDate} · ${nextRefill.daysLeft}d`, color: "#f59e0b" },
+              { label: "Next Refill", value: nextRefill ? nextRefill.name.split(" ")[0] : "—", sub: nextRefill ? `Due ${nextRefill.refillDate} · ${nextRefill.daysLeft}d` : "No meds added yet", color: "#f59e0b" },
             ].map(({ label, value, sub, color }, i) => (
               <div className="stat-card" key={label} style={{ animationDelay: `${i * 55}ms` }}>
                 <div style={{ width: 28, height: 3, background: color, borderRadius: 2, marginBottom: 14, boxShadow: `0 0 10px ${color}60` }} />

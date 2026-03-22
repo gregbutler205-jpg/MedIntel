@@ -1,63 +1,6 @@
 import { useState } from "react";
 
-const RECORDS = [
-  {
-    id: 1, type: "Visit Note", title: "Nephrology Follow-Up",
-    date: "Mar 12, 2026", facility: "UMC Transplant Center",
-    provider: "Dr. Ari Cohen, MD", tags: ["nephrology", "transplant"],
-    epicId: "ENC-20260312-001",
-    summary: "Stable creatinine at 1.42. Tacrolimus level therapeutic at 6.2 ng/mL. Continue current immunosuppression. Follow up in 3 months or sooner if creatinine rises.",
-    details: ["BP 131/71 — stable", "Tacrolimus 6.2 ng/mL — therapeutic", "Creatinine 1.42 mg/dL — near baseline", "eGFR 58 mL/min — CKD Stage 3a", "Continue Tacrolimus 2mg BID, Mycophenolate 720mg BID", "Hydration counseling provided", "Next visit: June 2026"],
-  },
-  {
-    id: 2, type: "Lab Report", title: "Transplant Labs Panel",
-    date: "Mar 10, 2026", facility: "Quest Diagnostics",
-    provider: "Order: Dr. Ari Cohen", tags: ["labs", "transplant"],
-    epicId: "LAB-20260310-447",
-    summary: "Full transplant panel drawn. Tacrolimus, metabolic panel, CBC all within acceptable range. Mild creatinine elevation noted over baseline.",
-    details: ["Creatinine 1.42 mg/dL (H)", "BUN 22 mg/dL", "eGFR 58 mL/min", "Tacrolimus 6.2 ng/mL", "WBC 6.2 K/μL", "Hemoglobin 13.8 g/dL", "Potassium 4.1 mEq/L"],
-  },
-  {
-    id: 3, type: "Imaging", title: "Renal Ultrasound",
-    date: "Feb 20, 2026", facility: "Baptist Medical Center",
-    provider: "Dr. Lisa Tran, Radiology", tags: ["imaging", "kidney"],
-    epicId: "IMG-20260220-089",
-    summary: "No hydronephrosis. Transplant kidney in RIF appears well-perfused with normal resistive indices. No perinephric fluid collection.",
-    details: ["Transplant kidney: 11.4 cm", "Cortical echogenicity: normal", "Resistive index: 0.62", "No hydronephrosis", "No perinephric collection", "Native kidneys: atrophic bilaterally"],
-  },
-  {
-    id: 4, type: "Visit Note", title: "Primary Care Annual",
-    date: "Feb 5, 2026", facility: "Hand Family Medicine",
-    provider: "Dr. Jonathan Hand, MD", tags: ["primary care"],
-    epicId: null,
-    summary: "Annual wellness visit. BP trending slightly elevated — adjusted amlodipine from 5mg to 10mg. Skin check clear. Continue current regimen.",
-    details: ["BP 148/82 — trending up", "Amlodipine increased to 10mg QD", "Weight 184 lbs — stable", "Skin cancer screening: clear", "Colonoscopy due 2027", "Flu/COVID boosters current"],
-  },
-  {
-    id: 5, type: "Procedure", title: "Kidney Biopsy",
-    date: "Oct 14, 2025", facility: "UMC Transplant Center",
-    provider: "Dr. Ari Cohen, MD", tags: ["procedure", "biopsy"],
-    epicId: "PROC-20251014-022",
-    summary: "Protocol biopsy at 12-month post-transplant. No acute rejection. Mild interstitial fibrosis/tubular atrophy (Grade 1). No calcineurin inhibitor toxicity identified.",
-    details: ["Indication: Protocol biopsy (12 mo)", "Banff score: i0 t0 g0 v0", "ci1 ct1 — mild IF/TA", "No acute rejection", "No CNI toxicity", "Recommendation: Continue current regimen"],
-  },
-  {
-    id: 6, type: "Hospital", title: "Kidney Transplant Admission",
-    date: "Oct 1, 2024", facility: "UMC Transplant Center",
-    provider: "Transplant Surgery Team", tags: ["hospital", "transplant", "surgery"],
-    epicId: "ADM-20241001-001",
-    summary: "Living donor kidney transplant. Right iliac fossa placement. Immediate graft function. 5-day admission, discharged on standard immunosuppression protocol.",
-    details: ["Admit: Oct 1 2024 · Discharge: Oct 6 2024", "Procedure: LDKT right iliac fossa", "Donor: Living related", "DGF: No — immediate graft function", "Induction: Basiliximab + methylprednisolone", "Discharge Cr: 1.18 mg/dL", "Immunosuppression initiated: Tac + MMF + Pred"],
-  },
-  {
-    id: 7, type: "Lab Report", title: "Pre-Op Bloodwork",
-    date: "Sep 28, 2024", facility: "UMC Lab",
-    provider: "Pre-surgical order", tags: ["labs", "pre-op"],
-    epicId: "LAB-20240928-201",
-    summary: "Pre-transplant type & screen, metabolic panel, coagulation studies, CMV/EBV titers all within acceptable surgical parameters.",
-    details: ["Blood type: O+", "Crossmatch: Negative", "CMV IgG: Positive (donor negative)", "EBV IgG: Positive", "PT/INR: 1.0", "Creatinine: 4.8 mg/dL (pre-transplant)", "eGFR: 12 mL/min"],
-  },
-];
+import { getRecords, setRecords } from "../../store.js";
 
 const TYPE_COLORS = {
   "Visit Note": "#4f8ef7",
@@ -84,13 +27,14 @@ function Badge({ type }) {
 }
 
 export default function Records() {
+  const [records, setRecordsState] = useState(() => getRecords());
   const [filter, setFilter]     = useState("All");
   const [search, setSearch]     = useState("");
-  const [selected, setSelected] = useState(RECORDS[0]);
+  const [selected, setSelected] = useState(() => getRecords()[0] ?? null);
   const [showAdd, setShowAdd]   = useState(false);
   const [addType, setAddType]   = useState(null);
 
-  const filtered = RECORDS.filter(r => {
+  const filtered = records.filter(r => {
     const matchType   = filter === "All" || r.type === filter;
     const matchSearch = !search
       || r.title.toLowerCase().includes(search.toLowerCase())
@@ -150,7 +94,7 @@ export default function Records() {
           />
         </div>
         <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
-          {RECORDS.length} records · Epic FHIR
+          {records.length} records · Epic FHIR
         </div>
       </div>
 
@@ -251,8 +195,11 @@ export default function Records() {
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#a0b4c8", fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
-            Select a record
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#a0b4c8", fontSize: 12, fontFamily: "'DM Mono',monospace", gap: 8 }}>
+            {records.length === 0
+              ? <><div style={{ fontSize: 24, marginBottom: 8, opacity: 0.4 }}>▤</div><div>No records yet</div><div style={{ fontSize: 10, color: "#6a8090" }}>Import XML or PDF files on the Import Records tab</div></>
+              : "Select a record to view details"
+            }
           </div>
         )}
       </div>

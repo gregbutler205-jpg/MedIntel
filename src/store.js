@@ -7,6 +7,7 @@ const DEFAULTS = {
   alerts:       [],
   upcoming:     [],
   labs:         [],
+  records:      [],
   lastImport:   null,
   importLog:    [],
   meds_full:    [],
@@ -55,6 +56,19 @@ export function mergeLabs(newLabs) {
   const existing = getStore('labs');
   const merged = [...newLabs, ...existing];
   setStore('labs', merged);
+  return merged;
+}
+
+// Records (Tab03)
+export function getRecords() { return getStore('records') ?? []; }
+export function setRecords(records) { setStore('records', records); }
+export function mergeRecords(newRecords) {
+  const existing = getStore('records');
+  const map = new Map();
+  existing.forEach(r => map.set(r.epicId ?? r.title + r.date, r));
+  newRecords.forEach(r => map.set(r.epicId ?? r.title + r.date, r));
+  const merged = Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+  setStore('records', merged);
   return merged;
 }
 
