@@ -113,10 +113,9 @@ export default function DataBackup() {
 
   function handleClearData() {
     localStorage.clear();
-    setApiKey("");
-    setBackups([]);
     setModal(null);
-    showToast("All data cleared");
+    showToast("All data cleared — reloading…");
+    setTimeout(() => window.location.reload(), 1500);
   }
 
   function handleReset() {
