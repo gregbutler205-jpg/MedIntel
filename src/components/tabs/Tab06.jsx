@@ -423,10 +423,7 @@ export default function App({ onNavChange }) {
   const [selectedId, setSelectedId] = useState("bp");
   const [timeRange, setTimeRange] = useState(1);
   const [showLog, setShowLog] = useState(false);
-  const [manualReadings, setManualReadings] = useState(() => {
-    const stored = getStore('readings');
-    return stored && stored.length > 0 ? stored : MANUAL_READINGS_SEED;
-  });
+  const [manualReadings, setManualReadings] = useState(() => getStore('readings') ?? []);
   const [time, setTime] = useState(new Date());
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
@@ -719,35 +716,56 @@ export default function App({ onNavChange }) {
                 )}
               </div>
 
-              {/* History table — manual readings only */}
+              {/* History table — focused on selected vital */}
               {!isWatch && (
                 <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"14px 18px" }}>
                   <div className="section-label">Reading History</div>
-                  <div className="hist-row" style={{ borderBottom:"1px solid #0d1a28", paddingBottom:7, marginBottom:2 }}>
-                    {["Date","BP","HR","O2","Weight","Temp","Glucose","Sleep"].map(h => (
-                      <div key={h} style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{h}</div>
-                    ))}
-                  </div>
-                  {filterByMonths(manualReadings, timeRange).map(r => {
-                    const bpF = r.bp_s >= 140 || r.bp_d >= 90;
-                    const gF  = r.glucose > 100;
-                    const slF = r.sleep < 7;
-                    const o2F = r.o2 != null && r.o2 < 95;
+                  {(() => {
+                    const rows = filterByMonths(manualReadings, timeRange);
+                    const id = config.id;
+                    // column definitions per vital
+                    const cols = id === "bp"
+                      ? [{ h:"Date", fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"Systolic",  fn:r=>r.bp_s??'—', c:r=>r.bp_s>=140?"#ef4444":r.bp_s>=130?"#f59e0b":"#c4d8ee", bold:true },
+                         { h:"Diastolic", fn:r=>r.bp_d??'—', c:r=>r.bp_d>=90?"#ef4444":"#c4d8ee" },
+                         { h:"HR",        fn:r=>r.hr??'—',   c:r=>"#7eb8d8" }]
+                    : id === "o2"
+                      ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"SpO2 %",     fn:r=>r.o2!=null?`${r.o2}%`:'—', c:r=>r.o2!=null&&r.o2<95?"#ef4444":r.o2!=null&&r.o2<97?"#f59e0b":"#10b981", bold:true },
+                         { h:"HR",         fn:r=>r.hr??'—',  c:r=>"#7eb8d8" }]
+                    : id === "weight"
+                      ? [{ h:"Date",   fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"Weight (lbs)", fn:r=>r.weight??'—', c:r=>"#f59e0b", bold:true },
+                         { h:"Change", fn:(r,i,arr)=>{const p=arr[i+1]; return p&&r.weight&&p.weight?(r.weight-p.weight>0?"+":"")+(r.weight-p.weight).toFixed(1):"—"}, c:(r,i,arr)=>{const p=arr[i+1]; if(!p||!r.weight||!p.weight)return"#a0b4c8"; return r.weight>p.weight?"#ef4444":r.weight<p.weight?"#10b981":"#a0b4c8";} }]
+                    : id === "temp"
+                      ? [{ h:"Date",     fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"Temp °F",  fn:r=>r.temp!=null?`${r.temp}°`:'—', c:r=>r.temp>99.5?"#ef4444":r.temp>99?"#f59e0b":"#b0c4d8", bold:true }]
+                    : id === "glucose"
+                      ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"Glucose mg/dL", fn:r=>r.glucose??'—', c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981", bold:true },
+                         { h:"Status", fn:r=>r.glucose>125?"High":r.glucose>100?"Pre-diabetic":r.glucose<70?"Low":"Normal", c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981" }]
+                    : id === "sleep"
+                      ? [{ h:"Date",     fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"Sleep hrs", fn:r=>r.sleep?`${r.sleep}h`:'—', c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981", bold:true },
+                         { h:"Status", fn:r=>r.sleep<6?"Poor":r.sleep<7?"Below goal":"Good", c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981" }]
+                      : [];
+                    if (!cols.length) return null;
                     return (
-                      <div key={r.ts} className="hist-row">
-                        <div style={{ color:"#98afc4", fontFamily:"'DM Mono',monospace", fontSize:10 }}>
-                          {r.date}{r.flag && <span style={{ marginLeft:3, fontSize:8, color:"#ef4444" }}>▲</span>}
+                      <>
+                        <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, gap:8, borderBottom:"1px solid #0d1a28", paddingBottom:7, marginBottom:2 }}>
+                          {cols.map(c => <div key={c.h} style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{c.h}</div>)}
                         </div>
-                        <div style={{ fontWeight:600, color:bpF?"#ef4444":"#c4d8ee", fontSize:11 }}>{r.bp_s}/{r.bp_d}</div>
-                        <div style={{ color:"#7eb8d8" }}>{r.hr}</div>
-                        <div style={{ color:o2F?"#ef4444":r.o2==null?"#a0b4c8":"#10b981" }}>{r.o2!=null?`${r.o2}%`:"—"}</div>
-                        <div style={{ color:"#a8c4dc" }}>{r.weight}</div>
-                        <div style={{ color:r.temp>99.5?"#ef4444":"#b0c4d8", fontFamily:"'DM Mono',monospace" }}>{r.temp}°</div>
-                        <div style={{ color:gF?"#f59e0b":"#a8c4dc" }}>{r.glucose??'—'}</div>
-                        <div style={{ color:slF?"#f59e0b":"#7eb8d8" }}>{r.sleep?`${r.sleep}h`:"—"}</div>
-                      </div>
+                        {rows.length === 0 && <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", padding:"10px 0" }}>No readings yet.</div>}
+                        {rows.map((r,i,arr) => (
+                          <div key={r.ts} style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, gap:8, padding:"6px 0", borderBottom:"1px solid #0a1525" }}>
+                            {cols.map((c,ci) => (
+                              <div key={ci} style={{ fontSize:11, color:c.c(r,i,arr), fontWeight:c.bold?600:400, fontFamily:"'DM Mono',monospace" }}>{c.fn(r,i,arr)}</div>
+                            ))}
+                          </div>
+                        ))}
+                      </>
                     );
-                  })}
+                  })()}
                 </div>
               )}
 
