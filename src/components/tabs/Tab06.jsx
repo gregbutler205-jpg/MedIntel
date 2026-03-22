@@ -417,8 +417,9 @@ function LogPanel({ onClose, onSave }) {
   );
 }
 
-export default function App() {
+export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("vitals");
+  const handleNav = (id) => { if (id !== "vitals") { onNavChange?.(id); } else { setActiveNav(id); } };
   const [selectedId, setSelectedId] = useState("bp");
   const [timeRange, setTimeRange] = useState(1);
   const [showLog, setShowLog] = useState(false);
@@ -515,13 +516,13 @@ export default function App() {
         <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
           <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
           {NAV.slice(0,8).map(({id,icon,label}) => (
-            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
+            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
           <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
           {NAV.slice(8).map(({id,icon,label}) => (
-            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>setActiveNav(id)}>
+            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
               {id==="ai" && <span style={{marginLeft:"auto",fontSize:8,background:"#4f8ef7",color:"#fff",padding:"1px 5px",borderRadius:8,fontFamily:"'DM Mono',monospace"}}>AI</span>}
             </div>

@@ -303,8 +303,9 @@ function trendColor(labId, trend) {
   return flipped ? "#f59e0b" : "#4f8ef7";
 }
 
-export default function App() {
+export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("labs");
+  const handleNav = (id) => { if (id !== "labs") { onNavChange?.(id); } else { setActiveNav(id); } };
   const [selectedLab, setSelectedLab] = useState(PANELS[0].labs[0]);
   const [selectedPanelColor, setSelectedPanelColor] = useState(PANELS[0].color);
   const [aiOpen, setAiOpen] = useState(false);
@@ -368,13 +369,13 @@ export default function App() {
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
           <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
           {NAV.slice(0, 8).map(({ id, icon, label }) => (
-            <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
+            <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
           <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
           {NAV.slice(8).map(({ id, icon, label }) => (
-            <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
+            <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
               {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "1px 5px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>AI</span>}
             </div>
