@@ -2,10 +2,9 @@ import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { getPendingMeds, setPendingMeds } from "../../store.js";
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.mjs",
-  import.meta.url
-).href;
+// Use CDN worker — avoids Vite/GitHub Pages path resolution issues
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 // Extract all text from a PDF File object
 async function extractPdfText(file) {
@@ -59,7 +58,7 @@ ${text.slice(0, 12000)}`;
       "anthropic-dangerous-direct-browser-access": "true",
     },
     body: JSON.stringify({
-      model: "claude-opus-4-6",
+      model: "claude-opus-4-5",
       max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -70,7 +69,9 @@ ${text.slice(0, 12000)}`;
     throw new Error(err.error?.message ?? `API error ${res.status}`);
   }
   const data = await res.json();
-  const raw = data.content?.[0]?.text ?? "{}";
+  let raw = data.content?.[0]?.text ?? "{}";
+  // Strip markdown code fences if Claude wraps JSON in them
+  raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
   return JSON.parse(raw);
 }
 
