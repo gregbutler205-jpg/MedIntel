@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import INTELLITRAX_LOGO from './assets/logo.png';
-import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, addImportLog } from './store.js';
+import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 
 // ── Tab component imports ─────────────────────────────────────────────────────
 import TabProfile     from './components/tabs/Tab02.jsx';
@@ -260,7 +260,7 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
-  // Called by ImportTab when the user confirms parsed PDF data
+  // Called by ImportTab when the user confirms parsed data
   const handleImport = useCallback((parsed) => {
     if (parsed.readings?.length) {
       const merged = mergeReadings(parsed.readings);
@@ -281,8 +281,11 @@ export default function App() {
       setStore('upcoming', merged);
       setUpcoming(merged);
     }
+    if (parsed.records?.length) {
+      mergeRecords(parsed.records);
+    }
     const ts = new Date().toISOString();
-    addImportLog({ ts, source: parsed.source ?? "PDF Import", records: parsed.totalRecords ?? 0 });
+    addImportLog({ ts, source: parsed.source ?? "Import", records: parsed.totalRecords ?? 0 });
     setLastImport(ts);
   }, []);
 
