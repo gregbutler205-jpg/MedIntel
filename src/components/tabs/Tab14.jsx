@@ -35,11 +35,7 @@ function loadAppts() {
 }
 
 function seedAppts() {
-  const appts = [
-    { id: genId(), title: "Nephrology Follow-up", provider: "Dr. Ari Cohen", specialty: "Nephrology / Transplant", facility: "Ochsner Medical Center — Jeff Hwy", date: "2026-04-15", time: "10:30 AM", phone: "(504) 842-3000", address: "1514 Jefferson Hwy, New Orleans, LA 70121", notes: "Tacrolimus trough level will be checked. Bring current med list.", prepInstructions: "Fast 4 hours before labs", status: "upcoming", urgency: "high", reminder: true },
-    { id: genId(), title: "Transplant Labs", provider: "Quest Diagnostics", specialty: "Lab / Imaging", facility: "Quest Diagnostics — Hattiesburg", date: "2026-04-18", time: "8:00 AM", phone: "(601) 268-5800", address: "6051 US-98, Hattiesburg, MS 39402", notes: "CBC, CMP, tacrolimus level, CMV titer", prepInstructions: "Fast 8 hours before draw", status: "upcoming", urgency: "med", reminder: true },
-    { id: genId(), title: "Primary Care", provider: "Dr. Jonathan Hand", specialty: "Primary Care", facility: "SCRMC Ellisville Clinic", date: "2026-04-25", time: "2:00 PM", phone: "(601) 477-6000", address: "1001 S Front St, Ellisville, MS 39437", notes: "Annual wellness visit. Discuss BP trend.", prepInstructions: "", status: "upcoming", urgency: "low", reminder: true },
-  ];
+  const appts = [];
   localStorage.setItem("mi_appointments", JSON.stringify(appts));
   return appts;
 }
