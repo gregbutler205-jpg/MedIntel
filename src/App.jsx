@@ -13,8 +13,9 @@ import TabCareplan    from './components/tabs/Tab08.jsx';
 import TabDocuments   from './components/tabs/Tab09.jsx';
 import TabNotes       from './components/tabs/Tab10.jsx';
 import TabAI          from './components/tabs/Tab11.jsx';
-import TabImport      from './components/tabs/Tab12.jsx';
-import TabBackup      from './components/tabs/Tab13.jsx';
+import TabImport       from './components/tabs/Tab12.jsx';
+import TabBackup       from './components/tabs/Tab13.jsx';
+import TabAppointments from './components/tabs/Tab14.jsx';
 
 // ── Routing maps ─────────────────────────────────────────────────────────────
 // These 4 tabs are full standalone apps (own sidebar + own topbar + height:100vh).
@@ -33,8 +34,9 @@ const TAB_COMPONENTS = {
   documents:   TabDocuments,
   notes:       TabNotes,
   ai:          TabAI,
-  import:      TabImport,
-  backup:      TabBackup,
+  import:       TabImport,
+  backup:       TabBackup,
+  appointments: TabAppointments,
 };
 
 // ── Assets & static data ──────────────────────────────────────────────────────
@@ -48,8 +50,9 @@ const NAV = [
   { id: "labs",        icon: "◈", label: "Labs & Trends" },
   { id: "vitals",      icon: "♡", label: "Vitals" },
   { id: "symptoms",    icon: "◎", label: "Symptoms" },
-  { id: "careplan",    icon: "◷", label: "Care Plan" },
-  { id: "documents",   icon: "▣", label: "Documents" },
+  { id: "careplan",      icon: "◷", label: "Care Plan" },
+  { id: "appointments", icon: "◻", label: "Appointments" },
+  { id: "documents",    icon: "▣", label: "Documents" },
   { id: "notes",       icon: "◻", label: "Notes" },
   { id: "ai",          icon: "✦", label: "AI Analysis" },
   { id: "import",      icon: "↓", label: "Import Records" },
@@ -215,7 +218,26 @@ export default function App() {
   const [readings, setReadings]   = useState(() => getStore('readings'));
   const [meds, setMeds]           = useState(() => getStore('meds'));
   const [alerts, setAlerts]       = useState(() => getStore('alerts'));
-  const [upcoming, setUpcoming]   = useState(() => getStore('upcoming'));
+  const [upcoming, setUpcoming]   = useState(() => {
+    // Prefer appointments store (Tab14); fall back to legacy mi_upcoming / defaults
+    try {
+      const raw = localStorage.getItem("mi_appointments");
+      if (raw) {
+        const appts = JSON.parse(raw);
+        return appts
+          .filter(a => a.status === "upcoming")
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .slice(0, 5)
+          .map(a => ({
+            label:   a.title,
+            date:    new Date(a.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" }),
+            urgency: a.urgency,
+            doctor:  a.provider,
+          }));
+      }
+    } catch {}
+    return getStore('upcoming');
+  });
   const [lastImport, setLastImport] = useState(() => getStore('lastImport'));
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [quickReading, setQuickReading] = useState({ bp_s:"", bp_d:"", weight:"", date:"" });
