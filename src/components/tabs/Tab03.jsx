@@ -33,6 +33,8 @@ export default function Records() {
   const [selected, setSelected] = useState(() => getRecords()[0] ?? null);
   const [showAdd, setShowAdd]   = useState(false);
   const [addType, setAddType]   = useState(null);
+  const [addForm, setAddForm]   = useState({ title: "", facility: "", provider: "", date: "" });
+  const [deleteId, setDeleteId] = useState(null);
 
   const filtered = records.filter(r => {
     const matchType   = filter === "All" || r.type === filter;
@@ -158,6 +160,12 @@ export default function Records() {
                     <span style={{ fontSize: 10 }}>↗</span> Open in Epic
                   </a>
                 )}
+                <button
+                  onClick={() => setDeleteId(selected.id)}
+                  style={{ marginLeft: "auto", padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                >
+                  Delete
+                </button>
               </div>
             </div>
 
@@ -170,11 +178,11 @@ export default function Records() {
             </div>
 
             {/* Key details */}
-            <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
+            {(selected.details ?? []).length > 0 && <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
               <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                 Key Details
               </div>
-              {selected.details.map((d, i) => {
+              {(selected.details ?? []).map((d, i) => {
                 const isFlag = d.includes("(H)") || d.includes("(L)");
                 return (
                   <div key={i} className="detail-line">
@@ -183,11 +191,11 @@ export default function Records() {
                   </div>
                 );
               })}
-            </div>
+            </div>}
 
             {/* Tags */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {selected.tags.map(t => (
+              {(selected.tags ?? []).map(t => (
                 <span key={t} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", color: "#98afc4", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
                   #{t}
                 </span>
@@ -208,7 +216,7 @@ export default function Records() {
       {showAdd && (
         <div
           style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}
-          onClick={() => setShowAdd(false)}
+          onClick={() => { setShowAdd(false); setAddForm({ title: "", facility: "", provider: "", date: "" }); setAddType(null); }}
         >
           <div
             style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: 28, width: 420, animation: "fadeUp .2s ease both" }}
@@ -217,14 +225,19 @@ export default function Records() {
             <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", marginBottom: 20 }}>Add Record</div>
 
             {[
-              { label: "Title",    placeholder: "e.g. Cardiology Follow-Up" },
-              { label: "Facility", placeholder: "e.g. Baptist Medical Center" },
-              { label: "Provider", placeholder: "e.g. Dr. Jane Smith, MD" },
-              { label: "Date",     placeholder: "e.g. Mar 19, 2026" },
-            ].map(({ label, placeholder }) => (
-              <div key={label} style={{ marginBottom: 14 }}>
+              { label: "Title",    key: "title",    placeholder: "e.g. Cardiology Follow-Up" },
+              { label: "Facility", key: "facility", placeholder: "e.g. Baptist Medical Center" },
+              { label: "Provider", key: "provider", placeholder: "e.g. Dr. Jane Smith, MD" },
+              { label: "Date",     key: "date",     placeholder: "e.g. Apr 8, 2026" },
+            ].map(({ label, key, placeholder }) => (
+              <div key={key} style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
-                <input className="modal-input" placeholder={placeholder} />
+                <input
+                  className="modal-input"
+                  placeholder={placeholder}
+                  value={addForm[key]}
+                  onChange={e => setAddForm(f => ({ ...f, [key]: e.target.value }))}
+                />
               </div>
             ))}
 
@@ -245,17 +258,57 @@ export default function Records() {
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button
-                onClick={() => setShowAdd(false)}
+                onClick={() => { setShowAdd(false); setAddForm({ title: "", facility: "", provider: "", date: "" }); setAddType(null); }}
                 style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
               >
                 Cancel
               </button>
               <button
-                onClick={() => setShowAdd(false)}
+                onClick={() => {
+                  if (!addForm.title.trim()) return;
+                  const newRec = {
+                    id: Date.now(),
+                    title: addForm.title.trim(),
+                    facility: addForm.facility.trim() || "Unknown",
+                    provider: addForm.provider.trim() || "Unknown",
+                    date: addForm.date.trim() || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                    type: addType || "Visit Note",
+                    summary: "",
+                    details: [],
+                    tags: [],
+                  };
+                  const updated = [newRec, ...records];
+                  setRecordsState(updated);
+                  setRecords(updated);
+                  setSelected(newRec);
+                  setShowAdd(false);
+                  setAddForm({ title: "", facility: "", provider: "", date: "" });
+                  setAddType(null);
+                }}
                 style={{ padding: "8px 18px", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
               >
                 Save Record
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm modal */}
+      {deleteId !== null && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 380 }}>
+            <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", marginBottom: 10 }}>Delete Record?</div>
+            <div style={{ fontSize: 13, color: "#98afc4", marginBottom: 22 }}>This cannot be undone.</div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button onClick={() => setDeleteId(null)} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => {
+                const updated = records.filter(r => r.id !== deleteId);
+                setRecordsState(updated);
+                setRecords(updated);
+                if (selected?.id === deleteId) setSelected(updated[0] ?? null);
+                setDeleteId(null);
+              }} style={{ padding: "8px 18px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 8, color: "#ef4444", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Delete</button>
             </div>
           </div>
         </div>

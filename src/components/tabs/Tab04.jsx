@@ -306,7 +306,7 @@ export default function App({ onNavChange }) {
 
   const filtered = meds.filter((m) => {
     const catOk = filterCat === "All" || m.category === filterCat;
-    const searchOk = m.name.toLowerCase().includes(search.toLowerCase()) || m.brand.toLowerCase().includes(search.toLowerCase());
+    const searchOk = m.name.toLowerCase().includes(search.toLowerCase()) || (m.brand || "").toLowerCase().includes(search.toLowerCase());
     const flagOk = !showFlagged || m.flag;
     return catOk && searchOk && flagOk;
   });
@@ -589,7 +589,7 @@ export default function App({ onNavChange }) {
             </div>
 
             {/* Right — detail panel */}
-            {selectedMed && (
+            {(selectedMed || editingMed) && (
               <div style={{ animation: "fadeUp .3s ease both" }}>
 
                 {/* ── EDIT MODE ── */}
