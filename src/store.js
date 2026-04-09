@@ -2,17 +2,22 @@
 // All health data lives here. Keys are prefixed with "mi_".
 
 const DEFAULTS = {
-  readings:     [],
-  meds:         [],
-  alerts:       [],
-  upcoming:     [],
-  labs:         [],
-  records:      [],
-  lastImport:   null,
-  importLog:    [],
-  meds_full:    [],
-  meds_pending: [],
-  watch_daily:  [],
+  readings:           [],
+  meds:               [],
+  alerts:             [],
+  upcoming:           [],
+  labs:               [],
+  records:            [],
+  lastImport:         null,
+  importLog:          [],
+  meds_full:          [],
+  meds_pending:       [],
+  watch_daily:        [],
+  care_team:          [],
+  allergies:          [],
+  emergency_contacts: [],
+  profile_personal:   {},
+  profile_insurance:  {},
 };
 
 export function getStore(key) {
@@ -80,6 +85,36 @@ export function setMedsFull(meds) { setStore('meds_full', meds); }
 
 export function getPendingMeds() { return getStore('meds_pending'); }
 export function setPendingMeds(meds) { setStore('meds_pending', meds); }
+
+// ── Profile helpers ────────────────────────────────────────────────────────────
+export function getProfilePersonal() { return getStore('profile_personal') ?? {}; }
+export function setProfilePersonal(v) { setStore('profile_personal', v); }
+
+export function getProfileInsurance() { return getStore('profile_insurance') ?? {}; }
+export function setProfileInsurance(v) { setStore('profile_insurance', v); }
+
+export function getCareTeam() { return getStore('care_team') ?? []; }
+export function setCareTeam(v) { setStore('care_team', v); }
+
+export function getAllergies() { return getStore('allergies') ?? []; }
+export function setAllergies(v) { setStore('allergies', v); }
+
+export function getEmergencyContacts() { return getStore('emergency_contacts') ?? []; }
+export function setEmergencyContacts(v) { setStore('emergency_contacts', v); }
+
+// Cross-section reads used by Profile
+export function getConditions() {
+  try { const r = localStorage.getItem('mi_conditions'); return r ? JSON.parse(r) : []; }
+  catch { return []; }
+}
+export function getSurgeries() {
+  try { const r = localStorage.getItem('mi_surgeries'); return r ? JSON.parse(r) : []; }
+  catch { return []; }
+}
+export function getLatestReading() {
+  const readings = getStore('readings') ?? [];
+  return readings.length > 0 ? readings[0] : null;
+}
 
 // Add an import log entry
 export function addImportLog(entry) {

@@ -58,21 +58,7 @@ const SEVERITY_LABELS = {
 const severityColor = s =>
   s <= 3 ? "#10b981" : s <= 5 ? "#f59e0b" : s <= 7 ? "#f97316" : "#ef4444";
 
-// Seed data
-const SEED = [
-  { id: 1, date: "Mar 10", ts: "2026-03-10T08:22:00", symptom: "Fatigue", custom: "", location: "Whole Body", severity: 5, note: "More tired than usual after waking. Improved by afternoon.", status: "active" },
-  { id: 2, date: "Mar 10", ts: "2026-03-10T14:10:00", symptom: "Hand Tremor", custom: "", location: "Arms", severity: 4, note: "Slight tremor noticed while writing. Tacrolimus-related?", status: "active" },
-  { id: 3, date: "Mar 7", ts: "2026-03-07T09:45:00", symptom: "Headache", custom: "", location: "Head", severity: 6, note: "Frontal headache. Drank extra water, resolved in 2 hours.", status: "resolved" },
-  { id: 4, date: "Mar 5", ts: "2026-03-05T07:30:00", symptom: "Swelling / Edema", custom: "", location: "Feet / Ankles", severity: 5, note: "Noticeable puffiness in ankles in the morning. Better by evening.", status: "resolved" },
-  { id: 5, date: "Mar 3", ts: "2026-03-03T18:00:00", symptom: "Nausea", custom: "", location: "Abdomen", severity: 7, note: "After evening meds. Lasted about 90 minutes.", status: "resolved" },
-  { id: 6, date: "Feb 28", ts: "2026-02-28T11:20:00", symptom: "Fatigue", custom: "", location: "Whole Body", severity: 4, note: "", status: "resolved" },
-  { id: 7, date: "Feb 22", ts: "2026-02-22T08:00:00", symptom: "Joint Pain / Gout", custom: "", location: "Feet / Ankles", severity: 6, note: "Right big toe tender, mild. Uric acid has been creeping up.", status: "resolved" },
-  { id: 8, date: "Feb 18", ts: "2026-02-18T20:30:00", symptom: "Decreased Urine Output", custom: "", location: "None / General", severity: 6, note: "Noticed less output than usual. Hydrated aggressively — back to normal next morning.", status: "resolved" },
-  { id: 9, date: "Feb 10", ts: "2026-02-10T09:10:00", symptom: "Dizziness", custom: "", location: "Head", severity: 5, note: "On standing. Resolved quickly. BP was 155/84 that morning.", status: "resolved" },
-  { id: 10, date: "Jan 28", ts: "2026-01-28T14:00:00", symptom: "Brain Fog / Confusion", custom: "", location: "Head", severity: 4, note: "Difficulty concentrating for several hours mid-afternoon.", status: "resolved" },
-];
-
-let nextId = 11;
+let nextId = Date.now();
 
 // Log panel
 function LogPanel({ onClose, onSave }) {
@@ -320,7 +306,7 @@ function DetailPanel({ entry, onClose, onResolve }) {
 export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("symptoms");
   const handleNav = (id) => { if (id !== "symptoms") { onNavChange?.(id); } else { setActiveNav(id); } };
-  const [entries, setEntries] = useState(SEED);
+  const [entries, setEntries] = useState(() => { try { const r = localStorage.getItem("mi_symptoms"); return r ? JSON.parse(r) : []; } catch { return []; } });
   const [showLog, setShowLog] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [filter, setFilter] = useState("all"); // all | active | resolved
@@ -330,14 +316,18 @@ export default function App({ onNavChange }) {
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
+  const saveToStorage = (updated) => { try { localStorage.setItem("mi_symptoms", JSON.stringify(updated)); } catch {} };
+
   const handleSave = (data) => {
-    const entry = { id: nextId++, date: "Mar 18", ts: `2026-03-18T${new Date().toTimeString().slice(0,8)}`, ...data };
-    setEntries(e => [entry, ...e]);
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const entry = { id: nextId++, date: dateLabel, ts: now.toISOString(), ...data };
+    setEntries(e => { const updated = [entry, ...e]; saveToStorage(updated); return updated; });
     setSelectedEntry(entry);
   };
 
   const handleResolve = (id) => {
-    setEntries(e => e.map(x => x.id === id ? { ...x, status: "resolved" } : x));
+    setEntries(e => { const updated = e.map(x => x.id === id ? { ...x, status: "resolved" } : x); saveToStorage(updated); return updated; });
     setSelectedEntry(prev => prev?.id === id ? { ...prev, status: "resolved" } : prev);
   };
 
@@ -473,6 +463,11 @@ export default function App({ onNavChange }) {
             </div>
 
             {/* Timeline */}
+            {displayed.length === 0 && (
+              <div style={{ textAlign:"center", padding:"40px 20px", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontSize:12 }}>
+                No symptoms logged yet. Use the &ldquo;Log Symptom&rdquo; button to record your first entry.
+              </div>
+            )}
             {Object.entries(grouped).map(([date, dayEntries]) => (
               <div key={date} style={{ marginBottom:22 }}>
                 {/* Date header with timeline dot */}

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const ANESTHESIA = ["General", "Regional", "Local", "Spinal", "Epidural", "Sedation", "None / N/A"];
 const OUTCOMES   = ["Successful", "Successful with complications", "Incomplete", "Cancelled", "Unknown"];
 
 const BLANK = {
-  id: null, procedure: "", date: "", surgeon: "", facility: "",
+  id: null, procedure: "", icd10: "", date: "", surgeon: "", facility: "",
   anesthesia: "General", outcome: "Successful", duration: "", notes: "",
 };
 function genId() { return Math.random().toString(36).slice(2); }
@@ -26,6 +26,74 @@ function outcomeColor(o) {
   return "#ef4444";
 }
 
+// ── ICD-10 Lookup (shared pattern) ─────────────────────────────────────────────
+function Icd10Lookup({ value, onChange, inp }) {
+  const [query, setQuery]     = useState(value || "");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen]       = useState(false);
+  const timerRef = useRef(null);
+  const wrapRef  = useRef(null);
+
+  useEffect(() => { setQuery(value || ""); }, [value]);
+  useEffect(() => {
+    function handler(e) { if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const search = useCallback((term) => {
+    if (!term || term.length < 2) { setResults([]); setOpen(false); return; }
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res  = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(term)}&maxList=8`);
+        const data = await res.json();
+        const items = (data[3] || []).map(([code, name]) => ({ code, name }));
+        setResults(items);
+        setOpen(items.length > 0);
+      } catch { setResults([]); }
+      finally { setLoading(false); }
+    }, 300);
+  }, []);
+
+  function handleInput(e) {
+    const v = e.target.value;
+    setQuery(v);
+    onChange(v);
+    search(v);
+  }
+
+  function pick(item) {
+    const combined = `${item.code} — ${item.name}`;
+    setQuery(combined);
+    onChange(combined);
+    setResults([]);
+    setOpen(false);
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position:"relative" }}>
+      <input style={inp} value={query} onChange={handleInput} onFocus={() => results.length > 0 && setOpen(true)} placeholder="Type code or procedure name to search…" />
+      {loading && <div style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", fontSize:10, color:"#6a8090" }}>…</div>}
+      {open && results.length > 0 && (
+        <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, right:0, background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:8, zIndex:400, maxHeight:240, overflowY:"auto", boxShadow:"0 8px 24px rgba(0,0,0,.5)" }}>
+          {results.map(item => (
+            <div key={item.code} onMouseDown={() => pick(item)}
+              style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #0d1a28", display:"flex", gap:10, alignItems:"flex-start" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#4f8ef7", flexShrink:0, minWidth:52 }}>{item.code}</span>
+              <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Modal ──────────────────────────────────────────────────────────────────────
 function SurgeryModal({ surgery, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK, ...surgery });
@@ -43,6 +111,11 @@ function SurgeryModal({ surgery, onSave, onClose }) {
           <div style={{ gridColumn:"1/-1" }}>
             <label style={lbl}>Procedure Name *</label>
             <input style={inp} value={form.procedure} onChange={e => set("procedure", e.target.value)} placeholder="e.g. Kidney Transplant (Living Donor)" />
+          </div>
+          {/* ICD-10 */}
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>ICD-10 Code — type code or procedure/diagnosis to search</label>
+            <Icd10Lookup value={form.icd10 || ""} onChange={v => set("icd10", v)} inp={inp} />
           </div>
           {/* Date */}
           <div>

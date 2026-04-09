@@ -280,7 +280,7 @@ const INTERACTIONS = [
   },
 ];
 
-const CATEGORIES = ["All", "Immunosuppressant", "Blood Pressure", "Corticosteroid", "GI / Protective", "Antibiotic / Prophylaxis", "Antiviral / Prophylaxis", "Diuretic", "Cholesterol", "Supplement", "Antiplatelet"];
+const CATEGORIES = ["All", "Immunosuppressant", "Blood Pressure", "Corticosteroid", "GI / Protective", "Antibiotic / Prophylaxis", "Antiviral / Prophylaxis", "Diuretic", "Cholesterol", "Supplement", "Antiplatelet", "Pain", "Mental Health", "Diabetes", "Other"];
 
 export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("medications");

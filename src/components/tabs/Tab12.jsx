@@ -1,5 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getStore, setStore } from "../../store.js";
+
+// ── PDF Lab Extractor ──────────────────────────────────────────────────────────
+async function extractTextFromPdf(file) {
+  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf  = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page    = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return text;
+}
+
+async function parseLabsWithClaude(pdfText, apiKey) {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-opus-4-5",
+      max_tokens: 4096,
+      messages: [{
+        role: "user",
+        content: `Extract all lab results from this lab report text. Return ONLY a JSON array of objects with these exact fields:
+- name (string, required): test name e.g. "Creatinine"
+- value (string, required): numeric result e.g. "1.2"
+- unit (string): unit e.g. "mg/dL"
+- refRange (string): reference range e.g. "0.7-1.3"
+- date (string): collection date in YYYY-MM-DD format if found, otherwise ""
+- facility (string): lab facility name if found, otherwise ""
+- category (string): one of: Metabolic Panel, CBC, Kidney Function, Liver Function, Immunosuppressant Level, Lipid Panel, Thyroid, Urinalysis, Cardiac, Vitamin / Mineral, Hormone, Other
+- flag (boolean): true if result is marked H, L, High, Low, or outside reference range
+- notes (string): any relevant note about this specific test, otherwise ""
+
+Return ONLY the JSON array, no markdown, no explanation.
+
+LAB REPORT TEXT:
+${pdfText.slice(0, 12000)}`
+      }],
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Claude API error: ${response.status} — ${err}`);
+  }
+  const data = await response.json();
+  let raw = data.content[0].text.trim();
+  raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  return JSON.parse(raw);
+}
 
 const CATEGORIES = [
   "Metabolic Panel", "CBC", "Kidney Function", "Liver Function",
@@ -27,6 +84,12 @@ export default function ImportTab() {
   const [catFilter, setCatFilter] = useState("All");
   const [toast, setToast]     = useState("");
   const [deleteId, setDeleteId] = useState(null);
+
+  // PDF upload state
+  const [pdfStatus, setPdfStatus]   = useState("idle"); // idle | extracting | parsing | done | error
+  const [pdfError, setPdfError]     = useState("");
+  const [pdfPreview, setPdfPreview] = useState([]); // extracted labs pending save
+  const fileInputRef = useRef(null);
 
   // Reload from storage on mount (handles Clear Data reload)
   useEffect(() => { setLabs(getLabs()); }, []);
@@ -82,6 +145,52 @@ export default function ImportTab() {
 
   function handlePrint() {
     window.print();
+  }
+
+  async function handlePdfUpload(e) {
+    const file = e.target.files?.[0];
+    if (!fileInputRef.current) return;
+    fileInputRef.current.value = "";
+    if (!file || file.type !== "application/pdf") {
+      showToast("Please select a PDF file.");
+      return;
+    }
+    const apiKey = localStorage.getItem("mi_ak");
+    if (!apiKey) {
+      showToast("API key required. Go to Data & Backup to add your key.");
+      return;
+    }
+    setPdfStatus("extracting");
+    setPdfError("");
+    setPdfPreview([]);
+    try {
+      const text = await extractTextFromPdf(file);
+      setPdfStatus("parsing");
+      const extracted = await parseLabsWithClaude(text, apiKey);
+      if (!Array.isArray(extracted) || extracted.length === 0) throw new Error("No lab results found in PDF.");
+      setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
+      setPdfStatus("done");
+      showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
+    } catch (err) {
+      setPdfStatus("error");
+      setPdfError(err.message || "Failed to extract labs from PDF.");
+    }
+  }
+
+  function confirmPdfLabs() {
+    const newLabs = pdfPreview.map(({ _previewId, ...l }) => l);
+    const updated = [...newLabs, ...labs].sort((a, b) => new Date(b.date) - new Date(a.date));
+    saveLabs(updated);
+    setLabs(updated);
+    setPdfPreview([]);
+    setPdfStatus("idle");
+    showToast(`${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} saved.`);
+  }
+
+  function discardPdfLabs() {
+    setPdfPreview([]);
+    setPdfStatus("idle");
+    setPdfError("");
   }
 
   const categories = ["All", ...CATEGORIES];
@@ -163,10 +272,59 @@ export default function ImportTab() {
               {labs.length} result{labs.length !== 1 ? "s" : ""} recorded
             </p>
           </div>
-          <button className="imp-btn btn-ghost" onClick={handlePrint} style={{ marginTop:4 }}>
-            🖨 Print Lab Report
-          </button>
+          <div style={{ display:"flex", gap:8, alignItems:"flex-start", marginTop:4 }}>
+            <button className="imp-btn btn-ghost" onClick={handlePrint}>🖨 Print</button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={pdfStatus === "extracting" || pdfStatus === "parsing"}
+              style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}
+            >
+              {pdfStatus === "extracting" ? "⏳ Reading PDF…" : pdfStatus === "parsing" ? "✦ Extracting…" : "⬆ Upload PDF"}
+            </button>
+            <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handlePdfUpload} style={{ display:"none" }} />
+          </div>
         </div>
+
+        {/* PDF error */}
+        {pdfStatus === "error" && (
+          <div style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.25)", borderRadius:10, padding:"12px 16px", marginBottom:20, fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
+            ⚠ {pdfError} <button onClick={discardPdfLabs} style={{ marginLeft:12, background:"transparent", border:"none", color:"#f87171", cursor:"pointer", textDecoration:"underline", fontSize:11 }}>Dismiss</button>
+          </div>
+        )}
+
+        {/* PDF preview — labs to confirm */}
+        {pdfPreview.length > 0 && (
+          <div style={{ background:"rgba(167,139,250,.05)", border:"1px solid rgba(167,139,250,.2)", borderRadius:12, padding:20, marginBottom:24 }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+              <div style={{ fontSize:13, color:"#a78bfa", fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
+                ✦ {pdfPreview.length} lab result{pdfPreview.length !== 1 ? "s" : ""} extracted — review then confirm
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={discardPdfLabs} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
+                <button onClick={confirmPdfLabs} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:7, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save All</button>
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:10 }}>
+              {pdfPreview.map((l, i) => (
+                <div key={l._previewId} style={{ background:"#0b1220", border:`1px solid ${l.flag ? "rgba(239,68,68,.3)" : "#111e30"}`, borderRadius:10, padding:"12px 14px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{l.name}</span>
+                    {l.flag && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", color:"#ef4444", padding:"1px 7px", borderRadius:8, fontFamily:"'DM Mono',monospace" }}>OUT OF RANGE</span>}
+                  </div>
+                  <div style={{ fontSize:14, fontWeight:700, color: l.flag ? "#f59e0b" : "#10b981" }}>{l.value} <span style={{ fontSize:11, color:"#98afc4", fontWeight:400 }}>{l.unit}</span></div>
+                  <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:3 }}>
+                    {l.refRange && <span>ref: {l.refRange} · </span>}
+                    {l.category}
+                  </div>
+                  <button onClick={() => setPdfPreview(prev => prev.filter(x => x._previewId !== l._previewId))}
+                    style={{ marginTop:8, background:"transparent", border:"1px solid #111e30", borderRadius:5, color:"#6a8090", fontSize:10, padding:"2px 8px", cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ display:"grid", gridTemplateColumns:"380px 1fr", gap:20 }}>
 
