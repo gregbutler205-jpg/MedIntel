@@ -180,41 +180,79 @@ function WeightCard({ readings }) {
 }
 
 // ── Shared sidebar component (used for non-standalone tabs) ───────────────────
-function AppSidebar({ activeNav, setActiveNav }) {
+function AppSidebar({ activeNav, setActiveNav, open, onClose }) {
   return (
-    <aside style={{ width: 210, minWidth: 210, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", height: "100vh" }}>
-      <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
-      </div>
-      <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
-        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>Greg Butler</div>
-        <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>Transplant · Immunosuppressed</div>
-      </div>
-      <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-        <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
-        {NAV.slice(0, 8).map(({ id, icon, label }) => (
-          <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
-            <span className="nav-icon">{icon}</span>
-            <span>{label}</span>
-          </div>
-        ))}
-        <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
-        {NAV.slice(8).map(({ id, icon, label }) => (
-          <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
-            <span className="nav-icon">{icon}</span>
-            <span>{label}</span>
-            {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "1px 5px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>AI</span>}
-          </div>
-        ))}
-      </nav>
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #0d1a28" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 10, color: "#1e4030", fontFamily: "'DM Mono',monospace" }}>
-          <div className="live-dot" />
-          All systems nominal
+    <>
+      {/* Backdrop — closes sidebar when tapped outside */}
+      {open && (
+        <div
+          onClick={onClose}
+          style={{
+            position: "fixed", inset: 0, zIndex: 40,
+            background: "rgba(0,0,0,.55)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
+        />
+      )}
+
+      {/* Drawer */}
+      <aside style={{
+        position: "fixed", top: 0, left: 0, zIndex: 50,
+        width: 220, height: "100vh",
+        background: "#080c14",
+        borderRight: "1px solid #0d1a28",
+        display: "flex", flexDirection: "column",
+        transform: open ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform .25s cubic-bezier(.4,0,.2,1)",
+        willChange: "transform",
+      }}>
+        {/* Logo + close button */}
+        <div style={{ padding: "16px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 150, height: 52, objectFit: "contain" }} />
+          <button
+            onClick={onClose}
+            style={{ background: "transparent", border: "1px solid #1a2f4a", borderRadius: 7, color: "#6a8090", fontSize: 16, width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+          >
+            ✕
+          </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Patient info */}
+        <div style={{ padding: "12px 18px", borderBottom: "1px solid #0d1a28" }}>
+          <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>
+            {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "Greg Butler"; } catch { return "Greg Butler"; } })()}
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
+          <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
+          {NAV.slice(0, 8).map(({ id, icon, label }) => (
+            <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => { setActiveNav(id); onClose(); }}>
+              <span className="nav-icon">{icon}</span>
+              <span>{label}</span>
+            </div>
+          ))}
+          <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
+          {NAV.slice(8).map(({ id, icon, label }) => (
+            <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => { setActiveNav(id); onClose(); }}>
+              <span className="nav-icon">{icon}</span>
+              <span>{label}</span>
+              {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "1px 5px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>AI</span>}
+            </div>
+          ))}
+        </nav>
+
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #0d1a28" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 10, color: "#1e4030", fontFamily: "'DM Mono',monospace" }}>
+            <div className="live-dot" />
+            All systems nominal
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -232,7 +270,8 @@ export default function App() {
 }
 
 function AppShell() {
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const [activeNav, setActiveNav]     = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime]           = useState(new Date());
   const [readings, setReadings]   = useState(() => getStore('readings'));
   const [meds, setMeds]           = useState(() => getStore('meds'));
@@ -327,7 +366,7 @@ function AppShell() {
   const ActiveTabComponent = TAB_COMPONENTS[activeNav] ?? null;
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#07090f", color: "#d4e2f0", fontFamily: "'Sora', sans-serif", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#07090f", color: "#d4e2f0", fontFamily: "'Sora', sans-serif", overflow: "hidden", position: "relative" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -358,14 +397,33 @@ function AppShell() {
       {/* We hand full-page control to them and pass navigation callback.       */}
       {isStandalone && <ActiveTabComponent onNavChange={setActiveNav} />}
 
-      {/* ── All other tabs: App sidebar is always visible ── */}
+      {/* ── Sidebar drawer (all non-standalone tabs) ── */}
+      {!isStandalone && (
+        <AppSidebar
+          activeNav={activeNav}
+          setActiveNav={setActiveNav}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── All other tabs: full-width main area ── */}
       {!isStandalone && (
         <>
-          <AppSidebar activeNav={activeNav} setActiveNav={setActiveNav} />
 
           {/* AI Analysis: has own topbar + height:100vh — give it the full remaining area */}
           {activeNav === "ai" && (
-            <div style={{ flex: 1, overflow: "hidden" }}>
+            <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+              {/* Hamburger overlay for AI tab */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                style={{ position:"absolute", top:10, left:12, zIndex:10, background:"rgba(8,12,20,.85)", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", width:36, height:36, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, cursor:"pointer", padding:0 }}
+                aria-label="Open menu"
+              >
+                <span style={{ width:16, height:2, background:"#b0c4d8", borderRadius:1, display:"block" }} />
+                <span style={{ width:16, height:2, background:"#b0c4d8", borderRadius:1, display:"block" }} />
+                <span style={{ width:16, height:2, background:"#b0c4d8", borderRadius:1, display:"block" }} />
+              </button>
               <ActiveTabComponent />
             </div>
           )}
@@ -375,13 +433,20 @@ function AppShell() {
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
               {/* Topbar */}
-              <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
+              <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 16px", gap: 12, flexShrink: 0 }}>
+                {/* Hamburger */}
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  style={{ background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#b0c4d8", width: 36, height: 36, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", flexShrink: 0, padding: 0 }}
+                  aria-label="Open menu"
+                >
+                  <span style={{ width: 16, height: 2, background: "#b0c4d8", borderRadius: 1, display: "block" }} />
+                  <span style={{ width: 16, height: 2, background: "#b0c4d8", borderRadius: 1, display: "block" }} />
+                  <span style={{ width: 16, height: 2, background: "#b0c4d8", borderRadius: 1, display: "block" }} />
+                </button>
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
                   <div className="live-dot" />
                   <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
-                </div>
-                <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
-                  Last import: {lastImport ? new Date(lastImport).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "Mar 12, 2026"}
                 </div>
                 <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
               </div>
