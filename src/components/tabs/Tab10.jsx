@@ -12,86 +12,6 @@ const TAG_STYLES = {
 
 const FILTERS = ["All", "Appt", "Labs", "Meds", "Symptoms", "General", "Urgent"];
 
-const INITIAL_NOTES = [
-  {
-    id: 1, pinned: true, tag: "Appt", date: "Mar 18, 2026",
-    title: "Ochsner appt prep — Apr 22",
-    preview: "Questions for Dr. Zapata: tacrolimus taper schedule, lymph node follow-up...",
-    linked: { label: "Ochsner Transplant / Orthopedics", date: "Apr 22, 2026 · New Orleans" },
-    sections: [
-      {
-        id: "s1", type: "checklist", header: "Questions for Dr. Zapata (Transplant)",
-        items: [
-          { id: "c1", done: true,  text: "Tacrolimus taper timeline — when will levels drop below 5?" },
-          { id: "c2", done: false, text: "Status of 3 cm necrotic porta hepatic lymph node — does Apr 22 imaging address this?" },
-          { id: "c3", done: false, text: "Persistent thrombocytopenia (Plt 119) — is this expected to resolve or chronic?" },
-          { id: "c4", done: false, text: "Splenomegaly / varices — any intervention planned or just monitoring?" },
-          { id: "c5", done: false, text: "Primary hyperparathyroidism — 24-hr urine Ca 159 mg/day, still below threshold. Re-check?" },
-        ]
-      },
-      {
-        id: "s2", type: "checklist", header: "Questions for Orthopedics (Akhtar / Chimento)",
-        items: [
-          { id: "c6", done: false, text: "Left hip DJD — what's the management plan? PT vs. injection vs. eventual replacement?" },
-          { id: "c7", done: false, text: "Cervical arthritis — is this connected to shoulder/arm symptoms?" },
-        ]
-      },
-      {
-        id: "s3", type: "text", header: "Logistics",
-        body: "Drive to New Orleans night before. Appointments start 10 AM, run through ~3 PM. Imaging last at 2:45 PM with Dr. Barr. Bring insurance card + medication list."
-      }
-    ]
-  },
-  {
-    id: 2, pinned: true, tag: "Meds", date: "Mar 10, 2026",
-    title: "Tacrolimus dose log",
-    preview: "Tracking daily AM/PM doses + trough levels at each draw...",
-    sections: [
-      { id: "s1", type: "text", header: "Overview", body: "Tracking tacrolimus 5.8 ng/mL as of 02/24/2026 — therapeutic range. AM dose with food, PM dose at consistent time. Next trough draw with April labs." }
-    ]
-  },
-  {
-    id: 3, pinned: true, tag: "Urgent", date: "Feb 11, 2026",
-    title: "Preauricular biopsy — pending",
-    preview: "02/11 biopsy left cheek. DDx SCC vs irritated SK. Path results expected...",
-    sections: [
-      { id: "s1", type: "text", header: "Details", body: "Shave biopsy left superior preauricular cheek on 02/11/2026. Order #118015. DDx: SCC vs irritated seborrheic keratosis. Provider noted immunosuppression as explicit SCC risk factor. Path results expected within 2 weeks." }
-    ]
-  },
-  {
-    id: 4, pinned: false, tag: "Symptoms", date: "Feb 5, 2026",
-    title: "Cervical spine — symptoms onset",
-    preview: "Pain started left shoulder radiating to arm. Worse after extended...",
-    sections: [
-      { id: "s1", type: "text", header: "Symptom Log", body: "Pain started left shoulder radiating down left arm. Worse after extended sitting or driving. New Dx 02/02/2026: degenerative arthritis of cervical spine. Discussing with Ochsner ortho at April visit." }
-    ]
-  },
-  {
-    id: 5, pinned: false, tag: "General", date: "Dec 17, 2025",
-    title: "Post-transplant 1-year reflections",
-    preview: "One year out. Energy levels much improved since Dec. Weight down to...",
-    sections: [
-      { id: "s1", type: "text", header: "Notes", body: "One year post liver transplant (12/17/2024). Energy levels dramatically improved. Weight down from 294 lb peak to 232 lb as of Dec 2025. Prednisone taper complete. C. diff cleared. Tacrolimus stable. Feeling cautiously optimistic." }
-    ]
-  },
-  {
-    id: 6, pinned: false, tag: "Labs", date: "Feb 24, 2026",
-    title: "Labs 02/24 — what to watch",
-    preview: "Platelets still low at 119. Anion gap 4 flagged low — ask about significance...",
-    sections: [
-      {
-        id: "s1", type: "checklist", header: "Flagged Values",
-        items: [
-          { id: "c1", done: false, text: "Platelets 119 (L) — persistent, consistent with immunosuppression + splenomegaly" },
-          { id: "c2", done: false, text: "Anion gap 4 (L) — ask Zapata if this is clinically significant" },
-          { id: "c3", done: false, text: "Lymphocytes 19% (L) — expected on tacrolimus + mycophenolate" },
-          { id: "c4", done: true,  text: "Tacrolimus 5.8 ✅ — therapeutic" },
-          { id: "c5", done: true,  text: "Creatinine 0.74, eGFR 103 ✅ — kidney function excellent" },
-        ]
-      }
-    ]
-  },
-];
 
 function TagBadge({ tag }) {
   const s = TAG_STYLES[tag] || TAG_STYLES.General;
@@ -357,8 +277,8 @@ function AIPanel({ note, onClose }) {
 }
 
 export default function Notes() {
-  const [notes, setNotes] = useState(INITIAL_NOTES);
-  const [selectedId, setSelectedId] = useState(1);
+  const [notes, setNotes] = useState(() => { try { const r = localStorage.getItem("mi_notes"); return r ? JSON.parse(r) : []; } catch { return []; } });
+  const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [showNew, setShowNew] = useState(false);
@@ -374,14 +294,17 @@ export default function Notes() {
   const recent = filtered.filter(n => !n.pinned);
   const selected = notes.find(n => n.id === selectedId) || null;
 
-  function updateNote(updated) { setNotes(notes.map(n => n.id === updated.id ? updated : n)); }
+  const saveNotes = (updated) => { try { localStorage.setItem("mi_notes", JSON.stringify(updated)); } catch {} };
+
+  function updateNote(updated) { const next = notes.map(n => n.id === updated.id ? updated : n); saveNotes(next); setNotes(next); }
   function deleteNote(id) {
     const remaining = notes.filter(n => n.id !== id);
+    saveNotes(remaining);
     setNotes(remaining);
     setSelectedId(remaining.length > 0 ? remaining[0].id : null);
   }
-  function pinNote(id) { setNotes(notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n)); }
-  function addNote(note) { setNotes([note, ...notes]); setSelectedId(note.id); }
+  function pinNote(id) { const next = notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n); saveNotes(next); setNotes(next); }
+  function addNote(note) { const next = [note, ...notes]; saveNotes(next); setNotes(next); setSelectedId(note.id); }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>

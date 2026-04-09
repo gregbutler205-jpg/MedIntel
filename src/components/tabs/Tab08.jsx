@@ -7,54 +7,12 @@ const mono = "'DM Mono',monospace";
 const serif = "'DM Serif Display',serif";
 const sora = "'Sora',sans-serif";
 
-const APPTS_INIT = [
-  { id:1, title:"Nephrology Follow-Up",      doctor:"Dr. Ari Cohen",     facility:"UMC Transplant Center",  date:"Mar 15, 2026", time:"10:00 AM", type:"appointment", urgency:"high", prep:["Bring home BP log","Ask about creatinine 1.42 trend","Review Tacrolimus dose — trough 6.2 ng/mL"] },
-  { id:2, title:"Transplant Labs",            doctor:"Quest Diagnostics", facility:"Quest Diagnostics",      date:"Mar 18, 2026", time:"9:00 AM",  type:"lab",         urgency:"med",  prep:["Fast after midnight — water okay","Take Tacrolimus at 7–8 PM night before labs only","Draw AFTER labs: Tacrolimus trough, CMP, CBC","Arrive early — trough must be pre-dose"] },
-  { id:3, title:"Liver / Kidney Ultrasound", doctor:"Dr. Lisa Tran",     facility:"Baptist Medical Center", date:"Mar 25, 2026", time:"2:30 PM",  type:"imaging",     urgency:"med",  prep:["No eating 4 hrs before","Drink water — full bladder preferred"] },
-  { id:4, title:"PT Session",                doctor:"Baptist Rehab",     facility:"Baptist Rehab Center",   date:"Apr 3, 2026",  time:"11:00 AM", type:"other",       urgency:"low",  prep:[] },
-  { id:5, title:"Dermatology Screen",        doctor:"TBD",               facility:"TBD",                    date:"Apr 2026",     time:"TBD",      type:"appointment", urgency:"low",  prep:["Annual skin cancer screen","Check moles, crusty areas, pink spots","Immunosuppression significantly raises skin cancer risk"] },
-  { id:6, title:"Primary Care Follow-Up",    doctor:"Dr. Jonathan Hand", facility:"Hand Family Medicine",   date:"May 2026",     time:"TBD",      type:"appointment", urgency:"low",  prep:["BP check post Amlodipine increase to 10mg","Review colonoscopy scheduling (due 2027)","Bone density test referral if not yet done"] },
-];
 
-const GOALS = [
-  { id:1,  label:"Creatinine ≤ 1.40 mg/dL",    category:"Kidney",           color:"#4f8ef7", status:"watch",    note:"Currently 1.42 — slightly above target" },
-  { id:2,  label:"Tacrolimus trough 5–8 ng/mL", category:"Immunosuppression",color:"#a78bfa", status:"on-track", note:"6.2 ng/mL — therapeutic" },
-  { id:3,  label:"BP below 130/80",              category:"Cardiovascular",   color:"#ef4444", status:"watch",    note:"Variable — spike to 164/78 on Mar 3" },
-  { id:4,  label:"eGFR ≥ 55 mL/min",            category:"Kidney",           color:"#4f8ef7", status:"on-track", note:"58 mL/min — within target" },
-  { id:5,  label:"Hemoglobin ≥ 12 g/dL",        category:"CBC",              color:"#10b981", status:"on-track", note:"13.8 g/dL — good" },
-  { id:6,  label:"No acute rejection episodes",  category:"Transplant",       color:"#f59e0b", status:"on-track", note:"Protocol biopsy Oct 2025 — no rejection" },
-  { id:7,  label:"Annual dermatology screen",    category:"Preventive",       color:"#10b981", status:"due",      note:"Overdue — schedule for Apr 2026" },
-  { id:8,  label:"Bone density test",            category:"Preventive",       color:"#10b981", status:"due",      note:"Due at 12-month post-transplant — not yet done" },
-  { id:9,  label:"Colonoscopy screening",        category:"Preventive",       color:"#10b981", status:"on-track", note:"Due 2027 — on schedule" },
-  { id:10, label:"Dental checkup (every 6 mo)",  category:"Preventive",       color:"#10b981", status:"watch",    note:"Every 6 months starting 6 months post-transplant" },
-];
+const GOALS = (() => { try { return JSON.parse(localStorage.getItem("mi_care_goals") || "[]"); } catch { return []; } })();
 
-const TEAM = [
-  { name:"Dr. Ari Cohen, MD",    role:"Nephrologist / Transplant", facility:"UMC Transplant Center",  phone:"(601) 555-0142", next:"Mar 15, 2026", color:"#4f8ef7" },
-  { name:"Dr. Jonathan Hand, MD",role:"Primary Care Physician",    facility:"Hand Family Medicine",    phone:"(601) 555-0198", next:"May 2026",     color:"#10b981" },
-  { name:"Dr. Lisa Tran",        role:"Radiologist",               facility:"Baptist Medical Center",  phone:"(601) 555-0231", next:"Mar 25, 2026", color:"#a78bfa" },
-  { name:"Quest Diagnostics",    role:"Lab Services",              facility:"Quest Diagnostics",       phone:"(601) 555-0177", next:"Mar 18, 2026", color:"#f59e0b" },
-  { name:"Baptist Rehab",        role:"Physical Therapy",          facility:"Baptist Rehab Center",    phone:"(601) 555-0155", next:"Apr 3, 2026",  color:"#10b981" },
-];
+const TEAM = (() => { try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; } })();
 
-const PREVENTIVE = [
-  { label:"Inactivated Influenza",        status:"current", note:"Annual — get every fall; dead virus only — safe",                          category:"Vaccine" },
-  { label:"COVID-19 Booster",             status:"current", note:"Updated Fall 2025",                                                         category:"Vaccine" },
-  { label:"Pneumococcal (PCV20)",         status:"current", note:"Series complete",                                                           category:"Vaccine" },
-  { label:"Hepatitis B",                  status:"current", note:"Series complete",                                                           category:"Vaccine" },
-  { label:"Tdap",                         status:"current", note:"Up to date",                                                                category:"Vaccine" },
-  { label:"Shingrix (recombinant)",       status:"due",     note:"Safe post-transplant (non-live recombinant) — schedule with PCP",          category:"Vaccine" },
-  { label:"Live flu vaccine (FluMist)",   status:"never",   note:"AVOID — live virus; contraindicated while immunosuppressed",               category:"Vaccine" },
-  { label:"MMR (measles/mumps/rubella)",  status:"never",   note:"AVOID — live virus; contraindicated",                                      category:"Vaccine" },
-  { label:"Varicella (chickenpox)",       status:"never",   note:"AVOID — live virus; contraindicated",                                      category:"Vaccine" },
-  { label:"Yellow fever",                 status:"never",   note:"AVOID — live virus; contraindicated",                                      category:"Vaccine" },
-  { label:"Dermatology Screen",           status:"due",     note:"Annual — overdue; immunosuppression raises skin cancer risk significantly", category:"Screening" },
-  { label:"Colonoscopy",                  status:"on-track",note:"Due 2027; repeat every 1–10 yrs depending on history",                     category:"Screening" },
-  { label:"Bone Density Test",            status:"due",     note:"Due at 12-month post-transplant — not yet scheduled; Prednisone affects bones", category:"Screening" },
-  { label:"Dental Checkup",              status:"watch",   note:"Every 6 months starting 6 months post-transplant",                          category:"Screening" },
-  { label:"Eye Exam",                     status:"watch",   note:"Annual — anti-rejection meds may raise eye risk; cataracts possible",      category:"Screening" },
-  { label:"Blood Pressure Check",         status:"on-track",note:"Ongoing — checked at every transplant visit",                              category:"Screening" },
-];
+const PREVENTIVE = (() => { try { return JSON.parse(localStorage.getItem("mi_preventive") || "[]"); } catch { return []; } })();
 
 const MILESTONES = [
   { label:"Transplant Surgery",             date:"Oct 1, 2024",       done:true,  note:"LDKT right iliac fossa. Immediate graft function. 5-day admission. Discharge Cr: 1.18 mg/dL." },
@@ -255,7 +213,8 @@ const STATUS_META = {
 };
 
 function Timeline() {
-  const [appts, setAppts] = useState(APPTS_INIT);
+  const [appts, setAppts] = useState(() => { try { const r = localStorage.getItem("mi_appointments"); return r ? JSON.parse(r) : []; } catch { return []; } });
+  const saveAppts = (updated) => { try { localStorage.setItem("mi_appointments", JSON.stringify(updated)); } catch {} };
   const [done, setDone] = useState({});
   const [editingPrep, setEditingPrep] = useState(null);
   const [editVal, setEditVal] = useState("");
@@ -265,14 +224,14 @@ function Timeline() {
   const toggleDone = (id) => setDone(d => ({ ...d, [id]: !d[id] }));
   const startEditPrep = (apptId, idx, val) => { setEditingPrep(`${apptId}-${idx}`); setEditVal(val); };
   const savePrep = (apptId, idx) => {
-    setAppts(prev => prev.map(a => a.id !== apptId ? a : { ...a, prep: a.prep.map((p,i) => i === idx ? editVal : p) }));
+    setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: a.prep.map((p,i) => i === idx ? editVal : p) }); saveAppts(updated); return updated; });
     setEditingPrep(null);
   };
-  const addPrepLine = (apptId) => setAppts(prev => prev.map(a => a.id !== apptId ? a : { ...a, prep: [...a.prep, ""] }));
-  const removePrep = (apptId, idx) => setAppts(prev => prev.map(a => a.id !== apptId ? a : { ...a, prep: a.prep.filter((_,i) => i !== idx) }));
+  const addPrepLine = (apptId) => setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: [...a.prep, ""] }); saveAppts(updated); return updated; });
+  const removePrep = (apptId, idx) => setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: a.prep.filter((_,i) => i !== idx) }); saveAppts(updated); return updated; });
   const addAppt = () => {
     if (!newAppt.title) return;
-    setAppts(prev => [...prev, { ...newAppt, id: Date.now(), prep:[] }]);
+    setAppts(prev => { const updated = [...prev, { ...newAppt, id: Date.now(), prep:[] }]; saveAppts(updated); return updated; });
     setNewAppt({ title:"", doctor:"", facility:"", date:"", time:"", type:"appointment", urgency:"low" });
     setShowAdd(false);
   };
@@ -553,7 +512,7 @@ export default function CarePlan() {
           {TABS.map(t => <button key={t} className={`tab-btn${tab===t?" active":""}`} onClick={() => setTab(t)}>{t}</button>)}
         </div>
         <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, background:"#0b1220", border:"1px solid #111e30", padding:"5px 12px", borderRadius:6, flexShrink:0 }}>
-          {APPTS_INIT.length} events · {GOALS.length} goals
+          {GOALS.length} goals
         </div>
       </div>
 
