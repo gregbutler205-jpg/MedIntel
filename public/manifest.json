@@ -1,0 +1,25 @@
+{
+  "name": "IntelliTrax",
+  "short_name": "IntelliTrax",
+  "description": "Personal Health Dashboard",
+  "start_url": "/MedIntel/",
+  "scope": "/MedIntel/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07090f",
+  "theme_color": "#07090f",
+  "icons": [
+    {
+      "src": "/MedIntel/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/MedIntel/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

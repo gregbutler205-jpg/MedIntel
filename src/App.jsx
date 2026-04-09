@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import INTELLITRAX_LOGO from './assets/logo.png';
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
+import LockScreen from './components/LockScreen.jsx';
 
 // ── Tab component imports ─────────────────────────────────────────────────────
 import TabProfile     from './components/tabs/Tab02.jsx';
@@ -219,6 +220,18 @@ function AppSidebar({ activeNav, setActiveNav }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [unlocked, setUnlocked] = useState(
+    () => sessionStorage.getItem("mi_unlocked") === "1"
+  );
+
+  if (!unlocked) {
+    return <LockScreen onUnlock={() => setUnlocked(true)} />;
+  }
+
+  return <AppShell />;
+}
+
+function AppShell() {
   const [activeNav, setActiveNav] = useState("dashboard");
   const [time, setTime]           = useState(new Date());
   const [readings, setReadings]   = useState(() => getStore('readings'));
