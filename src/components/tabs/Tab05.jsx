@@ -303,11 +303,19 @@ function trendColor(labId, trend) {
   return flipped ? "#f59e0b" : "#4f8ef7";
 }
 
+// Parse "0.7-1.3" or "70 - 100" or "3.4–5.1" into {low, high}
+function parseRefRange(str) {
+  if (!str) return { low: null, high: null };
+  const m = str.match(/(\d+\.?\d*)\s*[-–to]+\s*(\d+\.?\d*)/i);
+  return m ? { low: parseFloat(m[1]), high: parseFloat(m[2]) } : { low: null, high: null };
+}
+
 export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("labs");
   const handleNav = (id) => { if (id !== "labs") { onNavChange?.(id); } else { setActiveNav(id); } };
   const [selectedLab, setSelectedLab] = useState(PANELS[0].labs[0]);
   const [selectedPanelColor, setSelectedPanelColor] = useState(PANELS[0].color);
+  const [selectedImportedLab, setSelectedImportedLab] = useState(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [timeRange, setTimeRange] = useState(12);
   const [time, setTime] = useState(new Date());
@@ -338,21 +346,19 @@ export default function App({ onNavChange }) {
   const allLabs = PANELS.flatMap(p => p.labs);
   const flagged = allLabs.filter(l => statusOf(l) !== "ok").length;
 
-  const selectLab = (lab, color) => { setSelectedLab(lab); setSelectedPanelColor(color); setAiOpen(false); };
+  const selectLab = (lab, color) => { setSelectedLab(lab); setSelectedPanelColor(color); setAiOpen(false); setSelectedImportedLab(null); };
+  const selectImportedLab = (lab) => { setSelectedImportedLab(lab); setSelectedLab(null); setAiOpen(false); };
 
   const analyzeAllLabs = async () => {
     const apiKey = localStorage.getItem("mi_ak");
     if (!apiKey) { setAiError("API key required — go to Data & Backup to add it."); return; }
     setAiAnalyzing(true); setAiAnalysis(""); setAiError("");
     try {
-      // Build a summary of all flagged and imported labs
-      const flaggedPanelLabs = PANELS.flatMap(p => p.labs).filter(l => statusOf(l) !== "ok");
-      const importedFlagged  = importedLabs.filter(l => l.flag);
-      const allImported      = importedLabs.slice(0, 40);
-      const labSummary = [
-        ...flaggedPanelLabs.map(l => `${l.name}: ${latestVal(l)} ${l.unit} (range ${l.low}–${l.high}) — FLAGGED, trend ${trendOf(l)}`),
-        ...allImported.map(l => `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — FLAGGED" : ""}${l.date ? ` on ${l.date}` : ""}`),
-      ].join("\n");
+      // Build a summary from actual imported labs only
+      const allImported = importedLabs.slice(0, 60);
+      const labSummary = allImported.map(l =>
+        `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — OUT OF RANGE" : ""}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`
+      ).join("\n");
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -366,12 +372,12 @@ export default function App({ onNavChange }) {
           max_tokens: 1500,
           messages: [{
             role: "user",
-            content: `You are an intelligent health assistant for Greg Butler, a post-kidney transplant patient on immunosuppression (tacrolimus, mycophenolate, prednisone). Analyze the following lab results and provide a focused, clinically relevant summary. Highlight any concerning values or trends, explain what they mean in the context of his transplant, and suggest questions to raise with his care team. Be concise and organized with bullet points.
+            content: `You are an intelligent health assistant. Analyze the following lab results for Greg Butler and provide a focused, clinically relevant summary. Highlight any values outside the reference range, explain what they may indicate, and suggest questions to raise with his care team. Be concise and use bullet points.
 
 LAB RESULTS:
-${labSummary || "No flagged or imported labs available."}
+${labSummary || "No imported labs available yet. Please import lab results using the Import Records tab."}
 
-Format your response with: 1) Key Concerns, 2) Values to Watch, 3) Questions for Care Team. Keep it under 400 words.`,
+Format your response with: 1) Key Concerns (flagged/out-of-range values), 2) Values to Watch (borderline or trending), 3) Questions for Care Team. Keep it under 400 words.`,
           }],
         }),
       });
@@ -536,23 +542,33 @@ Format your response with: 1) Key Concerns, 2) Values to Watch, 3) Questions for
                           </button>
                         ))}
                       </div>
-                      {sorted.map((lab, i) => (
-                        <div key={i} className="lab-row" style={{ animationDelay: `${i * 20}ms`, flexDirection: "column", gap: 3 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee" }}>{lab.name}</div>
-                              <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{lab.date || "—"}{lab.facility ? ` · ${lab.facility}` : ""}</div>
+                      {sorted.map((lab, i) => {
+                        const { low, high } = parseRefRange(lab.refRange);
+                        const val = parseFloat(lab.value);
+                        const isSelected = selectedImportedLab && selectedImportedLab.id === lab.id;
+                        return (
+                          <div key={i} className={`lab-row ${isSelected ? "sel" : ""}`}
+                            onClick={() => selectImportedLab(lab)}
+                            style={{ animationDelay: `${i * 20}ms`, flexDirection: "column", gap: 3, cursor: "pointer" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee" }}>{lab.name}</div>
+                                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{lab.date || "—"}{lab.facility ? ` · ${lab.facility}` : ""}</div>
+                              </div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }}>
+                                {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
+                              </div>
                             </div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }}>
-                              {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
-                            </div>
+                            {low !== null && high !== null && !isNaN(val) && (
+                              <RangeBar value={val} low={low} high={high} compact />
+                            )}
+                            {lab.refRange && (low === null || high === null) && (
+                              <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14 }}>ref: {lab.refRange}</div>
+                            )}
                           </div>
-                          {lab.refRange && (
-                            <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14 }}>ref: {lab.refRange}</div>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </>
                   );
                 })()}
@@ -562,6 +578,71 @@ Format your response with: 1) Key Concerns, 2) Values to Watch, 3) Questions for
 
           {/* Center — chart + detail */}
           <div style={{ flex: 1, overflowY: "auto", padding: "24px 24px", transition: "all .25s", minWidth: 0 }}>
+
+            {/* ── Imported lab selected view ── */}
+            {selectedImportedLab && !selectedLab && (() => {
+              const { low, high } = parseRefRange(selectedImportedLab.refRange);
+              const val = parseFloat(selectedImportedLab.value);
+              const inRange = low !== null && high !== null && !isNaN(val) ? (val >= low && val <= high) : null;
+              return (
+                <div style={{ animation: "fadeUp .3s ease both" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
+                        <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400 }}>{selectedImportedLab.name}</h2>
+                        {selectedImportedLab.flag && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
+                        {selectedImportedLab.category}{selectedImportedLab.refRange ? ` · Normal range: ${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : ""}
+                        {selectedImportedLab.date ? ` · ${selectedImportedLab.date}` : ""}
+                        {selectedImportedLab.facility ? ` · ${selectedImportedLab.facility}` : ""}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Value + Range bar */}
+                  <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "20px 24px", marginBottom: 18 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
+                      <span style={{ fontSize: 36, fontWeight: 700, color: inRange === false ? "#ef4444" : inRange === true ? "#10b981" : "#dde8f5", letterSpacing: "-1px" }}>{selectedImportedLab.value}</span>
+                      <span style={{ fontSize: 16, color: "#7eb8d8" }}>{selectedImportedLab.unit}</span>
+                      {inRange === true && <span style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono',monospace" }}>✓ Within normal range</span>}
+                      {inRange === false && <span style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>⚠ Outside normal range</span>}
+                    </div>
+                    {selectedImportedLab.refRange && (
+                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+                        Normal range: {selectedImportedLab.refRange} {selectedImportedLab.unit}
+                      </div>
+                    )}
+                    {low !== null && high !== null && !isNaN(val) && (
+                      <RangeBar value={val} low={low} high={high} />
+                    )}
+                  </div>
+
+                  {/* Details grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+                    {[
+                      ["Category", selectedImportedLab.category || "—"],
+                      ["Date", selectedImportedLab.date || "—"],
+                      ["Facility", selectedImportedLab.facility || "—"],
+                      ["Reference Range", selectedImportedLab.refRange ? `${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : "—"],
+                    ].map(([k, v]) => (
+                      <div key={k} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
+                        <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{k}</div>
+                        <div style={{ fontSize: 13, color: "#c4d8ee", fontWeight: 500 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {selectedImportedLab.notes && (
+                    <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "14px 16px" }}>
+                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Notes</div>
+                      <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.6 }}>{selectedImportedLab.notes}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {selectedLab && chartLab && (
               <div style={{ animation: "fadeUp .3s ease both" }}>
                 {/* Header */}
@@ -672,7 +753,9 @@ Format your response with: 1) Key Concerns, 2) Values to Watch, 3) Questions for
               )}
               {!aiAnalysis && !aiAnalyzing && !aiError && (
                 <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
-                  Click to get an AI analysis of your flagged labs and imported results, cross-referenced with your transplant history.
+                  {importedLabs.length > 0
+                    ? "Click to get an AI analysis of your imported lab results."
+                    : "Import lab results using the Import Records tab, then click Analyze My Labs."}
                 </div>
               )}
             </div>
