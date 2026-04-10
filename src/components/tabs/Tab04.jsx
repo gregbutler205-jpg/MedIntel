@@ -18,6 +18,40 @@ const NAV = [
   { id: "backup", icon: "◈", label: "Data & Backup" },
 ];
 
+// ── Refill date helpers ───────────────────────────────────────────────────────
+function calcDaysLeft(refillDate) {
+  if (!refillDate) return 0;
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(refillDate)) {
+    d = new Date(refillDate + "T12:00:00");
+  } else {
+    const yr = new Date().getFullYear();
+    d = new Date(`${refillDate}, ${yr}`);
+    if (isNaN(d.getTime()) || d < new Date(Date.now() - 180 * 86400000)) {
+      d = new Date(`${refillDate}, ${yr + 1}`);
+    }
+  }
+  const days = Math.ceil((d - Date.now()) / 86400000);
+  return Math.max(0, isNaN(days) ? 0 : days);
+}
+
+function toIsoDate(str) {
+  if (!str) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  const yr = new Date().getFullYear();
+  const d = new Date(`${str}, ${yr}`);
+  if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  return "";
+}
+
+function fmtRefillDate(str) {
+  if (!str) return "—";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return new Date(str + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+  return str;
+}
+
 const MEDS_SEED = [
   {
     id: 1,
@@ -312,8 +346,8 @@ export default function App({ onNavChange }) {
   });
 
   const flaggedCount = meds.filter((m) => m.flag).length;
-  const refillSoon = meds.filter((m) => m.daysLeft <= 10).length;
-  const nextRefill = meds.length > 0 ? meds.reduce((min, m) => (m.daysLeft < min.daysLeft ? m : min), meds[0]) : null;
+  const refillSoon = meds.filter((m) => calcDaysLeft(m.refillDate) <= 10).length;
+  const nextRefill = meds.length > 0 ? meds.reduce((min, m) => (calcDaysLeft(m.refillDate) < calcDaysLeft(min.refillDate) ? m : min), meds[0]) : null;
 
   const statusColor = (s) => ({ ok: "#10b981", refill: "#f59e0b", warn: "#ef4444" }[s] || "#4f8ef7");
 
@@ -462,7 +496,7 @@ export default function App({ onNavChange }) {
               { label: "Active Medications", value: String(meds.length), sub: "across categories", color: "#4f8ef7" },
               { label: "Flagged for Review", value: String(flaggedCount), sub: "requires attention", color: "#ef4444" },
               { label: "Refills Due Soon", value: String(refillSoon), sub: "within 10 days", color: "#f59e0b" },
-              { label: "Next Refill", value: nextRefill ? nextRefill.name.split(" ")[0] : "—", sub: nextRefill ? `Due ${nextRefill.refillDate} · ${nextRefill.daysLeft}d` : "No meds added yet", color: "#f59e0b" },
+              { label: "Next Refill", value: nextRefill ? nextRefill.name.split(" ")[0] : "—", sub: nextRefill ? `Due ${fmtRefillDate(nextRefill.refillDate)} · ${calcDaysLeft(nextRefill.refillDate)}d` : "No meds added yet", color: "#f59e0b" },
             ].map(({ label, value, sub, color }, i) => (
               <div className="stat-card" key={label} style={{ animationDelay: `${i * 55}ms` }}>
                 <div style={{ width: 28, height: 3, background: color, borderRadius: 2, marginBottom: 14, boxShadow: `0 0 10px ${color}60` }} />
@@ -557,10 +591,12 @@ export default function App({ onNavChange }) {
 
                     {/* Refill badge */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 11, color: med.daysLeft <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace", fontWeight: med.daysLeft <= 10 ? 600 : 400 }}>
-                        {med.daysLeft <= 10 ? `⚠ ${med.daysLeft}d` : `${med.daysLeft}d`}
-                      </div>
-                      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{med.refillDate}</div>
+                      {(() => { const dl = calcDaysLeft(med.refillDate); return (
+                        <div style={{ fontSize: 11, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace", fontWeight: dl <= 10 ? 600 : 400 }}>
+                          {dl <= 10 ? `⚠ ${dl}d` : `${dl}d`}
+                        </div>
+                      ); })()}
+                      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{fmtRefillDate(med.refillDate)}</div>
                     </div>
 
                     {/* Status dot */}
@@ -609,19 +645,33 @@ export default function App({ onNavChange }) {
                       { label: "Schedule", key: "schedule" },
                       { label: "Prescriber", key: "prescriber" },
                       { label: "Pharmacy", key: "pharmacy" },
-                      { label: "Refill Date", key: "refillDate" },
-                      { label: "Days Remaining", key: "daysLeft", type: "number" },
-                    ].map(({ label, key, type }) => (
+                    ].map(({ label, key }) => (
                       <div key={key} style={{ marginBottom: 12 }}>
                         <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
                         <input
-                          type={type || "text"}
+                          type="text"
                           value={editingMed[key] ?? ""}
-                          onChange={e => setEditingMed(prev => ({ ...prev, [key]: type === "number" ? +e.target.value : e.target.value }))}
+                          onChange={e => setEditingMed(prev => ({ ...prev, [key]: e.target.value }))}
                           style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
                         />
                       </div>
                     ))}
+
+                    {/* Refill Date — date picker, days calculated automatically */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Refill Date</div>
+                      <input
+                        type="date"
+                        value={editingMed.refillDate ?? ""}
+                        onChange={e => setEditingMed(prev => ({ ...prev, refillDate: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
+                      />
+                      {editingMed.refillDate && (
+                        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
+                          {calcDaysLeft(editingMed.refillDate)} days from today
+                        </div>
+                      )}
+                    </div>
 
                     {/* Category */}
                     <div style={{ marginBottom: 18 }}>
@@ -689,7 +739,7 @@ export default function App({ onNavChange }) {
                         <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>{selectedMed.brand} · {selectedMed.category}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <button onClick={() => { setEditingMed({ ...selectedMed }); setDeleteConfirm(false); }}
+                        <button onClick={() => { setEditingMed({ ...selectedMed, refillDate: toIsoDate(selectedMed.refillDate) || selectedMed.refillDate }); setDeleteConfirm(false); }}
                           style={{ padding: "5px 12px", background: "#0f1e30", border: "1px solid #1a3050", borderRadius: 6, color: "#7eb8d8", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
                           Edit
                         </button>
@@ -723,31 +773,36 @@ export default function App({ onNavChange }) {
                   {[
                     ["Pharmacy", selectedMed.pharmacy],
                     ["Prescriber", selectedMed.prescriber],
-                    ["Refill Date", selectedMed.refillDate],
-                    ["Days Remaining", `${selectedMed.daysLeft} days`],
-                  ].map(([k, v]) => (
+                    ["Refill Date", fmtRefillDate(selectedMed.refillDate)],
+                    ["Days Remaining", `${calcDaysLeft(selectedMed.refillDate)} days`],
+                  ].map(([k, v]) => {
+                    const dl = calcDaysLeft(selectedMed.refillDate);
+                    return (
                     <div className="detail-row" key={k}>
                       <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
-                      <span style={{ fontSize: 12, color: selectedMed.daysLeft <= 10 && k === "Days Remaining" ? "#f59e0b" : "#a8c4dc", fontWeight: selectedMed.daysLeft <= 10 && k === "Days Remaining" ? 600 : 500, textAlign: "right" }}>{v}</span>
+                      <span style={{ fontSize: 12, color: dl <= 10 && k === "Days Remaining" ? "#f59e0b" : "#a8c4dc", fontWeight: dl <= 10 && k === "Days Remaining" ? 600 : 500, textAlign: "right" }}>{v}</span>
                     </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Refill progress */}
                   <div style={{ marginTop: 16 }}>
+                    {(() => { const dl = calcDaysLeft(selectedMed.refillDate); const pct = Math.min(100, Math.round(dl / 90 * 100)); return (<>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
-                      <span style={{ fontSize: 10, color: selectedMed.daysLeft <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{Math.min(100, Math.round(selectedMed.daysLeft / 90 * 100))}%</span>
+                      <span style={{ fontSize: 10, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{pct}%</span>
                     </div>
                     <div style={{ height: 4, background: "#0d1a28", borderRadius: 4, overflow: "hidden" }}>
                       <div style={{
                         height: "100%",
-                        width: `${Math.min(100, Math.round(selectedMed.daysLeft / 90 * 100))}%`,
-                        background: selectedMed.daysLeft <= 10 ? "#f59e0b" : selectedMed.color,
+                        width: `${pct}%`,
+                        background: dl <= 10 ? "#f59e0b" : selectedMed.color,
                         borderRadius: 4,
-                        boxShadow: `0 0 8px ${selectedMed.daysLeft <= 10 ? "#f59e0b" : selectedMed.color}60`,
+                        boxShadow: `0 0 8px ${dl <= 10 ? "#f59e0b" : selectedMed.color}60`,
                         transition: "width .4s ease"
                       }} />
                     </div>
+                    </>); })()}
                   </div>
                 </div>
 

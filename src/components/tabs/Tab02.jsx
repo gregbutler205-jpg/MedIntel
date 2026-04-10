@@ -651,7 +651,7 @@ export default function ProfileTab() {
           </div>
           <div style={{ textAlign:"right", fontSize:"8pt", color:"#444", fontFamily:"Arial, sans-serif" }}>
             <div style={{ background:"#07090f", borderRadius:6, padding:"4px 10px", display:"inline-block", marginBottom:4 }}>
-              <img src={LOGO_WHITE} alt="IntelliTrax" style={{ height:30, objectFit:"contain", display:"block" }} />
+              <img src={LOGO_WHITE} alt="IntelliTrax" style={{ height:60, objectFit:"contain", display:"block" }} />
             </div>
             <div>Personal Health Record</div>
             <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>

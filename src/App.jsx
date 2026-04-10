@@ -68,8 +68,11 @@ const NAV = [
 
 // ── Helper functions (accept data as params so they work with live state) ─────
 function parseRefillDate(str) {
+  if (!str) return new Date(0);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str + "T12:00:00");
   const yr = new Date().getFullYear();
   const d = new Date(`${str}, ${yr}`);
+  if (isNaN(d.getTime())) return new Date(0);
   // if date is more than 6 months in the past, assume next year
   if (d < new Date(Date.now() - 180 * 86400000)) d.setFullYear(yr + 1);
   return d;
@@ -585,7 +588,7 @@ function AppShell() {
                         <div className="section-label">AI Analysis</div>
                         <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: 16 }}>
                           <div style={{ fontSize: 11, color: "#98afc4", marginBottom: 12, lineHeight: 1.5, fontFamily: "'DM Mono',monospace" }}>Cross-references all your data automatically.</div>
-                          {["Analyze my current health status", "Review my medications for interactions", "Prep for Liver appt"].map((q, i) => (
+                          {["Analyze my current health status", "Review my medications for interactions", "Prep for Hepatology appt"].map((q, i) => (
                             <button key={i} className="ai-btn" onClick={() => setActiveNav("ai")} style={{ marginBottom: 8, animationDelay: `${320 + i * 50}ms`, justifyContent: "flex-start", textAlign: "left" }}>
                               <span style={{ color: "#4f8ef7", fontSize: 14 }}>✦</span>
                               <span>{q}</span>
