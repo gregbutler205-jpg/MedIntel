@@ -333,27 +333,39 @@ export default function ProfileTab() {
 
         /* ── Print styles ── */
         @media print {
-          body { background: #fff !important; color: #000 !important; margin: 0; }
-          .no-print { display: none !important; }
-          .print-only { display: block !important; }
-          #print-profile {
-            display: block !important;
-            font-family: 'Georgia', serif;
-            font-size: 10pt;
-            color: #111;
-            padding: 0;
-            margin: 0;
+          /* Hide entire app UI */
+          body > #root > * { display: none !important; }
+          /* Force white page */
+          html, body { background: #ffffff !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; }
+          /* Show only the print doc */
+          #print-profile { display: block !important; position: fixed; top: 0; left: 0; width: 100%; }
+          /* Nuke all inherited dark colors from the app */
+          #print-profile, #print-profile * {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border-color: #cccccc !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          #print-profile h1 { font-size: 18pt; margin-bottom: 2pt; }
-          #print-profile h2 { font-size: 11pt; font-family: 'Arial', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5pt solid #111; padding-bottom: 3pt; margin: 14pt 0 7pt; }
-          #print-profile .pr { display: flex; justify-content: space-between; padding: 3pt 0; border-bottom: 0.5pt solid #ddd; font-size: 9.5pt; }
-          #print-profile .pr-lbl { color: #555; font-family: 'Arial', sans-serif; font-size: 8.5pt; min-width: 110pt; }
-          #print-profile .pr-val { color: #111; flex: 1; }
+          /* Typography */
+          #print-profile { font-family: 'Georgia', serif; font-size: 10pt; padding: 0; margin: 0; }
+          #print-profile h1 { font-size: 18pt; margin-bottom: 2pt; color: #000 !important; }
+          #print-profile h2 {
+            font-size: 11pt; font-family: 'Arial', sans-serif; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            border-bottom: 1.5pt solid #000 !important;
+            padding-bottom: 3pt; margin: 14pt 0 7pt;
+            color: #000 !important;
+          }
+          #print-profile .pr { display: flex; padding: 3pt 0; border-bottom: 0.5pt solid #cccccc !important; font-size: 9.5pt; }
+          #print-profile .pr-lbl { color: #444 !important; font-family: 'Arial', sans-serif; font-size: 8.5pt; min-width: 110pt; flex-shrink: 0; }
+          #print-profile .pr-val { color: #000 !important; flex: 1; }
           #print-profile .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28pt; }
-          #print-profile .badge { display: inline-block; border: 0.5pt solid #999; border-radius: 3pt; padding: 1pt 5pt; font-size: 8pt; font-family: 'Arial', sans-serif; margin: 1pt 2pt 1pt 0; }
-          #print-profile .allergy-row { padding: 3pt 0; border-bottom: 0.5pt solid #ddd; font-size: 9.5pt; }
-          #print-profile .footer { margin-top: 20pt; font-size: 8pt; color: #888; font-family: 'Arial', sans-serif; text-align: center; border-top: 0.5pt solid #ccc; padding-top: 6pt; }
-          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          #print-profile .allergy-row { padding: 3pt 0; border-bottom: 0.5pt solid #cccccc !important; font-size: 9.5pt; color: #000 !important; }
+          #print-profile .footer { margin-top: 20pt; font-size: 8pt; color: #666 !important; font-family: 'Arial', sans-serif; text-align: center; border-top: 0.5pt solid #cccccc !important; padding-top: 6pt; }
+          #print-profile .pr-meta { color: #555 !important; }
         }
         @media screen { #print-profile { display: none; } }
       `}</style>
@@ -619,8 +631,8 @@ export default function ProfileTab() {
               DOB: {P.dob || "—"} &nbsp;·&nbsp; Age: {P.age || "—"} &nbsp;·&nbsp; Sex: {P.sex || "—"} &nbsp;·&nbsp; Blood Type: {P.blood || "—"}
             </div>
           </div>
-          <div style={{ textAlign:"right", fontSize:"8pt", color:"#888", fontFamily:"Arial, sans-serif" }}>
-            <div style={{ fontWeight:700, fontSize:"11pt", color:"#111", letterSpacing:1 }}>IntelliTrax</div>
+          <div style={{ textAlign:"right", fontSize:"8pt", color:"#444", fontFamily:"Arial, sans-serif" }}>
+            <div style={{ fontWeight:700, fontSize:"11pt", color:"#000", letterSpacing:1 }}>IntelliTrax</div>
             <div>Personal Health Record</div>
             <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
           </div>
