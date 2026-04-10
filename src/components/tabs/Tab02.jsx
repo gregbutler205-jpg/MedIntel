@@ -300,13 +300,8 @@ export default function ProfileTab() {
     else if (deleteTarget.type === "contact") deleteContact(deleteTarget.id);
   }
 
-  // Recent surgeries (last 12 months)
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const recentSurgeries = surgeries.filter(s => {
-    if (!s.date) return false;
-    return new Date(s.date) >= oneYearAgo;
-  });
+  // All surgeries sorted newest first
+  const allSurgeries = [...surgeries].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Active meds
   const activeMeds = meds.filter(m => m.status !== "inactive");
@@ -335,11 +330,43 @@ export default function ProfileTab() {
         .icon-btn { background:transparent; border:1px solid #111e30; border-radius:6px; color:#b0c4d8; font-size:11px; padding:3px 8px; cursor:pointer; transition:all .15s; }
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .icon-btn.danger:hover { border-color:rgba(239,68,68,.4); color:#ef4444; }
+
+        /* ── Print styles ── */
+        @media print {
+          body { background: #fff !important; color: #000 !important; margin: 0; }
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          #print-profile {
+            display: block !important;
+            font-family: 'Georgia', serif;
+            font-size: 10pt;
+            color: #111;
+            padding: 0;
+            margin: 0;
+          }
+          #print-profile h1 { font-size: 18pt; margin-bottom: 2pt; }
+          #print-profile h2 { font-size: 11pt; font-family: 'Arial', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1.5pt solid #111; padding-bottom: 3pt; margin: 14pt 0 7pt; }
+          #print-profile .pr { display: flex; justify-content: space-between; padding: 3pt 0; border-bottom: 0.5pt solid #ddd; font-size: 9.5pt; }
+          #print-profile .pr-lbl { color: #555; font-family: 'Arial', sans-serif; font-size: 8.5pt; min-width: 110pt; }
+          #print-profile .pr-val { color: #111; flex: 1; }
+          #print-profile .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28pt; }
+          #print-profile .badge { display: inline-block; border: 0.5pt solid #999; border-radius: 3pt; padding: 1pt 5pt; font-size: 8pt; font-family: 'Arial', sans-serif; margin: 1pt 2pt 1pt 0; }
+          #print-profile .allergy-row { padding: 3pt 0; border-bottom: 0.5pt solid #ddd; font-size: 9.5pt; }
+          #print-profile .footer { margin-top: 20pt; font-size: 8pt; color: #888; font-family: 'Arial', sans-serif; text-align: center; border-top: 0.5pt solid #ccc; padding-top: 6pt; }
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        @media screen { #print-profile { display: none; } }
       `}</style>
 
       {/* Topbar */}
-      <div style={{ height:54, background:T.sidebar, borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
+      <div className="no-print" style={{ height:54, background:T.sidebar, borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
         <div style={{ flex:1 }} />
+        <button
+          onClick={() => window.print()}
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
+        >
+          🖨 Print Profile
+        </button>
         <div style={{ width:32, height:32, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
           {(P.name || "G").charAt(0).toUpperCase()}
         </div>
@@ -524,14 +551,14 @@ export default function ProfileTab() {
           {/* ── Recent Surgeries (last 12 months) ── */}
           <div style={{ ...card, gridColumn:"1/-1" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Surgeries / Procedures — Last 12 Months</span>
+              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Surgical &amp; Procedure History</span>
               <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Surgeries tab ↗</span>
             </div>
-            {recentSurgeries.length === 0
-              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No surgeries in the past 12 months</div>
+            {allSurgeries.length === 0
+              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No surgeries recorded</div>
               : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
-                  {recentSurgeries.map((s, i) => (
-                    <div key={s.id || i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < recentSurgeries.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                  {allSurgeries.map((s, i) => (
+                    <div key={s.id || i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < allSurgeries.length - 1 ? `1px solid ${T.border}` : "none" }}>
                       <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue, marginTop:4, flexShrink:0 }} />
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{s.procedure}</div>
@@ -581,6 +608,127 @@ export default function ProfileTab() {
       {allergyModal  && <AllergyModal  allergy={allergyModal}  onSave={saveAllergy}  onClose={() => setAllergyModal(null)}  />}
       {ecModal       && <ECModal       contact={ecModal}       onSave={saveContact}  onClose={() => setEcModal(null)}       />}
       {deleteTarget  && <DeleteConfirm label={deleteTarget.label} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />}
+
+      {/* ── Print layout (screen:hidden, print:visible) ── */}
+      <div id="print-profile">
+        {/* Header */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
+          <div>
+            <h1 style={{ marginBottom:2 }}>{P.name || "Patient Name"}</h1>
+            <div style={{ fontSize:"9pt", color:"#555", fontFamily:"Arial, sans-serif" }}>
+              DOB: {P.dob || "—"} &nbsp;·&nbsp; Age: {P.age || "—"} &nbsp;·&nbsp; Sex: {P.sex || "—"} &nbsp;·&nbsp; Blood Type: {P.blood || "—"}
+            </div>
+          </div>
+          <div style={{ textAlign:"right", fontSize:"8pt", color:"#888", fontFamily:"Arial, sans-serif" }}>
+            <div style={{ fontWeight:700, fontSize:"11pt", color:"#111", letterSpacing:1 }}>IntelliTrax</div>
+            <div>Personal Health Record</div>
+            <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+          </div>
+        </div>
+
+        {/* Demographics */}
+        <h2>Demographics &amp; Contact</h2>
+        <div className="grid2">
+          {[["Height",P.height],["Weight",P.weight],["Phone",P.phone],["Email",P.email],["Address",P.address]].map(([l,v])=>v?(
+            <div key={l} className="pr"><span className="pr-lbl">{l}</span><span className="pr-val">{v}</span></div>
+          ):null)}
+        </div>
+
+        {/* Insurance */}
+        {(I.ins1 || I.plan1 || I.ins2) && <>
+          <h2>Insurance / Coverage</h2>
+          <div className="grid2">
+            {[["Primary Insurer",I.ins1],["Plan",I.plan1],["Member ID",I.mid1],["Group #",I.grp1],
+              ["Secondary Insurer",I.ins2],["Member ID (2)",I.mid2],["Copay (Specialist)",I.copay],["Deductible YTD",I.ded],["Out-of-Pocket Max",I.oop]
+            ].map(([l,v])=>v?(
+              <div key={l} className="pr"><span className="pr-lbl">{l}</span><span className="pr-val">{v}</span></div>
+            ):null)}
+          </div>
+        </>}
+
+        {/* Emergency Contacts */}
+        {contacts.length > 0 && <>
+          <h2>Emergency Contacts</h2>
+          {contacts.map((c,i)=>(
+            <div key={i} className="pr">
+              <span className="pr-lbl">{c.name}{c.primary?" (Primary)":""}</span>
+              <span className="pr-val">{c.relationship} &nbsp;·&nbsp; {c.phone}{c.email?` · ${c.email}`:""}</span>
+            </div>
+          ))}
+        </>}
+
+        {/* Allergies */}
+        {allergies.length > 0 && <>
+          <h2>Allergies</h2>
+          {allergies.map((a,i)=>(
+            <div key={i} className="allergy-row">
+              <strong>{a.name}</strong> — {a.reaction} <span style={{fontSize:"8pt",color:"#555"}}>({a.severity})</span>
+            </div>
+          ))}
+        </>}
+
+        {/* Active Conditions */}
+        {conditions.filter(c=>c.status!=="resolved").length > 0 && <>
+          <h2>Active Conditions / Diagnoses</h2>
+          {conditions.filter(c=>c.status!=="resolved").map((c,i)=>(
+            <div key={i} className="pr">
+              <span className="pr-lbl">{c.icd10 || "—"}</span>
+              <span className="pr-val">{c.name} <span style={{fontSize:"8pt",color:"#666"}}>({c.status}{c.diagnosedDate?`, dx ${new Date(c.diagnosedDate+"T12:00:00").getFullYear()}`:""})</span></span>
+            </div>
+          ))}
+        </>}
+
+        {/* Current Medications */}
+        {activeMeds.length > 0 && <>
+          <h2>Current Medications</h2>
+          <div className="grid2">
+            {activeMeds.map((m,i)=>(
+              <div key={i} className="pr">
+                <span className="pr-lbl">{m.name}{m.brand?` (${m.brand})`:""}</span>
+                <span className="pr-val">{m.dose} — {m.frequency}{m.prescriber?` · ${m.prescriber}`:""}</span>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {/* Care Team */}
+        {careTeam.length > 0 && <>
+          <h2>Care Team</h2>
+          <div className="grid2">
+            {careTeam.map((d,i)=>(
+              <div key={i} className="pr">
+                <span className="pr-lbl">{d.name}{d.pcp?" (PCP)":""}</span>
+                <span className="pr-val">{d.role}{d.facility?` · ${d.facility}`:""}{d.phone?` · ${d.phone}`:""}</span>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {/* Surgical History */}
+        {allSurgeries.length > 0 && <>
+          <h2>Surgical &amp; Procedure History</h2>
+          {allSurgeries.map((s,i)=>(
+            <div key={i} className="pr" style={{alignItems:"flex-start", paddingTop:5, paddingBottom:5}}>
+              <span className="pr-lbl" style={{paddingTop:1}}>
+                {s.date ? new Date(s.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
+              </span>
+              <span className="pr-val">
+                <strong>{s.procedure}</strong>
+                {s.surgeon?<span style={{fontSize:"9pt"}}> · {s.surgeon}</span>:null}
+                {s.facility?<span style={{fontSize:"9pt"}}> · {s.facility}</span>:null}
+                {s.icd10?<span style={{fontSize:"8pt",color:"#555",display:"block"}}>{s.icd10}</span>:null}
+                {s.notes?<span style={{fontSize:"8.5pt",color:"#444",display:"block",marginTop:1}}>{s.notes}</span>:null}
+              </span>
+            </div>
+          ))}
+        </>}
+
+        {/* Footer */}
+        <div className="footer">
+          This document was generated by IntelliTrax Personal Health Dashboard &nbsp;·&nbsp; For medical use only &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}
+        </div>
+      </div>
+
     </div>
   );
 }
