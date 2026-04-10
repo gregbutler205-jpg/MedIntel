@@ -224,11 +224,11 @@ function Timeline() {
   const toggleDone = (id) => setDone(d => ({ ...d, [id]: !d[id] }));
   const startEditPrep = (apptId, idx, val) => { setEditingPrep(`${apptId}-${idx}`); setEditVal(val); };
   const savePrep = (apptId, idx) => {
-    setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: a.prep.map((p,i) => i === idx ? editVal : p) }); saveAppts(updated); return updated; });
+    setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: (a.prep||[]).map((p,i) => i === idx ? editVal : p) }); saveAppts(updated); return updated; });
     setEditingPrep(null);
   };
-  const addPrepLine = (apptId) => setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: [...a.prep, ""] }); saveAppts(updated); return updated; });
-  const removePrep = (apptId, idx) => setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: a.prep.filter((_,i) => i !== idx) }); saveAppts(updated); return updated; });
+  const addPrepLine = (apptId) => setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: [...(a.prep||[]), ""] }); saveAppts(updated); return updated; });
+  const removePrep = (apptId, idx) => setAppts(prev => { const updated = prev.map(a => a.id !== apptId ? a : { ...a, prep: (a.prep||[]).filter((_,i) => i !== idx) }); saveAppts(updated); return updated; });
   const addAppt = () => {
     if (!newAppt.title) return;
     setAppts(prev => { const updated = [...prev, { ...newAppt, id: Date.now(), prep:[] }]; saveAppts(updated); return updated; });
@@ -242,8 +242,16 @@ function Timeline() {
         <SL mb={0}>Upcoming Appointments & Events</SL>
         <button className="add-badge-btn" onClick={() => setShowAdd(true)}>+ Add Event</button>
       </div>
-      {appts.map((a, i) => {
-        const c = { appointment:"#4f8ef7", lab:"#10b981", imaging:"#a78bfa", other:"#b0c4d8" }[a.type];
+      {appts.length === 0 && (
+        <div style={{ textAlign:"center", padding:"40px 0", fontSize:13, color:"#98afc4", fontFamily:mono }}>
+          No appointments yet. Add one below or create appointments in the Appointments tab.
+        </div>
+      )}
+      {[...appts].sort((a,b) => new Date(a.date||"9999")-new Date(b.date||"9999")).map((a, i, arr) => {
+        const prep = a.prep || (a.prepInstructions ? [a.prepInstructions] : []);
+        const doctorName = a.doctor || a.provider || "";
+        const apptType = a.type || "appointment";
+        const c = { appointment:"#4f8ef7", lab:"#10b981", imaging:"#a78bfa", other:"#b0c4d8" }[apptType] || "#4f8ef7";
         const isDone = !!done[a.id];
         return (
           <div key={a.id} style={{ display:"flex", gap:14, marginBottom:14 }}>
@@ -251,22 +259,22 @@ function Timeline() {
               <div onClick={() => toggleDone(a.id)} style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${isDone ? "#10b981" : c}`, background: isDone ? "#10b981" : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", transition:"all .15s", flexShrink:0 }}>
                 {isDone ? "✓" : ""}
               </div>
-              {i < appts.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
+              {i < arr.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
             </div>
             <div style={{ flex:1, background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"13px 16px", opacity: isDone ? 0.45 : 1, transition:"opacity .2s" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:7, gap:8 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <TypeBadge type={a.type} />
+                  <TypeBadge type={apptType} />
                   {a.urgency === "high" && <span style={{ width:6, height:6, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", display:"inline-block" }} />}
                 </div>
                 <span style={{ fontSize:10, color: a.urgency === "high" ? "#ef4444" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{a.date}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{a.title}</div>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: a.prep.length ? 10 : 0 }}>{a.doctor}{a.facility ? ` · ${a.facility}` : ""}</div>
-              {a.prep.length > 0 && (
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: prep.length ? 10 : 0 }}>{doctorName}{a.facility ? ` · ${a.facility}` : ""}</div>
+              {prep.length > 0 && (
                 <div style={{ borderTop:"1px solid #0d1a28", paddingTop:8 }}>
                   <SL mb={6}>Prep Notes</SL>
-                  {a.prep.map((p, j) => (
+                  {prep.map((p, j) => (
                     <div key={j} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4 }}>
                       <span style={{ color:"#a0b4c8", fontSize:10, flexShrink:0 }}>▸</span>
                       {editingPrep === `${a.id}-${j}` ? (
@@ -277,11 +285,7 @@ function Timeline() {
                       <span onClick={() => removePrep(a.id, j)} style={{ fontSize:10, color:"#a0b4c8", cursor:"pointer", paddingLeft:4 }}>✕</span>
                     </div>
                   ))}
-                  <button onClick={() => addPrepLine(a.id)} style={{ marginTop:4, fontSize:10, color:"#a0b4c8", fontFamily:mono, background:"transparent", border:"none", cursor:"pointer", padding:0 }}>+ add note</button>
                 </div>
-              )}
-              {a.prep.length === 0 && (
-                <button onClick={() => addPrepLine(a.id)} style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono, background:"transparent", border:"none", cursor:"pointer", padding:0, marginTop:4 }}>+ add prep note</button>
               )}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getStore, setStore } from "../../store.js";
+import { getStore, setStore, mergeRecords } from "../../store.js";
 
 // ── PDF Lab Extractor ──────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
@@ -89,6 +89,7 @@ export default function ImportTab() {
   const [pdfStatus, setPdfStatus]   = useState("idle"); // idle | extracting | parsing | done | error
   const [pdfError, setPdfError]     = useState("");
   const [pdfPreview, setPdfPreview] = useState([]); // extracted labs pending save
+  const [pdfFileName, setPdfFileName] = useState("");
   const fileInputRef = useRef(null);
 
   // Reload from storage on mount (handles Clear Data reload)
@@ -151,6 +152,7 @@ export default function ImportTab() {
     const file = e.target.files?.[0];
     if (!fileInputRef.current) return;
     fileInputRef.current.value = "";
+    if (file) setPdfFileName(file.name || "Lab Report.pdf");
     if (!file || file.type !== "application/pdf") {
       showToast("Please select a PDF file.");
       return;
@@ -182,9 +184,23 @@ export default function ImportTab() {
     const updated = [...newLabs, ...labs].sort((a, b) => new Date(b.date) - new Date(a.date));
     saveLabs(updated);
     setLabs(updated);
+
+    // Save a reference record to Records tab so it shows in Medical Records
+    const labDate = newLabs[0]?.date || new Date().toISOString().split("T")[0];
+    const facility = newLabs[0]?.facility || "";
+    mergeRecords([{
+      id: Date.now(),
+      title: pdfFileName ? pdfFileName.replace(/\.pdf$/i, "") : "Lab Report",
+      type: "Lab Report",
+      date: labDate,
+      facility,
+      provider: facility,
+      summary: `${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} imported from PDF. Tests: ${newLabs.slice(0,5).map(l=>l.name).join(", ")}${newLabs.length > 5 ? "…" : "."}`,
+    }]);
+
     setPdfPreview([]);
     setPdfStatus("idle");
-    showToast(`${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} saved.`);
+    showToast(`${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} saved to Labs & Records.`);
   }
 
   function discardPdfLabs() {
