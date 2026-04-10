@@ -285,7 +285,20 @@ function AppShell() {
     setStore('readings', SEED);
     return SEED;
   });
-  const [meds, setMeds]           = useState(() => getStore('meds_full'));
+  const [meds, setMeds]           = useState(() => {
+    const stored = getStore('meds_full');
+    if (stored.length > 0) return stored;
+    // Seed default meds so Refills card shows data on first load
+    const SEED = [
+      { id:1, name:"Tacrolimus",     brand:"Prograf",   dose:"3 mg",   frequency:"Twice daily", category:"Immunosuppressant", refillDate:"Apr 28", status:"ok",  color:"#a78bfa" },
+      { id:2, name:"Mycophenolate",  brand:"CellCept",  dose:"500 mg", frequency:"Twice daily", category:"Immunosuppressant", refillDate:"May 2",  status:"ok",  color:"#a78bfa" },
+      { id:3, name:"Prednisone",     brand:"Deltasone", dose:"5 mg",   frequency:"Once daily",  category:"Corticosteroid",    refillDate:"Apr 16", status:"warn",color:"#f59e0b" },
+      { id:4, name:"Amlodipine",     brand:"Norvasc",   dose:"10 mg",  frequency:"Once daily",  category:"Blood Pressure",    refillDate:"May 10", status:"ok",  color:"#4f8ef7" },
+      { id:5, name:"Atorvastatin",   brand:"Lipitor",   dose:"20 mg",  frequency:"Once daily",  category:"Cholesterol",       refillDate:"May 20", status:"ok",  color:"#10b981" },
+    ];
+    setStore('meds_full', SEED);
+    return SEED;
+  });
   const [alerts, setAlerts]       = useState(() => getStore('alerts'));
   const [upcoming, setUpcoming]   = useState(() => {
     // Prefer appointments store (Tab14); fall back to legacy mi_upcoming / defaults
@@ -572,7 +585,7 @@ function AppShell() {
                         <div className="section-label">AI Analysis</div>
                         <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: 16 }}>
                           <div style={{ fontSize: 11, color: "#98afc4", marginBottom: 12, lineHeight: 1.5, fontFamily: "'DM Mono',monospace" }}>Cross-references all your data automatically.</div>
-                          {["Analyze my current health status", "Review my medications for interactions", "Prep questions for nephrology appt"].map((q, i) => (
+                          {["Analyze my current health status", "Review my medications for interactions", "Prep for Liver appt"].map((q, i) => (
                             <button key={i} className="ai-btn" onClick={() => setActiveNav("ai")} style={{ marginBottom: 8, animationDelay: `${320 + i * 50}ms`, justifyContent: "flex-start", textAlign: "left" }}>
                               <span style={{ color: "#4f8ef7", fontSize: 14 }}>✦</span>
                               <span>{q}</span>

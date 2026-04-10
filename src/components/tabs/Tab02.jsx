@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import LOGO_WHITE from "../../assets/logo-white.png";
 import {
   getProfilePersonal, setProfilePersonal,
   getProfileInsurance, setProfileInsurance,
@@ -649,7 +650,9 @@ export default function ProfileTab() {
             </div>
           </div>
           <div style={{ textAlign:"right", fontSize:"8pt", color:"#444", fontFamily:"Arial, sans-serif" }}>
-            <div style={{ fontWeight:700, fontSize:"11pt", color:"#000", letterSpacing:1 }}>IntelliTrax</div>
+            <div style={{ background:"#07090f", borderRadius:6, padding:"4px 10px", display:"inline-block", marginBottom:4 }}>
+              <img src={LOGO_WHITE} alt="IntelliTrax" style={{ height:30, objectFit:"contain", display:"block" }} />
+            </div>
             <div>Personal Health Record</div>
             <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
           </div>

@@ -205,7 +205,14 @@ export default function ConditionsTab() {
     setDeleteId(null);
   }
 
-  const filtered = filter === "all" ? conditions : conditions.filter(c => c.status === filter);
+  const SEVERITY_ORDER = { severe: 0, moderate: 1, mild: 2 };
+  const STATUS_ORDER   = { active: 0, managed: 1, resolved: 2 };
+  const sortConditions = (list) => [...list].sort((a, b) => {
+    const statusDiff = (STATUS_ORDER[a.status] ?? 1) - (STATUS_ORDER[b.status] ?? 1);
+    if (statusDiff !== 0) return statusDiff;
+    return (SEVERITY_ORDER[a.severity] ?? 1) - (SEVERITY_ORDER[b.severity] ?? 1);
+  });
+  const filtered = sortConditions(filter === "all" ? conditions : conditions.filter(c => c.status === filter));
   const activeCt  = conditions.filter(c => c.status === "active").length;
   const managedCt = conditions.filter(c => c.status === "managed").length;
   const resolvedCt= conditions.filter(c => c.status === "resolved").length;

@@ -315,6 +315,9 @@ export default function App({ onNavChange }) {
     try { return JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { return []; }
   });
   const [importedCatFilter, setImportedCatFilter] = useState("All");
+  const [aiAnalysis, setAiAnalysis]     = useState("");
+  const [aiAnalyzing, setAiAnalyzing]   = useState(false);
+  const [aiError, setAiError]           = useState("");
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -336,6 +339,51 @@ export default function App({ onNavChange }) {
   const flagged = allLabs.filter(l => statusOf(l) !== "ok").length;
 
   const selectLab = (lab, color) => { setSelectedLab(lab); setSelectedPanelColor(color); setAiOpen(false); };
+
+  const analyzeAllLabs = async () => {
+    const apiKey = localStorage.getItem("mi_ak");
+    if (!apiKey) { setAiError("API key required — go to Data & Backup to add it."); return; }
+    setAiAnalyzing(true); setAiAnalysis(""); setAiError("");
+    try {
+      // Build a summary of all flagged and imported labs
+      const flaggedPanelLabs = PANELS.flatMap(p => p.labs).filter(l => statusOf(l) !== "ok");
+      const importedFlagged  = importedLabs.filter(l => l.flag);
+      const allImported      = importedLabs.slice(0, 40);
+      const labSummary = [
+        ...flaggedPanelLabs.map(l => `${l.name}: ${latestVal(l)} ${l.unit} (range ${l.low}–${l.high}) — FLAGGED, trend ${trendOf(l)}`),
+        ...allImported.map(l => `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — FLAGGED" : ""}${l.date ? ` on ${l.date}` : ""}`),
+      ].join("\n");
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-opus-4-5",
+          max_tokens: 1500,
+          messages: [{
+            role: "user",
+            content: `You are an intelligent health assistant for Greg Butler, a post-kidney transplant patient on immunosuppression (tacrolimus, mycophenolate, prednisone). Analyze the following lab results and provide a focused, clinically relevant summary. Highlight any concerning values or trends, explain what they mean in the context of his transplant, and suggest questions to raise with his care team. Be concise and organized with bullet points.
+
+LAB RESULTS:
+${labSummary || "No flagged or imported labs available."}
+
+Format your response with: 1) Key Concerns, 2) Values to Watch, 3) Questions for Care Team. Keep it under 400 words.`,
+          }],
+        }),
+      });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const data = await res.json();
+      setAiAnalysis(data.content[0].text.trim());
+    } catch (e) {
+      setAiError(e.message || "Analysis failed.");
+    } finally {
+      setAiAnalyzing(false);
+    }
+  };
 
   const chartMonths = MONTHS.slice(MONTHS.length - timeRange);
   const chartLab = selectedLab ? { ...selectedLab, values: selectedLab.values.slice(MONTHS.length - timeRange) } : null;
@@ -599,6 +647,35 @@ export default function App({ onNavChange }) {
                 </div>
               </div>
             )}
+
+            {/* ── AI Lab Analysis panel ── */}
+            <div style={{ marginTop: 20, background: "linear-gradient(135deg, rgba(79,142,247,.07), rgba(167,139,250,.05))", border: "1px solid rgba(79,142,247,.2)", borderRadius: 14, padding: "18px 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: aiAnalysis || aiAnalyzing ? 14 : 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, color: "#4f8ef7" }}>✦</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", letterSpacing: "0.5px" }}>AI Lab Analysis</span>
+                  {importedLabs.length > 0 && <span style={{ fontSize: 9, background: "rgba(16,185,129,.12)", color: "#10b981", border: "1px solid rgba(16,185,129,.25)", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>{importedLabs.length} imported</span>}
+                </div>
+                <button
+                  onClick={analyzeAllLabs}
+                  disabled={aiAnalyzing}
+                  style={{ padding: "7px 16px", background: aiAnalyzing ? "#0f1e30" : "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: aiAnalyzing ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  {aiAnalyzing ? <><span style={{ fontSize: 12 }}>⟳</span> Analyzing…</> : <><span style={{ fontSize: 12, color: "#4f8ef7" }}>✦</span> Analyze My Labs</>}
+                </button>
+              </div>
+              {aiError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>{aiError}</div>}
+              {aiAnalysis && (
+                <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                  {aiAnalysis}
+                </div>
+              )}
+              {!aiAnalysis && !aiAnalyzing && !aiError && (
+                <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
+                  Click to get an AI analysis of your flagged labs and imported results, cross-referenced with your transplant history.
+                </div>
+              )}
+            </div>
           </div>
 
           {/* AI Side Panel */}
