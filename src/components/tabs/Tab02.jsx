@@ -55,6 +55,15 @@ function FieldRow({ label, value, editing, field, vals, setVals }) {
   );
 }
 
+// ── Phone formatter ───────────────────────────────────────────────────────────
+function formatPhone(val) {
+  const digits = (val || "").replace(/\D/g, "").slice(0, 10);
+  if (!digits.length) return "";
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0,3)})-${digits.slice(3)}`;
+  return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}`;
+}
+
 // ── Care Team Modal ────────────────────────────────────────────────────────────
 const BLANK_PROVIDER = { id:null, name:"", role:"", specialty:"", facility:"", phone:"", email:"", pcp:false };
 function ProviderModal({ provider, onSave, onClose }) {
@@ -83,7 +92,7 @@ function ProviderModal({ provider, onSave, onClose }) {
           </div>
           <div>
             <label style={lbl}>Phone</label>
-            <input style={inp} value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="(601) 555-0000" />
+            <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601) 555-0000" />
           </div>
           <div>
             <label style={lbl}>Email / Portal</label>
@@ -153,7 +162,9 @@ function ECModal({ contact, onSave, onClose }) {
         {[["Full Name","name","e.g. Sarah Butler"],["Relationship","relationship","e.g. Spouse"],["Phone","phone","(601) 555-0000"],["Email","email","optional"]].map(([label, key, ph]) => (
           <div key={key} style={{ marginBottom:12 }}>
             <label style={lbl}>{label}</label>
-            <input style={inp} value={form[key]} onChange={e => setForm(f => ({...f, [key]:e.target.value}))} placeholder={ph} />
+            <input style={inp} value={form[key]}
+              onChange={e => setForm(f => ({...f, [key]: key === "phone" ? formatPhone(e.target.value) : e.target.value}))}
+              placeholder={ph} />
           </div>
         ))}
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20 }}>
@@ -690,8 +701,8 @@ export default function ProfileTab() {
           <h2>Active Conditions / Diagnoses</h2>
           {conditions.filter(c=>c.status!=="resolved").map((c,i)=>(
             <div key={i} className="pr">
-              <span className="pr-lbl">{c.icd10 || "—"}</span>
-              <span className="pr-val">{c.name} <span style={{fontSize:"8pt",color:"#666"}}>({c.status}{c.diagnosedDate?`, dx ${new Date(c.diagnosedDate+"T12:00:00").getFullYear()}`:""})</span></span>
+              <span className="pr-lbl">{c.diagnosedDate ? new Date(c.diagnosedDate+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}</span>
+              <span className="pr-val">{c.name} <span style={{fontSize:"8pt",color:"#666"}}>({c.status})</span></span>
             </div>
           ))}
         </>}
@@ -734,7 +745,6 @@ export default function ProfileTab() {
                 <strong>{s.procedure}</strong>
                 {s.surgeon?<span style={{fontSize:"9pt"}}> · {s.surgeon}</span>:null}
                 {s.facility?<span style={{fontSize:"9pt"}}> · {s.facility}</span>:null}
-                {s.icd10?<span style={{fontSize:"8pt",color:"#555",display:"block"}}>{s.icd10}</span>:null}
                 {s.notes?<span style={{fontSize:"8.5pt",color:"#444",display:"block",marginTop:1}}>{s.notes}</span>:null}
               </span>
             </div>

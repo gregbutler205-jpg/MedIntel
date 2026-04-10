@@ -57,6 +57,14 @@ function saveAppts(appts) {
   localStorage.setItem("mi_upcoming", JSON.stringify(upcoming));
 }
 
+function formatPhone(val) {
+  const digits = (val || "").replace(/\D/g, "").slice(0, 10);
+  if (!digits.length) return "";
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0,3)})-${digits.slice(3)}`;
+  return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}`;
+}
+
 function fmtDate(iso) {
   if (!iso) return "—";
   return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
@@ -72,6 +80,28 @@ function ApptModal({ appt, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK, ...appt });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const isNew = !form.id;
+
+  // Load care team for auto-fill
+  const careTeam = (() => {
+    try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
+  })();
+
+  // When the provider field loses focus, try to auto-fill phone/address from care team
+  const handleProviderBlur = () => {
+    const query = form.provider.trim().toLowerCase();
+    if (query.length < 3 || !careTeam.length) return;
+    const match = careTeam.find(p => {
+      const name = p.name.toLowerCase();
+      return name.includes(query) || query.includes(name.replace(/^dr\.?\s*/i, "").trim().split(" ").slice(-1)[0]);
+    });
+    if (match) {
+      setForm(f => ({
+        ...f,
+        phone:   f.phone   || formatPhone(match.phone   || ""),
+        address: f.address || match.facility || "",
+      }));
+    }
+  };
 
   const handleSave = () => {
     if (!form.title || !form.date) return;
@@ -97,7 +127,7 @@ function ApptModal({ appt, onSave, onClose }) {
           {/* Provider */}
           <div>
             <label style={lbl}>Provider / Doctor</label>
-            <input style={inp} placeholder="e.g. Dr. Ari Cohen" value={form.provider} onChange={e=>set("provider",e.target.value)} />
+            <input style={inp} placeholder="e.g. Dr. Ari Cohen" value={form.provider} onChange={e=>set("provider",e.target.value)} onBlur={handleProviderBlur} />
           </div>
           {/* Specialty */}
           <div>
@@ -130,7 +160,7 @@ function ApptModal({ appt, onSave, onClose }) {
           {/* Phone */}
           <div>
             <label style={lbl}>Phone</label>
-            <input style={inp} placeholder="(601) 555-0000" value={form.phone} onChange={e=>set("phone",e.target.value)} />
+            <input style={inp} placeholder="(601) 555-0000" value={form.phone} onChange={e=>set("phone",formatPhone(e.target.value))} />
           </div>
           {/* Urgency */}
           <div>

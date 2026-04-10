@@ -311,10 +311,22 @@ export default function App({ onNavChange }) {
   const [aiOpen, setAiOpen] = useState(false);
   const [timeRange, setTimeRange] = useState(12);
   const [time, setTime] = useState(new Date());
+  const [importedLabs, setImportedLabs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { return []; }
+  });
+  const [importedCatFilter, setImportedCatFilter] = useState("All");
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(t);
+  }, []);
+
+  // Refresh imported labs when component mounts
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("mi_labs");
+      if (stored) setImportedLabs(JSON.parse(stored));
+    } catch {}
   }, []);
 
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -450,6 +462,54 @@ export default function App({ onNavChange }) {
                 })}
               </div>
             ))}
+
+            {/* ── Imported Labs (from Import Records / PDF upload) ── */}
+            {importedLabs.length > 0 && (
+              <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 16, marginTop: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#7eb8d8", flexShrink: 0 }} />
+                  <span style={{ fontSize: 9.5, fontWeight: 600, color: "#7eb8d8", letterSpacing: "0.8px", textTransform: "uppercase", fontFamily: "'DM Mono',monospace" }}>Imported Results</span>
+                  <span style={{ fontSize: 8, background: "rgba(79,142,247,.15)", color: "#4f8ef7", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{importedLabs.length}</span>
+                </div>
+                {/* Category filter */}
+                {(() => {
+                  const cats = ["All", ...Array.from(new Set(importedLabs.map(l => l.category || "Other")))];
+                  const visible = importedCatFilter === "All" ? importedLabs : importedLabs.filter(l => (l.category || "Other") === importedCatFilter);
+                  const sorted = [...visible].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                  return (
+                    <>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 10 }}>
+                        {cats.map(c => (
+                          <button key={c} onClick={() => setImportedCatFilter(c)}
+                            style={{ padding: "2px 8px", borderRadius: 5, border: "none", cursor: "pointer", fontSize: 9, fontFamily: "'DM Mono',monospace",
+                              background: importedCatFilter === c ? "#4f8ef7" : "#0f1e30",
+                              color: importedCatFilter === c ? "#fff" : "#7eb8d8" }}>
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                      {sorted.map((lab, i) => (
+                        <div key={i} className="lab-row" style={{ animationDelay: `${i * 20}ms`, flexDirection: "column", gap: 3 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee" }}>{lab.name}</div>
+                              <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{lab.date || "—"}{lab.facility ? ` · ${lab.facility}` : ""}</div>
+                            </div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }}>
+                              {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
+                            </div>
+                          </div>
+                          {lab.refRange && (
+                            <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14 }}>ref: {lab.refRange}</div>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Center — chart + detail */}
