@@ -273,8 +273,19 @@ function AppShell() {
   const [activeNav, setActiveNav]     = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [time, setTime]           = useState(new Date());
-  const [readings, setReadings]   = useState(() => getStore('readings'));
-  const [meds, setMeds]           = useState(() => getStore('meds'));
+  const [readings, setReadings]   = useState(() => {
+    const stored = getStore('readings');
+    if (stored.length > 0) return stored;
+    // Seed initial readings so dashboard shows data on first load
+    const SEED = [
+      { date:"Mar 10", ts:"2026-03-10", bp_s:131, bp_d:71, hr:64, weight:184.2, flag:false },
+      { date:"Mar 7",  ts:"2026-03-07", bp_s:138, bp_d:74, hr:67, weight:184.8, flag:false },
+      { date:"Mar 5",  ts:"2026-03-05", bp_s:143, bp_d:79, hr:71, weight:185.1, flag:false },
+    ];
+    setStore('readings', SEED);
+    return SEED;
+  });
+  const [meds, setMeds]           = useState(() => getStore('meds_full'));
   const [alerts, setAlerts]       = useState(() => getStore('alerts'));
   const [upcoming, setUpcoming]   = useState(() => {
     // Prefer appointments store (Tab14); fall back to legacy mi_upcoming / defaults
@@ -311,6 +322,30 @@ function AppShell() {
     const t = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(t);
   }, []);
+
+  // Refresh dashboard data from localStorage each time the user navigates to the dashboard
+  useEffect(() => {
+    if (activeNav !== "dashboard") return;
+    setReadings(getStore('readings'));
+    setMeds(getStore('meds_full'));
+    try {
+      const raw = localStorage.getItem("mi_appointments");
+      if (raw) {
+        const appts = JSON.parse(raw);
+        const next = appts
+          .filter(a => a.status === "upcoming")
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .slice(0, 5)
+          .map(a => ({
+            label:   a.title,
+            date:    new Date(a.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" }),
+            urgency: a.urgency,
+            doctor:  a.provider,
+          }));
+        if (next.length > 0) setUpcoming(next);
+      }
+    } catch {}
+  }, [activeNav]);
 
   // Called by ImportTab when the user confirms parsed data
   const handleImport = useCallback((parsed) => {
