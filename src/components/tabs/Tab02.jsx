@@ -306,6 +306,48 @@ export default function ProfileTab() {
   // Active meds
   const activeMeds = meds.filter(m => m.status !== "inactive");
 
+  function handlePrint() {
+    const el = document.getElementById("print-profile");
+    if (!el) return;
+    const html = el.innerHTML;
+    const win = window.open("", "_blank", "width=900,height=700");
+    win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>IntelliTrax — Patient Profile</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #ffffff; color: #000000; font-family: Georgia, serif; font-size: 10pt; }
+    body { padding: 32pt 40pt; }
+    h1 { font-size: 18pt; color: #000; margin-bottom: 3pt; }
+    h2 { font-size: 10.5pt; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #000; border-bottom: 1.5pt solid #000; padding-bottom: 3pt; margin: 16pt 0 8pt; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12pt; }
+    .header-meta { font-size: 9pt; color: #444; font-family: Arial, sans-serif; margin-top: 4pt; }
+    .brand { text-align: right; font-family: Arial, sans-serif; }
+    .brand-name { font-size: 12pt; font-weight: 700; color: #000; letter-spacing: 1px; }
+    .brand-sub { font-size: 8pt; color: #555; }
+    .pr { display: flex; padding: 3.5pt 0; border-bottom: 0.5pt solid #ccc; font-size: 9.5pt; align-items: flex-start; }
+    .pr-lbl { font-family: Arial, sans-serif; font-size: 8.5pt; color: #444; min-width: 120pt; flex-shrink: 0; padding-top: 1pt; }
+    .pr-val { color: #000; flex: 1; line-height: 1.45; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32pt; }
+    .allergy-row { padding: 4pt 0; border-bottom: 0.5pt solid #ccc; font-size: 9.5pt; color: #000; }
+    .allergy-row strong { color: #000; }
+    .pr-meta { font-size: 8.5pt; color: #555; }
+    .footer { margin-top: 24pt; font-size: 8pt; color: #777; font-family: Arial, sans-serif; text-align: center; border-top: 0.5pt solid #ccc; padding-top: 6pt; }
+    @media print {
+      body { padding: 0; }
+      @page { margin: 18mm 20mm; }
+    }
+  </style>
+</head>
+<body>${html}</body>
+</html>`);
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 400);
+  }
+
   const P = personal;
   const I = insurance;
 
@@ -331,42 +373,6 @@ export default function ProfileTab() {
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .icon-btn.danger:hover { border-color:rgba(239,68,68,.4); color:#ef4444; }
 
-        /* ── Print styles ── */
-        @media print {
-          /* Hide entire app UI */
-          body > #root > * { display: none !important; }
-          /* Force white page */
-          html, body { background: #ffffff !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; }
-          /* Show only the print doc */
-          #print-profile { display: block !important; position: fixed; top: 0; left: 0; width: 100%; }
-          /* Nuke all inherited dark colors from the app */
-          #print-profile, #print-profile * {
-            background: #ffffff !important;
-            color: #000000 !important;
-            border-color: #cccccc !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          /* Typography */
-          #print-profile { font-family: 'Georgia', serif; font-size: 10pt; padding: 0; margin: 0; }
-          #print-profile h1 { font-size: 18pt; margin-bottom: 2pt; color: #000 !important; }
-          #print-profile h2 {
-            font-size: 11pt; font-family: 'Arial', sans-serif; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px;
-            border-bottom: 1.5pt solid #000 !important;
-            padding-bottom: 3pt; margin: 14pt 0 7pt;
-            color: #000 !important;
-          }
-          #print-profile .pr { display: flex; padding: 3pt 0; border-bottom: 0.5pt solid #cccccc !important; font-size: 9.5pt; }
-          #print-profile .pr-lbl { color: #444 !important; font-family: 'Arial', sans-serif; font-size: 8.5pt; min-width: 110pt; flex-shrink: 0; }
-          #print-profile .pr-val { color: #000 !important; flex: 1; }
-          #print-profile .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28pt; }
-          #print-profile .allergy-row { padding: 3pt 0; border-bottom: 0.5pt solid #cccccc !important; font-size: 9.5pt; color: #000 !important; }
-          #print-profile .footer { margin-top: 20pt; font-size: 8pt; color: #666 !important; font-family: 'Arial', sans-serif; text-align: center; border-top: 0.5pt solid #cccccc !important; padding-top: 6pt; }
-          #print-profile .pr-meta { color: #555 !important; }
-        }
         @media screen { #print-profile { display: none; } }
       `}</style>
 
@@ -374,7 +380,7 @@ export default function ProfileTab() {
       <div className="no-print" style={{ height:54, background:T.sidebar, borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
         <div style={{ flex:1 }} />
         <button
-          onClick={() => window.print()}
+          onClick={handlePrint}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
         >
           🖨 Print Profile
