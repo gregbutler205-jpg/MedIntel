@@ -585,6 +585,12 @@ export default function App({ onNavChange }) {
                         {med.flag && (
                           <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>REVIEW</span>
                         )}
+                        {calcDaysLeft(med.refillDate) <= 7 && (
+                          <span style={{ fontSize: 9, background: "rgba(245,158,11,.15)", color: "#f59e0b", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>REFILL THIS WEEK</span>
+                        )}
+                        {med.renewalDate && calcDaysLeft(med.renewalDate) <= 30 && (
+                          <span style={{ fontSize: 9, background: "rgba(239,68,68,.12)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>RENEWAL DUE</span>
+                        )}
                       </div>
                       <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}</div>
                     </div>
@@ -784,6 +790,18 @@ export default function App({ onNavChange }) {
                     </div>
                     );
                   })}
+                  {selectedMed.renewalDate && (() => {
+                    const rd = calcDaysLeft(selectedMed.renewalDate);
+                    return (
+                      <div className="detail-row">
+                        <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>Renewal Date</span>
+                        <span style={{ fontSize: 12, color: rd <= 30 ? "#f87171" : "#a8c4dc", fontWeight: rd <= 30 ? 600 : 500, textAlign: "right" }}>
+                          {selectedMed.renewalDate}
+                          {rd <= 30 && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, marginLeft: 6 }}>DUE IN {rd}d</span>}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   {/* Refill progress */}
                   <div style={{ marginTop: 16 }}>
