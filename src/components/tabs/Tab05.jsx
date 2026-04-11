@@ -182,11 +182,44 @@ export default function App({ onNavChange }) {
     if (!apiKey) { setAiError("API key required — go to Data & Backup to add it."); return; }
     setAiAnalyzing(true); setAiAnalysis(""); setAiError("");
     try {
-      // Build a summary from actual imported labs only
-      const allImported = importedLabs.slice(0, 60);
-      const labSummary = allImported.map(l =>
+      // Pull full medical context from localStorage
+      const safeRead = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
+      const conditions = safeRead("mi_conditions");
+      const surgeries  = safeRead("mi_surgeries");
+      const careTeam   = safeRead("mi_care_team");
+      const meds       = safeRead("mi_meds_full");
+
+      const condStr = conditions.length > 0
+        ? conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}${c.severity ? `, ${c.severity}` : ""}`).join("\n")
+        : "None recorded";
+
+      const surgStr = surgeries.length > 0
+        ? surgeries.map(s => `- ${s.procedure}${s.date ? ` (${s.date})` : ""}${s.surgeon ? ` — ${s.surgeon}` : ""}`).join("\n")
+        : "None recorded";
+
+      const medsStr = meds.length > 0
+        ? meds.filter(m => m.status !== "inactive").map(m => `- ${m.name}${m.dose ? ` ${m.dose}` : ""}${m.frequency ? `, ${m.frequency}` : ""}${m.category ? ` [${m.category}]` : ""}`).join("\n")
+        : "None recorded";
+
+      // Build care team string, highlighting liver/hepatology contact
+      const careStr = careTeam.length > 0
+        ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.facility ? ` — ${d.facility}` : ""}`).join("\n")
+        : "- Dr. Mariana Zapata, Hepatology Lead\n- Dr. Jonathan Hand, PCP";
+
+      // Find hepatology lead for specific reference in prompt
+      const hepatoDoc = careTeam.find(d => /hepat/i.test(d.role) || /hepat/i.test(d.name)) || { name: "Dr. Mariana Zapata" };
+      const liverDoc = hepatoDoc.name;
+
+      // Build lab summary from most recent imported results (deduplicated by name — latest per test)
+      const dedupForAI = {};
+      [...importedLabs].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).forEach(l => {
+        const key = (l.name || "").toLowerCase().trim();
+        if (key && !dedupForAI[key]) dedupForAI[key] = l;
+      });
+      const labSummary = Object.values(dedupForAI).slice(0, 60).map(l =>
         `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — OUT OF RANGE" : ""}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`
       ).join("\n");
+
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -197,15 +230,38 @@ export default function App({ onNavChange }) {
         },
         body: JSON.stringify({
           model: "claude-opus-4-5",
-          max_tokens: 1500,
+          max_tokens: 1800,
           messages: [{
             role: "user",
-            content: `You are an intelligent health assistant. Analyze the following lab results for Greg Butler and provide a focused, clinically relevant summary. Highlight any values outside the reference range, explain what they may indicate, and suggest questions to raise with his care team. Be concise and use bullet points.
+            content: `You are an intelligent health assistant analyzing lab results for Greg Butler. You have his full medical profile below — cross-reference it when explaining findings. Do NOT ask about conditions, diagnoses, or medications that are already listed — treat them as known facts.
 
-LAB RESULTS:
+━━━ PATIENT MEDICAL PROFILE ━━━
+
+ACTIVE CONDITIONS:
+${condStr}
+
+SURGICAL HISTORY:
+${surgStr}
+
+ACTIVE MEDICATIONS:
+${medsStr}
+
+CARE TEAM:
+${careStr}
+Note: For any findings related to the liver, bile ducts, or hepatic function, reference ${liverDoc} as the appropriate contact.
+
+━━━ LAB RESULTS (most recent per test) ━━━
 ${labSummary || "No imported labs available yet. Please import lab results using the Import Records tab."}
 
-Format your response with: 1) Key Concerns (flagged/out-of-range values), 2) Values to Watch (borderline or trending), 3) Questions for Care Team. Keep it under 400 words.`,
+━━━ INSTRUCTIONS ━━━
+Analyze the labs above in the context of Greg's profile. Cross-reference medications and surgical history with any abnormal findings. For each concern, name the specific doctor from the care team best suited to address it.
+
+Format your response with:
+1) Key Concerns (out-of-range values — explain in context of his conditions/meds/history)
+2) Values to Watch (borderline or notable)
+3) Questions for Care Team (specific, directed to the right doctor by name)
+
+Keep it under 500 words. Be direct and clinically specific.`,
           }],
         }),
       });
