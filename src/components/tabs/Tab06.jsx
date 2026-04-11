@@ -455,21 +455,25 @@ export default function App({ onNavChange }) {
     const today = new Date();
     const ts = newReading.ts || today.toISOString().split('T')[0];
     const dateLabel = newReading.date || today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+    // Carry forward most recent prior values for any blank field
+    const prior = manualReadings[0] || {};
+    const bp_s   = newReading.bp_s   ? parseInt(newReading.bp_s)       : prior.bp_s;
+    const bp_d   = newReading.bp_d   ? parseInt(newReading.bp_d)       : prior.bp_d;
+    const hr     = newReading.hr     ? parseInt(newReading.hr)         : prior.hr;
+    const o2     = newReading.o2     ? parseFloat(newReading.o2)       : prior.o2;
+    const weight = newReading.weight ? parseFloat(newReading.weight)   : prior.weight;
+    const temp   = newReading.temp   ? parseFloat(newReading.temp)     : prior.temp;
+    const glucose= newReading.glucose? parseInt(newReading.glucose)    : prior.glucose;
+    const sleep  = newReading.sleep  ? parseFloat(newReading.sleep)    : prior.sleep;
     const reading = {
       date: dateLabel, ts,
-      bp_s: newReading.bp_s ? parseInt(newReading.bp_s) : undefined,
-      bp_d: newReading.bp_d ? parseInt(newReading.bp_d) : undefined,
-      hr:   newReading.hr   ? parseInt(newReading.hr)   : undefined,
-      o2:   newReading.o2   ? parseFloat(newReading.o2) : undefined,
-      weight: newReading.weight ? parseFloat(newReading.weight) : undefined,
-      temp:   newReading.temp   ? parseFloat(newReading.temp)   : undefined,
-      glucose: newReading.glucose ? parseInt(newReading.glucose) : undefined,
-      flag: newReading.bp_s >= 160 || newReading.bp_s >= 160,
+      bp_s, bp_d, hr, o2, weight, temp, glucose, sleep,
+      flag: bp_s >= 160,
     };
     const merged = mergeReadings([reading]);
     setManualReadings(merged);
     setShowEntryForm(false);
-    setNewReading({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
+    setNewReading({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
   };
 
   const flaggedManual = manualReadings.filter(r => r.flag).length;

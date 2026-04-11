@@ -597,7 +597,6 @@ export default function ProfileTab() {
                           {s.facility ? ` · ${s.facility}` : ""}
                         </div>
                         {s.surgeon && <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{s.surgeon}</div>}
-                        {s.icd10 && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>ICD-10: {s.icd10}</div>}
                       </div>
                     </div>
                   ))}
@@ -702,7 +701,13 @@ export default function ProfileTab() {
         {/* Active Conditions */}
         {conditions.filter(c=>c.status!=="resolved").length > 0 && <>
           <h2>Active Conditions / Diagnoses</h2>
-          {conditions.filter(c=>c.status!=="resolved").map((c,i)=>(
+          {[...conditions.filter(c=>c.status!=="resolved")].sort((a,b)=>{
+            const SEV={severe:0,moderate:1,mild:2};
+            const STA={active:0,managed:1};
+            const sd=(SEV[a.severity]??9)-(SEV[b.severity]??9);
+            if(sd!==0)return sd;
+            return (STA[a.status]??9)-(STA[b.status]??9);
+          }).map((c,i)=>(
             <div key={i} className="pr">
               <span className="pr-lbl">{c.diagnosedDate ? new Date(c.diagnosedDate+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}</span>
               <span className="pr-val">{c.name} <span style={{fontSize:"8pt",color:"#666"}}>({c.status})</span></span>
