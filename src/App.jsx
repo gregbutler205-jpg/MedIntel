@@ -44,6 +44,40 @@ const TAB_COMPONENTS = {
   surgeries:    TabSurgeries,
 };
 
+// ── Featured labs helper ──────────────────────────────────────────────────────
+const FEATURED_LAB_DEFS = [
+  { label: "Alk Phos",   pattern: /alk.*phos|alkaline.*phos/i },
+  { label: "ALT",        pattern: /\balt\b|alanine\s*(amino)?trans/i },
+  { label: "AST",        pattern: /\bast\b|aspartate\s*(amino)?trans/i },
+  { label: "Bilirubin",  pattern: /bilirubin/i },
+  { label: "Glucose",    pattern: /\bglucose\b/i },
+  { label: "Calcium",    pattern: /\bcalcium\b/i },
+  { label: "Platelets",  pattern: /platelet/i },
+  { label: "Creatinine", pattern: /\bcreatinine\b/i },
+  { label: "eGFR",       pattern: /egfr|glom.*filt/i },
+  { label: "Sodium",     pattern: /\bsodium\b/i },
+  { label: "Magnesium",  pattern: /magnesium/i },
+];
+
+function getFeaturedLabs() {
+  try {
+    const all = JSON.parse(localStorage.getItem("mi_labs") || "[]");
+    // Deduplicate: latest per test name
+    const latest = {};
+    all.forEach(l => {
+      const key = (l.name || "").toLowerCase().trim();
+      if (!key) return;
+      if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) latest[key] = l;
+    });
+    const deduped = Object.values(latest);
+    // Match to featured tests
+    return FEATURED_LAB_DEFS.map(def => {
+      const match = deduped.find(l => def.pattern.test(l.name || ""));
+      return { label: def.label, lab: match || null };
+    });
+  } catch { return FEATURED_LAB_DEFS.map(def => ({ label: def.label, lab: null })); }
+}
+
 // ── Assets & static data ──────────────────────────────────────────────────────
 const SHIELD_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCADKANcDASIAAhEBAxEB/8QAHQABAAEFAQEBAAAAAAAAAAAAAAgBBAUGBwkDAv/EAFIQAAEDAwEEBgUDDwgJBQAAAAEAAgMEBREGBxIhMQgTQVFhcRQigZGhMkKyFRYjJTNDUmJkcoKxwcLRGCRTY3N0oqMmKDVERVVWlLN1hJLS4f/EABsBAQADAQEBAQAAAAAAAAAAAAAEBQYDAgEH/8QAOBEAAQMDAwEFBQYFBQAAAAAAAQACAwQFERIhMVETMkFhgQYicbHBFFKRodHwFRYzQuEjQ3Jz8f/aAAwDAQACEQMRAD8AmUiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiiwmqNW6Z0vT9fqC+UNubjIE0oD3eTflH2Bce1d0mdOUrn0+lrVVXiXkJ5vsEOe8A+sfcFIhpZpu43KjzVUMAy92F3xYur1FYaS7U9pqLxQx3CpfuQ0xmb1j3c8bvNQ71Xtd2hao3457wbbSP8A93oAYRjuLgd4+0rWLNU1FuutNd4JHuq6adlQ15dxLmuB5+xWsdjkLcvdhUNR7SxRuwxuVP8AXzhmhm3upljk3HFrtxwOCOYOO1YG5apoqfZ/Jq2JwdTmhFVF4lzctb55ICitbbteqG4SXKhutVS1czzJLJHIW77icknHPj3qFSW99SHHOMKRdb9FbnMBGrVvt4Dqploo9ab20ajoA2O90dPdIRzkZ9jlx5jgfcF0nTW1nRt6c2J9c621DuHV1jdwE+DhlvxXOagni5bkeS7Ul+oarZr8Hodv8fmt8RfiGSOaJssMjJI3DLXMdkHyIX7UNXHKIiIiIiIiIiIiIiIiIiIiIiIiIqEgAk8go5a76WGmLXJNR6Ysddd6mNxZ1tQfR4Q4HHi4+4LrFBJMcMGV4fI2MZcVI5YfU2qNOaZpTVagvdBbIgMg1E7WE+QPE+xQc1l0g9qOqA+KK7sslI/71bmdWcf2hy/3ELmcxnrKl1VX1U9XO45dJNIXuPmTkq3gscr93nCrproxndGVMvWnSi0XbA+DTVFW3+pHBr93qIM/nOG8fY1cV1dt82l6nL4objFYaR3Dqre3cdjxkOXe4hcnha1o4ABXcXYrqC008O+MnzVLU3OeTYHAV09slXUOqa2omqZ3nL5JXlznHxJ4lXtMxrRhrQFa06vYVYBoHCpJXl3KvIQshSt71Yw9iyFKvJVZOdlIm6Nx0VKEZPCGE/54XG4Suz3cf6qtH/d4P/OFxWFyqrb3ZP8AkV29o+/B/wBbfqrxgyvoKeKT5TASvlE4Y4rr2j9E6btWlYNS61lcRVAOgp95wAaRlvBvFziOPcAu9TO2EZdvngBU1DQS1shbGQABkknAA8yucWW63uwzCWyXeqo+0xh+WO82ngfcuhWHbTeKXdjv1ohrGDgZqY9W/wA8HIPwX31lozTVw0nJqnRkhbHTAmeDecQWj5XB3Frhzx2hcvB4KM2OnrWklu/j4EKxdV3KyyBgky0jIwctI8lJDTm0fSN8DWw3RlLM77zV/YnZ7sngfYVtrHNe0PY4OaRkEHIKh/LBFK0h7RxV5Y7xqTT7w6yXuqp2j7y529Gf0TkfBQJrN4xu/FX9H7bA4FQz1H6f5UtUXCbBttulJuxajs8dSzkZ6Q7jvMtOQfeF0zS20DSmoyyKgukcdS/gKeo+xyE9wB4H2Eqrmo5oe81ayjvFHWY7J4z0Ox/fwW1IiKKrNERERERERERERfmX7m/80ryyr+N3rD+USfTK9TZPubvIryxuB+3Fb/eJPplXtj/qO9Pqq25dwL9R8wriNW0Z4hXEa1gWfeFcxlbNo/SOp9Vmp+tyyVdzFI0OnMLRhmeQySOJwcAcStYZwU3eiBZDatjVJWyRhs11qZasnHEszuM/wsB9qgXGtNJFqaMkr1RUgqpdJOyh7E1zHujka5j2OLXNcMFpHAgjsKvIlsG2KhNt2w6tpNwMabi+ZoA7JMP/AHlr0SkxSdpGH9Qqepj7ORzOhV7CVkKU8ljYVkaBks08cEMb5ZZHBrGMaXOcTyAA5lfTsqmffhSQvPDoqUh/JoP/ADhcOhKkDfLLdWdGiK0ut9T6fFRwl9MGEyDEgcRujjkDio9QPBVTa3Atkx94qZ7Sxua6DI/22q+actI713OzVNp2kaFttqN0it96tbWsdFJ87Dd3eAzxaQAcjkVwljuC/W61xyRxHapFTTdtgg4I4KqKCuFIXtezUx4wRx+fgV3S/wBVZtB6BrtOwXKKvu9yDhI2Mg7u8N0uI+aA0cM8SVx9pAACs6doDgGNJc444cSStki0lqqSJsjNPXMsdxB9HcvMETacHW7c7knZeK6qkuLmiGPDWDAAycDzPmsVlMrLfWlqv/p26f8AbuX4m0xqWGN0ktgubGNGS40zsAe5du1jP9w/FQjR1A3MbvwKxJ4r7aZaGa+00WtA3rlCDgfjhW+9xVzptwGv9LjvukP0wuVR/Td8F3tZP2uPHUKXR5oh5osUv3JERERERERERERfl/yHeRXlfcD9ua7+8SfTK9UsZ4HtXlpqSD0XVl4pv6KunZ7pHBXljP8AqlV1x7gXxi5q6jVpFzVzGtYs+9X9so6i5XCmttI0uqKuZkEQHa57g0fEr0p0zaqexatt1lpQBDQ0sdOzyY0DPwUHeitYjfdtVoLo9+C2h9fLw4DcGGf43N9ylpqzWxtu2PR+jIpAG3OCqmqh4NYeqHtc13uWYvbnSyiJvgCf3+CtrU0RxmR3icKOfSxt4ods1RUhoArqCCfzI3mH6AXL4yu/dNi3Bl20zeAPusM9K44/BLXD6TlwK2QOrLjSUTAS6onjhA8XODf2q2tsgdSNcfAfJZ67REVbmjx+quYHB3AEHC710RrJRVl+u97qY2yT0EccdOHDO4ZN7ecPHDcZ8Ss30p9NWq1bNLTPa7ZSUpoa2OAOhiDSI3McMZHMZA9q5Vsk1xVaD1I65R05q6KpjEVZTg4c5oOQ5p5bw48+eSFGfO6upHGIYK5djHa7iwTnLec/voVNFRX6QNpo7LtMmFCxkcddTMq3xtGA15Lmo4eO7nzJXUqrb5oOO1mqivdHWY7J4z0Ox/fwW1IiKKrNERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERERFVUREKoqoiImFRVQoioidiqiYVEVU70REVURERERERERERERFREREX//2Q==";
 
@@ -396,13 +430,18 @@ function AppShell() {
     const today = new Date();
     const ts = today.toISOString().split('T')[0];
     const dateLabel = today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+    // Carry forward the most recent reading values for any fields left blank
+    const prior = readings.length > 0 ? readings[0] : {};
+    const bp_s   = quickReading.bp_s   ? parseInt(quickReading.bp_s)     : prior.bp_s;
+    const bp_d   = quickReading.bp_d   ? parseInt(quickReading.bp_d)     : prior.bp_d;
+    const weight = quickReading.weight ? parseFloat(quickReading.weight) : prior.weight;
     const reading = {
       date: quickReading.date || dateLabel,
       ts,
-      bp_s:   quickReading.bp_s   ? parseInt(quickReading.bp_s)   : undefined,
-      bp_d:   quickReading.bp_d   ? parseInt(quickReading.bp_d)   : undefined,
-      weight: quickReading.weight ? parseFloat(quickReading.weight) : undefined,
-      flag: parseInt(quickReading.bp_s) >= 160,
+      bp_s,
+      bp_d,
+      weight,
+      flag: bp_s >= 160,
     };
     const merged = mergeReadings([reading]);
     setReadings(merged);
@@ -617,6 +656,41 @@ function AppShell() {
                         </div>
                       </div>
                     )}
+
+                    {/* ── Featured Lab Results ── */}
+                    {(() => {
+                      const featuredLabs = getFeaturedLabs();
+                      const hasAny = featuredLabs.some(f => f.lab);
+                      if (!hasAny) return null;
+                      return (
+                        <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                            <div className="section-label" style={{ marginBottom: 0 }}>Recent Lab Results</div>
+                            <div style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("labs")}>View all →</div>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
+                            {featuredLabs.map(({ label, lab }) => {
+                              if (!lab) return (
+                                <div key={label} style={{ background: "#080c14", border: "1px solid #0d1a28", borderRadius: 8, padding: "10px 12px", opacity: 0.45 }}>
+                                  <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
+                                  <div style={{ fontSize: 13, color: "#6a8090" }}>—</div>
+                                </div>
+                              );
+                              const val = parseFloat(lab.value);
+                              const isFlag = lab.flag;
+                              const color = isFlag ? "#f59e0b" : "#10b981";
+                              return (
+                                <div key={label} style={{ background: "#080c14", border: `1px solid ${isFlag ? "rgba(245,158,11,.25)" : "#0d1a28"}`, borderRadius: 8, padding: "10px 12px" }}>
+                                  <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
+                                  <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1 }}>{lab.value}</div>
+                                  <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{lab.unit || ""}{lab.date ? ` · ${lab.date.slice(5).replace("-","/")}` : ""}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>

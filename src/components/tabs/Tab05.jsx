@@ -140,6 +140,7 @@ export default function App({ onNavChange }) {
     try { return JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { return []; }
   });
   const [importedCatFilter, setImportedCatFilter] = useState("All");
+  const [trendRange, setTrendRange]     = useState(12); // months
   const [aiAnalysis, setAiAnalysis]     = useState("");
   const [aiAnalyzing, setAiAnalyzing]   = useState(false);
   const [aiError, setAiError]           = useState("");
@@ -445,12 +446,20 @@ Keep it under 500 words. Be direct and clinically specific.`,
               const val = parseFloat(selectedImportedLab.value);
               const inRange = low !== null && high !== null && !isNaN(val) ? (val >= low && val <= high) : null;
               // All historical readings for this test, sorted oldest → newest
-              const history = [...importedLabs]
+              const allHistory = [...importedLabs]
                 .filter(l => (l.name || "").toLowerCase() === (selectedImportedLab.name || "").toLowerCase())
                 .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
-              const hasHistory = history.length > 1;
-              const chartData = hasHistory ? { values: history.map(h => parseFloat(h.value)), low: low ?? 0, high: high ?? 100 } : null;
-              const histLabels = hasHistory ? history.map(h => h.date || "—") : [];
+              // Filter by selected trend range
+              const cutoff = new Date();
+              cutoff.setMonth(cutoff.getMonth() - trendRange);
+              const history = allHistory.filter(h => !h.date || new Date(h.date + "T12:00:00") >= cutoff);
+              const hasHistory = allHistory.length > 1;
+              const chartData = history.length > 1 ? { values: history.map(h => parseFloat(h.value)), low: low ?? 0, high: high ?? 100 } : null;
+              const histLabels = history.map(h => {
+                if (!h.date) return "—";
+                const d = new Date(h.date + "T12:00:00");
+                return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              });
               const lineColor = inRange === false ? "#ef4444" : "#4f8ef7";
               return (
                 <div style={{ animation: "fadeUp .3s ease both" }}>
@@ -508,11 +517,27 @@ Keep it under 500 words. Be direct and clinically specific.`,
                     </div>
                   )}
 
-                  {/* Trend chart (only if >1 readings) */}
-                  {hasHistory && chartData && low !== null && high !== null && (
+                  {/* Trend chart (only if >1 readings exist across all time) */}
+                  {hasHistory && (
                     <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 16px 12px", marginBottom: 16 }}>
-                      <div className="section-label">{history.length}-Reading Trend</div>
-                      <TrendChart lab={chartData} color={lineColor} monthLabels={histLabels} />
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div className="section-label" style={{ marginBottom: 0 }}>Trend — {history.length} reading{history.length !== 1 ? "s" : ""}</div>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[3, 6, 12].map(mo => (
+                            <button key={mo} className="time-btn" onClick={() => setTrendRange(mo)}
+                              style={{ padding: "3px 10px", fontSize: 10, background: trendRange === mo ? "#4f8ef7" : "#0f1e30", color: trendRange === mo ? "#fff" : "#7eb8d8", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>
+                              {mo}mo
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {chartData && low !== null && high !== null ? (
+                        <TrendChart lab={chartData} color={lineColor} monthLabels={histLabels} />
+                      ) : (
+                        <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace", padding: "16px 0", textAlign: "center" }}>
+                          No readings in the selected {trendRange}-month window. Try a wider range.
+                        </div>
+                      )}
                       <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "1px solid #0d1a28" }}>
                         {[
                           { dot: null, label: "Reference range" },
@@ -531,9 +556,9 @@ Keep it under 500 words. Be direct and clinically specific.`,
                   {/* Result History table */}
                   {hasHistory && (
                     <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px" }}>
-                      <div className="section-label">All Readings ({history.length})</div>
-                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(history.length, 6)}, 1fr)`, gap: 6 }}>
-                        {[...history].reverse().map((h, i) => {
+                      <div className="section-label">All Readings ({allHistory.length})</div>
+                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(allHistory.length, 6)}, 1fr)`, gap: 6 }}>
+                        {[...allHistory].reverse().map((h, i) => {
                           const hv = parseFloat(h.value);
                           const bad = low !== null && high !== null && !isNaN(hv) && (hv < low || hv > high);
                           return (
