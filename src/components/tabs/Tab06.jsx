@@ -262,9 +262,9 @@ const VITALS = [
   {
     id: "bp", label: "Blood Pressure", unit: "mmHg", color: "#4f8ef7", source: "manual",
     goodMin: 90, goodMax: 130, yMin: 50, yMax: 180,
-    latestFn: r => `${r.bp_s}/${r.bp_d}`,
+    latestFn: r => (r.bp_s != null && r.bp_d != null) ? `${r.bp_s}/${r.bp_d}` : "—",
     latestNum: r => r.bp_s,
-    statusFn: r => r.bp_s >= 140 || r.bp_d >= 90 ? { label: "High", color: "#ef4444" } : r.bp_s >= 130 ? { label: "Elevated", color: "#f59e0b" } : { label: "Normal", color: "#10b981" },
+    statusFn: r => r.bp_s == null ? { label: "No data", color: "#98afc4" } : r.bp_s >= 140 || r.bp_d >= 90 ? { label: "High", color: "#ef4444" } : r.bp_s >= 130 ? { label: "Elevated", color: "#f59e0b" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["bp_s", "bp_d"], chartColors: ["#4f8ef7", "#a78bfa"],
     chartLabels: ["Systolic", "Diastolic"],
     refLines: [{ val: 120, color: "#4f8ef7" }, { val: 80, color: "#a78bfa" }],
@@ -274,9 +274,9 @@ const VITALS = [
   {
     id: "hr", label: "Heart Rate", unit: "bpm", color: "#ef4444", source: "manual",
     goodMin: 60, goodMax: 100, yMin: 40, yMax: 120,
-    latestFn: r => `${r.hr}`,
+    latestFn: r => r.hr != null ? `${r.hr}` : "—",
     latestNum: r => r.hr,
-    statusFn: r => r.hr < 50 ? { label: "Low", color: "#f59e0b" } : r.hr > 100 ? { label: "High", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
+    statusFn: r => r.hr == null ? { label: "No data", color: "#98afc4" } : r.hr < 50 ? { label: "Low", color: "#f59e0b" } : r.hr > 100 ? { label: "High", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["hr"], chartColors: ["#ef4444"],
     chartLabels: ["Heart Rate"],
     refLines: [{ val: 60, color: "#f59e0b" }, { val: 100, color: "#ef4444" }],
@@ -309,10 +309,11 @@ const VITALS = [
   {
     id: "weight", label: "Weight", unit: "lbs", color: "#f59e0b", source: "manual",
     goodMin: 180, goodMax: 190, yMin: 170, yMax: 200,
-    latestFn: r => `${r.weight}`,
+    latestFn: r => r.weight != null ? `${r.weight}` : "—",
     latestNum: r => r.weight,
     statusFn: (r, prev) => {
-      if (!prev) return { label: "No prior", color: "#98afc4" };
+      if (r.weight == null) return { label: "No data", color: "#98afc4" };
+      if (!prev || prev.weight == null) return { label: "No prior", color: "#98afc4" };
       const d = (r.weight - prev.weight).toFixed(1);
       return { label: d > 0 ? `+${d} lb` : `${d} lb`, color: Math.abs(d) < 1 ? "#10b981" : "#f59e0b" };
     },
@@ -325,9 +326,9 @@ const VITALS = [
   {
     id: "temp", label: "Temperature", unit: "°F", color: "#7eb8d8", source: "manual",
     goodMin: 97, goodMax: 99.5, yMin: 96, yMax: 101,
-    latestFn: r => `${r.temp}°`,
+    latestFn: r => r.temp != null ? `${r.temp}°` : "—",
     latestNum: r => r.temp,
-    statusFn: r => r.temp < 97 ? { label: "Low", color: "#4f8ef7" } : r.temp > 99.5 ? { label: "Fever", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
+    statusFn: r => r.temp == null ? { label: "No data", color: "#98afc4" } : r.temp < 97 ? { label: "Low", color: "#4f8ef7" } : r.temp > 99.5 ? { label: "Fever", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["temp"], chartColors: ["#7eb8d8"],
     chartLabels: ["Temp"],
     refLines: [{ val: 97, color: "#4f8ef7" }, { val: 99.5, color: "#ef4444" }],
@@ -337,9 +338,9 @@ const VITALS = [
   {
     id: "glucose", label: "Blood Glucose", unit: "mg/dL", color: "#a78bfa", source: "manual",
     goodMin: 70, goodMax: 100, yMin: 60, yMax: 130,
-    latestFn: r => `${r.glucose}`,
+    latestFn: r => r.glucose != null ? `${r.glucose}` : "—",
     latestNum: r => r.glucose,
-    statusFn: r => r.glucose > 125 ? { label: "High", color: "#ef4444" } : r.glucose > 100 ? { label: "Pre-diabetic", color: "#f59e0b" } : r.glucose < 70 ? { label: "Low", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
+    statusFn: r => r.glucose == null ? { label: "No data", color: "#98afc4" } : r.glucose > 125 ? { label: "High", color: "#ef4444" } : r.glucose > 100 ? { label: "Pre-diabetic", color: "#f59e0b" } : r.glucose < 70 ? { label: "Low", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["glucose"], chartColors: ["#a78bfa"],
     chartLabels: ["Fasting Glucose"],
     refLines: [{ val: 100, color: "#f59e0b" }, { val: 126, color: "#ef4444" }],
@@ -349,9 +350,9 @@ const VITALS = [
   {
     id: "sleep", label: "Sleep", unit: "hrs", color: "#60a5fa", source: "manual",
     goodMin: 7, goodMax: 9, yMin: 3, yMax: 11,
-    latestFn: r => `${r.sleep}h`,
+    latestFn: r => r.sleep != null ? `${r.sleep}h` : "—",
     latestNum: r => r.sleep,
-    statusFn: r => r.sleep < 6 ? { label: "Poor", color: "#ef4444" } : r.sleep < 7 ? { label: "Below goal", color: "#f59e0b" } : { label: "Good", color: "#10b981" },
+    statusFn: r => r.sleep == null ? { label: "No data", color: "#98afc4" } : r.sleep < 6 ? { label: "Poor", color: "#ef4444" } : r.sleep < 7 ? { label: "Below goal", color: "#f59e0b" } : { label: "Good", color: "#10b981" },
     chartType: "bar",
     chartLabels: ["Sleep Hours"],
     chartYMin: 0, chartYMax: 11,
@@ -455,16 +456,15 @@ export default function App({ onNavChange }) {
     const today = new Date();
     const ts = newReading.ts || today.toISOString().split('T')[0];
     const dateLabel = newReading.date || today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-    // Carry forward most recent prior values for any blank field
-    const prior = manualReadings[0] || {};
-    const bp_s   = newReading.bp_s   ? parseInt(newReading.bp_s)       : prior.bp_s;
-    const bp_d   = newReading.bp_d   ? parseInt(newReading.bp_d)       : prior.bp_d;
-    const hr     = newReading.hr     ? parseInt(newReading.hr)         : prior.hr;
-    const o2     = newReading.o2     ? parseFloat(newReading.o2)       : prior.o2;
-    const weight = newReading.weight ? parseFloat(newReading.weight)   : prior.weight;
-    const temp   = newReading.temp   ? parseFloat(newReading.temp)     : prior.temp;
-    const glucose= newReading.glucose? parseInt(newReading.glucose)    : prior.glucose;
-    const sleep  = newReading.sleep  ? parseFloat(newReading.sleep)    : prior.sleep;
+    // Carry forward most recent non-null value for each field independently
+    const bp_s   = newReading.bp_s   ? parseInt(newReading.bp_s)     : manualReadings.find(r => r.bp_s   != null)?.bp_s;
+    const bp_d   = newReading.bp_d   ? parseInt(newReading.bp_d)     : manualReadings.find(r => r.bp_d   != null)?.bp_d;
+    const hr     = newReading.hr     ? parseInt(newReading.hr)       : manualReadings.find(r => r.hr     != null)?.hr;
+    const o2     = newReading.o2     ? parseFloat(newReading.o2)     : manualReadings.find(r => r.o2     != null)?.o2;
+    const weight = newReading.weight ? parseFloat(newReading.weight) : manualReadings.find(r => r.weight != null)?.weight;
+    const temp   = newReading.temp   ? parseFloat(newReading.temp)   : manualReadings.find(r => r.temp   != null)?.temp;
+    const glucose= newReading.glucose? parseInt(newReading.glucose)  : manualReadings.find(r => r.glucose!= null)?.glucose;
+    const sleep  = newReading.sleep  ? parseFloat(newReading.sleep)  : manualReadings.find(r => r.sleep  != null)?.sleep;
     const reading = {
       date: dateLabel, ts,
       bp_s, bp_d, hr, o2, weight, temp, glucose, sleep,
