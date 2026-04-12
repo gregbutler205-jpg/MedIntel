@@ -71,44 +71,42 @@ function RangeBar({ value, low, high, compact = false }) {
   );
 }
 
-// Full trend chart
+// Full trend chart — works with or without reference range
 function TrendChart({ lab, color, monthLabels }) {
-  const pts = lab.values.map((v, i) => ({ v, i })).filter(x => x.v !== null);
+  const pts = lab.values.map((v, i) => ({ v, i })).filter(x => x.v !== null && !isNaN(x.v));
   if (pts.length < 2) return null;
   const allV = pts.map(x => x.v);
-  const minV = Math.min(...allV, lab.low) * 0.93;
-  const maxV = Math.max(...allV, lab.high) * 1.07;
+  const hasRef = lab.low !== null && lab.high !== null;
+  const minV = (hasRef ? Math.min(...allV, lab.low) : Math.min(...allV)) * 0.93;
+  const maxV = (hasRef ? Math.max(...allV, lab.high) : Math.max(...allV)) * 1.07;
   const rng = maxV - minV || 1;
   const W = 500, H = 160, PL = 44, PR = 12, PT = 14, PB = 32;
   const cW = W - PL - PR, cH = H - PT - PB;
-  const n = lab.values.length;
+  const n = pts.length;
   const toX = i => PL + (i / (n - 1)) * cW;
   const toY = v => PT + cH - ((v - minV) / rng) * cH;
-  const refLY = toY(lab.low), refHY = toY(lab.high);
+  const refLY = hasRef ? toY(lab.low) : null;
+  const refHY = hasRef ? toY(lab.high) : null;
   const polyPts = pts.map(({ v, i }) => `${toX(i)},${toY(v)}`).join(" ");
-  const areaPts = `${toX(pts[0].i)},${PT + cH} ${polyPts} ${toX(pts[pts.length - 1].i)},${PT + cH}`;
-  const yTicks = [minV, lab.low, lab.high, maxV].filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+  const areaPts = `${toX(0)},${PT + cH} ${polyPts} ${toX(n - 1)},${PT + cH}`;
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
-      {/* Reference band */}
-      <rect x={PL} y={refHY} width={cW} height={refLY - refHY} fill="rgba(16,185,129,0.06)" />
-      <line x1={PL} y1={refHY} x2={PL + cW} y2={refHY} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.5} />
-      <line x1={PL} y1={refLY} x2={PL + cW} y2={refLY} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.5} />
-      {/* Range labels */}
-      <text x={PL - 4} y={refHY + 3} textAnchor="end" fontSize={8} fill="#10b981" fontFamily="DM Mono" opacity={0.7}>{lab.high}</text>
-      <text x={PL - 4} y={refLY + 3} textAnchor="end" fontSize={8} fill="#10b981" fontFamily="DM Mono" opacity={0.7}>{lab.low}</text>
-      {/* Y grid lines */}
-      {yTicks.map(v => (
-        <line key={v} x1={PL} y1={toY(v)} x2={PL + cW} y2={toY(v)} stroke="#0d1a28" strokeWidth={0.5} />
-      ))}
+      {/* Reference band — only if ref range is available */}
+      {hasRef && <>
+        <rect x={PL} y={refHY} width={cW} height={refLY - refHY} fill="rgba(16,185,129,0.06)" />
+        <line x1={PL} y1={refHY} x2={PL + cW} y2={refHY} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.5} />
+        <line x1={PL} y1={refLY} x2={PL + cW} y2={refLY} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.5} />
+        <text x={PL - 4} y={refHY + 3} textAnchor="end" fontSize={8} fill="#10b981" fontFamily="DM Mono" opacity={0.7}>{lab.high}</text>
+        <text x={PL - 4} y={refLY + 3} textAnchor="end" fontSize={8} fill="#10b981" fontFamily="DM Mono" opacity={0.7}>{lab.low}</text>
+      </>}
       {/* Area */}
       <polygon points={areaPts} fill={`${color}14`} />
       {/* Line */}
       <polyline points={polyPts} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       {/* Points */}
       {pts.map(({ v, i }) => {
-        const bad = v < lab.low || v > lab.high;
+        const bad = hasRef && (v < lab.low || v > lab.high);
         return (
           <g key={i}>
             <circle cx={toX(i)} cy={toY(v)} r={4} fill={bad ? "#ef4444" : color} />
@@ -421,10 +419,7 @@ Keep it under 500 words. Be direct and clinically specific.`,
                                 {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
                               </div>
                             </div>
-                            {low !== null && high !== null && !isNaN(val) && (
-                              <RangeBar value={val} low={low} high={high} compact />
-                            )}
-                            {lab.refRange && (low === null || high === null) && (
+                            {lab.refRange && (
                               <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14 }}>ref: {lab.refRange}</div>
                             )}
                           </div>
@@ -454,7 +449,8 @@ Keep it under 500 words. Be direct and clinically specific.`,
               cutoff.setMonth(cutoff.getMonth() - trendRange);
               const history = allHistory.filter(h => !h.date || new Date(h.date + "T12:00:00") >= cutoff);
               const hasHistory = allHistory.length > 1;
-              const chartData = history.length > 1 ? { values: history.map(h => parseFloat(h.value)), low: low ?? 0, high: high ?? 100 } : null;
+              // chartData uses null for low/high when ref range unavailable — TrendChart handles it gracefully
+              const chartData = history.length > 1 ? { values: history.map(h => parseFloat(h.value)), low, high } : null;
               const histLabels = history.map(h => {
                 if (!h.date) return "—";
                 const d = new Date(h.date + "T12:00:00");
@@ -531,7 +527,7 @@ Keep it under 500 words. Be direct and clinically specific.`,
                           ))}
                         </div>
                       </div>
-                      {chartData && low !== null && high !== null ? (
+                      {chartData ? (
                         <TrendChart lab={chartData} color={lineColor} monthLabels={histLabels} />
                       ) : (
                         <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace", padding: "16px 0", textAlign: "center" }}>

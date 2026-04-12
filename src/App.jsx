@@ -430,11 +430,13 @@ function AppShell() {
     const today = new Date();
     const ts = today.toISOString().split('T')[0];
     const dateLabel = today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-    // Carry forward the most recent reading values for any fields left blank
-    const prior = readings.length > 0 ? readings[0] : {};
-    const bp_s   = quickReading.bp_s   ? parseInt(quickReading.bp_s)     : prior.bp_s;
-    const bp_d   = quickReading.bp_d   ? parseInt(quickReading.bp_d)     : prior.bp_d;
-    const weight = quickReading.weight ? parseFloat(quickReading.weight) : prior.weight;
+    // Carry forward the most recent non-null value for each field from any prior reading
+    const priorBpS   = readings.find(r => r.bp_s   != null)?.bp_s;
+    const priorBpD   = readings.find(r => r.bp_d   != null)?.bp_d;
+    const priorWeight = readings.find(r => r.weight != null)?.weight;
+    const bp_s   = quickReading.bp_s   ? parseInt(quickReading.bp_s)     : priorBpS;
+    const bp_d   = quickReading.bp_d   ? parseInt(quickReading.bp_d)     : priorBpD;
+    const weight = quickReading.weight ? parseFloat(quickReading.weight) : priorWeight;
     const reading = {
       date: quickReading.date || dateLabel,
       ts,
@@ -702,7 +704,7 @@ function AppShell() {
                           <div key={h} style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px" }}>{h}</div>
                         ))}
                       </div>
-                      {readings.slice(0, 4).map(r => ({ date:r.date, bp:`${r.bp_s}/${r.bp_d}`, hr:r.hr??"--", o2:r.o2??"--", flag:!!r.flag })).map(({ date, bp, hr, o2, flag }) => (
+                      {readings.slice(0, 4).map(r => ({ date:r.date, bp: (r.bp_s != null && r.bp_d != null) ? `${r.bp_s}/${r.bp_d}` : "--", hr:r.hr??"--", o2:r.o2??"--", flag:!!r.flag })).map(({ date, bp, hr, o2, flag }) => (
                         <div className="vital-row" key={date}>
                           <div style={{ color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{date}</div>
                           <div style={{ fontWeight: 600, color: flag ? "#ef4444" : "#c4d8ee", display: "flex", alignItems: "center", gap: 5 }}>
