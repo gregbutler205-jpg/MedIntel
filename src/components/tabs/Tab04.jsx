@@ -345,7 +345,11 @@ export default function App({ onNavChange }) {
     return catOk && searchOk && flagOk;
   });
 
-  const flaggedCount = meds.filter((m) => m.flag).length;
+  const flaggedCount = meds.filter((m) =>
+    m.flag ||
+    calcDaysLeft(m.refillDate) <= 7 ||
+    (m.renewalDate && calcDaysLeft(m.renewalDate) <= 30)
+  ).length;
   const refillSoon = meds.filter((m) => calcDaysLeft(m.refillDate) <= 10).length;
   const nextRefill = meds.length > 0 ? meds.reduce((min, m) => (calcDaysLeft(m.refillDate) < calcDaysLeft(min.refillDate) ? m : min), meds[0]) : null;
 

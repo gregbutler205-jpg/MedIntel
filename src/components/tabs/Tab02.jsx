@@ -9,6 +9,38 @@ import {
   getConditions, getSurgeries, getMedsFull, getLatestReading,
 } from "../../store.js";
 
+// ── Featured labs helper (11 key labs) ────────────────────────────────────────
+const FEATURED_LAB_DEFS = [
+  { label: "Alk Phos",   pattern: /alk.*phos|alkaline.*phos/i },
+  { label: "ALT",        pattern: /\balt\b|alanine\s*(amino)?trans/i },
+  { label: "AST",        pattern: /\bast\b|aspartate\s*(amino)?trans/i },
+  { label: "Bilirubin",  pattern: /bilirubin/i },
+  { label: "Glucose",    pattern: /\bglucose\b/i },
+  { label: "Calcium",    pattern: /\bcalcium\b/i },
+  { label: "Platelets",  pattern: /platelet/i },
+  { label: "Creatinine", pattern: /\bcreatinine\b/i },
+  { label: "eGFR",       pattern: /egfr|glom.*filt/i },
+  { label: "Sodium",     pattern: /\bsodium\b/i },
+  { label: "Magnesium",  pattern: /magnesium/i },
+];
+
+function getFeaturedLabs() {
+  try {
+    const all = JSON.parse(localStorage.getItem("mi_labs") || "[]");
+    const latest = {};
+    all.forEach(l => {
+      const key = (l.name || "").toLowerCase().trim();
+      if (!key) return;
+      if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) latest[key] = l;
+    });
+    const deduped = Object.values(latest);
+    return FEATURED_LAB_DEFS.map(def => {
+      const match = deduped.find(l => def.pattern.test(l.name || ""));
+      return { label: def.label, lab: match || null };
+    });
+  } catch { return FEATURED_LAB_DEFS.map(def => ({ label: def.label, lab: null })); }
+}
+
 const T = {
   bg:"#07090f", sidebar:"#080c14", card:"#0b1220",
   border:"#0d1a28", borderHover:"#111e30", borderActive:"#1a2f4a",
@@ -492,7 +524,6 @@ export default function ProfileTab() {
                         <div style={{ width:6, height:6, borderRadius:"50%", background:color, flexShrink:0 }} />
                         <div>
                           <div style={{ fontSize:12, color:T.s }}>{c.name}</div>
-                          {c.icd10 && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{c.icd10}</div>}
                         </div>
                       </div>
                       <span style={{ fontSize:9, padding:"2px 8px", borderRadius:10, fontFamily:"'DM Mono',monospace", background:`${color}18`, color, border:`1px solid ${color}35` }}>{c.status}</span>
@@ -603,6 +634,48 @@ export default function ProfileTab() {
                 </div>
             }
           </div>
+
+          {/* ── Featured Lab Results ── */}
+          {(() => {
+            const featuredLabs = getFeaturedLabs();
+            const hasAny = featuredLabs.some(f => f.lab);
+            if (!hasAny) return null;
+            // Find the most recent lab date for the header
+            const latestDate = featuredLabs
+              .filter(f => f.lab?.date)
+              .map(f => f.lab.date)
+              .sort()
+              .reverse()[0];
+            return (
+              <div style={{ ...card, gridColumn:"1/-1" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                  <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Recent Lab Results</span>
+                  {latestDate && <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>
+                    Most recent: {new Date(latestDate + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+                  </span>}
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(110px,1fr))", gap:8 }}>
+                  {featuredLabs.map(({ label, lab }) => {
+                    if (!lab) return (
+                      <div key={label} style={{ background:"#080c14", border:`1px solid ${T.border}`, borderRadius:8, padding:"10px 12px", opacity:0.45 }}>
+                        <div style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                        <div style={{ fontSize:13, color:T.ghost }}>—</div>
+                      </div>
+                    );
+                    const isFlag = lab.flag;
+                    const color = isFlag ? T.yellow : T.green;
+                    return (
+                      <div key={label} style={{ background:"#080c14", border:`1px solid ${isFlag ? "rgba(245,158,11,.3)" : T.border}`, borderRadius:8, padding:"10px 12px" }}>
+                        <div style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                        <div style={{ fontSize:15, fontWeight:700, color, lineHeight:1 }}>{lab.value}</div>
+                        <div style={{ fontSize:8, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{lab.unit || ""}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── Latest Vitals ── */}
           {latestVitals && (
@@ -727,6 +800,32 @@ export default function ProfileTab() {
             ))}
           </div>
         </>}
+
+        {/* Recent Lab Results */}
+        {(() => {
+          const featuredLabs = getFeaturedLabs();
+          const hasAny = featuredLabs.some(f => f.lab);
+          if (!hasAny) return null;
+          const latestDate = featuredLabs.filter(f=>f.lab?.date).map(f=>f.lab.date).sort().reverse()[0];
+          return (<>
+            <h2>Recent Lab Results{latestDate ? ` — ${new Date(latestDate+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}` : ""}</h2>
+            <div className="grid2">
+              {featuredLabs.map(({ label, lab }) => lab ? (
+                <div key={label} className="pr">
+                  <span className="pr-lbl">{label}</span>
+                  <span className="pr-val" style={lab.flag ? {color:"#c05000",fontWeight:600}:{}}>
+                    {lab.value} {lab.unit}{lab.refRange ? ` (ref: ${lab.refRange})` : ""}{lab.flag ? " ▲" : ""}
+                  </span>
+                </div>
+              ) : (
+                <div key={label} className="pr">
+                  <span className="pr-lbl">{label}</span>
+                  <span className="pr-val" style={{color:"#aaa"}}>Not on file</span>
+                </div>
+              ))}
+            </div>
+          </>);
+        })()}
 
         {/* Care Team */}
         {careTeam.length > 0 && <>

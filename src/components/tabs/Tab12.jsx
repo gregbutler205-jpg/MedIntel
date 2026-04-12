@@ -209,12 +209,27 @@ export default function ImportTab() {
     setPdfError("");
   }
 
+  const [latestOnly, setLatestOnly] = useState(true);
+
   const categories = ["All", ...CATEGORIES];
-  const filtered = labs.filter(l => {
+  const baseFiltered = labs.filter(l => {
     const matchCat = catFilter === "All" || l.category === catFilter;
     const matchSearch = !search || l.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
+
+  // Deduplicate to latest per test name when latestOnly is on
+  const filtered = latestOnly ? (() => {
+    const latest = {};
+    baseFiltered.forEach(l => {
+      const key = (l.name || "").toLowerCase().trim();
+      if (!key) return;
+      if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) {
+        latest[key] = l;
+      }
+    });
+    return Object.values(latest).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  })() : baseFiltered;
 
   const inp = (label, key, props = {}) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -398,7 +413,7 @@ export default function ImportTab() {
           {/* ── Lab List ── */}
           <div id="lab-print-area">
             {/* Filters */}
-            <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -408,6 +423,11 @@ export default function ImportTab() {
               <select className="dark-sel" style={{ width:"auto", minWidth:160 }} value={catFilter} onChange={e => setCatFilter(e.target.value)}>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+              <button
+                onClick={() => setLatestOnly(o => !o)}
+                style={{ padding:"7px 14px", background: latestOnly ? "rgba(16,185,129,.15)" : "#0b1220", border: latestOnly ? "1px solid rgba(16,185,129,.4)" : "1px solid #111e30", borderRadius:8, color: latestOnly ? "#10b981" : "#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                {latestOnly ? "✓ Latest Only" : "All History"}
+              </button>
             </div>
 
             {filtered.length === 0 && (

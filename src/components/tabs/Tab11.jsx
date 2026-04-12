@@ -18,23 +18,20 @@ function buildSystemPrompt() {
   // ── Conditions section ────────────────────────────────────────────────────
   const condStr = conditions.length > 0
     ? conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}${c.severity ? ` — ${c.severity}` : ""}${c.notes ? `: ${c.notes}` : ""}`).join("\n")
-    : `- End-stage renal disease (ESRD) — resolved via transplant
-- Status post living-donor kidney transplant (LDKT), Oct 1, 2024
-- Chronic kidney disease (CKD) Stage 3a — eGFR ~58 mL/min
-- Hypertension — on Amlodipine + Lisinopril
-- Diabetes Mellitus (Type 2 / PTDM — existing diagnosis)
+    : `- Status post Living Donor Liver Transplant (LDLT), Oct 1, 2024 — primary ongoing diagnosis
+- Hypertension — on Amlodipine + Metoprolol
+- Diabetes Mellitus (Type 2 / PTDM — pre-existing, worsened by tacrolimus/prednisone)
 - Hyperlipidemia — on Atorvastatin
-- Immunosuppression-dependent state (lifelong)
+- Immunosuppression-dependent state (lifelong, due to LDLT)
 - CMV IgG positive; EBV IgG positive
-- Mild interstitial fibrosis / tubular atrophy (IF/TA) Grade 1 — biopsy Oct 2025`;
+- Tacrolimus-related nephrotoxicity risk — monitor creatinine/eGFR as secondary markers`;
 
   // ── Surgical history section ───────────────────────────────────────────────
   const surgStr = surgeries.length > 0
     ? surgeries.map(s => `- ${s.procedure}${s.date ? ` (${s.date})` : ""}${s.surgeon ? ` — ${s.surgeon}` : ""}${s.facility ? `, ${s.facility}` : ""}${s.notes ? `: ${s.notes}` : ""}`).join("\n")
-    : `- Oct 1, 2024: Living donor kidney transplant (LDKT), right iliac fossa, UMC Transplant Center. Immediate graft function. Induction: Basiliximab + methylprednisolone.
-- Oct 14, 2025: Protocol biopsy at 12-month mark. Banff: i0 t0 g0 v0, ci1 ct1. No acute rejection.
-- Feb 20, 2026: Renal ultrasound — transplant kidney 11.4 cm, resistive index 0.62, normal perfusion.
-- Right hip replacement (on file in surgical history — relevant to bone-origin ALP elevations)`;
+    : `- Oct 1, 2024: Living Donor Liver Transplant (LDLT), UMC Transplant Center. Surgeon: Dr. Ari Cohen. Immediate graft function. Induction: Basiliximab + methylprednisolone.
+- Oct 14, 2025: Protocol liver biopsy at 12-month mark — no acute rejection findings.
+- Right hip replacement (on file in surgical history — relevant to bone-source ALP elevations)`;
 
   // ── Medications section ───────────────────────────────────────────────────
   const medsStr = meds.filter(m => m.status !== "inactive").length > 0
@@ -80,8 +77,9 @@ Other:
 - Dr. Ari Cohen, MD — Transplant Surgeon, UMC Transplant Center (historical; procedure performed Oct 2024; now in maintenance phase — not primary ongoing contact)
 - Quest Diagnostics — Lab draws`;
 
-  const liverDoc  = hepato?.name  || "Dr. Mariana Zapata";
-  const kidneyDoc = nephro?.name  || "the transplant/nephrology team";
+  // For a liver transplant patient, Dr. Zapata (Hepatology) IS the primary transplant physician.
+  // There is no separate nephrology/transplant doc — tacrolimus and rejection concerns go to Dr. Zapata.
+  const liverDoc  = hepato?.name  || nephro?.name  || "Dr. Mariana Zapata";
   const pcpDoc    = pcp?.name     || "Dr. Jonathan Hand";
 
   return `You are an intelligent personal health assistant for Greg Butler. You have deep, comprehensive knowledge of his entire medical history. Your job is to help Greg understand his health holistically — cross-referencing all of his data to surface insights, flag concerns, and prepare him for medical conversations.
@@ -89,9 +87,10 @@ Other:
 CRITICAL RULES:
 - NEVER ask about or suggest screening for a condition already listed in his diagnoses — treat all listed conditions as confirmed, existing diagnoses.
 - ALWAYS cross-reference his medications and surgical history when explaining any abnormal lab value.
-- For anything related to liver, bile ducts, hepatic enzymes (ALT, AST, Alk Phos, bilirubin, GGT), or hepatology: direct Greg to ${liverDoc}.
-- For kidney/transplant function (creatinine, eGFR, tacrolimus levels, rejection risk): reference ${kidneyDoc}.
-- Dr. Ari Cohen was the transplant surgeon — he is largely out of the picture now that Greg is in maintenance phase. Do not list him as the ongoing primary contact for day-to-day care.
+- Greg had a Living Donor Liver Transplant (LDLT) — NOT a kidney transplant. Never reference kidney transplant, LDKT, ESRD, or right iliac fossa in any response.
+- For anything related to liver, bile ducts, hepatic enzymes (ALT, AST, Alk Phos, bilirubin, GGT), transplant graft health, tacrolimus management, or rejection risk: direct Greg to ${liverDoc}.
+- Creatinine and eGFR are monitored as SECONDARY markers because tacrolimus is nephrotoxic — but the primary concern is liver graft health, not kidney disease.
+- Dr. Ari Cohen was the liver transplant surgeon — he is largely out of the picture now that Greg is in maintenance phase. Do not list him as the ongoing primary contact for day-to-day care.
 - For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -140,7 +139,7 @@ MEDICATIONS TO AVOID — CRITICAL LIST
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 NSAIDs (ABSOLUTELY AVOID):
 - Ibuprofen, Naproxen, Ketorolac, Indomethacin, Celecoxib, Aspirin >81mg
-- Reason: nephrotoxic in CKD/transplant — risk of acute kidney injury and graft damage
+- Reason: nephrotoxic in transplant patients — risk of acute kidney injury; also increases hepatotoxicity risk when combined with immunosuppressants
 - Safe pain alternative: Acetaminophen (Tylenol) ≤2g/day
 
 Antibiotics / antifungals that interact with Tacrolimus (CYP3A4/P-gp):
@@ -206,11 +205,11 @@ const PRESETS = [
   { label: "Full health summary",      prompt: "Give me a comprehensive cross-referenced summary of my current health status — covering my diagnoses, recent labs, vitals, medications, and upcoming care." },
   { label: "Medication safety check",  prompt: "Review my full medication list for interactions, anything I should avoid (including OTCs and supplements), and flag any concerns to raise with my care team." },
   { label: "Prep for Hepatology appt", prompt: "Help me prepare for my upcoming hepatology appointment. Cross-reference my recent liver panel labs (Bilirubin, ALT, AST, Alk Phos), current medications including tacrolimus and mycophenolate, and any relevant clinical findings or trends." },
-  { label: "Rejection risk check",     prompt: "Based on my current creatinine, Tacrolimus level, blood pressure, and biopsy findings, what are my current signs or risk factors for rejection or graft decline?" },
+  { label: "Rejection risk check",     prompt: "Based on my current liver enzymes (ALT, AST, Alk Phos, Bilirubin), Tacrolimus level, and any biopsy findings, what are my current signs or risk factors for liver graft rejection or decline?" },
   { label: "Foods & things to avoid",  prompt: "Give me a complete rundown of foods, drinks, OTC medications, supplements, and activities I need to avoid or be cautious about given my transplant and current medications." },
   { label: "Infection risk review",    prompt: "What are my current infection risks given my immunosuppression level, CMV status, and recent labs? What symptoms should prompt me to call the transplant team immediately?" },
   { label: "BP pattern analysis",      prompt: "Analyze my blood pressure readings and cross-reference with my medication changes, kidney function, and lab trends. Are there concerning patterns?" },
-  { label: "Lab trend deep dive",      prompt: "Walk me through all of my key lab trends — creatinine, eGFR, Tacrolimus, CBC, liver panel, and electrolytes — and flag anything moving in the wrong direction." },
+  { label: "Lab trend deep dive",      prompt: "Walk me through all of my key lab trends — liver panel (ALT, AST, Alk Phos, Bilirubin), Tacrolimus level, CBC (including platelets), electrolytes, and creatinine/eGFR as secondary monitors — and flag anything moving in the wrong direction." },
 ];
 
 const CONTEXT_ITEMS = [
