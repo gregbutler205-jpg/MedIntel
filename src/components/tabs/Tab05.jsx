@@ -122,11 +122,22 @@ function TrendChart({ lab, color, monthLabels }) {
   );
 }
 
-// Parse "0.7-1.3" or "70 - 100" or "3.4–5.1" into {low, high}
+// Parse reference range strings into {low, high}
+// Handles: "0.7-1.3", "70 - 100", "3.4–5.1", "3.4 to 5.1",
+//          "0.70 - 1.30 mg/dL", "< 10.0", ">= 60", "150 - 400 K/µL"
 function parseRefRange(str) {
   if (!str) return { low: null, high: null };
-  const m = str.match(/(\d+\.?\d*)\s*[-–to]+\s*(\d+\.?\d*)/i);
-  return m ? { low: parseFloat(m[1]), high: parseFloat(m[2]) } : { low: null, high: null };
+  const s = String(str).trim();
+  // Two-number range: "X - Y", "X–Y", "X to Y"
+  const mRange = s.match(/(\d+\.?\d*)\s*(?:[-–—]|to)\s*(\d+\.?\d*)/i);
+  if (mRange) return { low: parseFloat(mRange[1]), high: parseFloat(mRange[2]) };
+  // Less-than upper bound only: "< X" or "<= X" or "Up to X"
+  const mLt = s.match(/(?:<=?|up\s*to)\s*(\d+\.?\d*)/i);
+  if (mLt) return { low: 0, high: parseFloat(mLt[1]) };
+  // Greater-than lower bound only: "> X" or ">= X"
+  const mGt = s.match(/>=?\s*(\d+\.?\d*)/i);
+  if (mGt) return { low: parseFloat(mGt[1]), high: parseFloat(mGt[1]) * 2 };
+  return { low: null, high: null };
 }
 
 export default function App({ onNavChange }) {
