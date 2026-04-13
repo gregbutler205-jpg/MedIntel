@@ -16,21 +16,40 @@ async function extractTextFromPdf(file) {
   return text;
 }
 
+// Attempt to salvage a truncated JSON array by closing it at the last complete object
+function repairTruncatedJsonArray(raw) {
+  // Strip trailing partial object — find last complete "},"  or "}"
+  const lastClose = raw.lastIndexOf("}");
+  if (lastClose === -1) return raw;
+  const trimmed = raw.slice(0, lastClose + 1);
+  // Ensure it's wrapped in an array
+  const open = trimmed.indexOf("[");
+  if (open === -1) return "[" + trimmed + "]";
+  return trimmed + "]";
+}
+
 async function parseLabsWithClaude(pdfText, apiKey) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model: "claude-opus-4-5",
-      max_tokens: 4096,
-      messages: [{
-        role: "user",
-        content: `Extract all lab results from this lab report text. Return ONLY a JSON array of objects with these exact fields:
+  // For very large PDFs, split into chunks and merge results
+  const CHUNK = 14000;
+  const chunks = [];
+  for (let i = 0; i < pdfText.length; i += CHUNK) chunks.push(pdfText.slice(i, i + CHUNK));
+
+  const allLabs = [];
+  for (const chunk of chunks) {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-opus-4-5",
+        max_tokens: 8192,
+        messages: [{
+          role: "user",
+          content: `Extract all lab results from this lab report text. Return ONLY a JSON array of objects with these exact fields:
 - name (string, required): test name e.g. "Creatinine"
 - value (string, required): numeric result e.g. "1.2"
 - unit (string): unit e.g. "mg/dL"
@@ -41,21 +60,34 @@ async function parseLabsWithClaude(pdfText, apiKey) {
 - flag (boolean): true if result is marked H, L, High, Low, or outside reference range
 - notes (string): any relevant note about this specific test, otherwise ""
 
-Return ONLY the JSON array, no markdown, no explanation.
+Return ONLY the JSON array, no markdown, no explanation. If there are no lab results in this text, return [].
 
 LAB REPORT TEXT:
-${pdfText.slice(0, 12000)}`
-      }],
-    }),
-  });
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Claude API error: ${response.status} — ${err}`);
+${chunk}`
+        }],
+      }),
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Claude API error: ${response.status} — ${err}`);
+    }
+    const data = await response.json();
+    let raw = data.content[0].text.trim();
+    raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      // Response was likely truncated — recover what we can
+      try {
+        parsed = JSON.parse(repairTruncatedJsonArray(raw));
+      } catch {
+        parsed = [];
+      }
+    }
+    if (Array.isArray(parsed)) allLabs.push(...parsed);
   }
-  const data = await response.json();
-  let raw = data.content[0].text.trim();
-  raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
-  return JSON.parse(raw);
+  return allLabs;
 }
 
 const CATEGORIES = [
