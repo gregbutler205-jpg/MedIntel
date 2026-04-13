@@ -3,19 +3,24 @@ import { useState, useEffect } from "react";
 import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds } from "../../store.js";
 
 const NAV = [
-  { id: "dashboard", icon: "⬡", label: "Dashboard" },
-  { id: "profile", icon: "◯", label: "Profile" },
-  { id: "records", icon: "▤", label: "Records" },
+  // ── Core ───────────────────────────────────────────────────────────────────
+  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
+  { id: "profile",     icon: "◯", label: "Profile" },
+  { id: "conditions",  icon: "◎", label: "Conditions" },
+  { id: "surgeries",   icon: "✦", label: "Surgeries" },
   { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs", icon: "◈", label: "Labs & Trends" },
-  { id: "vitals", icon: "♡", label: "Vitals" },
-  { id: "symptoms", icon: "◎", label: "Symptoms" },
-  { id: "careplan", icon: "◷", label: "Care Plan" },
-  { id: "documents", icon: "▣", label: "Documents" },
-  { id: "notes", icon: "◻", label: "Notes" },
-  { id: "ai", icon: "✦", label: "AI Analysis" },
-  { id: "import", icon: "↓", label: "Import Records" },
-  { id: "backup", icon: "◈", label: "Data & Backup" },
+  { id: "labs",        icon: "◈", label: "Labs & Trends" },
+  { id: "vitals",      icon: "♡", label: "Vitals" },
+  { id: "symptoms",    icon: "◎", label: "Symptoms" },
+  { id: "appointments",icon: "◻", label: "Appointments" },
+  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  // ── System ─────────────────────────────────────────────────────────────────
+  { id: "records",     icon: "▤", label: "Records" },
+  { id: "documents",   icon: "▣", label: "Documents" },
+  { id: "notes",       icon: "◻", label: "Notes" },
+  { id: "ai",          icon: "✦", label: "AI Analysis" },
+  { id: "import",      icon: "↓", label: "Import Records" },
+  { id: "backup",      icon: "◈", label: "Data & Backup" },
 ];
 
 // ── Refill date helpers ───────────────────────────────────────────────────────
@@ -338,10 +343,11 @@ export default function App({ onNavChange }) {
   const fmt = (d) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = (d) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
+  const isFlagged = (m) => m.flag || calcDaysLeft(m.refillDate) <= 7 || (m.renewalDate && calcDaysLeft(m.renewalDate) <= 30);
   const filtered = meds.filter((m) => {
     const catOk = filterCat === "All" || m.category === filterCat;
     const searchOk = m.name.toLowerCase().includes(search.toLowerCase()) || (m.brand || "").toLowerCase().includes(search.toLowerCase());
-    const flagOk = !showFlagged || m.flag;
+    const flagOk = !showFlagged || isFlagged(m);
     return catOk && searchOk && flagOk;
   });
 
@@ -431,7 +437,7 @@ export default function App({ onNavChange }) {
       {/* Sidebar */}
       <aside style={{ width: 210, minWidth: 210, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", height: "100vh" }}>
         <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
           <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
@@ -440,14 +446,14 @@ export default function App({ onNavChange }) {
         </div>
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
           <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
-          {NAV.slice(0, 8).map(({ id, icon, label }) => (
+          {NAV.slice(0, 10).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => handleNav(id)}>
               <span className="nav-icon">{icon}</span>
               <span>{label}</span>
             </div>
           ))}
           <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
-          {NAV.slice(8).map(({ id, icon, label }) => (
+          {NAV.slice(10).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => handleNav(id)}>
               <span className="nav-icon">{icon}</span>
               <span>{label}</span>
@@ -498,15 +504,16 @@ export default function App({ onNavChange }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 22 }}>
             {[
               { label: "Active Medications", value: String(meds.length), sub: "across categories", color: "#4f8ef7" },
-              { label: "Flagged for Review", value: String(flaggedCount), sub: "requires attention", color: "#ef4444" },
+              { label: "Flagged for Review", value: String(flaggedCount), sub: "requires attention", color: "#ef4444", clickable: true },
               { label: "Refills Due Soon", value: String(refillSoon), sub: "within 10 days", color: "#f59e0b" },
               { label: "Next Refill", value: nextRefill ? nextRefill.name.split(" ")[0] : "—", sub: nextRefill ? `Due ${fmtRefillDate(nextRefill.refillDate)} · ${calcDaysLeft(nextRefill.refillDate)}d` : "No meds added yet", color: "#f59e0b" },
-            ].map(({ label, value, sub, color }, i) => (
-              <div className="stat-card" key={label} style={{ animationDelay: `${i * 55}ms` }}>
+            ].map(({ label, value, sub, color, clickable }, i) => (
+              <div className="stat-card" key={label} style={{ animationDelay: `${i * 55}ms`, cursor: clickable ? "pointer" : "default" }} onClick={clickable ? () => setShowFlagged(f => !f) : undefined}>
                 <div style={{ width: 28, height: 3, background: color, borderRadius: 2, marginBottom: 14, boxShadow: `0 0 10px ${color}60` }} />
                 <div style={{ fontSize: 24, fontWeight: 700, color: "#dde8f5", letterSpacing: "-0.5px", lineHeight: 1, marginBottom: 5 }}>{value}</div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8", marginBottom: 3 }}>{label}</div>
                 <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
+                {clickable && <div style={{ marginTop:8, fontSize:10, color: showFlagged ? "#ef4444" : "#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
               </div>
             ))}
           </div>
@@ -525,8 +532,11 @@ export default function App({ onNavChange }) {
                   onChange={(e) => setSearch(e.target.value)}
                   style={{ width: 200 }}
                 />
-                <button className={`toggle-btn ${showFlagged ? "on" : ""}`} onClick={() => setShowFlagged(!showFlagged)}>
-                  {showFlagged ? "▲ Flagged only" : "▲ Show flagged"}
+                <button
+                  onClick={() => setShowFlagged(!showFlagged)}
+                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#ef4444" : "#4f8ef7", transition:"all .15s" }}
+                >
+                  {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
                 <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", prescriber:"", pharmacy:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
                   + Add Med

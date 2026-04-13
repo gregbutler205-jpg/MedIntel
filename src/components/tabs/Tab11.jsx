@@ -311,6 +311,20 @@ export default function AIAnalysis() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
 
+  // Auto-send pending prompt from Dashboard AI buttons
+  const pendingSentRef = useRef(false);
+  useEffect(() => {
+    if (pendingSentRef.current) return;
+    const pending = localStorage.getItem("mi_ai_pending");
+    if (pending) {
+      localStorage.removeItem("mi_ai_pending");
+      pendingSentRef.current = true;
+      // Small delay to let component fully mount
+      setTimeout(() => sendMessage(pending), 300);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const sendMessage = useCallback(async (text) => {
     const trimmed = text.trim();
     if (!trimmed || streaming) return;
@@ -424,8 +438,23 @@ export default function AIAnalysis() {
     setShowKeyPopover(false);
   };
 
+  const saveConversationToNotes = (msgs) => {
+    if (!msgs || msgs.length === 0) return;
+    try {
+      const notes = JSON.parse(localStorage.getItem("mi_notes") || "[]");
+      const ts = new Date().toISOString();
+      const title = `AI Analysis — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+      const preview = msgs.find(m => m.role === "user")?.text?.slice(0, 120) || "AI conversation";
+      const content = msgs.map(m => `${m.role === "user" ? "You" : "AI"}: ${m.text}`).join("\n\n---\n\n");
+      const note = { id: Date.now().toString(), title, pinned: false, tag: "General", date: ts, preview, linked: [], sections: [{ heading: "", body: content }] };
+      notes.unshift(note);
+      localStorage.setItem("mi_notes", JSON.stringify(notes));
+    } catch {}
+  };
+
   const newConversation = () => {
     if (streaming) { abortRef.current?.abort(); }
+    saveConversationToNotes(messages);
     setMessages([]);
     setError("");
     setStreaming(false);
@@ -547,11 +576,11 @@ export default function AIAnalysis() {
 
           <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #0d1a28" }}>
             <button className="new-conv-btn" onClick={newConversation} style={{ width: "100%", justifyContent: "center" }}>
-              ↺ New Conversation
+              ↺ Clear &amp; Save to Notes
             </button>
             {messages.length > 0 && (
               <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 8 }}>
-                {messages.length} message{messages.length !== 1 ? "s" : ""} · auto-saved
+                {messages.length} message{messages.length !== 1 ? "s" : ""} · saves to Notes on clear
               </div>
             )}
           </div>
@@ -574,9 +603,23 @@ export default function AIAnalysis() {
               </div>
             )}
 
-            {messages.map((m, i) => (
-              <Message key={i} role={m.role} text={m.text} streaming={m.streaming && i === messages.length - 1} />
-            ))}
+            {messages.map((m, i) => {
+              // Show a divider between assistant response and the next user message (new turn)
+              const prevIsAssistant = i > 0 && messages[i-1].role === "assistant";
+              const isNewTurn = m.role === "user" && prevIsAssistant;
+              return (
+                <div key={i}>
+                  {isNewTurn && (
+                    <div style={{ display:"flex", alignItems:"center", gap:10, margin:"16px 0", opacity:0.4 }}>
+                      <div style={{ flex:1, height:1, background:"#1a2840" }} />
+                      <div style={{ fontSize:9, color:"#6a8090", fontFamily:"'DM Mono',monospace", letterSpacing:"1px" }}>NEW QUESTION</div>
+                      <div style={{ flex:1, height:1, background:"#1a2840" }} />
+                    </div>
+                  )}
+                  <Message role={m.role} text={m.text} streaming={m.streaming && i === messages.length - 1} />
+                </div>
+              );
+            })}
 
             {streaming && messages[messages.length - 1]?.text === "" && <TypingIndicator />}
 

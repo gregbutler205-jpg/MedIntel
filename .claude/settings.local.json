@@ -64,7 +64,11 @@
       "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\Documents\\\\Medical\\\\IntelliTrax\\\\' | Select-Object Name\")",
       "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\Documents\\\\Medical\\\\IntelliTrax\\\\Logos\\\\' | Select-Object Name\")",
       "Bash(powershell.exe -Command ':*)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(copy \"C:\\\\Documents\\\\Medical\\\\IntelliTrax\\\\Logos\\\\IntellTrax - White.png\" \"C:\\\\Documents\\\\Medical\\\\IntelliTrax\\\\Code\\\\src\\\\assets\\\\logo-white.png\")",
+      "Bash(pandoc \"C:\\\\Documents\\\\Medical\\\\IntelliTrax\\\\Lab Analysis - 4.8.26.docx\" --track-changes=all -t markdown)",
+      "Bash(py C:/Users/gregb/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/d6bd8abc-64db-4916-89c7-fff7a5fe0673/e0a4c5a9-d0ac-4eff-a89b-98f9310b597c/skills/docx/scripts/office/unpack.py 'C:/Documents/Medical/IntelliTrax/Lab Analysis - 4.8.26.docx' C:/Temp/lab_analysis_unpacked/)",
+      "Bash(gh run:*)"
     ]
   },
   "disableAllHooks": true

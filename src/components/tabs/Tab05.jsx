@@ -2,19 +2,24 @@ import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
 
 const NAV = [
-  { id: "dashboard", icon: "⬡", label: "Dashboard" },
-  { id: "profile", icon: "◯", label: "Profile" },
-  { id: "records", icon: "▤", label: "Records" },
+  // ── Core ───────────────────────────────────────────────────────────────────
+  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
+  { id: "profile",     icon: "◯", label: "Profile" },
+  { id: "conditions",  icon: "◎", label: "Conditions" },
+  { id: "surgeries",   icon: "✦", label: "Surgeries" },
   { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs", icon: "◈", label: "Labs & Trends" },
-  { id: "vitals", icon: "♡", label: "Vitals" },
-  { id: "symptoms", icon: "◎", label: "Symptoms" },
-  { id: "careplan", icon: "◷", label: "Care Plan" },
-  { id: "documents", icon: "▣", label: "Documents" },
-  { id: "notes", icon: "◻", label: "Notes" },
-  { id: "ai", icon: "✦", label: "AI Analysis" },
-  { id: "import", icon: "↓", label: "Import Records" },
-  { id: "backup", icon: "◈", label: "Data & Backup" },
+  { id: "labs",        icon: "◈", label: "Labs & Trends" },
+  { id: "vitals",      icon: "♡", label: "Vitals" },
+  { id: "symptoms",    icon: "◎", label: "Symptoms" },
+  { id: "appointments",icon: "◻", label: "Appointments" },
+  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  // ── System ─────────────────────────────────────────────────────────────────
+  { id: "records",     icon: "▤", label: "Records" },
+  { id: "documents",   icon: "▣", label: "Documents" },
+  { id: "notes",       icon: "◻", label: "Notes" },
+  { id: "ai",          icon: "✦", label: "AI Analysis" },
+  { id: "import",      icon: "↓", label: "Import Records" },
+  { id: "backup",      icon: "◈", label: "Data & Backup" },
 ];
 
 
@@ -122,6 +127,63 @@ function TrendChart({ lab, color, monthLabels }) {
   );
 }
 
+// ── Built-in Lab Test Dictionary ─────────────────────────────────────────────
+const LAB_DICTIONARY = [
+  { patterns: [/\balt\b|alanine\s*aminotrans/i], name:"ALT (Alanine Aminotransferase)", description:"A liver enzyme released when liver cells are damaged. High levels may indicate hepatitis, liver injury, or fatty liver disease. In transplant patients, rising ALT can be an early sign of graft rejection.", normalRange:"7–56 U/L", whyMatters:"Key marker for liver graft health and hepatocyte injury." },
+  { patterns: [/\bast\b|aspartate\s*aminotrans/i], name:"AST (Aspartate Aminotransferase)", description:"An enzyme found in the liver, heart, and muscles. Elevated levels often indicate liver damage but can also rise from muscle injury or heart problems. Monitored alongside ALT.", normalRange:"10–40 U/L", whyMatters:"Used with ALT to assess liver cell damage." },
+  { patterns: [/alk.*phos|alkaline.*phos/i], name:"Alkaline Phosphatase (Alk Phos / ALP)", description:"An enzyme produced by the liver, bile ducts, and bones. Elevated levels can indicate bile duct obstruction, bone disease, or liver pathology. In liver transplant patients, persistently elevated ALP warrants investigation for biliary complications.", normalRange:"44–147 U/L", whyMatters:"Signals bile duct issues or graft complications in transplant patients." },
+  { patterns: [/\bggt\b|gamma.*glutamyl/i], name:"GGT (Gamma-Glutamyl Transferase)", description:"A liver enzyme sensitive to alcohol use and bile duct disease. Often elevated alongside Alk Phos in biliary obstruction. Useful for confirming liver origin of elevated Alk Phos.", normalRange:"9–48 U/L", whyMatters:"Helps confirm whether elevated Alk Phos is liver-derived." },
+  { patterns: [/bilirubin/i], name:"Bilirubin (Total)", description:"A yellow pigment produced from red blood cell breakdown, processed by the liver. Elevated levels cause jaundice. High bilirubin in transplant patients may indicate rejection, bile duct problems, or graft dysfunction.", normalRange:"0.2–1.2 mg/dL", whyMatters:"Critical marker for liver graft function and biliary health." },
+  { patterns: [/direct.*bili|bilirubin.*direct/i], name:"Direct (Conjugated) Bilirubin", description:"The portion of bilirubin processed by the liver. Elevated direct bilirubin strongly suggests liver or bile duct disease.", normalRange:"0.0–0.3 mg/dL", whyMatters:"More specific for liver/biliary pathology than total bilirubin." },
+  { patterns: [/\bcreatinine\b/i], name:"Creatinine", description:"A waste product filtered by the kidneys. Elevated creatinine indicates impaired kidney function. In transplant patients on tacrolimus, rising creatinine signals nephrotoxicity and requires prompt attention.", normalRange:"0.74–1.35 mg/dL (men)", whyMatters:"Tracks tacrolimus nephrotoxicity risk and overall kidney function." },
+  { patterns: [/egfr|glomer.*filt/i], name:"eGFR (Estimated Glomerular Filtration Rate)", description:"Estimates how well the kidneys filter blood each minute. Values below 60 indicate reduced kidney function. Monitored closely in transplant patients taking calcineurin inhibitors like tacrolimus.", normalRange:"≥60 mL/min/1.73m²", whyMatters:"Primary measure of kidney function; tracks long-term tacrolimus nephrotoxicity." },
+  { patterns: [/\bglucose\b/i], name:"Glucose (Blood Sugar)", description:"The primary energy source for cells. Chronically elevated glucose indicates diabetes or poor glycemic control. Post-transplant diabetes mellitus (PTDM) is common due to tacrolimus and steroids.", normalRange:"70–99 mg/dL (fasting)", whyMatters:"Tracks glucose control; PTDM affects up to 20% of liver transplant recipients." },
+  { patterns: [/hba1c|hemoglobin\s*a1c|glycated/i], name:"HbA1c (Hemoglobin A1c)", description:"Reflects average blood sugar over the past 2–3 months. Used to monitor diabetes management long-term.", normalRange:"<5.7% (normal); 5.7–6.4% (pre-diabetes); ≥6.5% (diabetes)", whyMatters:"Best measure of long-term glycemic control in PTDM." },
+  { patterns: [/\bsodium\b/i], name:"Sodium", description:"An electrolyte regulating fluid balance and nerve/muscle function. Abnormal levels can cause neurological symptoms ranging from confusion to seizures.", normalRange:"136–145 mEq/L", whyMatters:"Electrolyte imbalance affects nerve function; diuretics can lower sodium." },
+  { patterns: [/\bpotassium\b/i], name:"Potassium", description:"An electrolyte essential for heart and muscle function. Tacrolimus can cause elevated potassium (hyperkalemia), which can trigger dangerous heart arrhythmias.", normalRange:"3.5–5.0 mEq/L", whyMatters:"Tacrolimus-related hyperkalemia is a known side effect requiring monitoring." },
+  { patterns: [/\bcalcium\b/i], name:"Calcium (Total)", description:"Essential for bone health, nerve transmission, and muscle contraction. Long-term steroid use reduces calcium absorption and bone density.", normalRange:"8.6–10.2 mg/dL", whyMatters:"Corticosteroids impair calcium absorption; osteoporosis risk after transplant." },
+  { patterns: [/magnesium/i], name:"Magnesium", description:"A mineral involved in hundreds of enzymatic reactions. Tacrolimus causes urinary magnesium wasting, making low magnesium (hypomagnesemia) common in transplant patients.", normalRange:"1.7–2.2 mg/dL", whyMatters:"Tacrolimus-induced hypomagnesemia is very common; may require supplementation." },
+  { patterns: [/phosph/i], name:"Phosphorus", description:"A mineral important for bone formation and energy production. Abnormal levels are common after transplant.", normalRange:"2.5–4.5 mg/dL", whyMatters:"Monitored for bone health and metabolic complications." },
+  { patterns: [/\buric\s*acid\b/i], name:"Uric Acid", description:"A waste product from purine metabolism. High levels cause gout, which is more frequent in transplant patients on calcineurin inhibitors.", normalRange:"3.4–7.0 mg/dL (men)", whyMatters:"Tacrolimus/cyclosporine increase uric acid levels; gout is a common complication." },
+  { patterns: [/\bwbc\b|white\s*blood/i], name:"WBC (White Blood Cell Count)", description:"Counts infection-fighting cells. Immunosuppressive drugs lower WBC (leukopenia), increasing infection risk. Mycophenolate and valganciclovir are common causes.", normalRange:"4.5–11.0 ×10³/µL", whyMatters:"Immunosuppression can cause leukopenia; low WBC increases infection risk." },
+  { patterns: [/\brbc\b|red\s*blood\s*cell.*count/i], name:"RBC (Red Blood Cell Count)", description:"Counts oxygen-carrying red blood cells. Low counts indicate anemia, common after transplant.", normalRange:"4.5–5.9 ×10⁶/µL (men)", whyMatters:"Anemia is common post-transplant; mycophenolate and valganciclovir are frequent causes." },
+  { patterns: [/\bhgb\b|hemoglobin/i], name:"Hemoglobin", description:"The protein in red blood cells that carries oxygen. Low hemoglobin indicates anemia.", normalRange:"13.5–17.5 g/dL (men)", whyMatters:"Low hemoglobin causes fatigue and reduced exercise tolerance." },
+  { patterns: [/\bhct\b|hematocrit/i], name:"Hematocrit", description:"The percentage of blood volume occupied by red blood cells. Low hematocrit indicates anemia.", normalRange:"41–53% (men)", whyMatters:"Tracks red blood cell volume; used alongside hemoglobin to assess anemia." },
+  { patterns: [/\bplatelet/i], name:"Platelets", description:"Cell fragments essential for blood clotting. Low platelets (thrombocytopenia) increase bleeding risk. Mycophenolate and valganciclovir can suppress platelet production.", normalRange:"150–400 ×10³/µL", whyMatters:"Thrombocytopenia is a known side effect of transplant immunosuppression." },
+  { patterns: [/\bneutro/i], name:"Neutrophils", description:"The most abundant white blood cells, critical for fighting bacterial and fungal infections. Low neutrophils (neutropenia) severely increase infection risk.", normalRange:"1.8–7.7 ×10³/µL", whyMatters:"Neutropenia from immunosuppression is a major infection risk factor." },
+  { patterns: [/\blympho/i], name:"Lymphocytes", description:"Immune cells that fight viral infections and recognize foreign tissue. Transplant immunosuppression intentionally reduces lymphocyte activity to prevent rejection.", normalRange:"1.0–4.8 ×10³/µL", whyMatters:"Monitored to balance rejection prevention vs. infection susceptibility." },
+  { patterns: [/\btacrolimus\b|fk506/i], name:"Tacrolimus Level (Trough)", description:"Measures tacrolimus concentration in blood before the next dose. Target range varies by transplant type and time post-transplant. Too low risks rejection; too high risks nephrotoxicity, neurotoxicity, and infection.", normalRange:"5–10 ng/mL (early); 4–8 ng/mL (maintenance)", whyMatters:"Critical for balancing rejection prevention against drug toxicity." },
+  { patterns: [/cyclosporine|ciclosporin/i], name:"Cyclosporine Level", description:"A calcineurin inhibitor similar to tacrolimus. Measured as trough or 2-hour post-dose (C2). Narrow therapeutic window requires close monitoring.", normalRange:"100–400 ng/mL (varies by protocol)", whyMatters:"Therapeutic drug monitoring essential to prevent rejection or toxicity." },
+  { patterns: [/\bbnp\b|nt.*probnp|brain.*natriuretic/i], name:"BNP / NT-proBNP", description:"Hormones released when the heart is under stress or the heart muscle is stretched. Elevated levels indicate heart failure or fluid overload.", normalRange:"<100 pg/mL (BNP); <125 pg/mL (NT-proBNP)", whyMatters:"Monitors cardiac status, especially relevant with fluid retention after transplant." },
+  { patterns: [/prothrombin|pt\b|inr/i], name:"PT / INR (Prothrombin Time)", description:"Measures how long blood takes to clot. The INR standardizes this measurement. In liver disease, a high INR reflects reduced clotting factor production.", normalRange:"11–13.5 seconds (PT); 0.9–1.1 (INR)", whyMatters:"Reflects synthetic liver function; elevated INR indicates impaired liver function." },
+  { patterns: [/\balbumin\b/i], name:"Albumin", description:"A protein made by the liver that maintains fluid balance and transports substances in the blood. Low albumin indicates poor liver function or malnutrition.", normalRange:"3.5–5.0 g/dL", whyMatters:"A key marker of liver synthetic function and nutritional status." },
+  { patterns: [/total\s*protein/i], name:"Total Protein", description:"Measures the total amount of protein in the blood, including albumin and globulins. Used to assess nutritional status and liver function.", normalRange:"6.3–8.2 g/dL", whyMatters:"Low protein can indicate liver disease, malnutrition, or protein-losing conditions." },
+  { patterns: [/\bglobulin/i], name:"Globulin", description:"A group of proteins including antibodies and carrier proteins. High globulin may indicate chronic inflammation or immune activation.", normalRange:"2.0–3.5 g/dL", whyMatters:"Elevated globulin can reflect chronic infection or immune dysregulation." },
+  { patterns: [/\bcholesterol\b|total\s*chol/i], name:"Total Cholesterol", description:"Measures all cholesterol in the blood. High levels increase cardiovascular disease risk, already elevated in transplant patients on steroids and tacrolimus.", normalRange:"<200 mg/dL (desirable)", whyMatters:"Transplant patients have higher cardiovascular risk; statin therapy often required." },
+  { patterns: [/\bldl\b/i], name:"LDL Cholesterol", description:"\"Bad\" cholesterol that builds up in artery walls. Minimizing LDL is a priority in transplant patients who have elevated cardiovascular risk.", normalRange:"<100 mg/dL (optimal)", whyMatters:"Primary target for cardiovascular risk reduction post-transplant." },
+  { patterns: [/\bhdl\b/i], name:"HDL Cholesterol", description:"\"Good\" cholesterol that removes LDL from the bloodstream. Higher levels are protective against heart disease.", normalRange:">40 mg/dL (men); >50 mg/dL (women)", whyMatters:"Low HDL compounds cardiovascular risk; exercise can raise HDL." },
+  { patterns: [/triglyceride/i], name:"Triglycerides", description:"Fats stored in blood. Elevated levels are associated with metabolic syndrome, which is common in post-transplant patients due to steroids and weight gain.", normalRange:"<150 mg/dL", whyMatters:"High triglycerides contribute to cardiovascular and pancreatic disease risk." },
+  { patterns: [/\bldh\b|lactate.*dehydro/i], name:"LDH (Lactate Dehydrogenase)", description:"An enzyme released during tissue damage. Non-specific marker elevated in many conditions including liver injury, hemolysis, and infection.", normalRange:"135–225 U/L", whyMatters:"Can indicate liver injury or hemolysis, particularly relevant if bilirubin is elevated." },
+  { patterns: [/\btsh\b|thyroid.*stimulating/i], name:"TSH (Thyroid-Stimulating Hormone)", description:"Regulates thyroid function. Low TSH suggests hyperthyroidism; high TSH indicates hypothyroidism. Thyroid disease is more common in patients on long-term immunosuppression.", normalRange:"0.4–4.0 mIU/L", whyMatters:"Thyroid dysfunction affects metabolism, energy, and cardiac health." },
+  { patterns: [/\bhba1c\b|hemoglobin\s*a1c/i], name:"Hemoglobin A1c (HbA1c)", description:"Reflects average blood glucose over 2–3 months. Used to diagnose and monitor diabetes, including post-transplant diabetes mellitus (PTDM).", normalRange:"<5.7% (normal); ≥6.5% (diabetes)", whyMatters:"Best measure of long-term glucose control." },
+  { patterns: [/\bcmv\b/i], name:"CMV (Cytomegalovirus)", description:"A common virus that can reactivate after transplant due to immunosuppression. CMV disease can cause fever, low blood counts, hepatitis, and graft damage.", normalRange:"Undetectable (< assay lower limit)", whyMatters:"CMV reactivation is a serious risk requiring prophylaxis and monitoring post-transplant." },
+  { patterns: [/\bebv\b/i], name:"EBV (Epstein-Barr Virus)", description:"A herpesvirus that can reactivate under immunosuppression. High EBV viral loads are associated with post-transplant lymphoproliferative disorder (PTLD).", normalRange:"Undetectable", whyMatters:"EBV-associated PTLD is a rare but serious malignancy risk after transplant." },
+  { patterns: [/ferritin/i], name:"Ferritin", description:"A protein that stores iron. Elevated ferritin indicates iron overload or inflammation (acute-phase reaction). Low ferritin indicates iron deficiency.", normalRange:"12–300 ng/mL (men)", whyMatters:"Tracks iron stores; elevated ferritin is common in liver disease and inflammation." },
+  { patterns: [/\biron\b|serum\s*iron/i], name:"Iron (Serum)", description:"Measures iron in the blood, distinct from stored iron (ferritin). Low iron is common in chronic disease states.", normalRange:"65–175 µg/dL", whyMatters:"Low serum iron contributes to anemia; monitored alongside ferritin and TIBC." },
+  { patterns: [/\btibc\b|total.*iron.*bind/i], name:"TIBC (Total Iron-Binding Capacity)", description:"Measures the blood's capacity to bind and transport iron. High TIBC with low iron indicates iron deficiency anemia.", normalRange:"250–370 µg/dL", whyMatters:"Used with serum iron and ferritin to fully characterize iron status." },
+  { patterns: [/\bc\s*reactive|crp\b/i], name:"CRP (C-Reactive Protein)", description:"A protein produced by the liver in response to inflammation or infection. A sensitive marker of acute inflammation, infection, or injury.", normalRange:"<1.0 mg/L (low risk); 1–3 mg/L (average risk); >3 mg/L (high risk)", whyMatters:"Elevated CRP can signal infection, rejection, or systemic inflammation." },
+  { patterns: [/esr|erythrocyte.*sed/i], name:"ESR (Erythrocyte Sedimentation Rate)", description:"Measures how quickly red blood cells settle in a tube. A non-specific marker of inflammation, infection, and autoimmune disease.", normalRange:"0–15 mm/hr (men); 0–20 mm/hr (women)", whyMatters:"Used alongside CRP to detect systemic inflammation." },
+  { patterns: [/\bbnp\b/i], name:"BNP (B-type Natriuretic Peptide)", description:"Released by the heart ventricles when under stress. A key marker for heart failure and fluid overload.", normalRange:"<100 pg/mL", whyMatters:"Elevated BNP signals cardiac stress, important in patients with hypertension or fluid retention." },
+];
+
+function lookupLabDef(testName) {
+  if (!testName) return null;
+  for (const def of LAB_DICTIONARY) {
+    if (def.patterns.some(p => p.test(testName))) return def;
+  }
+  return null;
+}
+
 // Parse reference range strings into {low, high}
 // Handles: "0.7-1.3", "70 - 100", "3.4–5.1", "3.4 to 5.1",
 //          "0.70 - 1.30 mg/dL", "< 10.0", ">= 60", "150 - 400 K/µL"
@@ -149,6 +211,8 @@ export default function App({ onNavChange }) {
     try { return JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { return []; }
   });
   const [importedCatFilter, setImportedCatFilter] = useState("All");
+  const [showFlagged, setShowFlagged]   = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const [trendRange, setTrendRange]     = useState(12); // months
   const [aiAnalysis, setAiAnalysis]     = useState("");
   const [aiAnalyzing, setAiAnalyzing]   = useState(false);
@@ -185,7 +249,7 @@ export default function App({ onNavChange }) {
   const flaggedCount = dedupedLabs.filter(l => l.flag).length;
   const normalCount  = dedupedLabs.length - flaggedCount;
 
-  const selectImportedLab = (lab) => { setSelectedImportedLab(lab); };
+  const selectImportedLab = (lab) => { setSelectedImportedLab(lab); setShowDescription(false); };
 
   const analyzeAllLabs = async () => {
     const apiKey = localStorage.getItem("mi_ak");
@@ -316,7 +380,7 @@ Keep it under 500 words. Be direct and clinically specific.`,
       {/* ── Sidebar ── */}
       <aside style={{ width: 210, minWidth: 210, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", height: "100vh" }}>
         <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
           <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
@@ -325,13 +389,13 @@ Keep it under 500 words. Be direct and clinically specific.`,
         </div>
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
           <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
-          {NAV.slice(0, 8).map(({ id, icon, label }) => (
+          {NAV.slice(0, 10).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
           <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
-          {NAV.slice(8).map(({ id, icon, label }) => (
+          {NAV.slice(10).map(({ id, icon, label }) => (
             <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
               {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "1px 5px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>AI</span>}
@@ -353,7 +417,9 @@ Keep it under 500 words. Be direct and clinically specific.`,
             <div className="live-dot" />
             <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
-          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>Last import: Mar 12, 2026</div>
+          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
+            Last import: {(() => { try { const logs = JSON.parse(localStorage.getItem("mi_import_log") || "[]"); if (logs.length) { const d = new Date(logs[logs.length-1].ts); return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); } } catch {} return "—"; })()}
+          </div>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#fff" }}>G</div>
         </div>
 
@@ -369,10 +435,10 @@ Keep it under 500 words. Be direct and clinically specific.`,
 
             {/* Summary chips */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
-              <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #111e30", borderRadius: 10, padding: "12px 14px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: flaggedCount > 0 ? "#ef4444" : "#a0b4c8", lineHeight: 1, marginBottom: 3 }}>{flaggedCount}</div>
-                <div style={{ fontSize: 10, color: "#7eb8d8", fontWeight: 600 }}>Flagged</div>
-                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>out of range</div>
+                <div style={{ fontSize: 10, color: showFlagged ? "#ef4444" : "#7eb8d8", fontWeight: 600 }}>Flagged</div>
+                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{showFlagged ? "click to clear" : "click to filter"}</div>
               </div>
               <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: "#10b981", lineHeight: 1, marginBottom: 3 }}>{normalCount}</div>
@@ -392,9 +458,9 @@ Keep it under 500 words. Be direct and clinically specific.`,
                 {/* Category filter */}
                 {(() => {
                   const cats = ["All", ...Array.from(new Set(dedupedLabs.map(l => l.category || "Other"))).sort()];
-                  const visible = importedCatFilter === "All"
-                    ? dedupedLabs
-                    : dedupedLabs.filter(l => (l.category || "Other") === importedCatFilter);
+                  const visible = dedupedLabs
+                    .filter(l => importedCatFilter === "All" || (l.category || "Other") === importedCatFilter)
+                    .filter(l => !showFlagged || l.flag);
                   const sorted = [...visible].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
                   return (
                     <>
@@ -482,7 +548,32 @@ Keep it under 500 words. Be direct and clinically specific.`,
                         {selectedImportedLab.facility ? ` · ${selectedImportedLab.facility}` : ""}
                       </div>
                     </div>
+                    {lookupLabDef(selectedImportedLab.name) && (
+                      <button onClick={() => setShowDescription(d => !d)} style={{ padding:"7px 14px", background: showDescription ? "rgba(79,142,247,.2)" : "rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                        {showDescription ? "✕ Hide Description" : "📋 Test Description"}
+                      </button>
+                    )}
                   </div>
+                  {showDescription && (() => {
+                    const def = lookupLabDef(selectedImportedLab.name);
+                    if (!def) return null;
+                    return (
+                      <div style={{ background:"rgba(79,142,247,.06)", border:"1px solid rgba(79,142,247,.2)", borderRadius:12, padding:"16px 18px", marginBottom:18 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:8 }}>{def.name}</div>
+                        <div style={{ fontSize:12, color:"#a8c4dc", lineHeight:1.7, marginBottom:10 }}>{def.description}</div>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                          <div style={{ background:"#080c14", borderRadius:8, padding:"10px 12px" }}>
+                            <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Normal Range</div>
+                            <div style={{ fontSize:12, color:"#10b981", fontFamily:"'DM Mono',monospace" }}>{def.normalRange}</div>
+                          </div>
+                          <div style={{ background:"#080c14", borderRadius:8, padding:"10px 12px" }}>
+                            <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Why It Matters</div>
+                            <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.5 }}>{def.whyMatters}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Value + Range bar */}
                   <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "20px 24px", marginBottom: 18 }}>

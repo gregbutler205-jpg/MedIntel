@@ -3,19 +3,24 @@ import { useState, useEffect } from "react";
 import { getStore, setStore, mergeReadings } from "../../store.js";
 
 const NAV = [
-  { id: "dashboard", icon: "⬡", label: "Dashboard" },
-  { id: "profile", icon: "◯", label: "Profile" },
-  { id: "records", icon: "▤", label: "Records" },
+  // ── Core ───────────────────────────────────────────────────────────────────
+  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
+  { id: "profile",     icon: "◯", label: "Profile" },
+  { id: "conditions",  icon: "◎", label: "Conditions" },
+  { id: "surgeries",   icon: "✦", label: "Surgeries" },
   { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs", icon: "◈", label: "Labs & Trends" },
-  { id: "vitals", icon: "♡", label: "Vitals" },
-  { id: "symptoms", icon: "◎", label: "Symptoms" },
-  { id: "careplan", icon: "◷", label: "Care Plan" },
-  { id: "documents", icon: "▣", label: "Documents" },
-  { id: "notes", icon: "◻", label: "Notes" },
-  { id: "ai", icon: "✦", label: "AI Analysis" },
-  { id: "import", icon: "↓", label: "Import Records" },
-  { id: "backup", icon: "◈", label: "Data & Backup" },
+  { id: "labs",        icon: "◈", label: "Labs & Trends" },
+  { id: "vitals",      icon: "♡", label: "Vitals" },
+  { id: "symptoms",    icon: "◎", label: "Symptoms" },
+  { id: "appointments",icon: "◻", label: "Appointments" },
+  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  // ── System ─────────────────────────────────────────────────────────────────
+  { id: "records",     icon: "▤", label: "Records" },
+  { id: "documents",   icon: "▣", label: "Documents" },
+  { id: "notes",       icon: "◻", label: "Notes" },
+  { id: "ai",          icon: "✦", label: "AI Analysis" },
+  { id: "import",      icon: "↓", label: "Import Records" },
+  { id: "backup",      icon: "◈", label: "Data & Backup" },
 ];
 
 // Manual / sporadic readings (BP, Weight, Temp, Glucose, O2, Sleep)
@@ -428,6 +433,7 @@ export default function App({ onNavChange }) {
   const [time, setTime] = useState(new Date());
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
+  const [showFlagged, setShowFlagged] = useState(false);
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -507,7 +513,7 @@ export default function App({ onNavChange }) {
       {/* Sidebar */}
       <aside style={{ width:210, minWidth:210, background:"#080c14", borderRight:"1px solid #0d1a28", display:"flex", flexDirection:"column", height:"100vh" }}>
         <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
           <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
@@ -516,13 +522,13 @@ export default function App({ onNavChange }) {
         </div>
         <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
           <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
-          {NAV.slice(0,8).map(({id,icon,label}) => (
+          {NAV.slice(0,10).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
           <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
-          {NAV.slice(8).map(({id,icon,label}) => (
+          {NAV.slice(10).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
               {id==="ai" && <span style={{marginLeft:"auto",fontSize:8,background:"#4f8ef7",color:"#fff",padding:"1px 5px",borderRadius:8,fontFamily:"'DM Mono',monospace"}}>AI</span>}
@@ -564,9 +570,10 @@ export default function App({ onNavChange }) {
 
             {/* Summary chips */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7, marginBottom:14 }}>
-              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"9px 11px" }}>
+              <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #111e30", borderRadius:10, padding:"9px 11px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
                 <div style={{ fontSize:17, fontWeight:700, color:"#ef4444", lineHeight:1, marginBottom:2 }}>{flaggedManual}</div>
-                <div style={{ fontSize:9, color:"#7eb8d8", fontWeight:600 }}>Flagged</div>
+                <div style={{ fontSize:9, color: showFlagged ? "#ef4444" : "#7eb8d8", fontWeight:600 }}>Flagged</div>
+                <div style={{ fontSize:8, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "clear" : "filter"}</div>
               </div>
               <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"9px 11px" }}>
                 <div style={{ fontSize:17, fontWeight:700, color:"#4f8ef7", lineHeight:1, marginBottom:2 }}>{manualReadings.length}</div>
@@ -593,14 +600,7 @@ export default function App({ onNavChange }) {
                     </span>
                     <span style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
                   </div>
-                  {status && <div style={{ fontSize:10, color:status.color, fontWeight:600, marginBottom: vc.id !== "resting_hr" ? 6 : 0 }}>{status.label}</div>}
-                  {/* Range bar — skip band chart types */}
-                  {vc.id !== "resting_hr" && val != null && (
-                    <MiniRangeBar value={val} yMin={vc.yMin} yMax={vc.yMax} goodMin={vc.goodMin} goodMax={vc.goodMax} />
-                  )}
-                  {vc.id === "resting_hr" && val != null && (
-                    <MiniRangeBar value={val} yMin={40} yMax={90} goodMin={50} goodMax={70} />
-                  )}
+                  {status && <div style={{ fontSize:10, color:status.color, fontWeight:600 }}>{status.label}</div>}
                 </div>
               );
             })}

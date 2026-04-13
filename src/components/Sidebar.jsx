@@ -21,7 +21,7 @@ export default function Sidebar({ tabs, activeTabId, onTabSelect }) {
           color: '#60a5fa',
           letterSpacing: '0.5px',
         }}>
-          IntelliTrax
+          Insina Health
         </div>
         <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
           Personal Health Dashboard

@@ -1,4 +1,4 @@
-// ── IntelliTrax localStorage data store ──────────────────────────────────────
+// ── Insina Health localStorage data store ────────────────────────────────────
 // All health data lives here. Keys are prefixed with "mi_".
 
 const DEFAULTS = {

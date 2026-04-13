@@ -101,7 +101,7 @@ export default function LockScreen({ onUnlock }) {
               : "Enter PIN";
   const subtitle = mode === "setup"   ? "Choose a 4-digit PIN to secure your health data"
                  : mode === "confirm" ? "Re-enter the same PIN to confirm"
-                 : "IntelliTrax is locked";
+                 : "Insina Health is locked";
 
   return (
     <div style={{
@@ -149,7 +149,7 @@ export default function LockScreen({ onUnlock }) {
       <div className="lock-wrap" style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%", maxWidth:340, padding:"0 24px" }}>
 
         {/* Logo */}
-        <img src={LOGO} alt="IntelliTrax" style={{ width:160, height:56, objectFit:"contain", marginBottom:32, opacity:.9 }} />
+        <img src={LOGO} alt="Insina Health" style={{ width:160, height:56, objectFit:"contain", marginBottom:32, opacity:.9 }} />
 
         {/* Title */}
         <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#dde8f5", marginBottom:8, textAlign:"center" }}>

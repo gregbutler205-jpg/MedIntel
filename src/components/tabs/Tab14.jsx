@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const URGENCY_CFG = {
   high: { color: "#ef4444", bg: "rgba(239,68,68,.10)", border: "rgba(239,68,68,.25)", label: "High" },
@@ -228,12 +228,92 @@ function ApptModal({ appt, onSave, onClose }) {
 const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:8, padding:"9px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" };
 
+// ── AI Analysis Panel for an Appointment ────────────────────────────────────
+function ApptAIPanel({ appt }) {
+  const [additionalQ, setAdditionalQ] = useState("");
+  const [analysis, setAnalysis]       = useState("");
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState("");
+
+  const buildPrompt = useCallback(() => {
+    let ctx = "";
+    try {
+      const conditions = JSON.parse(localStorage.getItem("mi_conditions") || "[]");
+      const meds = JSON.parse(localStorage.getItem("mi_meds_full") || "[]");
+      if (conditions.length) ctx += `\nActive Conditions: ${conditions.map(c=>c.name).join(", ")}`;
+      if (meds.length) ctx += `\nCurrent Medications: ${meds.filter(m=>m.status!=="inactive").map(m=>`${m.name} ${m.dose||""}`).join(", ")}`;
+    } catch {}
+    const base = `Help me prepare for my upcoming ${appt.specialty || "medical"} appointment.
+Appointment: ${appt.title}
+Provider: ${appt.provider || "—"}${appt.specialty ? ` (${appt.specialty})` : ""}
+Facility: ${appt.facility || "—"}
+Date: ${fmtDate(appt.date)}${appt.prepInstructions ? `\nPrep Instructions: ${appt.prepInstructions}` : ""}${ctx}
+
+Please provide:
+1. What to discuss or ask during this appointment
+2. What to bring or prepare
+3. Any relevant concerns from my medical history to raise
+4. Questions to ask about my current medications or conditions${additionalQ.trim() ? `\n\nAdditional questions: ${additionalQ}` : ""}`;
+    return base;
+  }, [appt, additionalQ]);
+
+  const runAnalysis = async () => {
+    const apiKey = localStorage.getItem("mi_ak");
+    if (!apiKey) { setError("API key required — go to Data & Backup to add your key."); return; }
+    setLoading(true); setError(""); setAnalysis("");
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "x-api-key":apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
+        body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1024, messages:[{ role:"user", content:buildPrompt() }] }),
+      });
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e?.error?.message || `API error ${res.status}`); }
+      const data = await res.json();
+      setAnalysis(data.content?.[0]?.text || "No response");
+    } catch(e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={{ marginTop:16, background:"rgba(79,142,247,.04)", border:"1px solid rgba(79,142,247,.15)", borderRadius:12, padding:18 }}>
+      <div style={{ fontSize:11, fontWeight:600, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
+        <span>✦</span> AI Appointment Prep
+        {analysis && <button onClick={() => window.print()} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ Print</button>}
+      </div>
+      <div style={{ marginBottom:10 }}>
+        <label style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", display:"block", marginBottom:5 }}>Additional Questions / Context</label>
+        <textarea
+          value={additionalQ}
+          onChange={e => setAdditionalQ(e.target.value)}
+          placeholder="e.g. Ask about adjusting my Tacrolimus dose, or discuss recent lab trends…"
+          rows={2}
+          style={{ width:"100%", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:8, padding:"9px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none", resize:"vertical" }}
+        />
+      </div>
+      <button
+        onClick={runAnalysis}
+        disabled={loading}
+        style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:loading?"wait":"pointer", opacity:loading?0.7:1 }}
+      >
+        {loading ? "⏳ Analyzing…" : "✦ Generate Prep Analysis"}
+      </button>
+      {error && <div style={{ marginTop:10, fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace" }}>⚠ {error}</div>}
+      {analysis && (
+        <div style={{ marginTop:14, background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"14px 16px", fontSize:12, color:"#a8c4dc", lineHeight:1.75, whiteSpace:"pre-wrap" }}>
+          {analysis}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AppointmentsTab() {
   const [appts, setAppts]     = useState(() => loadAppts());
   const [modal, setModal]     = useState(null);   // null | BLANK | appt object
   const [filter, setFilter]   = useState("upcoming");
   const [expanded, setExpanded] = useState(null);
+  const [showAI, setShowAI]   = useState(null);  // appt.id for which AI panel is open
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => { saveAppts(appts); }, [appts]);
@@ -438,7 +518,7 @@ export default function AppointmentsTab() {
                       {appt.prepInstructions && <Detail label="Prep Instructions" value={appt.prepInstructions} />}
                       {appt.notes   && <Detail label="Notes"    value={appt.notes}   full />}
                     </div>
-                    <div style={{ display:"flex", gap:8 }}>
+                    <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                       <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={e => { e.stopPropagation(); setModal(appt); }}>
                         ✎ Edit
                       </button>
@@ -446,11 +526,17 @@ export default function AppointmentsTab() {
                         onClick={e => { e.stopPropagation(); handleSave({ ...appt, status:"completed" }); }}>
                         ✓ Mark Complete
                       </button>
+                      <button className="apt-btn"
+                        style={{ background: showAI === appt.id ? "rgba(167,139,250,.15)" : "rgba(79,142,247,.08)", borderColor: showAI === appt.id ? "rgba(167,139,250,.4)" : "rgba(79,142,247,.2)", color: showAI === appt.id ? "#a78bfa" : "#7eb8d8" }}
+                        onClick={e => { e.stopPropagation(); setShowAI(prev => prev === appt.id ? null : appt.id); }}>
+                        ✦ {showAI === appt.id ? "Hide AI Prep" : "AI Prep Analysis"}
+                      </button>
                       <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#ef4444", marginLeft:"auto" }}
                         onClick={e => { e.stopPropagation(); setDeleteConfirm(appt.id); }}>
                         ✕ Delete
                       </button>
                     </div>
+                    {showAI === appt.id && <ApptAIPanel appt={appt} />}
                   </div>
                 )}
               </div>

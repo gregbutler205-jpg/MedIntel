@@ -2,19 +2,24 @@ import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
 
 const NAV = [
-  { id: "dashboard", icon: "⬡", label: "Dashboard" },
-  { id: "profile", icon: "◯", label: "Profile" },
-  { id: "records", icon: "▤", label: "Records" },
+  // ── Core ───────────────────────────────────────────────────────────────────
+  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
+  { id: "profile",     icon: "◯", label: "Profile" },
+  { id: "conditions",  icon: "◎", label: "Conditions" },
+  { id: "surgeries",   icon: "✦", label: "Surgeries" },
   { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs", icon: "◈", label: "Labs & Trends" },
-  { id: "vitals", icon: "♡", label: "Vitals" },
-  { id: "symptoms", icon: "◎", label: "Symptoms" },
-  { id: "careplan", icon: "◷", label: "Care Plan" },
-  { id: "documents", icon: "▣", label: "Documents" },
-  { id: "notes", icon: "◻", label: "Notes" },
-  { id: "ai", icon: "✦", label: "AI Analysis" },
-  { id: "import", icon: "↓", label: "Import Records" },
-  { id: "backup", icon: "◈", label: "Data & Backup" },
+  { id: "labs",        icon: "◈", label: "Labs & Trends" },
+  { id: "vitals",      icon: "♡", label: "Vitals" },
+  { id: "symptoms",    icon: "◎", label: "Symptoms" },
+  { id: "appointments",icon: "◻", label: "Appointments" },
+  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  // ── System ─────────────────────────────────────────────────────────────────
+  { id: "records",     icon: "▤", label: "Records" },
+  { id: "documents",   icon: "▣", label: "Documents" },
+  { id: "notes",       icon: "◻", label: "Notes" },
+  { id: "ai",          icon: "✦", label: "AI Analysis" },
+  { id: "import",      icon: "↓", label: "Import Records" },
+  { id: "backup",      icon: "◈", label: "Data & Backup" },
 ];
 
 // Common symptoms relevant to transplant / immunosuppressed patients
@@ -369,7 +374,7 @@ export default function App({ onNavChange }) {
       {/* Sidebar */}
       <aside style={{ width:210, minWidth:210, background:"#080c14", borderRight:"1px solid #0d1a28", display:"flex", flexDirection:"column", height:"100vh" }}>
         <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src={INTELLITRAX_LOGO} alt="IntelliTrax" style={{ width: 185, height: 65, objectFit: "contain" }} />
+          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: 185, height: 65, objectFit: "contain" }} />
         </div>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
           <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
@@ -378,13 +383,13 @@ export default function App({ onNavChange }) {
         </div>
         <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
           <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
-          {NAV.slice(0,8).map(({id,icon,label}) => (
+          {NAV.slice(0,10).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
             </div>
           ))}
           <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
-          {NAV.slice(8).map(({id,icon,label}) => (
+          {NAV.slice(10).map(({id,icon,label}) => (
             <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
               <span className="nav-icon">{icon}</span><span>{label}</span>
               {id==="ai"&&<span style={{marginLeft:"auto",fontSize:8,background:"#4f8ef7",color:"#fff",padding:"1px 5px",borderRadius:8,fontFamily:"'DM Mono',monospace"}}>AI</span>}

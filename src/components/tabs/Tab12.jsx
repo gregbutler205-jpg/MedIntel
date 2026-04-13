@@ -209,7 +209,7 @@ export default function ImportTab() {
     setPdfError("");
   }
 
-  const [latestOnly, setLatestOnly] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
 
   const categories = ["All", ...CATEGORIES];
   const baseFiltered = labs.filter(l => {
@@ -218,18 +218,28 @@ export default function ImportTab() {
     return matchCat && matchSearch;
   });
 
-  // Deduplicate to latest per test name when latestOnly is on
-  const filtered = latestOnly ? (() => {
-    const latest = {};
+  // Group by test name, each group has all readings sorted newest first
+  const grouped = (() => {
+    const groups = {};
     baseFiltered.forEach(l => {
       const key = (l.name || "").toLowerCase().trim();
       if (!key) return;
-      if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) {
-        latest[key] = l;
-      }
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(l);
     });
-    return Object.values(latest).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  })() : baseFiltered;
+    // Sort each group newest first
+    Object.values(groups).forEach(arr => arr.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)));
+    // Sort groups by name
+    return Object.values(groups).sort((a, b) => (a[0]?.name || "").localeCompare(b[0]?.name || ""));
+  })();
+
+  const toggleGroup = (key) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   const inp = (label, key, props = {}) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
@@ -410,7 +420,7 @@ export default function ImportTab() {
             </div>
           </div>
 
-          {/* ── Lab List ── */}
+          {/* ── Lab List (grouped by test name) ── */}
           <div id="lab-print-area">
             {/* Filters */}
             <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
@@ -423,14 +433,12 @@ export default function ImportTab() {
               <select className="dark-sel" style={{ width:"auto", minWidth:160 }} value={catFilter} onChange={e => setCatFilter(e.target.value)}>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <button
-                onClick={() => setLatestOnly(o => !o)}
-                style={{ padding:"7px 14px", background: latestOnly ? "rgba(16,185,129,.15)" : "#0b1220", border: latestOnly ? "1px solid rgba(16,185,129,.4)" : "1px solid #111e30", borderRadius:8, color: latestOnly ? "#10b981" : "#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
-                {latestOnly ? "✓ Latest Only" : "All History"}
-              </button>
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"7px 12px", background:"#0b1220", border:"1px solid #111e30", borderRadius:8 }}>
+                {grouped.length} test{grouped.length !== 1 ? "s" : ""} · {labs.length} total readings
+              </div>
             </div>
 
-            {filtered.length === 0 && (
+            {grouped.length === 0 && (
               <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:32, textAlign:"center" }}>
                 <div style={{ fontSize:24, marginBottom:10, color:"#1a2f4a" }}>◈</div>
                 <div style={{ fontSize:14, color:"#a0b4c8", marginBottom:6 }}>No lab results yet</div>
@@ -438,33 +446,66 @@ export default function ImportTab() {
               </div>
             )}
 
-            {filtered.map((lab, i) => (
-              <div key={lab.id} className="lab-card" style={{ animationDelay:`${i*40}ms` }}>
-                <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                      {lab.flag && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", border:"1px solid rgba(239,68,68,.3)", color:"#ef4444", borderRadius:4, padding:"1px 6px", fontFamily:"'DM Mono',monospace" }}>OUT OF RANGE</span>}
-                      <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace" }}>{lab.category}</span>
+            {grouped.map((group, i) => {
+              const latest = group[0];
+              const key = (latest.name || "").toLowerCase().trim();
+              const isExpanded = expandedGroups.has(key);
+              const anyFlagged = group.some(l => l.flag);
+              return (
+                <div key={key} className="lab-card" style={{ animationDelay:`${i*30}ms`, cursor:"pointer", padding:0 }}>
+                  {/* Group header — click to expand */}
+                  <div
+                    onClick={() => toggleGroup(key)}
+                    style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 16px" }}
+                  >
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                        <span style={{ fontSize:14, fontWeight:600, color:"#dde8f5" }}>{latest.name}</span>
+                        {anyFlagged && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", border:"1px solid rgba(239,68,68,.3)", color:"#ef4444", borderRadius:4, padding:"1px 6px", fontFamily:"'DM Mono',monospace" }}>FLAGGED</span>}
+                        <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace" }}>{latest.category}</span>
+                      </div>
+                      <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
+                        <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#ef4444" : "#4f8ef7", letterSpacing:"-0.5px" }}>{latest.value}</span>
+                        <span style={{ fontSize:11, color:"#7eb8d8" }}>{latest.unit}</span>
+                        {latest.refRange && <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {latest.refRange}</span>}
+                        <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {latest.date ? new Date(latest.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}</span>
+                      </div>
                     </div>
-                    <div style={{ fontSize:14, fontWeight:600, color:"#dde8f5", marginBottom:2 }}>{lab.name}</div>
-                    <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:6 }}>
-                      <span style={{ fontSize:22, fontWeight:700, color: lab.flag ? "#ef4444" : "#4f8ef7", letterSpacing:"-0.5px" }}>{lab.value}</span>
-                      <span style={{ fontSize:12, color:"#7eb8d8" }}>{lab.unit}</span>
-                      {lab.refRange && <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {lab.refRange}</span>}
+                    <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+                      <span style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>{group.length} reading{group.length !== 1 ? "s" : ""}</span>
+                      <span style={{ fontSize:12, color:"#6a8090", transition:"transform .2s", transform:isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
                     </div>
-                    <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", display:"flex", gap:12 }}>
-                      <span>{lab.date ? new Date(lab.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "—"}</span>
-                      {lab.facility && <span>· {lab.facility}</span>}
-                    </div>
-                    {lab.notes && <div style={{ fontSize:11, color:"#7eb8d8", marginTop:5, fontStyle:"italic" }}>{lab.notes}</div>}
                   </div>
-                  <div style={{ display:"flex", gap:6, flexShrink:0 }}>
-                    <button className="imp-btn btn-ghost" style={{ padding:"5px 10px", fontSize:11 }} onClick={() => handleEdit(lab)}>Edit</button>
-                    <button className="imp-btn btn-danger" style={{ padding:"5px 10px", fontSize:11 }} onClick={() => setDeleteId(lab.id)}>✕</button>
-                  </div>
+
+                  {/* Expanded history grid */}
+                  {isExpanded && (
+                    <div style={{ borderTop:"1px solid #111e30", padding:"12px 16px 14px" }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, paddingBottom:6, borderBottom:"1px solid #0d1a28", marginBottom:4 }}>
+                        {["DATE","VALUE","RANGE","FACILITY",""].map((h,j) => (
+                          <div key={j} style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", padding:"0 4px" }}>{h}</div>
+                        ))}
+                      </div>
+                      {group.map((lab, j) => (
+                        <div key={lab.id} style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, padding:"7px 0", borderBottom: j < group.length-1 ? "1px solid #0d1a28" : "none", alignItems:"center" }}>
+                          <div style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>
+                            {lab.date ? new Date(lab.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
+                          </div>
+                          <div style={{ fontSize:13, fontWeight:700, color: lab.flag ? "#ef4444" : "#10b981", padding:"0 4px" }}>
+                            {lab.value} <span style={{ fontSize:9, color:"#7eb8d8", fontWeight:400 }}>{lab.unit}</span>
+                          </div>
+                          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.refRange || "—"}</div>
+                          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.facility || "—"}</div>
+                          <div style={{ display:"flex", gap:4, padding:"0 4px" }}>
+                            <button className="imp-btn btn-ghost" style={{ padding:"3px 8px", fontSize:10 }} onClick={e => { e.stopPropagation(); handleEdit(lab); }}>Edit</button>
+                            <button className="imp-btn btn-danger" style={{ padding:"3px 8px", fontSize:10 }} onClick={e => { e.stopPropagation(); setDeleteId(lab.id); }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
