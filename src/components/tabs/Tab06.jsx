@@ -513,7 +513,7 @@ export default function App({ onNavChange }) {
       {/* Sidebar */}
       <aside style={{ width:210, minWidth:210, background:"#080c14", borderRight:"1px solid #0d1a28", display:"flex", flexDirection:"column", height:"100vh" }}>
         <div style={{ padding: "20px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: 185, height: 65, objectFit: "contain" }} />
+          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
           <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>

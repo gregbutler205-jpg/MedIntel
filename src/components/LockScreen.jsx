@@ -149,7 +149,7 @@ export default function LockScreen({ onUnlock }) {
       <div className="lock-wrap" style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%", maxWidth:340, padding:"0 24px" }}>
 
         {/* Logo */}
-        <img src={LOGO} alt="Insina Health" style={{ width:160, height:56, objectFit:"contain", marginBottom:32, opacity:.9 }} />
+        <img src={LOGO} alt="Insina Health" style={{ width:300, height:"auto", objectFit:"contain", marginBottom:32, opacity:.9 }} />
 
         {/* Title */}
         <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#dde8f5", marginBottom:8, textAlign:"center" }}>
