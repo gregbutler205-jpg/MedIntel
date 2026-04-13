@@ -222,8 +222,8 @@ export default function App() {
       `}</style>
 
       {/* ── Sidebar ── */}
-      <aside style={{ width: 300, minWidth: 300, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", height: "100vh" }}>
-        <div style={{ padding: "12px 0", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <aside style={{ width: 220, minWidth: 220, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", height: "100vh" }}>
+        <div style={{ padding: "10px 20px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <img src={LOGO} alt="Insina Health" style={{ width: "100%", height: "auto", display: "block" }} />
         </div>
 
