@@ -508,8 +508,8 @@ export default function CarePlan() {
         .modal-input:focus{border-color:#1a2f4a;}
       `}</style>
 
-      <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }}>
-        <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: "auto", height: "auto", maxHeight: 195, objectFit: "contain" }} />
+      <div style={{ height:120, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }}>
+        <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ height: 100, width: "auto", objectFit: "contain" }} />
         <div style={{ fontFamily:serif, fontSize:20, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.3px" }}>Care Plan</div>
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>

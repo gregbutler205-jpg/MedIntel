@@ -244,15 +244,15 @@ function WeightCard({ readings }) {
 function AppSidebar({ activeNav, setActiveNav }) {
   return (
     <aside style={{
-      width: 220, minWidth: 220, height: "100vh",
+      width: 300, minWidth: 300, height: "100vh",
       background: "#080c14",
       borderRight: "1px solid #0d1a28",
       display: "flex", flexDirection: "column",
       flexShrink: 0,
     }}>
       {/* Logo */}
-      <div style={{ padding: "16px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: 170, height: 60, objectFit: "contain" }} />
+      <div style={{ padding: "12px 0", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: "100%", height: "auto", display: "block" }} />
       </div>
 
       {/* Patient info */}
