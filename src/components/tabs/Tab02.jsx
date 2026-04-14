@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import LOGO_WHITE from "../../assets/logo-white.png";
+import LOGO_WHITE from "../../assets/logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
   getProfileInsurance, setProfileInsurance,

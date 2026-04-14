@@ -1,4 +1,4 @@
-import INTELLITRAX_LOGO from "../../assets/logo.png";
+import INTELLITRAX_LOGO from "../../assets/logo-white.png";
 import { useState } from "react";
 
 const TABS = ["Timeline", "Goals", "Care Team", "Preventive", "Emergency", "Milestones", "Reference"];
