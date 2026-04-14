@@ -1,4 +1,4 @@
-import INTELLITRAX_LOGO from "../../assets/logo.jpg";
+import INTELLITRAX_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
 
 const INITIAL_BACKUPS = [
