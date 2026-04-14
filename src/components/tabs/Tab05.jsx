@@ -217,6 +217,9 @@ export default function App({ onNavChange }) {
   const [aiAnalysis, setAiAnalysis]     = useState("");
   const [aiAnalyzing, setAiAnalyzing]   = useState(false);
   const [aiError, setAiError]           = useState("");
+  const [aiQuestion, setAiQuestion]     = useState("");
+  const [aiQA, setAiQA]                 = useState([]);
+  const [aiQALoading, setAiQALoading]   = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -346,6 +349,49 @@ Keep it under 500 words. Be direct and clinically specific.`,
       setAiError(e.message || "Analysis failed.");
     } finally {
       setAiAnalyzing(false);
+    }
+  };
+
+  const askLabQuestion = async () => {
+    const q = aiQuestion.trim();
+    if (!q || aiQALoading) return;
+    const apiKey = localStorage.getItem("mi_ak");
+    if (!apiKey) { setAiError("API key required — go to Data & Backup to add it."); return; }
+    setAiQALoading(true);
+    setAiQuestion("");
+    setAiQA(prev => [...prev, { q, a: null }]);
+    try {
+      const safeRead = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
+      const conditions = safeRead("mi_conditions");
+      const meds = safeRead("mi_meds_full");
+      const condStr = conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}`).join("\n") || "None recorded";
+      const medsStr = meds.filter(m => m.status !== "inactive").map(m => `- ${m.name} ${m.dose || ""} ${m.frequency || ""}`.trim()).join("\n") || "None recorded";
+      const byDate = {};
+      importedLabs.forEach(l => { const d = l.date || "Unknown"; if (!byDate[d]) byDate[d] = []; byDate[d].push(l); });
+      const sortedDates = Object.keys(byDate).sort((a, b) => new Date(b) - new Date(a));
+      const labsStr = sortedDates.map(date =>
+        `[${date}]\n` + byDate[date].map(l =>
+          `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}${l.flag ? " ⚠ FLAGGED" : ""}`
+        ).join("\n")
+      ).join("\n\n");
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1024,
+          system: `You are a personal health assistant for Greg Butler, a liver transplant patient. Answer questions about his lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed.\n\nCONDITIONS:\n${condStr}\n\nMEDICATIONS:\n${medsStr}\n\nALL LAB RESULTS:\n${labsStr}`,
+          messages: [{ role: "user", content: q }],
+        }),
+      });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const data = await res.json();
+      const answer = data.content[0].text.trim();
+      setAiQA(prev => { const copy = [...prev]; copy[copy.length - 1] = { q, a: answer }; return copy; });
+    } catch (e) {
+      setAiQA(prev => { const copy = [...prev]; copy[copy.length - 1] = { q, a: `Error: ${e.message}` }; return copy; });
+    } finally {
+      setAiQALoading(false);
     }
   };
 
@@ -486,18 +532,18 @@ Keep it under 500 words. Be direct and clinically specific.`,
                             style={{ animationDelay: `${i * 18}ms`, flexDirection: "column", gap: 3, cursor: "pointer" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <div style={{ width: 6, height: 6, borderRadius: "50%", background: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee" }}>{lab.name}</div>
-                                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
+                              <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", textAlign: "left" }}>{lab.name}</div>
+                                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>
                                   {lab.date || "—"}{histCount > 1 ? ` · ${histCount} readings` : ""}
                                 </div>
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0, textAlign: "right" }}>
                                 {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
                               </div>
                             </div>
                             {lab.refRange && (
-                              <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14 }}>ref: {lab.refRange}</div>
+                              <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14, textAlign: "left" }}>ref: {lab.refRange}</div>
                             )}
                           </div>
                         );
@@ -675,7 +721,8 @@ Keep it under 500 words. Be direct and clinically specific.`,
 
             {/* ── AI Lab Analysis panel ── */}
             <div style={{ marginTop: 20, background: "linear-gradient(135deg, rgba(79,142,247,.07), rgba(167,139,250,.05))", border: "1px solid rgba(79,142,247,.2)", borderRadius: 14, padding: "18px 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: aiAnalysis || aiAnalyzing ? 14 : 6 }}>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 14, color: "#4f8ef7" }}>✦</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", letterSpacing: "0.5px" }}>AI Lab Analysis</span>
@@ -683,23 +730,57 @@ Keep it under 500 words. Be direct and clinically specific.`,
                 </div>
                 <button
                   onClick={analyzeAllLabs}
-                  disabled={aiAnalyzing}
+                  disabled={aiAnalyzing || aiQALoading}
                   style={{ padding: "7px 16px", background: aiAnalyzing ? "#0f1e30" : "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: aiAnalyzing ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6 }}
                 >
-                  {aiAnalyzing ? <><span style={{ fontSize: 12 }}>⟳</span> Analyzing…</> : <><span style={{ fontSize: 12, color: "#4f8ef7" }}>✦</span> Analyze My Labs</>}
+                  {aiAnalyzing ? <><span style={{ fontSize: 12 }}>⟳</span> Analyzing…</> : <><span style={{ fontSize: 12, color: "#4f8ef7" }}>✦</span> Full Analysis</>}
                 </button>
               </div>
-              {aiError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>{aiError}</div>}
+
+              {/* Question input */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                <input
+                  value={aiQuestion}
+                  onChange={e => setAiQuestion(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && askLabQuestion()}
+                  placeholder="Ask a question about your labs… (Enter to send)"
+                  disabled={aiQALoading || aiAnalyzing}
+                  style={{ flex: 1, background: "#0b1220", border: "1px solid #1a2f4a", color: "#c4d8ee", padding: "8px 12px", borderRadius: 8, fontFamily: "'Sora',sans-serif", fontSize: 12, outline: "none" }}
+                />
+                <button
+                  onClick={askLabQuestion}
+                  disabled={!aiQuestion.trim() || aiQALoading || aiAnalyzing}
+                  style={{ padding: "8px 16px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#4f8ef7", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", whiteSpace: "nowrap" }}
+                >Ask ↑</button>
+              </div>
+
+              {aiError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>{aiError}</div>}
+
+              {/* Q&A thread */}
+              {aiQA.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: aiAnalysis ? 16 : 0 }}>
+                  {aiQA.map((item, i) => (
+                    <div key={i}>
+                      <div style={{ fontSize: 12, color: "#7eb8d8", fontWeight: 600, marginBottom: 4 }}>Q: {item.q}</div>
+                      <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.75, background: "#0b1220", borderRadius: 8, padding: "10px 14px", border: "1px solid #111e30", whiteSpace: "pre-wrap" }}>
+                        {item.a === null ? <span style={{ color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>⟳ Thinking…</span> : item.a}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Full analysis result */}
               {aiAnalysis && (
-                <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.8, whiteSpace: "pre-wrap", borderTop: aiQA.length > 0 ? "1px solid #111e30" : "none", paddingTop: aiQA.length > 0 ? 14 : 0 }}>
                   {aiAnalysis}
                 </div>
               )}
-              {!aiAnalysis && !aiAnalyzing && !aiError && (
+              {!aiAnalysis && !aiAnalyzing && aiQA.length === 0 && !aiError && (
                 <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
                   {importedLabs.length > 0
-                    ? "Click to get an AI analysis of your imported lab results."
-                    : "Import lab results using the Import Records tab, then click Analyze My Labs."}
+                    ? "Ask a question above or click Full Analysis for a complete review."
+                    : "Import lab results using the Import Records tab, then ask questions here."}
                 </div>
               )}
             </div>

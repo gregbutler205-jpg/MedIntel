@@ -65,22 +65,74 @@ Other:
 - Aspirin 81mg QD`;
 
   // ── Care team section — always prefer localStorage data ───────────────────
-  // Identify key roles from stored team
   const hepato  = careTeam.find(d => /hepat/i.test(d.role || ""));
-  const nephro   = careTeam.find(d => /nephr|transplant/i.test(d.role || ""));
-  const pcp      = careTeam.find(d => /pcp|primary|family/i.test(d.role || ""));
+  const nephro  = careTeam.find(d => /nephr|transplant/i.test(d.role || ""));
+  const pcp     = careTeam.find(d => /pcp|primary|family/i.test(d.role || ""));
 
   const careStr = careTeam.length > 0
-    ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.facility ? ` — ${d.facility}` : ""}${d.phone ? ` · ${d.phone}` : ""}`).join("\n")
+    ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.specialty ? ` (${d.specialty})` : ""}${d.facility ? ` — ${d.facility}` : ""}${d.phone ? ` · ${d.phone}` : ""}`).join("\n")
     : `- Dr. Mariana Zapata — Hepatology Lead (liver, bile duct, hepatic function)
 - Dr. Jonathan Hand, MD — PCP, Hand Family Medicine
-- Dr. Ari Cohen, MD — Transplant Surgeon, UMC Transplant Center (historical; procedure performed Oct 2024; now in maintenance phase — not primary ongoing contact)
+- Dr. Ari Cohen, MD — Transplant Surgeon, UMC Transplant Center (historical)
 - Quest Diagnostics — Lab draws`;
 
-  // For a liver transplant patient, Dr. Zapata (Hepatology) IS the primary transplant physician.
-  // There is no separate nephrology/transplant doc — tacrolimus and rejection concerns go to Dr. Zapata.
-  const liverDoc  = hepato?.name  || nephro?.name  || "Dr. Mariana Zapata";
-  const pcpDoc    = pcp?.name     || "Dr. Jonathan Hand";
+  const liverDoc = hepato?.name || nephro?.name || "Dr. Mariana Zapata";
+  const pcpDoc   = pcp?.name    || "Dr. Jonathan Hand";
+
+  // ── Labs section — read ALL labs from mi_labs ────────────────────────────
+  const labs = safeRead("mi_labs", []);
+  let labStr;
+  if (labs.length > 0) {
+    const byDate = {};
+    labs.forEach(l => {
+      const d = l.date || "Unknown date";
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(l);
+    });
+    const sortedDates = Object.keys(byDate).sort((a, b) => {
+      if (a === "Unknown date") return 1;
+      if (b === "Unknown date") return -1;
+      return new Date(b) - new Date(a);
+    });
+    labStr = sortedDates.map(date => {
+      const items = byDate[date];
+      return `[${date}]\n` + items.map(l =>
+        `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}` +
+        `${l.refRange ? ` (ref: ${l.refRange})` : ""}` +
+        `${l.flag ? " ⚠ FLAGGED" : ""}` +
+        `${l.notes ? ` — ${l.notes}` : ""}`
+      ).join("\n");
+    }).join("\n\n");
+  } else {
+    labStr = "No lab results loaded yet.";
+  }
+
+  // ── Vitals section — read from mi_readings ────────────────────────────────
+  const readings = safeRead("mi_readings", []);
+  let vitalsStr;
+  if (readings.length > 0) {
+    const sorted = [...readings].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    vitalsStr = sorted.slice(0, 30).map(r => {
+      const parts = [];
+      if (r.systolic && r.diastolic) parts.push(`BP ${r.systolic}/${r.diastolic}`);
+      if (r.pulse)   parts.push(`HR ${r.pulse}`);
+      if (r.spo2)    parts.push(`O2 ${r.spo2}%`);
+      if (r.weight)  parts.push(`Weight ${r.weight} lbs`);
+      if (r.glucose) parts.push(`Glucose ${r.glucose} mg/dL`);
+      if (r.temp)    parts.push(`Temp ${r.temp}°F`);
+      const line = parts.join(", ");
+      return line ? `- ${r.date || "Unknown"}: ${line}${r.flag ? " ⚠ FLAGGED" : ""}` : null;
+    }).filter(Boolean).join("\n") || "No vital readings recorded.";
+  } else {
+    vitalsStr = "No vital readings recorded.";
+  }
+
+  // ── Reference documents ──────────────────────────────────────────────────
+  const refDocs = safeRead("mi_ref_docs", []);
+  const refDocsSection = refDocs.length > 0
+    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nREFERENCE DOCUMENTS (uploaded by patient)\n━━━━━━━━━━━━━━━━━━━━━━━━━\nWhen information from these documents is relevant to a response, cite the document name.\n\n` +
+      refDocs.map(d => `[Document: "${d.name}"]\n${d.text.slice(0, 8000)}${d.text.length > 8000 ? "\n…(truncated)" : ""}`).join("\n\n---\n\n")
+    : "";
 
   return `You are an intelligent personal health assistant for Greg Butler. You have deep, comprehensive knowledge of his entire medical history. Your job is to help Greg understand his health holistically — cross-referencing all of his data to surface insights, flag concerns, and prepare him for medical conversations.
 
@@ -92,6 +144,7 @@ CRITICAL RULES:
 - Creatinine and eGFR are monitored as SECONDARY markers because tacrolimus is nephrotoxic — but the primary concern is liver graft health, not kidney disease.
 - Dr. Ari Cohen was the liver transplant surgeon — he is largely out of the picture now that Greg is in maintenance phase. Do not list him as the ongoing primary contact for day-to-day care.
 - For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
+- ALL lab results and vitals listed below come directly from Greg's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 DIAGNOSES & ACTIVE CONDITIONS
@@ -114,25 +167,14 @@ CARE TEAM
 ${careStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
-RECENT LABS (Apr 8, 2026)
+ALL LAB RESULTS (complete history from patient records)
 ━━━━━━━━━━━━━━━━━━━━━━━━━
-- Platelets: 125 K/µL (LOW — below ref 150–400)
-- Alkaline Phosphatase: 139 U/L (elevated — ref 44–147; note: right hip replacement is a likely bone-source contributor; Clindamycin use may also contribute hepatically)
-- Monocytes %: 10 (mildly elevated)
-- Eosinophils %: 6 (mildly elevated)
-- Albumin: 4.6 g/dL (slightly high — possible dehydration)
-- Glucose: 107 mg/dL (upper normal — manage in context of existing Diabetes Mellitus)
-- Tacrolimus level: 5.1 ng/mL (low-therapeutic; target 5–8 ng/mL)
-- Calcium: 10.3 mg/dL (upper normal)
-- All liver enzymes (ALT, AST, Bilirubin): within normal range
+${labStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
-RECENT VITALS
+VITALS HISTORY
 ━━━━━━━━━━━━━━━━━━━━━━━━━
-- Mar 4: BP 131/71, HR 64, O2 99%
-- Mar 3: BP 164/78, HR 59, O2 100% — elevated, flagged
-- Jan 28: BP 148/78, HR 74, O2 96%
-- Weight: ~184 lbs (stable)
+${vitalsStr}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 MEDICATIONS TO AVOID — CRITICAL LIST
@@ -198,7 +240,22 @@ ASSISTANT GUIDELINES
 - Always name the specific doctor best suited to address each concern
 - Never diagnose or prescribe — inform, analyze, and guide
 - Cross-check any medication question against both his current med list AND the avoid list
-- Treat this as a comprehensive clinical intelligence tool, not a general chatbot`;
+- Treat this as a comprehensive clinical intelligence tool, not a general chatbot${refDocsSection}`;
+}
+
+// Extract text from PDF using pdf.js
+async function extractTextFromPdf(file) {
+  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return text.trim();
 }
 
 const PRESETS = [
@@ -212,12 +269,15 @@ const PRESETS = [
   { label: "Lab trend deep dive",      prompt: "Walk me through all of my key lab trends — liver panel (ALT, AST, Alk Phos, Bilirubin), Tacrolimus level, CBC (including platelets), electrolytes, and creatinine/eGFR as secondary monitors — and flag anything moving in the wrong direction." },
 ];
 
-const CONTEXT_ITEMS = [
-  { label: "2,996 lab entries", color: "#10b981" },
-  { label: "14 medications",    color: "#f59e0b" },
-  { label: "48 vital readings", color: "#a78bfa" },
-  { label: "7 records",         color: "#4f8ef7" },
-];
+function getContextCounts() {
+  const sr = (k) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : []; } catch { return []; } };
+  return [
+    { label: `${sr("mi_labs").length} lab entries`,      color: "#10b981" },
+    { label: `${sr("mi_meds_full").filter(m => m.status !== "inactive").length} medications`, color: "#f59e0b" },
+    { label: `${sr("mi_readings").length} vital readings`, color: "#a78bfa" },
+    { label: `${sr("mi_ref_docs").length} ref docs`,      color: "#4f8ef7" },
+  ];
+}
 
 const CONTEXT_TAGS = [
   { label: "Labs",        color: "#10b981" },
@@ -300,8 +360,15 @@ export default function AIAnalysis() {
   const [apiKey, setApiKey]           = useState(() => localStorage.getItem(API_KEY_STORE) || "");
   const [keyInput, setKeyInput]       = useState("");
   const [error, setError]             = useState("");
+  const [refDocs, setRefDocs]         = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mi_ref_docs") || "[]"); } catch { return []; }
+  });
+  const [refUploading, setRefUploading] = useState(false);
+  const [refError, setRefError]         = useState("");
+  const refFileRef                    = useRef(null);
   const bottomRef                     = useRef(null);
   const abortRef                      = useRef(null);
+  const contextCounts                 = getContextCounts();
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
@@ -460,6 +527,31 @@ export default function AIAnalysis() {
     setStreaming(false);
   };
 
+  const handleRefDocUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (refFileRef.current) refFileRef.current.value = "";
+    if (!file) return;
+    setRefUploading(true);
+    setRefError("");
+    try {
+      const text = await extractTextFromPdf(file);
+      const doc = { id: Date.now().toString(), name: file.name.replace(/\.pdf$/i, ""), text, addedDate: new Date().toLocaleDateString() };
+      const updated = [...refDocs, doc];
+      setRefDocs(updated);
+      localStorage.setItem("mi_ref_docs", JSON.stringify(updated));
+    } catch (err) {
+      setRefError("Failed to read PDF: " + (err.message || "Unknown error"));
+    } finally {
+      setRefUploading(false);
+    }
+  };
+
+  const removeRefDoc = (id) => {
+    const updated = refDocs.filter(d => d.id !== id);
+    setRefDocs(updated);
+    localStorage.setItem("mi_ref_docs", JSON.stringify(updated));
+  };
+
   const hasKey = !!apiKey;
 
   return (
@@ -566,12 +658,39 @@ export default function AIAnalysis() {
 
           <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
             <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Context Loaded</div>
-            {CONTEXT_ITEMS.map(({ label, color }) => (
+            {contextCounts.map(({ label, color }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
                 {label}
               </div>
             ))}
+          </div>
+
+          {/* Reference Documents */}
+          <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Reference Docs</div>
+              <button
+                onClick={() => refFileRef.current?.click()}
+                disabled={refUploading}
+                style={{ fontSize: 9, padding: "2px 8px", background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+              >{refUploading ? "…" : "+ PDF"}</button>
+              <input ref={refFileRef} type="file" accept="application/pdf" onChange={handleRefDocUpload} style={{ display: "none" }} />
+            </div>
+            {refError && <div style={{ fontSize: 9, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
+            {refDocs.length === 0
+              ? <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>No reference docs.<br />Upload a PDF to include it in AI context.</div>
+              : refDocs.map(d => (
+                <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 6, background: "#0b1220", border: "1px solid rgba(167,139,250,.15)", borderRadius: 7, padding: "6px 8px" }}>
+                  <span style={{ fontSize: 10, color: "#a78bfa", flexShrink: 0, marginTop: 1 }}>▣</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
+                    <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {d.addedDate}</div>
+                  </div>
+                  <button onClick={() => removeRefDoc(d.id)} style={{ background: "transparent", border: "none", color: "#6a8090", cursor: "pointer", fontSize: 11, flexShrink: 0, padding: 0 }}>✕</button>
+                </div>
+              ))
+            }
           </div>
 
           <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #0d1a28" }}>

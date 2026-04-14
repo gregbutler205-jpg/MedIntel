@@ -722,8 +722,8 @@ export default function ProfileTab() {
             </div>
           </div>
           <div style={{ textAlign:"right", fontSize:"8pt", color:"#444", fontFamily:"Arial, sans-serif" }}>
-            <div style={{ background:"#07090f", borderRadius:6, padding:"4px 10px", display:"inline-block", marginBottom:4 }}>
-              <img src={LOGO_WHITE} alt="Insina Health" style={{ height:160, objectFit:"contain", display:"block" }} />
+            <div style={{ background:"#07090f", borderRadius:6, padding:"6px 8px", display:"inline-block", marginBottom:4 }}>
+              <img src={LOGO_WHITE} alt="Insina Health" style={{ width:180, height:"auto", display:"block" }} />
             </div>
             <div>Personal Health Record</div>
             <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>

@@ -13,7 +13,7 @@ const STATUS_CFG = {
 };
 
 const SPECIALTIES = [
-  "Cardiology", "Dermatology", "Endocrinology", "Gastroenterology",
+  "Cardiology", "Dentistry", "Dermatology", "Endocrinology", "Gastroenterology",
   "Hepatology / Liver Transplant", "Lab / Imaging", "Neurology",
   "Ophthalmology", "Orthopedics", "Physical Therapy", "Primary Care",
   "Pulmonology", "Rheumatology", "Urology", "Other",
