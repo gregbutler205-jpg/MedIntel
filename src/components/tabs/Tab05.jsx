@@ -1,4 +1,4 @@
-import INTELLITRAX_LOGO from "../../assets/logo.png";
+import INTELLITRAX_LOGO from "../../assets/logo.jpg";
 import { useState, useEffect } from "react";
 
 const NAV = [

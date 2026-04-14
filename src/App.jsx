@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import INTELLITRAX_LOGO from './assets/logo.png';
+import INTELLITRAX_LOGO from './assets/logo.jpg';
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import LockScreen from './components/LockScreen.jsx';
 

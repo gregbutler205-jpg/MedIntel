@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import LOGO from "../assets/logo.png";
+import LOGO from "../assets/logo.jpg";
 
 const PIN_LENGTH = 4;
 
