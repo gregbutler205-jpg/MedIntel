@@ -27,11 +27,18 @@ function buildSystemPrompt() {
 - Tacrolimus-related nephrotoxicity risk — monitor creatinine/eGFR as secondary markers`;
 
   // ── Surgical history section ───────────────────────────────────────────────
-  const surgStr = surgeries.length > 0
+  const rawSurgStr = surgeries.length > 0
     ? surgeries.map(s => `- ${s.procedure}${s.date ? ` (${s.date})` : ""}${s.surgeon ? ` — ${s.surgeon}` : ""}${s.facility ? `, ${s.facility}` : ""}${s.notes ? `: ${s.notes}` : ""}`).join("\n")
     : `- Oct 1, 2024: Living Donor Liver Transplant (LDLT), UMC Transplant Center. Surgeon: Dr. Ari Cohen. Immediate graft function. Induction: Basiliximab + methylprednisolone.
 - Oct 14, 2025: Protocol liver biopsy at 12-month mark — no acute rejection findings.
 - Right hip replacement (on file in surgical history — relevant to bone-source ALP elevations)`;
+
+  // Sanitize: correct any erroneous "kidney transplant" references that may have
+  // been introduced by PDF imports or data entry errors. Greg had a LIVER transplant.
+  const surgStr = rawSurgStr
+    .replace(/kidney\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected")
+    .replace(/\bLDKT\b/g, "LDLT ⚠corrected")
+    .replace(/renal\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected");
 
   // ── Medications section ───────────────────────────────────────────────────
   const medsStr = meds.filter(m => m.status !== "inactive").length > 0
@@ -135,6 +142,18 @@ Other:
     : "";
 
   return `You are an intelligent personal health assistant for Greg Butler. You have deep, comprehensive knowledge of his entire medical history. Your job is to help Greg understand his health holistically — cross-referencing all of his data to surface insights, flag concerns, and prepare him for medical conversations.
+
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+PATIENT IDENTITY — ABSOLUTE FACTS (override any conflicting data below)
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+- Patient: Greg Butler
+- Transplant type: Living Donor LIVER Transplant (LDLT) — Oct 1, 2024, UMC Transplant Center
+- This is a LIVER transplant. NOT a kidney transplant. NOT LDKT. NOT renal transplant.
+- Surgeon: Dr. Ari Cohen (historical — not ongoing primary care)
+- Primary transplant follow-up physician: ${liverDoc}
+- Immunosuppression (Tacrolimus, Mycophenolate, Prednisone) protects the LIVER GRAFT
+- Creatinine/eGFR are secondary monitors due to tacrolimus nephrotoxicity — NOT indicators of kidney disease as primary diagnosis
+- If any data section below appears to reference a kidney transplant, it is a DATA ENTRY ERROR — disregard it and apply LDLT context
 
 CRITICAL RULES:
 - NEVER ask about or suggest screening for a condition already listed in his diagnoses — treat all listed conditions as confirmed, existing diagnoses.
