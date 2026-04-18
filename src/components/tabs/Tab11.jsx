@@ -166,6 +166,19 @@ CRITICAL RULES:
 - ALL lab results and vitals listed below come directly from Greg's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
+RESPONSE FORMATTING RULES (follow exactly — these control on-screen rendering)
+━━━━━━━━━━━━━━━━━━━━━━━━━
+- NO emojis of any kind anywhere in your response
+- NO markdown table pipes (|) — instead use bolded label lines: **Label:** value
+- NO ✦ symbol in response text
+- Use **bold text** for ALL section headers — each header on its own line
+- Use ----- (five dashes) on its own line as a divider between major sections
+- Use bullet points starting with "- " for unordered lists
+- Use numbered lists (1. 2. 3.) for questions to ask, steps, or ranked items
+- Bold key values inline: e.g. "Your **Tacrolimus** is **3.2 ng/mL**"
+- End most responses with a **Bottom Line** section summarizing key actions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
 DIAGNOSES & ACTIVE CONDITIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 ${condStr}
@@ -305,22 +318,89 @@ const CONTEXT_TAGS = [
   { label: "Records",     color: "#4f8ef7" },
 ];
 
-function renderMarkdown(text) {
+// Shared AI response renderer — strips emojis, renders bold/bullets/dividers cleanly
+function renderMarkdown(rawText) {
+  if (!rawText) return null;
+
+  // Strip emojis and variation selectors; remove stray pipe chars
+  const text = rawText
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .replace(/\u{FE0F}/gu, "")
+    .replace(/✦/g, "");
+
+  const applyBold = (str) =>
+    str.replace(/\*\*(.*?)\*\*/g, (_, m) =>
+      `<strong style="color:#c4d8ee;font-weight:700">${m}</strong>`
+    );
+
   const lines = text.split("\n");
   return lines.map((line, i) => {
-    const bold = line.replace(/\*\*(.*?)\*\*/g, (_, m) =>
-      `<strong style="color:#c4d8ee;font-weight:600">${m}</strong>`
-    );
-    if (line.startsWith("- ") || line.startsWith("• ")) {
+    const trimmed = line.trim();
+
+    // Section divider: 3+ dashes alone on a line
+    if (/^-{3,}$/.test(trimmed)) {
+      return <hr key={i} style={{ border: "none", borderTop: "1px solid #1a2840", margin: "12px 0" }} />;
+    }
+
+    // Table rows with | → format as label: value pairs
+    if (trimmed.includes("|")) {
+      // Skip table separator lines like |---|---|
+      if (/^\|?[\s\-|]+\|?$/.test(trimmed)) return <div key={i} style={{ height: 2 }} />;
+      const cells = trimmed.split("|").map(c => c.trim()).filter(Boolean);
+      if (cells.length >= 2) {
+        return (
+          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 5, paddingLeft: 4 }}>
+            <span dangerouslySetInnerHTML={{ __html: applyBold(cells[0]) }}
+              style={{ fontWeight: 700, color: "#c4d8ee", minWidth: 140, flexShrink: 0 }} />
+            <span dangerouslySetInnerHTML={{ __html: applyBold(cells.slice(1).join(" — ")) }}
+              style={{ color: "#a8c4dc" }} />
+          </div>
+        );
+      }
+    }
+
+    // Section header: entire line is **bold** (with optional trailing colon)
+    const headerMatch = trimmed.match(/^\*\*([^*]+?)\*\*:?\s*$/);
+    if (headerMatch) {
       return (
-        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 3, paddingLeft: 4 }}>
-          <span style={{ color: "#4f8ef7", flexShrink: 0, marginTop: 2, fontSize: 10 }}>▸</span>
-          <span dangerouslySetInnerHTML={{ __html: bold.replace(/^[-•]\s/, "") }} />
+        <div key={i} style={{ fontWeight: 700, color: "#c4d8ee", fontSize: 13, marginTop: 14, marginBottom: 4 }}>
+          {headerMatch[1].replace(/:$/, "")}
         </div>
       );
     }
-    if (line === "") return <div key={i} style={{ height: 8 }} />;
-    return <div key={i} dangerouslySetInnerHTML={{ __html: bold }} style={{ marginBottom: 2 }} />;
+
+    // Bullet points
+    if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+      const content = trimmed.replace(/^[-•]\s+/, "");
+      return (
+        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, paddingLeft: 4 }}>
+          <span style={{ color: "#4f8ef7", flexShrink: 0, marginTop: 4, fontSize: 9 }}>▸</span>
+          <span dangerouslySetInnerHTML={{ __html: applyBold(content) }} style={{ lineHeight: 1.7 }} />
+        </div>
+      );
+    }
+
+    // Numbered lists
+    const numMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
+    if (numMatch) {
+      return (
+        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5, paddingLeft: 4 }}>
+          <span style={{ color: "#4f8ef7", fontWeight: 700, flexShrink: 0, minWidth: 22,
+            fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{numMatch[1]}.</span>
+          <span dangerouslySetInnerHTML={{ __html: applyBold(numMatch[2]) }} style={{ lineHeight: 1.7 }} />
+        </div>
+      );
+    }
+
+    // Empty line → small spacer
+    if (trimmed === "") return <div key={i} style={{ height: 6 }} />;
+
+    // Regular line with possible inline bold
+    return (
+      <div key={i} dangerouslySetInnerHTML={{ __html: applyBold(line) }}
+        style={{ marginBottom: 3, lineHeight: 1.75 }} />
+    );
   });
 }
 
@@ -748,11 +828,7 @@ export default function AIAnalysis() {
               return (
                 <div key={i}>
                   {isNewTurn && (
-                    <div style={{ display:"flex", alignItems:"center", gap:10, margin:"16px 0", opacity:0.4 }}>
-                      <div style={{ flex:1, height:1, background:"#1a2840" }} />
-                      <div style={{ fontSize:9, color:"#6a8090", fontFamily:"'DM Mono',monospace", letterSpacing:"1px" }}>NEW QUESTION</div>
-                      <div style={{ flex:1, height:1, background:"#1a2840" }} />
-                    </div>
+                    <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 20px" }} />
                   )}
                   <Message role={m.role} text={m.text} streaming={m.streaming && i === messages.length - 1} />
                 </div>

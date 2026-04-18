@@ -202,6 +202,63 @@ function parseRefRange(str) {
   return { low: null, high: null };
 }
 
+// Shared AI response renderer — strips emojis, renders bold/bullets/dividers cleanly
+function renderMarkdown(rawText) {
+  if (!rawText) return null;
+  const text = rawText
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .replace(/\u{FE0F}/gu, "")
+    .replace(/✦/g, "");
+  const applyBold = (str) =>
+    str.replace(/\*\*(.*?)\*\*/g, (_, m) =>
+      `<strong style="color:#c4d8ee;font-weight:700">${m}</strong>`
+    );
+  return text.split("\n").map((line, i) => {
+    const trimmed = line.trim();
+    if (/^-{3,}$/.test(trimmed))
+      return <hr key={i} style={{ border:"none", borderTop:"1px solid #1a2840", margin:"12px 0" }} />;
+    if (trimmed.includes("|")) {
+      if (/^\|?[\s\-|]+\|?$/.test(trimmed)) return <div key={i} style={{ height:2 }} />;
+      const cells = trimmed.split("|").map(c => c.trim()).filter(Boolean);
+      if (cells.length >= 2) return (
+        <div key={i} style={{ display:"flex", gap:10, marginBottom:5, paddingLeft:4 }}>
+          <span dangerouslySetInnerHTML={{ __html: applyBold(cells[0]) }}
+            style={{ fontWeight:700, color:"#c4d8ee", minWidth:140, flexShrink:0 }} />
+          <span dangerouslySetInnerHTML={{ __html: applyBold(cells.slice(1).join(" — ")) }}
+            style={{ color:"#a8c4dc" }} />
+        </div>
+      );
+    }
+    const headerMatch = trimmed.match(/^\*\*([^*]+?)\*\*:?\s*$/);
+    if (headerMatch) return (
+      <div key={i} style={{ fontWeight:700, color:"#c4d8ee", fontSize:13, marginTop:14, marginBottom:4 }}>
+        {headerMatch[1].replace(/:$/, "")}
+      </div>
+    );
+    if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+      const content = trimmed.replace(/^[-•]\s+/, "");
+      return (
+        <div key={i} style={{ display:"flex", gap:8, marginBottom:4, paddingLeft:4 }}>
+          <span style={{ color:"#4f8ef7", flexShrink:0, marginTop:4, fontSize:9 }}>▸</span>
+          <span dangerouslySetInnerHTML={{ __html: applyBold(content) }} style={{ lineHeight:1.7 }} />
+        </div>
+      );
+    }
+    const numMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
+    if (numMatch) return (
+      <div key={i} style={{ display:"flex", gap:8, marginBottom:5, paddingLeft:4 }}>
+        <span style={{ color:"#4f8ef7", fontWeight:700, flexShrink:0, minWidth:22,
+          fontFamily:"'DM Mono',monospace", fontSize:11 }}>{numMatch[1]}.</span>
+        <span dangerouslySetInnerHTML={{ __html: applyBold(numMatch[2]) }} style={{ lineHeight:1.7 }} />
+      </div>
+    );
+    if (trimmed === "") return <div key={i} style={{ height:6 }} />;
+    return <div key={i} dangerouslySetInnerHTML={{ __html: applyBold(line) }}
+      style={{ marginBottom:3, lineHeight:1.75 }} />;
+  });
+}
+
 export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("labs");
   const handleNav = (id) => { if (id !== "labs") { onNavChange?.(id); } else { setActiveNav(id); } };
@@ -758,12 +815,15 @@ Keep it under 500 words. Be direct and clinically specific.`,
 
               {/* Q&A thread */}
               {aiQA.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: aiAnalysis ? 16 : 0 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: aiAnalysis ? 16 : 0 }}>
                   {aiQA.map((item, i) => (
                     <div key={i}>
-                      <div style={{ fontSize: 12, color: "#7eb8d8", fontWeight: 600, marginBottom: 4 }}>Q: {item.q}</div>
-                      <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.75, background: "#0b1220", borderRadius: 8, padding: "10px 14px", border: "1px solid #111e30", whiteSpace: "pre-wrap" }}>
-                        {item.a === null ? <span style={{ color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>⟳ Thinking…</span> : item.a}
+                      {i > 0 && <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 14px" }} />}
+                      <div style={{ fontSize: 12, color: "#7eb8d8", fontWeight: 600, marginBottom: 8 }}>Q: {item.q}</div>
+                      <div style={{ fontSize: 12, color: "#a8c4dc", background: "#0b1220", borderRadius: 8, padding: "10px 14px", border: "1px solid #111e30" }}>
+                        {item.a === null
+                          ? <span style={{ color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>⟳ Thinking…</span>
+                          : renderMarkdown(item.a)}
                       </div>
                     </div>
                   ))}
@@ -772,8 +832,8 @@ Keep it under 500 words. Be direct and clinically specific.`,
 
               {/* Full analysis result */}
               {aiAnalysis && (
-                <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.8, whiteSpace: "pre-wrap", borderTop: aiQA.length > 0 ? "1px solid #111e30" : "none", paddingTop: aiQA.length > 0 ? 14 : 0 }}>
-                  {aiAnalysis}
+                <div style={{ fontSize: 12, color: "#a8c4dc", borderTop: aiQA.length > 0 ? "1px solid #111e30" : "none", paddingTop: aiQA.length > 0 ? 14 : 0 }}>
+                  {renderMarkdown(aiAnalysis)}
                 </div>
               )}
               {!aiAnalysis && !aiAnalyzing && aiQA.length === 0 && !aiError && (
