@@ -1,4 +1,5 @@
 import INTELLITRAX_LOGO from "../../assets/logo-white.png";
+import PRINT_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
 
 const NAV = [
@@ -200,6 +201,76 @@ function parseRefRange(str) {
   const mGt = s.match(/>=?\s*(\d+\.?\d*)/i);
   if (mGt) return { low: parseFloat(mGt[1]), high: parseFloat(mGt[1]) * 2 };
   return { low: null, high: null };
+}
+
+function answerToHTML(rawText) {
+  if (!rawText) return "";
+  const text = rawText
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .replace(/\u{FE0F}/gu, "")
+    .replace(/✦/g, "");
+  const bold = (s) => s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  return text.split("\n").map(line => {
+    const t = line.trim();
+    if (/^-{3,}$/.test(t)) return `<hr style="border:none;border-top:1px solid #ddd;margin:14px 0">`;
+    if (t.includes("|")) {
+      if (/^\|?[\s\-|]+\|?$/.test(t)) return "";
+      const cells = t.split("|").map(c => c.trim()).filter(Boolean);
+      if (cells.length >= 2)
+        return `<div style="display:flex;gap:16px;margin-bottom:6px;padding-left:8px">
+          <span style="font-weight:700;min-width:160px;flex-shrink:0">${bold(cells[0])}</span>
+          <span>${bold(cells.slice(1).join(" — "))}</span></div>`;
+    }
+    const hm = t.match(/^\*\*([^*]+?)\*\*:?\s*$/);
+    if (hm) return `<div style="font-weight:700;font-size:15px;margin-top:16px;margin-bottom:6px">${hm[1].replace(/:$/, "")}</div>`;
+    if (t.startsWith("- ") || t.startsWith("• ")) {
+      const c = t.replace(/^[-•]\s+/, "");
+      return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px">
+        <span style="color:#2563eb;flex-shrink:0;font-weight:700">&#9658;</span>
+        <span>${bold(c)}</span></div>`;
+    }
+    const nm = t.match(/^(\d+)\.\s+(.+)/);
+    if (nm) return `<div style="display:flex;gap:8px;margin-bottom:6px;padding-left:8px">
+      <span style="font-weight:700;flex-shrink:0;min-width:22px;color:#2563eb">${nm[1]}.</span>
+      <span>${bold(nm[2])}</span></div>`;
+    if (t === "") return `<div style="height:8px"></div>`;
+    return `<div style="margin-bottom:4px;line-height:1.75">${bold(line)}</div>`;
+  }).join("");
+}
+
+function printAIResponse(question, answer, logoUrl) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const win = window.open("", "_blank", "width=900,height=700");
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>AI Analysis — Insina Health</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Georgia, serif; max-width: 760px; margin: 48px auto; color: #1a1a1a; font-size: 14px; line-height: 1.65; padding: 0 24px; }
+      .logo { height: 56px; margin-bottom: 20px; }
+      h1 { text-align: center; font-size: 30px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 10px; }
+      .rule { border: none; border-top: 2px solid #2563eb; margin-bottom: 26px; }
+      .q-label { font-weight: 700; font-size: 13px; margin-bottom: 5px; }
+      .q-text  { margin-bottom: 22px; font-size: 14px; }
+      .a-label { font-weight: 700; font-size: 16px; margin-bottom: 14px; }
+      .footer  { margin-top: 48px; border-top: 1px solid #ddd; padding-top: 12px; font-size: 11px; color: #777; display: flex; justify-content: space-between; }
+      @media print { body { margin: 28px; } }
+    </style>
+  </head><body>
+    <img src="${logoUrl}" class="logo" />
+    <h1>AI Analysis</h1>
+    <hr class="rule" />
+    <div class="q-label">Question:</div>
+    <div class="q-text">${question.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+    <div class="a-label">Analysis</div>
+    ${answerToHTML(answer)}
+    <div class="footer">
+      <span>Insina Health &mdash; Personal Health Intelligence</span>
+      <span>Generated ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
 }
 
 // Shared AI response renderer — strips emojis, renders bold/bullets/dividers cleanly
@@ -823,7 +894,16 @@ Keep it under 500 words. Be direct and clinically specific.`,
                       <div style={{ fontSize: 12, color: "#a8c4dc", background: "#0b1220", borderRadius: 8, padding: "10px 14px", border: "1px solid #111e30" }}>
                         {item.a === null
                           ? <span style={{ color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>⟳ Thinking…</span>
-                          : renderMarkdown(item.a)}
+                          : <>
+                              {renderMarkdown(item.a)}
+                              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8, paddingTop:6, borderTop:"1px solid #111e30" }}>
+                                <button onClick={() => printAIResponse(item.q, item.a, PRINT_LOGO)}
+                                  style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                                  ⎙ Print
+                                </button>
+                              </div>
+                            </>
+                        }
                       </div>
                     </div>
                   ))}
@@ -834,6 +914,12 @@ Keep it under 500 words. Be direct and clinically specific.`,
               {aiAnalysis && (
                 <div style={{ fontSize: 12, color: "#a8c4dc", borderTop: aiQA.length > 0 ? "1px solid #111e30" : "none", paddingTop: aiQA.length > 0 ? 14 : 0 }}>
                   {renderMarkdown(aiAnalysis)}
+                  <div style={{ display:"flex", justifyContent:"flex-end", marginTop:10, paddingTop:8, borderTop:"1px solid #111e30" }}>
+                    <button onClick={() => printAIResponse("Full Lab Analysis", aiAnalysis, PRINT_LOGO)}
+                      style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                      ⎙ Print
+                    </button>
+                  </div>
                 </div>
               )}
               {!aiAnalysis && !aiAnalyzing && aiQA.length === 0 && !aiError && (
