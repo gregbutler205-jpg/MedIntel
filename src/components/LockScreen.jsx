@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import LOGO from "../assets/logo-white.png";
+const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
 const PIN_LENGTH = 4;
 

@@ -1,6 +1,9 @@
-import INTELLITRAX_LOGO from "../../assets/logo-white.png";
-import PRINT_LOGO from "../../assets/logo.png";
 import { useState, useEffect } from "react";
+
+const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
+const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
+
+const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 
 const NAV = [
   // ── Core ───────────────────────────────────────────────────────────────────
@@ -383,8 +386,6 @@ export default function App({ onNavChange }) {
   const selectImportedLab = (lab) => { setSelectedImportedLab(lab); setShowDescription(false); };
 
   const analyzeAllLabs = async () => {
-    const apiKey = localStorage.getItem("mi_ak");
-    if (!apiKey) { setAiError("API key required — go to Data & Backup to add it."); return; }
     setAiAnalyzing(true); setAiAnalysis(""); setAiError("");
     try {
       // Pull full medical context from localStorage
@@ -425,22 +426,9 @@ export default function App({ onNavChange }) {
         `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — OUT OF RANGE" : ""}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`
       ).join("\n");
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-opus-4-5",
-          max_tokens: 1800,
-          messages: [{
-            role: "user",
-            content: `You are an intelligent health assistant analyzing lab results for Greg Butler. You have his full medical profile below — cross-reference it when explaining findings. Do NOT ask about conditions, diagnoses, or medications that are already listed — treat them as known facts.
+      const systemPrompt = `You are an intelligent health assistant analyzing lab results for Greg Butler, a Living Donor Liver Transplant (LDLT) patient. Cross-reference his profile when explaining findings. Never ask about conditions already listed — treat them as known facts.
 
-━━━ PATIENT MEDICAL PROFILE ━━━
+PATIENT IDENTITY: Greg Butler — Living Donor LIVER Transplant (LDLT) Oct 1, 2024. NOT a kidney transplant.
 
 ACTIVE CONDITIONS:
 ${condStr}
@@ -453,24 +441,37 @@ ${medsStr}
 
 CARE TEAM:
 ${careStr}
-Note: For any findings related to the liver, bile ducts, or hepatic function, reference ${liverDoc} as the appropriate contact.
+Note: For liver/hepatic findings, reference ${liverDoc}.
 
-━━━ LAB RESULTS (most recent per test) ━━━
-${labSummary || "No imported labs available yet. Please import lab results using the Import Records tab."}
+RESPONSE FORMAT: No emojis. No pipe tables. Bold section headers on their own line. Use ----- as section dividers. Bullet points for lists.`;
 
-━━━ INSTRUCTIONS ━━━
-Analyze the labs above in the context of Greg's profile. Cross-reference medications and surgical history with any abnormal findings. For each concern, name the specific doctor from the care team best suited to address it.
+      const res = await fetch(`${PROXY_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1800,
+          system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+          messages: [{
+            role: "user",
+            content: `Analyze the following lab results in the context of Greg's profile. Cross-reference medications and surgical history with any abnormal findings. For each concern, name the specific doctor from the care team best suited to address it.
+
+LAB RESULTS (most recent per test):
+${labSummary || "No imported labs available yet."}
 
 Format your response with:
-1) Key Concerns (out-of-range values — explain in context of his conditions/meds/history)
+1) Key Concerns (out-of-range values with clinical context)
 2) Values to Watch (borderline or notable)
-3) Questions for Care Team (specific, directed to the right doctor by name)
+3) Questions for Care Team (directed to the right doctor by name)
 
-Keep it under 500 words. Be direct and clinically specific.`,
+Be direct and clinically specific.`,
           }],
         }),
       });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error || `Server error ${res.status}`);
+      }
       const data = await res.json();
       setAiAnalysis(data.content[0].text.trim());
     } catch (e) {
@@ -483,8 +484,6 @@ Keep it under 500 words. Be direct and clinically specific.`,
   const askLabQuestion = async () => {
     const q = aiQuestion.trim();
     if (!q || aiQALoading) return;
-    const apiKey = localStorage.getItem("mi_ak");
-    if (!apiKey) { setAiError("API key required — go to Data & Backup to add it."); return; }
     setAiQALoading(true);
     setAiQuestion("");
     setAiQA(prev => [...prev, { q, a: null }]);
@@ -502,17 +501,31 @@ Keep it under 500 words. Be direct and clinically specific.`,
           `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}${l.flag ? " ⚠ FLAGGED" : ""}`
         ).join("\n")
       ).join("\n\n");
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const qaSystem = `You are a personal health assistant for Greg Butler, a Living Donor Liver Transplant (LDLT) patient. Answer questions about his lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists.
+
+CONDITIONS:
+${condStr}
+
+MEDICATIONS:
+${medsStr}
+
+ALL LAB RESULTS:
+${labsStr}`;
+
+      const res = await fetch(`${PROXY_URL}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 1024,
-          system: `You are a personal health assistant for Greg Butler, a liver transplant patient. Answer questions about his lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed.\n\nCONDITIONS:\n${condStr}\n\nMEDICATIONS:\n${medsStr}\n\nALL LAB RESULTS:\n${labsStr}`,
+          system: [{ type: "text", text: qaSystem, cache_control: { type: "ephemeral" } }],
           messages: [{ role: "user", content: q }],
         }),
       });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error || `Server error ${res.status}`);
+      }
       const data = await res.json();
       const answer = data.content[0].text.trim();
       setAiQA(prev => { const copy = [...prev]; copy[copy.length - 1] = { q, a: answer }; return copy; });

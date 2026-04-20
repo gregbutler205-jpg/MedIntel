@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import INTELLITRAX_LOGO from './assets/logo-white.png';
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import LockScreen from './components/LockScreen.jsx';
+
+const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
 // ── Tab component imports ─────────────────────────────────────────────────────
 import TabProfile     from './components/tabs/Tab02.jsx';

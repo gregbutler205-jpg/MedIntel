@@ -1,5 +1,8 @@
-import INTELLITRAX_LOGO from "../../assets/logo-white.png";
 import { useState, useEffect } from "react";
+import ConsentText, { printConsent } from "../PrintableConsent";
+import { CONSENT_VERSION } from "../../config/urgencyThresholds";
+
+const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
 const INITIAL_BACKUPS = [
   { id: 1, type: "Auto-backup",   date: "Mar 18, 2026", size: "18.4 KB" },
@@ -76,13 +79,53 @@ const sectionLbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', mon
 const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
 const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
 
+const AI_MODE_KEY = "insina_ai_mode";
+
+function loadAIMode() {
+  try { return JSON.parse(localStorage.getItem(AI_MODE_KEY)); } catch { return null; }
+}
+
 export default function DataBackup() {
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem("mi_ak") || "");
   const [backupFreq, setBackupFreq] = useState("Weekly");
   const [backups, setBackups]     = useState(INITIAL_BACKUPS);
   const [toast, setToast]         = useState("");
-  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey"
+  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "advanced_consent"
   const [restoreId, setRestoreId] = useState(null);
+
+  // AI Mode state
+  const [aiMode, setAiModeState]        = useState(() => loadAIMode());
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [showConsentText, setShowConsentText] = useState(false);
+
+  const currentMode = aiMode?.mode || "standard";
+  const consentDate = aiMode?.consentDate
+    ? new Date(aiMode.consentDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    : null;
+  const consentVersion = aiMode?.consentVersion || null;
+
+  function setAIMode(mode) {
+    const now = new Date().toISOString();
+    let updated;
+    if (mode === "standard") {
+      updated = { ...aiMode, mode: "standard", switchedToStandardDate: now };
+    } else if (mode === "advanced") {
+      updated = {
+        ...aiMode,
+        mode: "advanced",
+        consentVersion: CONSENT_VERSION,
+        consentDate: now,
+        activatedDate: now,
+        staleConsentDetected: false,
+      };
+    }
+    localStorage.setItem(AI_MODE_KEY, JSON.stringify(updated));
+    setAiModeState(updated);
+    // Notify Tab11 via custom event if it's mounted
+    window.dispatchEvent(new CustomEvent("insina_mode_change", {
+      detail: { mode, consentVersion: CONSENT_VERSION, consentDate: now },
+    }));
+  }
 
   const maskedKey = apiKey ? "sk-ant-" + "•".repeat(20) : "";
 
@@ -264,6 +307,114 @@ export default function DataBackup() {
             <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
               January 2020 (oldest record)
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Analysis Mode */}
+      <div style={{ ...cardStyle, marginBottom: 14 }}>
+        <div style={sectionLbl}>AI Analysis Mode</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+          {/* Current mode status */}
+          <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "14px 16px" }}>
+            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Current Mode</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: "50%",
+                background: currentMode === "advanced" ? "#4f8ef7" : "#10b981",
+                boxShadow: `0 0 6px ${currentMode === "advanced" ? "#4f8ef760" : "#10b98160"}`,
+              }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#dde8f5" }}>
+                {currentMode === "advanced" ? "Advanced Mode" : "Standard Mode"}
+              </span>
+            </div>
+            <div style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
+              {currentMode === "advanced"
+                ? <>Model: <strong>Claude Opus 4.6</strong><br />Deeper cross-referenced analysis</>
+                : <>Model: <strong>Claude Sonnet 4.6</strong><br />Clear daily-use analysis</>
+              }
+            </div>
+            {currentMode === "advanced" && consentDate && (
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #0d1a28", fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>
+                Consent given: {consentDate}<br />
+                Consent version: v{consentVersion}
+              </div>
+            )}
+          </div>
+
+          {/* Switch controls */}
+          <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "14px 16px" }}>
+            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Switch Mode</div>
+
+            {currentMode === "advanced" ? (
+              // Currently Advanced → show switch to Standard
+              <div>
+                <div style={{ fontSize: 11, color: "#7eb8d8", lineHeight: 1.6, marginBottom: 12 }}>
+                  Switching to Standard Mode is immediate and does not require any action. You can re-enable Advanced Mode at any time.
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm("Switch to Standard Mode? You can re-enable Advanced Mode at any time.")) {
+                      setAIMode("standard");
+                      showToast("Switched to Standard Mode");
+                    }
+                  }}
+                  style={{ ...btnGhost, width: "100%", textAlign: "center", color: "#10b981", borderColor: "rgba(16,185,129,.3)" }}
+                >
+                  Switch to Standard Mode
+                </button>
+                <button
+                  onClick={() => printConsent({ mode: "Advanced", consentDate: consentDate || "—", consentVersion: consentVersion || CONSENT_VERSION })}
+                  style={{ marginTop: 8, background: "none", border: "none", color: "#4a5c6a", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 5 }}
+                >⎙ View / reprint consent document</button>
+              </div>
+            ) : (
+              // Currently Standard → show switch to Advanced with consent
+              <div>
+                <div style={{ fontSize: 11, color: "#7eb8d8", lineHeight: 1.6, marginBottom: 10 }}>
+                  Advanced Mode uses Claude Opus for deeper analysis. Informed consent is required.
+                </div>
+                <button
+                  onClick={() => setShowConsentText(p => !p)}
+                  style={{ background: "none", border: "none", color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}
+                >
+                  {showConsentText ? "▾" : "▸"} {showConsentText ? "Hide" : "Read"} consent details
+                </button>
+                {showConsentText && (
+                  <div style={{ maxHeight: 160, overflowY: "auto", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "10px 12px", marginBottom: 10 }}>
+                    <ConsentText style={{ fontSize: 10.5 }} />
+                  </div>
+                )}
+                <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={consentChecked}
+                    onChange={e => setConsentChecked(e.target.checked)}
+                    style={{ marginTop: 2, accentColor: "#4f8ef7", flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: 10.5, color: "#a8c4dc", lineHeight: 1.6 }}>
+                    I consent to Advanced Mode per the terms above.
+                  </span>
+                </label>
+                <button
+                  disabled={!consentChecked}
+                  onClick={() => {
+                    setAIMode("advanced");
+                    setConsentChecked(false);
+                    setShowConsentText(false);
+                    showToast("Advanced Mode enabled");
+                  }}
+                  style={{
+                    ...btnPrimary, width: "100%", textAlign: "center",
+                    opacity: consentChecked ? 1 : 0.4,
+                    cursor: consentChecked ? "pointer" : "not-allowed",
+                  }}
+                >
+                  Enable Advanced Mode
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

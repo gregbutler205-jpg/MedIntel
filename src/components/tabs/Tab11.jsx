@@ -1,12 +1,40 @@
-import INTELLITRAX_LOGO from "../../assets/logo-white.png";
-import PRINT_LOGO from "../../assets/logo.png";
 import { useState, useRef, useEffect, useCallback } from "react";
+import AIModeOnboardingModal from "../AIModeOnboardingModal";
+import { printConsent } from "../PrintableConsent";
+import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 
-const STORAGE_KEY  = "intellitrax_ai_messages";
-const API_KEY_STORE = "mi_ak";
+const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
+const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
-// Build the system prompt dynamically so it reflects current profile data from localStorage
-function buildSystemPrompt() {
+const STORAGE_KEY    = "intellitrax_ai_messages";
+const AI_MODE_KEY    = "insina_ai_mode";
+const AI_LOG_KEY     = "insina_ai_log";
+const PROXY_URL      = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mode helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function loadModeData() {
+  try { return JSON.parse(localStorage.getItem(AI_MODE_KEY)); } catch { return null; }
+}
+
+function saveModeData(data) {
+  try { localStorage.setItem(AI_MODE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function appendAuditLog(entry) {
+  try {
+    const log = JSON.parse(localStorage.getItem(AI_LOG_KEY) || "[]");
+    log.unshift({ ...entry, ts: new Date().toISOString() });
+    // Keep last 200 entries
+    localStorage.setItem(AI_LOG_KEY, JSON.stringify(log.slice(0, 200)));
+  } catch {}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// System prompt builder
+// ─────────────────────────────────────────────────────────────────────────────
+function buildSystemPrompt(mode = "standard") {
   const safeRead = (key, fallback) => {
     try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
   };
@@ -16,7 +44,7 @@ function buildSystemPrompt() {
   const careTeam   = safeRead("mi_care_team",  []);
   const meds       = safeRead("mi_meds_full",  []);
 
-  // ── Conditions section ────────────────────────────────────────────────────
+  // ── Conditions ─────────────────────────────────────────────────────────────
   const condStr = conditions.length > 0
     ? conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}${c.severity ? ` — ${c.severity}` : ""}${c.notes ? `: ${c.notes}` : ""}`).join("\n")
     : `- Status post Living Donor Liver Transplant (LDLT), Oct 1, 2024 — primary ongoing diagnosis
@@ -27,21 +55,19 @@ function buildSystemPrompt() {
 - CMV IgG positive; EBV IgG positive
 - Tacrolimus-related nephrotoxicity risk — monitor creatinine/eGFR as secondary markers`;
 
-  // ── Surgical history section ───────────────────────────────────────────────
+  // ── Surgical history ────────────────────────────────────────────────────────
   const rawSurgStr = surgeries.length > 0
     ? surgeries.map(s => `- ${s.procedure}${s.date ? ` (${s.date})` : ""}${s.surgeon ? ` — ${s.surgeon}` : ""}${s.facility ? `, ${s.facility}` : ""}${s.notes ? `: ${s.notes}` : ""}`).join("\n")
     : `- Oct 1, 2024: Living Donor Liver Transplant (LDLT), UMC Transplant Center. Surgeon: Dr. Ari Cohen. Immediate graft function. Induction: Basiliximab + methylprednisolone.
 - Oct 14, 2025: Protocol liver biopsy at 12-month mark — no acute rejection findings.
 - Right hip replacement (on file in surgical history — relevant to bone-source ALP elevations)`;
 
-  // Sanitize: correct any erroneous "kidney transplant" references that may have
-  // been introduced by PDF imports or data entry errors. Greg had a LIVER transplant.
   const surgStr = rawSurgStr
     .replace(/kidney\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected")
     .replace(/\bLDKT\b/g, "LDLT ⚠corrected")
     .replace(/renal\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected");
 
-  // ── Medications section ───────────────────────────────────────────────────
+  // ── Medications ─────────────────────────────────────────────────────────────
   const medsStr = meds.filter(m => m.status !== "inactive").length > 0
     ? meds.filter(m => m.status !== "inactive").map(m =>
         `- ${m.name}${m.brand ? ` (${m.brand})` : ""} ${m.dose || ""} ${m.frequency || ""}${m.category ? ` [${m.category}]` : ""}`.trim()
@@ -72,7 +98,7 @@ Supplements:
 Other:
 - Aspirin 81mg QD`;
 
-  // ── Care team section — always prefer localStorage data ───────────────────
+  // ── Care team ───────────────────────────────────────────────────────────────
   const hepato  = careTeam.find(d => /hepat/i.test(d.role || ""));
   const nephro  = careTeam.find(d => /nephr|transplant/i.test(d.role || ""));
   const pcp     = careTeam.find(d => /pcp|primary|family/i.test(d.role || ""));
@@ -87,7 +113,7 @@ Other:
   const liverDoc = hepato?.name || nephro?.name || "Dr. Mariana Zapata";
   const pcpDoc   = pcp?.name    || "Dr. Jonathan Hand";
 
-  // ── Labs section — read ALL labs from mi_labs ────────────────────────────
+  // ── Labs ────────────────────────────────────────────────────────────────────
   const labs = safeRead("mi_labs", []);
   let labStr;
   if (labs.length > 0) {
@@ -115,7 +141,7 @@ Other:
     labStr = "No lab results loaded yet.";
   }
 
-  // ── Vitals section — read from mi_readings ────────────────────────────────
+  // ── Vitals ─────────────────────────────────────────────────────────────────
   const readings = safeRead("mi_readings", []);
   let vitalsStr;
   if (readings.length > 0) {
@@ -135,12 +161,17 @@ Other:
     vitalsStr = "No vital readings recorded.";
   }
 
-  // ── Reference documents ──────────────────────────────────────────────────
+  // ── Reference docs ──────────────────────────────────────────────────────────
   const refDocs = safeRead("mi_ref_docs", []);
   const refDocsSection = refDocs.length > 0
     ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nREFERENCE DOCUMENTS (uploaded by patient)\n━━━━━━━━━━━━━━━━━━━━━━━━━\nWhen information from these documents is relevant to a response, cite the document name.\n\n` +
       refDocs.map(d => `[Document: "${d.name}"]\n${d.text.slice(0, 8000)}${d.text.length > 8000 ? "\n…(truncated)" : ""}`).join("\n\n---\n\n")
     : "";
+
+  // ── Mode-specific additions ─────────────────────────────────────────────────
+  const modeInstructions = mode === "advanced"
+    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- When appropriate, include differential considerations and nuanced clinical context\n- Flag any value that approaches critical thresholds, even if technically within range\n- Provide actionable guidance with specific questions to raise with each specialist`
+    : `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSTANDARD MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide clear, well-organized responses focused on the most important insights\n- Flag any lab values that are critically abnormal and require urgent attention\n- Keep responses focused and actionable — prioritize what matters most\n- Always name the right doctor to contact for each concern`;
 
   return `You are an intelligent personal health assistant for Greg Butler. You have deep, comprehensive knowledge of his entire medical history. Your job is to help Greg understand his health holistically — cross-referencing all of his data to surface insights, flag concerns, and prepare him for medical conversations.
 
@@ -273,10 +304,12 @@ ASSISTANT GUIDELINES
 - Always name the specific doctor best suited to address each concern
 - Never diagnose or prescribe — inform, analyze, and guide
 - Cross-check any medication question against both his current med list AND the avoid list
-- Treat this as a comprehensive clinical intelligence tool, not a general chatbot${refDocsSection}`;
+- Treat this as a comprehensive clinical intelligence tool, not a general chatbot${modeInstructions}${refDocsSection}`;
 }
 
-// Extract text from PDF using pdf.js
+// ─────────────────────────────────────────────────────────────────────────────
+// PDF text extraction
+// ─────────────────────────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
   const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
@@ -291,6 +324,9 @@ async function extractTextFromPdf(file) {
   return text.trim();
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Quick prompts
+// ─────────────────────────────────────────────────────────────────────────────
 const PRESETS = [
   { label: "Full health summary",      prompt: "Give me a comprehensive cross-referenced summary of my current health status — covering my diagnoses, recent labs, vitals, medications, and upcoming care." },
   { label: "Medication safety check",  prompt: "Review my full medication list for interactions, anything I should avoid (including OTCs and supplements), and flag any concerns to raise with my care team." },
@@ -319,7 +355,9 @@ const CONTEXT_TAGS = [
   { label: "Records",     color: "#4f8ef7" },
 ];
 
-// Convert AI response text to clean HTML for the print report
+// ─────────────────────────────────────────────────────────────────────────────
+// Print helpers
+// ─────────────────────────────────────────────────────────────────────────────
 function answerToHTML(rawText) {
   if (!rawText) return "";
   const text = rawText
@@ -359,9 +397,11 @@ function answerToHTML(rawText) {
   }).join("");
 }
 
-function printAIResponse(question, answer, logoUrl) {
+function printAIResponse(question, answer, logoUrl, mode = "standard") {
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
   const win = window.open("", "_blank", "width=900,height=700");
+  if (!win) return;
   win.document.write(`<!DOCTYPE html><html><head>
     <title>AI Analysis — Insina Health</title>
     <style>
@@ -373,6 +413,7 @@ function printAIResponse(question, answer, logoUrl) {
       .q-label { font-weight: 700; font-size: 13px; margin-bottom: 5px; }
       .q-text  { margin-bottom: 22px; font-size: 14px; }
       .a-label { font-weight: 700; font-size: 16px; margin-bottom: 14px; }
+      .mode-badge { display:inline-block; background:#f0f6ff; border:1px solid #2563eb; borderRadius:4px; padding:2px 8px; font-size:10px; font-family:monospace; color:#2563eb; margin-bottom:18px; }
       .footer  { margin-top: 48px; border-top: 1px solid #ddd; padding-top: 12px; font-size: 11px; color: #777; display: flex; justify-content: space-between; }
       @media print { body { margin: 28px; } button { display: none; } }
     </style>
@@ -383,6 +424,7 @@ function printAIResponse(question, answer, logoUrl) {
     <div class="q-label">Question:</div>
     <div class="q-text">${question.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
     <div class="a-label">Analysis</div>
+    <div class="mode-badge">${modeLabel}</div>
     ${answerToHTML(answer)}
     <div class="footer">
       <span>Insina Health &mdash; Personal Health Intelligence</span>
@@ -393,11 +435,12 @@ function printAIResponse(question, answer, logoUrl) {
   win.document.close();
 }
 
-// Shared AI response renderer — strips emojis, renders bold/bullets/dividers cleanly
+// ─────────────────────────────────────────────────────────────────────────────
+// Markdown renderer
+// ─────────────────────────────────────────────────────────────────────────────
 function renderMarkdown(rawText) {
   if (!rawText) return null;
 
-  // Strip emojis and variation selectors; remove stray pipe chars
   const text = rawText
     .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
     .replace(/[\u{2600}-\u{27BF}]/gu, "")
@@ -413,14 +456,11 @@ function renderMarkdown(rawText) {
   return lines.map((line, i) => {
     const trimmed = line.trim();
 
-    // Section divider: 3+ dashes alone on a line
     if (/^-{3,}$/.test(trimmed)) {
       return <hr key={i} style={{ border: "none", borderTop: "1px solid #1a2840", margin: "12px 0" }} />;
     }
 
-    // Table rows with | → format as label: value pairs
     if (trimmed.includes("|")) {
-      // Skip table separator lines like |---|---|
       if (/^\|?[\s\-|]+\|?$/.test(trimmed)) return <div key={i} style={{ height: 2 }} />;
       const cells = trimmed.split("|").map(c => c.trim()).filter(Boolean);
       if (cells.length >= 2) {
@@ -435,7 +475,6 @@ function renderMarkdown(rawText) {
       }
     }
 
-    // Section header: entire line is **bold** (with optional trailing colon)
     const headerMatch = trimmed.match(/^\*\*([^*]+?)\*\*:?\s*$/);
     if (headerMatch) {
       return (
@@ -445,7 +484,6 @@ function renderMarkdown(rawText) {
       );
     }
 
-    // Bullet points
     if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
       const content = trimmed.replace(/^[-•]\s+/, "");
       return (
@@ -456,7 +494,6 @@ function renderMarkdown(rawText) {
       );
     }
 
-    // Numbered lists
     const numMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
     if (numMatch) {
       return (
@@ -468,10 +505,8 @@ function renderMarkdown(rawText) {
       );
     }
 
-    // Empty line → small spacer
     if (trimmed === "") return <div key={i} style={{ height: 6 }} />;
 
-    // Regular line with possible inline bold
     return (
       <div key={i} dangerouslySetInnerHTML={{ __html: applyBold(line) }}
         style={{ marginBottom: 3, lineHeight: 1.75 }} />
@@ -479,9 +514,13 @@ function renderMarkdown(rawText) {
   });
 }
 
-function Message({ role, text, streaming, questionText, logoUrl }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Message component
+// ─────────────────────────────────────────────────────────────────────────────
+function Message({ role, text, streaming, questionText, logoUrl, mode }) {
   const isUser = role === "user";
   const canPrint = !isUser && !streaming && questionText && text;
+  const isAdvanced = mode === "advanced";
   return (
     <div style={{ display: "flex", gap: 12, marginBottom: 20, flexDirection: isUser ? "row-reverse" : "row", alignItems: "flex-start" }}>
       <div style={{
@@ -506,14 +545,34 @@ function Message({ role, text, streaming, questionText, logoUrl }) {
         {isUser
           ? <span style={{ color: "#7eb8d8" }}>{text}</span>
           : <div>
+              {/* Mode badge per response */}
+              {!streaming && text && (
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{
+                    fontSize: 9, fontFamily: "'DM Mono',monospace",
+                    background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
+                    color: isAdvanced ? "#4f8ef7" : "#10b981",
+                    border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
+                    padding: "1px 7px", borderRadius: 3, letterSpacing: "0.4px",
+                  }}>
+                    {isAdvanced ? "Advanced · Opus" : "Standard · Sonnet"}
+                  </span>
+                </div>
+              )}
               {renderMarkdown(text)}
               {streaming && <span style={{ display: "inline-block", width: 8, height: 14, background: "#4f8ef7", marginLeft: 2, animation: "cursorBlink 1s step-end infinite", verticalAlign: "text-bottom" }} />}
               {canPrint && (
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30" }}>
                   <button
-                    onClick={() => printAIResponse(questionText, text, logoUrl)}
+                    onClick={() => printAIResponse(questionText, text, logoUrl, mode)}
                     style={{ background: "none", border: "none", color: "#4f8ef7", fontSize: 11, cursor: "pointer", fontFamily: "'DM Mono',monospace", opacity: 0.65, display: "flex", alignItems: "center", gap: 5, padding: 0 }}
                   >⎙ Print</button>
+                </div>
+              )}
+              {/* Advanced Mode footer disclaimer */}
+              {isAdvanced && !streaming && text && (
+                <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
+                  Advanced Mode — AI analysis is informational only. Always consult your physician before making health decisions.
                 </div>
               )}
             </div>
@@ -536,15 +595,15 @@ function TypingIndicator() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Main component
+// ─────────────────────────────────────────────────────────────────────────────
 export default function AIAnalysis() {
   const [messages, setMessages]       = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
   });
   const [input, setInput]             = useState("");
   const [streaming, setStreaming]     = useState(false);
-  const [showKeyPopover, setShowKeyPopover] = useState(false);
-  const [apiKey, setApiKey]           = useState(() => localStorage.getItem(API_KEY_STORE) || "");
-  const [keyInput, setKeyInput]       = useState("");
   const [error, setError]             = useState("");
   const [refDocs, setRefDocs]         = useState(() => {
     try { return JSON.parse(localStorage.getItem("mi_ref_docs") || "[]"); } catch { return []; }
@@ -555,6 +614,57 @@ export default function AIAnalysis() {
   const bottomRef                     = useRef(null);
   const abortRef                      = useRef(null);
   const contextCounts                 = getContextCounts();
+
+  // ── Mode state ─────────────────────────────────────────────────────────────
+  const [modeData, setModeDataState]  = useState(() => loadModeData());
+  const [showOnboarding, setShowOnboarding] = useState(() => !loadModeData());
+  // Stale consent banner: advanced mode but consent version mismatch
+  const [staleConsent, setStaleConsent] = useState(false);
+
+  const currentMode = modeData?.mode || "standard";
+
+  // ── Consent version check on mount ────────────────────────────────────────
+  useEffect(() => {
+    const stored = loadModeData();
+    if (stored?.mode === "advanced" && stored?.consentVersion !== CONSENT_VERSION) {
+      // Stale consent: switch to standard, show banner
+      const updated = { ...stored, mode: "standard", staleConsentDetected: true, staleSwitchDate: new Date().toISOString() };
+      saveModeData(updated);
+      setModeDataState(updated);
+      setStaleConsent(true);
+      appendAuditLog({ event: "stale_consent_auto_switch", from: "advanced", to: "standard", oldVersion: stored.consentVersion, newRequired: CONSENT_VERSION });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleModeConfirm = (data) => {
+    saveModeData(data);
+    setModeDataState(data);
+    setShowOnboarding(false);
+    appendAuditLog({ event: "mode_selected", mode: data.mode, consentVersion: data.consentVersion || null });
+  };
+
+  // Expose mode setter for Tab13 (dispatches custom event)
+  useEffect(() => {
+    const handler = (e) => {
+      const { mode, consentDate, consentVersion } = e.detail || {};
+      if (!mode) return;
+      const now = new Date().toISOString();
+      let updated;
+      if (mode === "standard") {
+        updated = { ...modeData, mode: "standard", switchedToStandardDate: now };
+      } else if (mode === "advanced") {
+        updated = { ...modeData, mode: "advanced", consentVersion, consentDate, activatedDate: now };
+      }
+      if (updated) {
+        saveModeData(updated);
+        setModeDataState(updated);
+        appendAuditLog({ event: "mode_changed", mode, consentVersion: consentVersion || null });
+      }
+    };
+    window.addEventListener("insina_mode_change", handler);
+    return () => window.removeEventListener("insina_mode_change", handler);
+  }, [modeData]);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
@@ -572,7 +682,6 @@ export default function AIAnalysis() {
     if (pending) {
       localStorage.removeItem("mi_ai_pending");
       pendingSentRef.current = true;
-      // Small delay to let component fully mount
       setTimeout(() => sendMessage(pending), 300);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -581,9 +690,13 @@ export default function AIAnalysis() {
   const sendMessage = useCallback(async (text) => {
     const trimmed = text.trim();
     if (!trimmed || streaming) return;
-    if (!apiKey) { setShowKeyPopover(true); return; }
+    // Block if stale consent is active
+    if (staleConsent) return;
 
     setError("");
+    const mode = loadModeData()?.mode || "standard";
+    const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
+
     const userMsg  = { role: "user", text: trimmed };
     const newMsgs  = [...messages, userMsg];
     setMessages(newMsgs);
@@ -595,33 +708,38 @@ export default function AIAnalysis() {
     let accum = "";
     const assistantIdx = newMsgs.length;
 
-    setMessages(prev => [...prev, { role: "assistant", text: "", streaming: true }]);
+    setMessages(prev => [...prev, { role: "assistant", text: "", streaming: true, mode }]);
+
+    // Build system prompt with prompt caching blocks
+    const systemPromptText = buildSystemPrompt(mode);
+    const systemBlocks = [
+      {
+        type: "text",
+        text: systemPromptText,
+        cache_control: { type: "ephemeral" },
+      },
+    ];
 
     try {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch(`${PROXY_URL}/api/chat`, {
         method: "POST",
         signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1024,
+          model,
+          max_tokens: mode === "advanced" ? 2048 : 1024,
           stream: true,
-          system: buildSystemPrompt(),
+          system: systemBlocks,
           messages: apiMessages,
         }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `API error ${res.status}`);
+        throw new Error(err?.error || `Server error ${res.status}`);
       }
 
       const reader  = res.body.getReader();
@@ -644,7 +762,7 @@ export default function AIAnalysis() {
               accum += parsed.delta.text;
               setMessages(prev => {
                 const copy = [...prev];
-                copy[assistantIdx] = { role: "assistant", text: accum, streaming: true };
+                copy[assistantIdx] = { role: "assistant", text: accum, streaming: true, mode };
                 return copy;
               });
             }
@@ -654,20 +772,23 @@ export default function AIAnalysis() {
 
       setMessages(prev => {
         const copy = [...prev];
-        copy[assistantIdx] = { role: "assistant", text: accum };
+        copy[assistantIdx] = { role: "assistant", text: accum, mode };
         return copy;
       });
+
+      appendAuditLog({ event: "message_sent", mode, model, tokens: accum.length });
+
     } catch (e) {
       if (e.name === "AbortError") {
         setMessages(prev => {
           const copy = [...prev];
-          copy[assistantIdx] = { role: "assistant", text: accum || "_(stopped)_" };
+          copy[assistantIdx] = { role: "assistant", text: accum || "_(stopped)_", mode };
           return copy;
         });
       } else {
         setMessages(prev => {
           const copy = [...prev];
-          copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}` };
+          copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}`, mode };
           return copy;
         });
         setError(e.message);
@@ -676,19 +797,10 @@ export default function AIAnalysis() {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming, apiKey]);
+  }, [messages, streaming, staleConsent]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
-  };
-
-  const saveApiKey = () => {
-    const k = keyInput.trim();
-    if (!k) return;
-    localStorage.setItem(API_KEY_STORE, k);
-    setApiKey(k);
-    setKeyInput("");
-    setShowKeyPopover(false);
   };
 
   const saveConversationToNotes = (msgs) => {
@@ -738,7 +850,7 @@ export default function AIAnalysis() {
     localStorage.setItem("mi_ref_docs", JSON.stringify(updated));
   };
 
-  const hasKey = !!apiKey;
+  const isAdvanced = currentMode === "advanced";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#07090f", fontFamily: "'Sora',sans-serif", color: "#d4e2f0", overflow: "hidden", position: "relative" }}>
@@ -761,16 +873,16 @@ export default function AIAnalysis() {
         .chat-input:focus { border-color:#1a2f4a; }
         .icon-btn { background:transparent; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; font-size:13px; flex-shrink:0; }
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
-        .modal-input { width:100%; background:#07090f; border:1px solid #111e30; color:#c4d8ee; padding:9px 12px; border-radius:8px; font-family:'DM Mono',monospace; font-size:12px; outline:none; transition:border-color .15s; letter-spacing:0.5px; }
-        .modal-input:focus { border-color:#1a2f4a; }
         .new-conv-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:transparent; border:1px solid #111e30; border-radius:12px; color:#98afc4; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; }
         .new-conv-btn:hover { border-color:#1a2f4a; color:#b0c4d8; }
         @media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }
       `}</style>
 
+      {/* First-run onboarding modal */}
+      {showOnboarding && <AIModeOnboardingModal onConfirm={handleModeConfirm} />}
+
       {/* Topbar */}
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
-        
         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px" }}>AI Analysis</div>
         <span style={{ fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "2px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px" }}>AI</span>
         <div style={{ flex: 1 }} />
@@ -779,53 +891,56 @@ export default function AIAnalysis() {
             <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
-        {/* Print button */}
         <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
           ⎙ Print
         </button>
-        {/* API key indicator + gear */}
-        <div style={{ position: "relative" }}>
-          <button className="icon-btn" onClick={() => setShowKeyPopover(p => !p)} title="API Key settings" style={{ gap: 5, width: "auto", padding: "0 10px", color: hasKey ? "#10b981" : "#f59e0b", borderColor: hasKey ? "rgba(16,185,129,.25)" : "rgba(245,158,11,.25)" }}>
-            <span style={{ fontSize: 11 }}>⚙</span>
-            <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace" }}>{hasKey ? "Key set" : "No key"}</span>
-          </button>
-
-          {showKeyPopover && (
-            <div style={{ position: "absolute", right: 0, top: 40, width: 320, background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 12, padding: 18, zIndex: 50, animation: "fadeUp .2s ease both", boxShadow: "0 8px 32px rgba(0,0,0,.5)" }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Anthropic API Key</div>
-              {hasKey && (
-                <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
-                  ✓ Key saved · {apiKey.slice(0, 8)}••••••••
-                </div>
-              )}
-              <input
-                className="modal-input"
-                placeholder="sk-ant-api03-…"
-                value={keyInput}
-                onChange={e => setKeyInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && saveApiKey()}
-                style={{ marginBottom: 10 }}
-              />
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={saveApiKey} style={{ flex: 1, padding: "7px 0", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#4f8ef7", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
-                  Save Key
-                </button>
-                <button onClick={() => setShowKeyPopover(false)} style={{ padding: "7px 14px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
-                  Cancel
-                </button>
-              </div>
-              <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 10 }}>
-                Stored in localStorage under mi_ak · never transmitted except to api.anthropic.com
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div style={{ fontSize: 10, color: "#1e4030", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: hasKey ? "#10b981" : "#b0c4d8", display: "inline-block" }} />
-          claude-sonnet-4-6
-        </div>
       </div>
+
+      {/* Mode indicator bar */}
+      <div style={{
+        height: 36, background: isAdvanced ? "rgba(79,142,247,.06)" : "rgba(16,185,129,.05)",
+        borderBottom: `1px solid ${isAdvanced ? "rgba(79,142,247,.15)" : "rgba(16,185,129,.12)"}`,
+        display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0,
+      }}>
+        <span style={{
+          fontSize: 9, fontFamily: "'DM Mono',monospace",
+          background: isAdvanced ? "rgba(79,142,247,.15)" : "rgba(16,185,129,.12)",
+          color: isAdvanced ? "#4f8ef7" : "#10b981",
+          border: `1px solid ${isAdvanced ? "rgba(79,142,247,.3)" : "rgba(16,185,129,.3)"}`,
+          padding: "2px 9px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase",
+        }}>
+          {isAdvanced ? "Advanced Mode" : "Standard Mode"}
+        </span>
+        <span style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+          {isAdvanced ? "Claude Opus · deeper analysis · consent given" : "Claude Sonnet · recommended for daily use"}
+        </span>
+        <div style={{ flex: 1 }} />
+        <span style={{
+          fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace",
+          background: "#07090f", border: "1px solid #111e30",
+          padding: "2px 10px", borderRadius: 4,
+        }}>
+          {isAdvanced ? "claude-opus-4-6" : "claude-sonnet-4-6"}
+        </span>
+      </div>
+
+      {/* Stale consent banner */}
+      {staleConsent && (
+        <div style={{
+          background: "rgba(245,158,11,.08)", borderBottom: "1px solid rgba(245,158,11,.25)",
+          padding: "10px 24px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 12, color: "#f59e0b" }}>⚠</span>
+          <span style={{ fontSize: 11, color: "#c4a060", fontFamily: "'DM Mono',monospace", flex: 1 }}>
+            Advanced Mode consent has been updated. You have been switched to Standard Mode.
+            To re-enable Advanced Mode, go to <strong>Data &amp; Backup → AI Analysis Mode</strong> and re-consent.
+          </span>
+          <button
+            onClick={() => setStaleConsent(false)}
+            style={{ background: "none", border: "none", color: "#c4a060", cursor: "pointer", fontSize: 14, padding: 0 }}
+          >✕</button>
+        </div>
+      )}
 
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
@@ -901,9 +1016,7 @@ export default function AIAnalysis() {
                 <div style={{ fontSize: 32, color: "#1a2840" }}>✦</div>
                 <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#98afc4", fontWeight: 400 }}>How can I help today?</div>
                 <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", maxWidth: 320, lineHeight: 1.6 }}>
-                  {hasKey
-                    ? "Ask anything about your health data, labs, medications, or upcoming appointments."
-                    : "Set your Anthropic API key using the ⚙ button above to get started."}
+                  Ask anything about your health data, labs, medications, or upcoming appointments.
                 </div>
               </div>
             )}
@@ -923,6 +1036,7 @@ export default function AIAnalysis() {
                     streaming={m.streaming && i === messages.length - 1}
                     questionText={questionText}
                     logoUrl={PRINT_LOGO}
+                    mode={m.mode || currentMode}
                   />
                 </div>
               );
@@ -945,20 +1059,20 @@ export default function AIAnalysis() {
               <textarea
                 className="chat-input"
                 rows={2}
-                placeholder={hasKey ? "Ask anything about your health data…" : "Set your API key to begin…"}
+                placeholder={staleConsent ? "Re-consent to Advanced Mode required — switch to Standard in Data & Backup" : "Ask anything about your health data…"}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={!hasKey}
+                disabled={staleConsent}
               />
               {streaming
                 ? <button className="stop-btn" onClick={() => abortRef.current?.abort()}>Stop ◼</button>
-                : <button className="send-btn" onClick={() => sendMessage(input)} disabled={!input.trim() || !hasKey}>Send ↑</button>
+                : <button className="send-btn" onClick={() => sendMessage(input)} disabled={!input.trim() || staleConsent}>Send ↑</button>
               }
             </div>
             <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between" }}>
               <span>Shift+Enter for new line · Enter to send</span>
-              <span>Powered by Claude · data stays local</span>
+              <span>{isAdvanced ? "Advanced Mode · Claude Opus" : "Standard Mode · Claude Sonnet"} · data stays local</span>
             </div>
           </div>
         </div>

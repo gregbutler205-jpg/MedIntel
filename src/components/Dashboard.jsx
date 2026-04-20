@@ -1,5 +1,6 @@
-import LOGO from "../assets/logo-white.png";
 import { useState, useEffect } from "react";
+
+const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
 
 const NAV = [

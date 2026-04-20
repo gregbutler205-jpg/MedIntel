@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import LOGO_WHITE from "../../assets/logo.png";
+const LOGO_WHITE = import.meta.env.BASE_URL + "logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
   getProfileInsurance, setProfileInsurance,
