@@ -2,6 +2,79 @@ import { useState, useEffect } from "react";
 import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds } from "../../store.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
+const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
+
+function printMedicationList(meds) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const active = meds.filter(m => m.status !== "inactive");
+  // Group by category
+  const grouped = {};
+  active.forEach(m => {
+    const cat = m.category || "Other";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(m);
+  });
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const fmtRefill = (str) => {
+    if (!str) return "—";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    return str;
+  };
+  const medsHTML = Object.entries(grouped).map(([cat, catMeds]) => `
+    <div class="category-header">${esc(cat)}</div>
+    <table>
+      <thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Schedule</th><th>Prescriber</th><th>Refill</th></tr></thead>
+      <tbody>
+        ${catMeds.map(m => `<tr>
+          <td><strong>${esc(m.name)}</strong>${m.brand ? `<br><span class="brand">${esc(m.brand)}</span>` : ""}${m.flag ? `<span class="flag-badge"> REVIEW</span>` : ""}</td>
+          <td>${esc(m.dose||"—")}</td>
+          <td>${esc(m.frequency||"—")}</td>
+          <td>${esc(m.schedule||"—")}</td>
+          <td>${esc(m.prescriber||"—")}</td>
+          <td>${esc(fmtRefill(m.refillDate))}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+  `).join("");
+  const win = window.open("", "_blank", "width=960,height=700");
+  if (!win) return;
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Medication List — Insina Health</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Georgia,serif; max-width:860px; margin:40px auto; color:#1a1a1a; font-size:13px; line-height:1.6; padding:0 24px; }
+      .logo { height:50px; margin-bottom:16px; }
+      h1 { text-align:center; font-size:26px; font-weight:700; letter-spacing:-.5px; margin-bottom:6px; }
+      .subtitle { text-align:center; font-size:12px; color:#555; margin-bottom:4px; }
+      .meta { text-align:center; font-size:11px; color:#777; margin-bottom:20px; font-family:monospace; }
+      .rule { border:none; border-top:2px solid #2563eb; margin-bottom:22px; }
+      .category-header { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#2563eb; font-family:monospace; background:#f0f6ff; padding:6px 10px; margin-top:18px; margin-bottom:0; border-left:3px solid #2563eb; }
+      table { width:100%; border-collapse:collapse; margin-bottom:4px; }
+      th { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:#555; font-family:monospace; text-align:left; padding:7px 8px; border-bottom:1px solid #ddd; background:#fafafa; }
+      td { font-size:12px; padding:7px 8px; border-bottom:1px solid #eee; vertical-align:top; }
+      tr:last-child td { border-bottom:none; }
+      .brand { font-size:11px; color:#777; font-style:italic; }
+      .flag-badge { font-size:9px; background:#fee2e2; color:#dc2626; border-radius:3px; padding:1px 5px; margin-left:4px; font-family:monospace; font-style:normal; }
+      .footer { margin-top:36px; border-top:1px solid #ddd; padding-top:10px; font-size:11px; color:#777; display:flex; justify-content:space-between; }
+      .disclaimer { margin-top:16px; font-size:10px; color:#999; border-top:1px dashed #ddd; padding-top:8px; }
+      @media print { body { margin:20px; } }
+    </style>
+  </head><body>
+    <img src="${PRINT_LOGO}" class="logo" />
+    <h1>Medication List</h1>
+    <div class="subtitle">Greg Butler &mdash; Insina Health</div>
+    <div class="meta">${active.length} active medications &nbsp;·&nbsp; ${date}</div>
+    <hr class="rule" />
+    ${medsHTML}
+    <div class="disclaimer">This list is for reference only. Always confirm medications and dosages with your prescribing physician and pharmacist.</div>
+    <div class="footer">
+      <span>Insina Health &mdash; Personal Health Intelligence</span>
+      <span>Printed ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
 
 const NAV = [
   // ── Core ───────────────────────────────────────────────────────────────────
@@ -481,8 +554,8 @@ export default function App({ onNavChange }) {
           <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
             Last import: Mar 12, 2026
           </div>
-          <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-            ⎙ Print
+          <button onClick={() => printMedicationList(meds)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+            ⎙ Print Med List
           </button>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
         </div>
@@ -843,11 +916,14 @@ export default function App({ onNavChange }) {
                 <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px" }}>
                   <div className="section-label">AI Quick Actions</div>
                   {[
-                    `Explain ${selectedMed.name} and its purpose`,
-                    `Check interactions with my other meds`,
-                    `What should I monitor on ${selectedMed.name}?`,
+                    `Explain ${selectedMed.name} and its purpose for a post-liver-transplant patient`,
+                    `Check interactions between ${selectedMed.name} and my other medications`,
+                    `What should I monitor clinically while taking ${selectedMed.name}?`,
                   ].map((q, i) => (
-                    <button key={i} style={{
+                    <button key={i} onClick={() => {
+                      localStorage.setItem("mi_ai_pending", q);
+                      onNavChange?.("ai");
+                    }} style={{
                       width: "100%", marginBottom: 7, padding: "10px 12px", background: "linear-gradient(135deg, rgba(79,142,247,.1), rgba(167,139,250,.07))",
                       border: "1px solid rgba(79,142,247,.25)", borderRadius: 9, color: "#7eb8d8", fontFamily: "'Sora',sans-serif",
                       fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, textAlign: "left"

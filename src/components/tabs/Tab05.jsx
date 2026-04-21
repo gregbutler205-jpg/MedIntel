@@ -351,6 +351,40 @@ export default function App({ onNavChange }) {
   const [aiQuestion, setAiQuestion]     = useState("");
   const [aiQA, setAiQA]                 = useState([]);
   const [aiQALoading, setAiQALoading]   = useState(false);
+  const [showAddLab, setShowAddLab]     = useState(false);
+  const [newLab, setNewLab]             = useState({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
+
+  const LAB_CATEGORIES = ["Chemistry","CBC / Hematology","Immunosuppression","Liver Panel","Lipid Panel","Electrolytes","Endocrine","Infection / Serology","Urinalysis","Other"];
+
+  function handleAddLab() {
+    if (!newLab.name.trim() || !newLab.value.trim()) return;
+    // Auto-detect flag from ref range
+    let flag = false;
+    if (newLab.refRange) {
+      const mRange = newLab.refRange.match(/(\d+\.?\d*)\s*[-–]\s*(\d+\.?\d*)/);
+      if (mRange) {
+        const v = parseFloat(newLab.value);
+        if (!isNaN(v) && (v < parseFloat(mRange[1]) || v > parseFloat(mRange[2]))) flag = true;
+      }
+    }
+    const entry = {
+      name: newLab.name.trim(),
+      value: newLab.value.trim(),
+      unit: newLab.unit.trim(),
+      refRange: newLab.refRange.trim(),
+      category: newLab.category,
+      date: newLab.date || new Date().toISOString().split("T")[0],
+      facility: "Manual Entry",
+      notes: newLab.notes.trim(),
+      flag,
+    };
+    const updated = [entry, ...importedLabs];
+    setImportedLabs(updated);
+    try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
+    setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
+    setShowAddLab(false);
+    setSelectedImportedLab(entry);
+  }
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -475,7 +509,10 @@ Be direct and clinically specific.`,
       const data = await res.json();
       setAiAnalysis(data.content[0].text.trim());
     } catch (e) {
-      setAiError(e.message || "Analysis failed.");
+      const isNetworkErr = e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("waking");
+      setAiError(isNetworkErr
+        ? "Server is waking up (Render free tier sleeps after 15 min inactivity). Wait ~30 seconds then click Full Analysis again."
+        : e.message || "Analysis failed.");
     } finally {
       setAiAnalyzing(false);
     }
@@ -530,7 +567,11 @@ ${labsStr}`;
       const answer = data.content[0].text.trim();
       setAiQA(prev => { const copy = [...prev]; copy[copy.length - 1] = { q, a: answer }; return copy; });
     } catch (e) {
-      setAiQA(prev => { const copy = [...prev]; copy[copy.length - 1] = { q, a: `Error: ${e.message}` }; return copy; });
+      const isNetworkErr = e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("waking");
+      const errMsg = isNetworkErr
+        ? "Server is waking up (Render free tier). Wait ~30 seconds and try again."
+        : `Error: ${e.message}`;
+      setAiQA(prev => { const copy = [...prev]; copy[copy.length - 1] = { q, a: errMsg }; return copy; });
     } finally {
       setAiQALoading(false);
     }
@@ -633,6 +674,67 @@ ${labsStr}`;
                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>within range</div>
               </div>
             </div>
+
+            {/* Add Lab button */}
+            <button
+              onClick={() => setShowAddLab(o => !o)}
+              style={{ width:"100%", marginBottom:14, padding:"8px 12px", background: showAddLab ? "rgba(16,185,129,.12)" : "rgba(79,142,247,.08)", border:`1px solid ${showAddLab ? "rgba(16,185,129,.35)" : "rgba(79,142,247,.25)"}`, borderRadius:8, color: showAddLab ? "#10b981" : "#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:6, fontWeight:600 }}
+            >
+              <span style={{ fontSize:14 }}>{showAddLab ? "✕" : "+"}</span>
+              {showAddLab ? "Cancel" : "Add Lab Result"}
+            </button>
+
+            {/* Inline Add Lab form */}
+            {showAddLab && (
+              <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:10, padding:"14px", marginBottom:14, animation:"fadeUp .2s ease both" }}>
+                <div style={{ fontSize:9, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:12 }}>NEW LAB RESULT</div>
+                {[
+                  { label:"Test Name *", key:"name", placeholder:"e.g. Creatinine", type:"text" },
+                  { label:"Result Value *", key:"value", placeholder:"e.g. 1.2", type:"text" },
+                  { label:"Unit", key:"unit", placeholder:"e.g. mg/dL", type:"text" },
+                  { label:"Reference Range", key:"refRange", placeholder:"e.g. 0.74-1.35", type:"text" },
+                  { label:"Date", key:"date", placeholder:"", type:"date" },
+                ].map(f => (
+                  <div key={f.key} style={{ marginBottom:9 }}>
+                    <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>{f.label}</div>
+                    <input
+                      type={f.type}
+                      placeholder={f.placeholder}
+                      value={newLab[f.key]}
+                      onChange={e => setNewLab(p => ({ ...p, [f.key]: e.target.value }))}
+                      style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
+                    />
+                  </div>
+                ))}
+                <div style={{ marginBottom:9 }}>
+                  <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Category</div>
+                  <select
+                    value={newLab.category}
+                    onChange={e => setNewLab(p => ({ ...p, category: e.target.value }))}
+                    style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
+                  >
+                    {LAB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Notes</div>
+                  <input
+                    type="text"
+                    placeholder="Optional notes"
+                    value={newLab.notes}
+                    onChange={e => setNewLab(p => ({ ...p, notes: e.target.value }))}
+                    style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
+                  />
+                </div>
+                <button
+                  onClick={handleAddLab}
+                  disabled={!newLab.name.trim() || !newLab.value.trim()}
+                  style={{ width:"100%", padding:"8px", background: newLab.name.trim() && newLab.value.trim() ? "#10b981" : "#0f1e30", border:"none", borderRadius:7, color: newLab.name.trim() && newLab.value.trim() ? "#fff" : "#6a8090", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor: newLab.name.trim() && newLab.value.trim() ? "pointer" : "not-allowed" }}
+                >
+                  Save Lab Result
+                </button>
+              </div>
+            )}
 
             {/* ── Imported Labs (deduplicated — latest per test name) ── */}
             {importedLabs.length === 0 ? (

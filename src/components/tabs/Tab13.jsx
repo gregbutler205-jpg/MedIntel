@@ -138,11 +138,55 @@ export default function DataBackup() {
   }
 
   function handleExport(type) {
-    const blob = new Blob([JSON.stringify({ exported: new Date().toISOString(), type, patient: "Greg Butler", note: "IntelliTrax export" }, null, 2)], { type: "application/json" });
+    const safeRead = (key) => { try { return JSON.parse(localStorage.getItem(key) || "null") ?? []; } catch { return []; } };
+
+    // Labs CSV — special case
+    if (type === "Labs CSV") {
+      const labs = safeRead("mi_labs");
+      if (!labs.length) { showToast("No lab results to export"); return; }
+      const esc = s => `"${String(s||"").replace(/"/g,'""')}"`;
+      const rows = ["Name,Value,Unit,Reference Range,Category,Date,Facility,Flag"];
+      labs.forEach(l => rows.push([esc(l.name),esc(l.value),esc(l.unit),esc(l.refRange),esc(l.category),esc(l.date),esc(l.facility||"Manual"),esc(l.flag?"YES":"NO")].join(",")));
+      const csvBlob = new Blob([rows.join("\n")], { type: "text/csv" });
+      const csvUrl = URL.createObjectURL(csvBlob);
+      const a = document.createElement("a"); a.href = csvUrl;
+      a.download = `intellitrax_labs_${new Date().toISOString().split("T")[0]}.csv`;
+      a.click(); URL.revokeObjectURL(csvUrl);
+      showToast("Labs CSV downloaded");
+      return;
+    }
+
+    // Build export object with real localStorage data
+    const exportData = {
+      exported: new Date().toISOString(),
+      exportType: type,
+      patient: "Greg Butler",
+      version: "1.0",
+      labs:         safeRead("mi_labs"),
+      medications:  safeRead("mi_meds_full"),
+      readings:     safeRead("mi_readings"),
+      conditions:   safeRead("mi_conditions"),
+      surgeries:    safeRead("mi_surgeries"),
+      careTeam:     safeRead("mi_care_team"),
+      notes:        safeRead("mi_notes"),
+      appointments: safeRead("mi_appointments"),
+      symptoms:     safeRead("mi_symptoms"),
+    };
+
+    // Trim irrelevant sections for specific export types
+    if (type === "Medication List") {
+      delete exportData.labs; delete exportData.readings;
+      delete exportData.notes; delete exportData.appointments; delete exportData.symptoms;
+    } else if (type === "Health Summary") {
+      delete exportData.notes; delete exportData.symptoms;
+      exportData.labs = exportData.labs.slice(0, 80); // most recent 80
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `intellitrax_${type.toLowerCase().replace(/ /g, "_")}.json`;
+    a.download = `intellitrax_${type.toLowerCase().replace(/\s+/g,"_")}_${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast(`${type} downloaded`);

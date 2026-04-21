@@ -238,7 +238,7 @@ function SeverityBar({ value }) {
 }
 
 // Detail side panel
-function DetailPanel({ entry, onClose, onResolve }) {
+function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
   return (
     <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #0d1a28", display: "flex", flexDirection: "column", zIndex: 10, animation: "slideInRight .2s ease both" }}>
       <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
@@ -291,7 +291,15 @@ function DetailPanel({ entry, onClose, onResolve }) {
             {entry.symptom === "Headache" && "Hypertension is a common cause of headache in transplant patients — correlates with BP readings above 140."}
             {!["Hand Tremor","Fatigue","Swelling / Edema","Nausea","Joint Pain / Gout","Decreased Urine Output","Dizziness","Brain Fog / Confusion","Headache"].includes(entry.symptom) && "This symptom has been logged. The AI Analysis tab can cross-reference it against your labs, vitals, and medications for deeper insights."}
           </div>
-          <button style={{ width: "100%", padding: "8px", background: "transparent", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#4f8ef7", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
+          <button
+            onClick={() => {
+              const loc = entry.location && entry.location !== "None / General" ? ` in my ${entry.location.toLowerCase()}` : "";
+              const prompt = `I've been experiencing ${entry.symptom}${loc}, severity ${entry.severity}/10.${entry.note ? ` Notes: ${entry.note}.` : ""} Please cross-reference this symptom with my current labs, vitals, and medications to identify possible causes and what I should discuss with my care team.`;
+              localStorage.setItem("mi_ai_pending", prompt);
+              onNavToAI?.();
+              onClose();
+            }}
+            style={{ width: "100%", padding: "8px", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#4f8ef7", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
             ✦ Analyze in AI tab →
           </button>
         </div>
@@ -526,7 +534,12 @@ export default function App({ onNavChange }) {
 
           {/* Detail panel */}
           {selectedEntry && !showLog && (
-            <DetailPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} onResolve={handleResolve} />
+            <DetailPanel
+              entry={selectedEntry}
+              onClose={() => setSelectedEntry(null)}
+              onResolve={handleResolve}
+              onNavToAI={() => onNavChange?.("ai")}
+            />
           )}
 
           {/* Log panel */}

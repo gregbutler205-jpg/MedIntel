@@ -1,5 +1,70 @@
 import { useState, useEffect, useCallback } from "react";
 
+const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
+const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
+
+function printConsultationPrep(appt, analysis) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const apptDate = appt.date ? new Date(appt.date + "T12:00:00").toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" }) : "—";
+  const win = window.open("", "_blank", "width=900,height=700");
+  if (!win) return;
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const bold = s => s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  const renderText = rawText => {
+    if (!rawText) return "";
+    const text = rawText.replace(/[\u{1F300}-\u{1F9FF}]/gu,"").replace(/[\u{2600}-\u{27BF}]/gu,"").replace(/\u{FE0F}/gu,"").replace(/✦/g,"");
+    return text.split("\n").map(line => {
+      const t = line.trim();
+      if (/^-{3,}$/.test(t)) return `<hr style="border:none;border-top:1px solid #ddd;margin:12px 0">`;
+      if (t.startsWith("- ") || t.startsWith("• ")) return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px"><span style="color:#2563eb;font-weight:700">&#9658;</span><span>${bold(t.replace(/^[-•]\s+/,""))}</span></div>`;
+      const nm = t.match(/^(\d+)\.\s+(.+)/);
+      if (nm) return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px"><span style="font-weight:700;color:#2563eb;min-width:22px">${nm[1]}.</span><span>${bold(nm[2])}</span></div>`;
+      const hm = t.match(/^\*\*([^*]+?)\*\*:?\s*$/);
+      if (hm) return `<div style="font-weight:700;font-size:14px;margin-top:14px;margin-bottom:5px">${hm[1].replace(/:$/,"")}</div>`;
+      if (t === "") return `<div style="height:7px"></div>`;
+      return `<div style="margin-bottom:3px;line-height:1.7">${bold(esc(line))}</div>`;
+    }).join("");
+  };
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Consultation Prep — Insina Health</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Georgia,serif; max-width:760px; margin:48px auto; color:#1a1a1a; font-size:14px; line-height:1.65; padding:0 24px; }
+      .logo { height:52px; margin-bottom:18px; }
+      h1 { text-align:center; font-size:28px; font-weight:700; letter-spacing:-.5px; margin-bottom:8px; }
+      .subtitle { text-align:center; font-size:13px; color:#555; margin-bottom:22px; }
+      .rule { border:none; border-top:2px solid #2563eb; margin-bottom:24px; }
+      .appt-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px; background:#f8f9fa; border:1px solid #ddd; border-radius:6px; padding:16px; }
+      .appt-field label { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:#777; font-family:monospace; display:block; margin-bottom:3px; }
+      .appt-field span { font-size:13px; color:#1a1a1a; font-weight:600; }
+      .section-title { font-weight:700; font-size:16px; margin-bottom:12px; }
+      .footer { margin-top:48px; border-top:1px solid #ddd; padding-top:12px; font-size:11px; color:#777; display:flex; justify-content:space-between; }
+      @media print { body { margin:28px; } }
+    </style>
+  </head><body>
+    <img src="${PRINT_LOGO}" class="logo" />
+    <h1>Consultation Prep</h1>
+    <div class="subtitle">Insina Health &mdash; AI Appointment Analysis</div>
+    <hr class="rule" />
+    <div class="appt-grid">
+      <div class="appt-field"><label>Appointment</label><span>${esc(appt.title)}</span></div>
+      <div class="appt-field"><label>Date</label><span>${apptDate}</span></div>
+      <div class="appt-field"><label>Provider</label><span>${esc(appt.provider||"—")}</span></div>
+      <div class="appt-field"><label>Specialty</label><span>${esc(appt.specialty||"—")}</span></div>
+      ${appt.facility ? `<div class="appt-field" style="grid-column:1/-1"><label>Facility</label><span>${esc(appt.facility)}</span></div>` : ""}
+      ${appt.prepInstructions ? `<div class="appt-field" style="grid-column:1/-1"><label>Prep Instructions</label><span>${esc(appt.prepInstructions)}</span></div>` : ""}
+    </div>
+    <div class="section-title">AI Preparation Analysis</div>
+    ${renderText(analysis)}
+    <div class="footer">
+      <span>Insina Health &mdash; Personal Health Intelligence</span>
+      <span>Generated ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
 const URGENCY_CFG = {
   high: { color: "#ef4444", bg: "rgba(239,68,68,.10)", border: "rgba(239,68,68,.25)", label: "High" },
   med:  { color: "#f59e0b", bg: "rgba(245,158,11,.10)", border: "rgba(245,158,11,.25)", label: "Med"  },
@@ -258,19 +323,29 @@ Please provide:
   }, [appt, additionalQ]);
 
   const runAnalysis = async () => {
-    const apiKey = localStorage.getItem("mi_ak");
-    if (!apiKey) { setError("API key required — go to Data & Backup to add your key."); return; }
     setLoading(true); setError(""); setAnalysis("");
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch(`${PROXY_URL}/api/chat`, {
         method:"POST",
-        headers:{ "Content-Type":"application/json", "x-api-key":apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
-        body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1024, messages:[{ role:"user", content:buildPrompt() }] }),
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          model:"claude-sonnet-4-6",
+          max_tokens:1024,
+          system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers.", cache_control:{ type:"ephemeral" } }],
+          messages:[{ role:"user", content:buildPrompt() }],
+        }),
       });
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e?.error?.message || `API error ${res.status}`); }
+      if (!res.ok) {
+        const e = await res.json().catch(()=>({}));
+        const isServerSleep = res.status === 503 || String(e?.error||"").includes("503");
+        throw new Error(isServerSleep ? "Server is waking up (takes ~30 sec) — wait and try again." : (e?.error || `Server error ${res.status}`));
+      }
       const data = await res.json();
       setAnalysis(data.content?.[0]?.text || "No response");
-    } catch(e) { setError(e.message); }
+    } catch(e) {
+      const isNetworkErr = e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("waking up");
+      setError(isNetworkErr ? "Server is waking up (Render free tier). Wait ~30 seconds then try again." : e.message);
+    }
     finally { setLoading(false); }
   };
 
@@ -278,7 +353,7 @@ Please provide:
     <div style={{ marginTop:16, background:"rgba(79,142,247,.04)", border:"1px solid rgba(79,142,247,.15)", borderRadius:12, padding:18 }}>
       <div style={{ fontSize:11, fontWeight:600, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
         <span>✦</span> AI Appointment Prep
-        {analysis && <button onClick={() => window.print()} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ Print</button>}
+        {analysis && <button onClick={() => printConsultationPrep(appt, analysis)} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ Print</button>}
       </div>
       <div style={{ marginBottom:10 }}>
         <label style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", display:"block", marginBottom:5 }}>Additional Questions / Context</label>

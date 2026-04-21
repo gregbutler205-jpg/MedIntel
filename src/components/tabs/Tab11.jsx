@@ -620,6 +620,8 @@ export default function AIAnalysis() {
   const [showOnboarding, setShowOnboarding] = useState(() => !loadModeData());
   // Stale consent banner: advanced mode but consent version mismatch
   const [staleConsent, setStaleConsent] = useState(false);
+  // Cold-start retry state (Render free tier sleeps after 15 min)
+  const [coldStartRetry, setColdStartRetry] = useState(null); // text to retry
 
   const currentMode = modeData?.mode || "standard";
 
@@ -687,18 +689,20 @@ export default function AIAnalysis() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sendMessage = useCallback(async (text) => {
+  const sendMessage = useCallback(async (text, messagesOverride = null) => {
     const trimmed = text.trim();
     if (!trimmed || streaming) return;
     // Block if stale consent is active
     if (staleConsent) return;
 
+    setColdStartRetry(null);
     setError("");
     const mode = loadModeData()?.mode || "standard";
     const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
 
     const userMsg  = { role: "user", text: trimmed };
-    const newMsgs  = [...messages, userMsg];
+    const baseMessages = messagesOverride !== null ? messagesOverride : messages;
+    const newMsgs  = [...baseMessages, userMsg];
     setMessages(newMsgs);
     setInput("");
     setStreaming(true);
@@ -786,12 +790,22 @@ export default function AIAnalysis() {
           return copy;
         });
       } else {
-        setMessages(prev => {
-          const copy = [...prev];
-          copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}`, mode };
-          return copy;
-        });
-        setError(e.message);
+        const isColdStart = e.name === "TypeError" || e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("NetworkError");
+        if (isColdStart) {
+          setColdStartRetry(trimmed);
+          setMessages(prev => {
+            const copy = [...prev];
+            copy[assistantIdx] = { role: "assistant", text: "**Server is waking up** (Render free tier sleeps after 15 minutes of inactivity).\n\nThis takes about 30–60 seconds. Click **Retry** when ready.", mode };
+            return copy;
+          });
+        } else {
+          setMessages(prev => {
+            const copy = [...prev];
+            copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}`, mode };
+            return copy;
+          });
+          setError(e.message);
+        }
       }
     } finally {
       setStreaming(false);
@@ -1043,6 +1057,19 @@ export default function AIAnalysis() {
             })}
 
             {streaming && messages[messages.length - 1]?.text === "" && <TypingIndicator />}
+
+            {coldStartRetry && !streaming && (
+              <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.25)", borderRadius:8, padding:"10px 14px", fontSize:11, color:"#c4a060", fontFamily:"'DM Mono',monospace", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
+                <span style={{ flex:1 }}>⚠ Server cold start — the proxy is waking up (Render free tier). Wait ~30–60 seconds then click Retry.</span>
+                <button onClick={() => {
+                  const text = coldStartRetry;
+                  setColdStartRetry(null);
+                  sendMessage(text, messages.slice(0, -2));
+                }} style={{ padding:"5px 14px", background:"rgba(245,158,11,.15)", border:"1px solid rgba(245,158,11,.35)", borderRadius:6, color:"#f59e0b", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
+                  ↺ Retry
+                </button>
+              </div>
+            )}
 
             {error && (
               <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>

@@ -602,6 +602,7 @@ export default function App({ onNavChange }) {
                     <span style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
                   </div>
                   {status && <div style={{ fontSize:10, color:status.color, fontWeight:600 }}>{status.label}</div>}
+                  {latestR?.date && <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginTop:2 }}>Last: {latestR.date}</div>}
                 </div>
               );
             })}
