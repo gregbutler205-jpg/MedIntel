@@ -20,20 +20,23 @@ import { createServer }  from "http";
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+// ── Health check — before CORS so monitoring tools always reach it ─────────────
+app.get("/health", (_req, res) => res.json({ status: "ok", ts: new Date().toISOString() }));
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Allow the GitHub Pages origin. Add localhost for local dev.
 const ALLOWED_ORIGINS = [
-  "https://gregb555.github.io",   // production GitHub Pages
-  "http://localhost:5173",        // Vite dev server
-  "http://localhost:4173",        // Vite preview
+  "https://gregbutler205-jpg.github.io", // production GitHub Pages
+  "http://localhost:5173",               // Vite dev server
+  "http://localhost:4173",               // Vite preview
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (curl, Postman, server-to-server) only in dev
-    if (!origin && process.env.NODE_ENV !== "production") return callback(null, true);
+    // Allow requests with no origin (curl, Postman, health checks) in any env
+    if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    callback(new Error("CORS: origin not allowed"));
+    callback(new Error(`CORS: origin not allowed — ${origin}`));
   },
   methods: ["POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
@@ -50,12 +53,8 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Rate limit exceeded. You may send 20 AI requests per hour. Please try again later." },
-  // Zero-logging: do not log IP in errors
   skip: () => false,
 });
-
-// ── Health check ───────────────────────────────────────────────────────────────
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // ── Main proxy endpoint ────────────────────────────────────────────────────────
 app.post("/api/chat", limiter, async (req, res) => {

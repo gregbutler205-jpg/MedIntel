@@ -100,9 +100,9 @@ The proxy will run at `http://localhost:3001`.
 
 ## Security Notes
 
-- CORS is restricted to the GitHub Pages origin (`https://gregb555.github.io`)
-  and localhost for dev. Edit `ALLOWED_ORIGINS` in `server.js` if your Pages
-  URL differs.
+- CORS is restricted to the GitHub Pages origin (`https://gregbutler205-jpg.github.io`)
+  and localhost for dev. If your GitHub username differs, update `ALLOWED_ORIGINS`
+  in `server.js` to match `https://<your-username>.github.io`.
 - Zero-logging: request bodies (which contain health data) are never logged.
 - The Anthropic API key lives only in Render's environment — never in the browser
   or in the repo.
