@@ -93,7 +93,7 @@ app.post("/api/chat", limiter, async (req, res) => {
       body: JSON.stringify({
         model,
         max_tokens: Math.min(max_tokens || 1024, 4096), // cap at 4096
-        stream: true,
+        stream: stream === true,  // respect client preference; default false (JSON response)
         system,
         messages,
       }),
@@ -105,19 +105,21 @@ app.post("/api/chat", limiter, async (req, res) => {
       return res.status(anthropicRes.status).send(errBody);
     }
 
-    // ── Stream passthrough ──────────────────────────────────────────────────
-    // Pipe raw SSE bytes from Anthropic directly to the browser.
-    // The browser's existing stream reader requires no changes.
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("X-Accel-Buffering", "no"); // disable Nginx buffering on Render
-
-    anthropicRes.body.pipe(res);
-
-    // Clean up if client disconnects mid-stream
-    req.on("close", () => {
-      anthropicRes.body.destroy();
-    });
+    if (stream === true) {
+      // ── SSE stream passthrough (Tab11 AI chat) ────────────────────────────
+      // Pipe raw SSE bytes from Anthropic directly to the browser.
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("X-Accel-Buffering", "no"); // disable Nginx buffering on Render
+      anthropicRes.body.pipe(res);
+      // Clean up if client disconnects mid-stream
+      req.on("close", () => { anthropicRes.body.destroy(); });
+    } else {
+      // ── Non-streaming JSON passthrough (Tab05 labs, Tab14 consult prep) ───
+      // Anthropic returns application/json when stream=false — pipe it straight through.
+      res.setHeader("Content-Type", "application/json");
+      anthropicRes.body.pipe(res);
+    }
 
   } catch (err) {
     // Zero-logging: do NOT log err.message as it may contain request data
