@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
+const CANONICAL_MAP_KEY = "mi_lab_canonical";
 
 const NAV = [
   // ── Core ───────────────────────────────────────────────────────────────────
@@ -333,6 +334,45 @@ function renderMarkdown(rawText) {
   });
 }
 
+// ── Duplicate detection ──────────────────────────────────────────────────────
+// Strips common lab name suffixes/noise to find names that refer to the same test
+function normalizeName(name) {
+  return (name || "")
+    .toLowerCase()
+    .replace(/\b(level|lvl|trough|total|serum|whole\s*blood|blood|fasting|non[\-\s]?fasting|result|test|count|concentration|plasma|urine|random|am|pm|morning|panel|screen|assay)\b/g, "")
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function detectDuplicates(labs) {
+  const groups = {};
+  labs.forEach(l => {
+    const norm = normalizeName(l.name);
+    if (!norm) return;
+    if (!groups[norm]) groups[norm] = new Set();
+    groups[norm].add(l.name);
+  });
+  return Object.entries(groups)
+    .filter(([, names]) => names.size >= 2)
+    .map(([norm, names]) => {
+      const nameArr = [...names];
+      return {
+        norm,
+        names: nameArr,
+        variants: nameArr.map(name => ({
+          name,
+          count: labs.filter(l => l.name === name).length,
+          dateRange: (() => {
+            const dates = labs.filter(l => l.name === name && l.date).map(l => l.date).sort();
+            if (!dates.length) return null;
+            return dates.length === 1 ? dates[0] : `${dates[0]} – ${dates[dates.length - 1]}`;
+          })(),
+        })).sort((a, b) => b.count - a.count), // most common first
+      };
+    });
+}
+
 export default function App({ onNavChange }) {
   const [activeNav, setActiveNav] = useState("labs");
   const handleNav = (id) => { if (id !== "labs") { onNavChange?.(id); } else { setActiveNav(id); } };
@@ -353,6 +393,10 @@ export default function App({ onNavChange }) {
   const [aiQALoading, setAiQALoading]   = useState(false);
   const [showAddLab, setShowAddLab]     = useState(false);
   const [newLab, setNewLab]             = useState({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
+  const [showDupModal, setShowDupModal] = useState(false);
+  const [dupGroups, setDupGroups]       = useState([]);
+  // { [norm]: { canonical: string, skip: bool } }
+  const [dupDecisions, setDupDecisions] = useState({});
 
   const LAB_CATEGORIES = ["Chemistry","CBC / Hematology","Immunosuppression","Liver Panel","Lipid Panel","Electrolytes","Endocrine","Infection / Serology","Urinalysis","Other"];
 
@@ -384,6 +428,44 @@ export default function App({ onNavChange }) {
     setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
     setShowAddLab(false);
     setSelectedImportedLab(entry);
+  }
+
+  // Recompute duplicate groups whenever labs change
+  const duplicateGroups = useMemo(() => detectDuplicates(importedLabs), [importedLabs]);
+
+  function openDupModal() {
+    const groups = detectDuplicates(importedLabs);
+    // Default canonical = variant with most entries (already sorted that way)
+    const decisions = {};
+    groups.forEach(g => {
+      decisions[g.norm] = { canonical: g.variants[0].name, skip: false };
+    });
+    setDupGroups(groups);
+    setDupDecisions(decisions);
+    setShowDupModal(true);
+  }
+
+  function applyMerges() {
+    let updated = [...importedLabs];
+    dupGroups.forEach(g => {
+      const dec = dupDecisions[g.norm];
+      if (!dec || dec.skip) return;
+      updated = updated.map(lab =>
+        g.names.includes(lab.name) && lab.name !== dec.canonical
+          ? { ...lab, name: dec.canonical }
+          : lab
+      );
+      // Persist canonical map so other components can use it
+      try {
+        const map = JSON.parse(localStorage.getItem(CANONICAL_MAP_KEY) || "{}");
+        g.names.forEach(n => { map[n.toLowerCase()] = dec.canonical; });
+        localStorage.setItem(CANONICAL_MAP_KEY, JSON.stringify(map));
+      } catch {}
+    });
+    setImportedLabs(updated);
+    try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
+    setSelectedImportedLab(null);
+    setShowDupModal(false);
   }
 
   useEffect(() => {
@@ -674,6 +756,15 @@ ${labsStr}`;
                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>within range</div>
               </div>
             </div>
+
+            {/* Duplicate detection badge */}
+            {duplicateGroups.length > 0 && (
+              <button onClick={openDupModal} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.3)", borderRadius:8, color:"#f59e0b", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
+                <span style={{ fontSize:13 }}>⚡</span>
+                <span style={{ flex:1, textAlign:"left" }}>{duplicateGroups.length} duplicate group{duplicateGroups.length > 1 ? "s" : ""} detected</span>
+                <span style={{ fontSize:10, opacity:0.65 }}>Review →</span>
+              </button>
+            )}
 
             {/* Add Lab button */}
             <button
@@ -1049,6 +1140,111 @@ ${labsStr}`;
 
         </div>
       </div>
+
+      {/* ── Duplicate Lab Names Modal ── */}
+      {showDupModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.78)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+          <div style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:580, maxHeight:"82vh", display:"flex", flexDirection:"column", overflow:"hidden", boxShadow:"0 24px 60px rgba(0,0,0,.7)" }}>
+
+            {/* Modal header */}
+            <div style={{ padding:"18px 22px 14px", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"flex-start", gap:12, flexShrink:0 }}>
+              <span style={{ fontSize:18, color:"#f59e0b", marginTop:1 }}>⚡</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#c4d8ee", marginBottom:3 }}>Duplicate Lab Names Detected</div>
+                <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", lineHeight:1.55 }}>
+                  {dupGroups.length} group{dupGroups.length > 1 ? "s" : ""} of tests appear to be the same test under different names.<br />
+                  Select which name to use as the canonical (official) name, then click Apply.
+                </div>
+              </div>
+              <button onClick={() => setShowDupModal(false)} style={{ background:"none", border:"none", color:"#a0b4c8", fontSize:18, cursor:"pointer", padding:0, lineHeight:1, flexShrink:0, marginTop:1 }}>✕</button>
+            </div>
+
+            {/* Groups list */}
+            <div style={{ overflowY:"auto", padding:"16px 22px", flex:1 }}>
+              {dupGroups.map((g, gi) => {
+                const dec = dupDecisions[g.norm] || { canonical: g.variants[0]?.name, skip: false };
+                const totalEntries = g.variants.reduce((s, v) => s + v.count, 0);
+                return (
+                  <div key={g.norm} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"14px 16px", marginBottom:12 }}>
+                    {/* Group heading */}
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+                      <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", background:"rgba(245,158,11,.12)", color:"#f59e0b", border:"1px solid rgba(245,158,11,.28)", padding:"1px 7px", borderRadius:4, letterSpacing:"0.5px" }}>
+                        GROUP {gi + 1}
+                      </span>
+                      <span style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                        {g.names.length} variants · {totalEntries} total entries
+                      </span>
+                    </div>
+
+                    {/* Variant rows — click to set canonical */}
+                    {g.variants.map(v => {
+                      const isSelected = dec.canonical === v.name && !dec.skip;
+                      return (
+                        <div key={v.name}
+                          onClick={() => !dec.skip && setDupDecisions(d => ({ ...d, [g.norm]: { ...d[g.norm], canonical: v.name } }))}
+                          style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px", marginBottom:6, borderRadius:8,
+                            background: isSelected ? "rgba(79,142,247,.09)" : "rgba(255,255,255,.015)",
+                            border:`1px solid ${isSelected ? "rgba(79,142,247,.4)" : "#1a2840"}`,
+                            cursor: dec.skip ? "default" : "pointer",
+                            opacity: dec.skip ? 0.4 : 1,
+                            transition:"all .12s",
+                          }}>
+                          {/* Radio circle */}
+                          <div style={{ width:15, height:15, borderRadius:"50%", border:`2px solid ${isSelected ? "#4f8ef7" : "#3a4a5a"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                            {isSelected && <div style={{ width:7, height:7, borderRadius:"50%", background:"#4f8ef7" }} />}
+                          </div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:12, color:"#c4d8ee", fontWeight:600 }}>{v.name}</div>
+                            <div style={{ fontSize:9, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                              {v.count} entr{v.count === 1 ? "y" : "ies"}{v.dateRange ? ` · ${v.dateRange}` : ""}
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span style={{ fontSize:8, background:"rgba(79,142,247,.15)", color:"#4f8ef7", border:"1px solid rgba(79,142,247,.3)", padding:"1px 7px", borderRadius:3, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
+                              CANONICAL
+                            </span>
+                          )}
+                          {gi === 0 && v === g.variants[0] && !isSelected && !dec.skip && (
+                            <span style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>most common</span>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Skip toggle */}
+                    <button
+                      onClick={() => setDupDecisions(d => ({ ...d, [g.norm]: { ...d[g.norm], skip: !dec.skip } }))}
+                      style={{ marginTop:6, padding:"4px 11px", background: dec.skip ? "rgba(167,139,250,.12)" : "transparent", border:`1px solid ${dec.skip ? "rgba(167,139,250,.35)" : "#1a2840"}`, borderRadius:6, color: dec.skip ? "#a78bfa" : "#6a8090", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer", transition:"all .12s" }}>
+                      {dec.skip ? "✓ Keeping separate" : "Keep separate (skip)"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Modal footer */}
+            <div style={{ padding:"14px 22px", borderTop:"1px solid #0d1a28", display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+              <div style={{ flex:1, fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                {(() => {
+                  const merging = dupGroups.filter(g => !dupDecisions[g.norm]?.skip).length;
+                  return merging > 0
+                    ? `${merging} group${merging !== 1 ? "s" : ""} will be merged`
+                    : "No groups selected for merge";
+                })()}
+              </div>
+              <button onClick={() => setShowDupModal(false)} style={{ padding:"8px 16px", background:"transparent", border:"1px solid #1a2840", borderRadius:8, color:"#a0b4c8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
+                Cancel
+              </button>
+              <button
+                onClick={applyMerges}
+                disabled={dupGroups.every(g => dupDecisions[g.norm]?.skip)}
+                style={{ padding:"8px 20px", background: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#0f1e30" : "rgba(16,185,129,.14)", border:`1px solid ${dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#1a2840" : "rgba(16,185,129,.4)"}`, borderRadius:8, color: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#4a5c6a" : "#10b981", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "not-allowed" : "pointer" }}>
+                Apply Merges
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
