@@ -117,7 +117,7 @@ const NAV = [
   { id: "vitals",      icon: "♡", label: "Vitals" },
   { id: "symptoms",    icon: "◎", label: "Symptoms" },
   { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
   // ── System ──────────────────────────────────────────────────────────────────
   { id: "records",     icon: "▤", label: "Records" },
   { id: "documents",   icon: "▣", label: "Documents" },
@@ -631,15 +631,25 @@ function AppShell() {
                     {/* ── Care Team / Doctor Cards ── */}
                     {(() => {
                       let team = [];
+                      let selectedNames = null;
                       try { team = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
-                      if (team.length === 0) return null;
+                      try {
+                        const raw = localStorage.getItem("mi_care_team_selected");
+                        if (raw) selectedNames = new Set(JSON.parse(raw));
+                      } catch {}
+                      // Filter to selected doctors only; fall back to all if no selection saved
+                      const visible = selectedNames
+                        ? team.filter(d => selectedNames.has(d.name))
+                        : team;
+                      if (visible.length === 0) return null;
                       return (
                         <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Care Team</div>
+                            <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
-                            {team.slice(0,6).map((d, i) => (
+                            {visible.slice(0,10).map((d, i) => (
                               <div key={i} style={{ background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"12px 14px" }}>
                                 <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{d.name || "—"}</div>
                                 {d.role && <div style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>{d.role}</div>}

@@ -11,7 +11,7 @@ const NAV = [
   { id: "labs",      icon: "◈", label: "Labs & Trends" },
   { id: "vitals",    icon: "♡", label: "Vitals" },
   { id: "symptoms",  icon: "◎", label: "Symptoms" },
-  { id: "careplan",  icon: "◷", label: "Care Plan" },
+  { id: "careplan",  icon: "◷", label: "Care Plan/Team" },
   { id: "documents", icon: "▣", label: "Documents" },
   { id: "notes",     icon: "◻", label: "Notes" },
   { id: "ai",        icon: "✦", label: "AI Analysis" },

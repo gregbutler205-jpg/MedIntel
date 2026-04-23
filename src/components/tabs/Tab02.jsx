@@ -350,6 +350,18 @@ export default function ProfileTab() {
   // Active meds
   const activeMeds = meds.filter(m => m.status !== "inactive");
 
+  // Care team filtered by Dashboard selection (falls back to all if no selection saved)
+  const selectedCareTeam = (() => {
+    try {
+      const raw = localStorage.getItem("mi_care_team_selected");
+      if (raw) {
+        const names = new Set(JSON.parse(raw));
+        return careTeam.filter(d => names.has(d.name));
+      }
+    } catch {}
+    return careTeam;
+  })();
+
   function handlePrint() {
     const el = document.getElementById("print-profile");
     if (!el) return;
@@ -827,11 +839,11 @@ export default function ProfileTab() {
           </>);
         })()}
 
-        {/* Care Team */}
-        {careTeam.length > 0 && <>
+        {/* Care Team — only selected doctors shown in report */}
+        {selectedCareTeam.length > 0 && <>
           <h2>Care Team</h2>
           <div className="grid2">
-            {careTeam.map((d,i)=>(
+            {selectedCareTeam.map((d,i)=>(
               <div key={i} className="pr">
                 <span className="pr-lbl">{d.name}{d.pcp?" (PCP)":""}</span>
                 <span className="pr-val">{d.role}{d.facility?` · ${d.facility}`:""}{d.phone?` · ${d.phone}`:""}</span>

@@ -356,26 +356,70 @@ function Goals() {
 }
 
 function CareTeam() {
+  const [team] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
+  });
+  const [selected, setSelected] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("mi_care_team_selected") || "null");
+      if (Array.isArray(saved)) return new Set(saved);
+      // Default: all selected
+      const all = JSON.parse(localStorage.getItem("mi_care_team") || "[]");
+      return new Set(all.map(t => t.name));
+    } catch { return new Set(); }
+  });
+
+  function toggleDoctor(name) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      try { localStorage.setItem("mi_care_team_selected", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }
+
   return (
     <div style={{ padding:"24px 28px", overflowY:"auto", height:"100%" }}>
-      <SL>Care Team</SL>
+      <div style={{ display:"flex", alignItems:"baseline", gap:10, marginBottom:4 }}>
+        <SL mb={0}>Care Team</SL>
+      </div>
+      <p style={{ fontSize:11, color:"#6a8090", fontFamily:mono, fontStyle:"italic", marginBottom:16, lineHeight:1.55 }}>
+        Select which doctors to show on the Dashboard and in printed reports. Up to 10 may be selected.
+      </p>
       <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-        {TEAM.map(t => (
-          <div key={t.name} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 18px", display:"flex", alignItems:"center", gap:16 }}>
-            <div style={{ width:40, height:40, borderRadius:"50%", background:`${t.color}18`, border:`1px solid ${t.color}28`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:t.color, flexShrink:0 }}>
-              {t.name.split(" ").filter(w => w.match(/^[A-Z]/)).slice(0,2).map(w=>w[0]).join("")}
+        {team.map(t => {
+          const isChecked = selected.has(t.name);
+          return (
+            <div key={t.name} style={{ background:"#0b1220", border:`1px solid ${isChecked ? "#1a3a5c" : "#111e30"}`, borderRadius:12, padding:"14px 18px", display:"flex", alignItems:"center", gap:16, cursor:"pointer", transition:"border-color .15s" }}
+              onClick={() => toggleDoctor(t.name)}>
+              {/* Checkbox */}
+              <div style={{ width:18, height:18, borderRadius:4, border:`2px solid ${isChecked ? "#4f8ef7" : "#2a3a50"}`, background: isChecked ? "#4f8ef7" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .15s" }}>
+                {isChecked && <span style={{ color:"#fff", fontSize:11, lineHeight:1, fontWeight:700 }}>✓</span>}
+              </div>
+              {/* Avatar */}
+              <div style={{ width:40, height:40, borderRadius:"50%", background:`${t.color}18`, border:`1px solid ${t.color}28`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:t.color, flexShrink:0 }}>
+                {t.name.split(" ").filter(w => w.match(/^[A-Z]/)).slice(0,2).map(w=>w[0]).join("")}
+              </div>
+              {/* Info */}
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:600, color: isChecked ? "#c4d8ee" : "#7a8fa0", marginBottom:2 }}>{t.name}</div>
+                <div style={{ fontSize:11, color: isChecked ? "#b0c4d8" : "#5a6e7a" }}>{t.role}</div>
+                <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
+              </div>
+              {/* Contact */}
+              <div style={{ textAlign:"right", flexShrink:0 }}>
+                <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:4 }}>{t.phone}</div>
+                <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>
+              </div>
             </div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:2 }}>{t.name}</div>
-              <div style={{ fontSize:11, color:"#b0c4d8" }}>{t.role}</div>
-              <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
-            </div>
-            <div style={{ textAlign:"right", flexShrink:0 }}>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:4 }}>{t.phone}</div>
-              <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>
-            </div>
+          );
+        })}
+        {team.length === 0 && (
+          <div style={{ fontSize:12, color:"#5a6e7a", fontFamily:mono, textAlign:"center", padding:"24px 0" }}>
+            No care team members added yet.<br />Add doctors in the Profile tab.
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

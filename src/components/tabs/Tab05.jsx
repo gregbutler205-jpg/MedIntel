@@ -17,7 +17,7 @@ const NAV = [
   { id: "vitals",      icon: "♡", label: "Vitals" },
   { id: "symptoms",    icon: "◎", label: "Symptoms" },
   { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
   // ── System ─────────────────────────────────────────────────────────────────
   { id: "records",     icon: "▤", label: "Records" },
   { id: "documents",   icon: "▣", label: "Documents" },
@@ -141,7 +141,7 @@ const LAB_DICTIONARY = [
   { patterns: [/bilirubin/i], name:"Bilirubin (Total)", description:"A yellow pigment produced from red blood cell breakdown, processed by the liver. Elevated levels cause jaundice. High bilirubin in transplant patients may indicate rejection, bile duct problems, or graft dysfunction.", normalRange:"0.2–1.2 mg/dL", whyMatters:"Critical marker for liver graft function and biliary health." },
   { patterns: [/direct.*bili|bilirubin.*direct/i], name:"Direct (Conjugated) Bilirubin", description:"The portion of bilirubin processed by the liver. Elevated direct bilirubin strongly suggests liver or bile duct disease.", normalRange:"0.0–0.3 mg/dL", whyMatters:"More specific for liver/biliary pathology than total bilirubin." },
   { patterns: [/\bcreatinine\b/i], name:"Creatinine", description:"A waste product filtered by the kidneys. Elevated creatinine indicates impaired kidney function. In transplant patients on tacrolimus, rising creatinine signals nephrotoxicity and requires prompt attention.", normalRange:"0.74–1.35 mg/dL (men)", whyMatters:"Tracks tacrolimus nephrotoxicity risk and overall kidney function." },
-  { patterns: [/egfr|glomer.*filt/i], name:"eGFR (Estimated Glomerular Filtration Rate)", description:"Estimates how well the kidneys filter blood each minute. Values below 60 indicate reduced kidney function. Monitored closely in transplant patients taking calcineurin inhibitors like tacrolimus.", normalRange:"≥60 mL/min/1.73m²", whyMatters:"Primary measure of kidney function; tracks long-term tacrolimus nephrotoxicity." },
+  { patterns: [/egfr|\bgfr\b|glomer.*filt/i], name:"eGFR / GFR (Estimated Glomerular Filtration Rate)", description:"Estimates how well the kidneys filter blood each minute. Values below 60 indicate reduced kidney function. Monitored closely in transplant patients taking calcineurin inhibitors like tacrolimus.", normalRange:"≥60 mL/min/1.73m²", whyMatters:"Primary measure of kidney function; tracks long-term tacrolimus nephrotoxicity." },
   { patterns: [/\bglucose\b/i], name:"Glucose (Blood Sugar)", description:"The primary energy source for cells. Chronically elevated glucose indicates diabetes or poor glycemic control. Post-transplant diabetes mellitus (PTDM) is common due to tacrolimus and steroids.", normalRange:"70–99 mg/dL (fasting)", whyMatters:"Tracks glucose control; PTDM affects up to 20% of liver transplant recipients." },
   { patterns: [/hba1c|hemoglobin\s*a1c|glycated/i], name:"HbA1c (Hemoglobin A1c)", description:"Reflects average blood sugar over the past 2–3 months. Used to monitor diabetes management long-term.", normalRange:"<5.7% (normal); 5.7–6.4% (pre-diabetes); ≥6.5% (diabetes)", whyMatters:"Best measure of long-term glycemic control in PTDM." },
   { patterns: [/\bsodium\b/i], name:"Sodium", description:"An electrolyte regulating fluid balance and nerve/muscle function. Abnormal levels can cause neurological symptoms ranging from confusion to seizures.", normalRange:"136–145 mEq/L", whyMatters:"Electrolyte imbalance affects nerve function; diuretics can lower sodium." },
@@ -155,14 +155,14 @@ const LAB_DICTIONARY = [
   { patterns: [/\bhgb\b|hemoglobin/i], name:"Hemoglobin", description:"The protein in red blood cells that carries oxygen. Low hemoglobin indicates anemia.", normalRange:"13.5–17.5 g/dL (men)", whyMatters:"Low hemoglobin causes fatigue and reduced exercise tolerance." },
   { patterns: [/\bhct\b|hematocrit/i], name:"Hematocrit", description:"The percentage of blood volume occupied by red blood cells. Low hematocrit indicates anemia.", normalRange:"41–53% (men)", whyMatters:"Tracks red blood cell volume; used alongside hemoglobin to assess anemia." },
   { patterns: [/\bplatelet/i], name:"Platelets", description:"Cell fragments essential for blood clotting. Low platelets (thrombocytopenia) increase bleeding risk. Mycophenolate and valganciclovir can suppress platelet production.", normalRange:"150–400 ×10³/µL", whyMatters:"Thrombocytopenia is a known side effect of transplant immunosuppression." },
-  { patterns: [/\bneutro/i], name:"Neutrophils", description:"The most abundant white blood cells, critical for fighting bacterial and fungal infections. Low neutrophils (neutropenia) severely increase infection risk.", normalRange:"1.8–7.7 ×10³/µL", whyMatters:"Neutropenia from immunosuppression is a major infection risk factor." },
-  { patterns: [/\blympho/i], name:"Lymphocytes", description:"Immune cells that fight viral infections and recognize foreign tissue. Transplant immunosuppression intentionally reduces lymphocyte activity to prevent rejection.", normalRange:"1.0–4.8 ×10³/µL", whyMatters:"Monitored to balance rejection prevention vs. infection susceptibility." },
+  { patterns: [/\bneutro|\bsegs\b/i], name:"Neutrophils / Segs", description:"The most abundant white blood cells, critical for fighting bacterial and fungal infections. Segmented neutrophils (Segs or SEGS%) are the mature form, counted as a percentage of white blood cells in the differential. Low neutrophils (neutropenia) severely increase infection risk.", normalRange:"1.8–7.7 ×10³/µL (Absolute); 50–70% (Differential)", whyMatters:"Neutropenia from immunosuppression is a major infection risk factor; SEGS% tracks mature neutrophil activity." },
+  { patterns: [/\blympho|\blymph\b/i], name:"Lymphocytes / Lymph %", description:"Immune cells that fight viral infections and recognize foreign tissue. Transplant immunosuppression intentionally reduces lymphocyte activity to prevent rejection. Lymph % is the differential percentage of lymphocytes in the white blood cell count.", normalRange:"1.0–4.8 ×10³/µL (Absolute); 20–40% (Differential)", whyMatters:"Monitored to balance rejection prevention vs. infection susceptibility; very low lymphocytes signal heavy immunosuppression." },
   { patterns: [/\btacrolimus\b|fk506/i], name:"Tacrolimus Level (Trough)", description:"Measures tacrolimus concentration in blood before the next dose. Target range varies by transplant type and time post-transplant. Too low risks rejection; too high risks nephrotoxicity, neurotoxicity, and infection.", normalRange:"5–10 ng/mL (early); 4–8 ng/mL (maintenance)", whyMatters:"Critical for balancing rejection prevention against drug toxicity." },
   { patterns: [/cyclosporine|ciclosporin/i], name:"Cyclosporine Level", description:"A calcineurin inhibitor similar to tacrolimus. Measured as trough or 2-hour post-dose (C2). Narrow therapeutic window requires close monitoring.", normalRange:"100–400 ng/mL (varies by protocol)", whyMatters:"Therapeutic drug monitoring essential to prevent rejection or toxicity." },
   { patterns: [/\bbnp\b|nt.*probnp|brain.*natriuretic/i], name:"BNP / NT-proBNP", description:"Hormones released when the heart is under stress or the heart muscle is stretched. Elevated levels indicate heart failure or fluid overload.", normalRange:"<100 pg/mL (BNP); <125 pg/mL (NT-proBNP)", whyMatters:"Monitors cardiac status, especially relevant with fluid retention after transplant." },
   { patterns: [/prothrombin|pt\b|inr/i], name:"PT / INR (Prothrombin Time)", description:"Measures how long blood takes to clot. The INR standardizes this measurement. In liver disease, a high INR reflects reduced clotting factor production.", normalRange:"11–13.5 seconds (PT); 0.9–1.1 (INR)", whyMatters:"Reflects synthetic liver function; elevated INR indicates impaired liver function." },
   { patterns: [/\balbumin\b/i], name:"Albumin", description:"A protein made by the liver that maintains fluid balance and transports substances in the blood. Low albumin indicates poor liver function or malnutrition.", normalRange:"3.5–5.0 g/dL", whyMatters:"A key marker of liver synthetic function and nutritional status." },
-  { patterns: [/total\s*protein/i], name:"Total Protein", description:"Measures the total amount of protein in the blood, including albumin and globulins. Used to assess nutritional status and liver function.", normalRange:"6.3–8.2 g/dL", whyMatters:"Low protein can indicate liver disease, malnutrition, or protein-losing conditions." },
+  { patterns: [/total\s*protein|protein\s*total/i], name:"Total Protein", description:"Measures the total amount of protein in the blood, including albumin and globulins. Used to assess nutritional status and liver function.", normalRange:"6.3–8.2 g/dL", whyMatters:"Low protein can indicate liver disease, malnutrition, or protein-losing conditions." },
   { patterns: [/\bglobulin/i], name:"Globulin", description:"A group of proteins including antibodies and carrier proteins. High globulin may indicate chronic inflammation or immune activation.", normalRange:"2.0–3.5 g/dL", whyMatters:"Elevated globulin can reflect chronic infection or immune dysregulation." },
   { patterns: [/\bcholesterol\b|total\s*chol/i], name:"Total Cholesterol", description:"Measures all cholesterol in the blood. High levels increase cardiovascular disease risk, already elevated in transplant patients on steroids and tacrolimus.", normalRange:"<200 mg/dL (desirable)", whyMatters:"Transplant patients have higher cardiovascular risk; statin therapy often required." },
   { patterns: [/\bldl\b/i], name:"LDL Cholesterol", description:"\"Bad\" cholesterol that builds up in artery walls. Minimizing LDL is a priority in transplant patients who have elevated cardiovascular risk.", normalRange:"<100 mg/dL (optimal)", whyMatters:"Primary target for cardiovascular risk reduction post-transplant." },
@@ -179,6 +179,22 @@ const LAB_DICTIONARY = [
   { patterns: [/\bc\s*reactive|crp\b/i], name:"CRP (C-Reactive Protein)", description:"A protein produced by the liver in response to inflammation or infection. A sensitive marker of acute inflammation, infection, or injury.", normalRange:"<1.0 mg/L (low risk); 1–3 mg/L (average risk); >3 mg/L (high risk)", whyMatters:"Elevated CRP can signal infection, rejection, or systemic inflammation." },
   { patterns: [/esr|erythrocyte.*sed/i], name:"ESR (Erythrocyte Sedimentation Rate)", description:"Measures how quickly red blood cells settle in a tube. A non-specific marker of inflammation, infection, and autoimmune disease.", normalRange:"0–15 mm/hr (men); 0–20 mm/hr (women)", whyMatters:"Used alongside CRP to detect systemic inflammation." },
   { patterns: [/\bbnp\b/i], name:"BNP (B-type Natriuretic Peptide)", description:"Released by the heart ventricles when under stress. A key marker for heart failure and fluid overload.", normalRange:"<100 pg/mL", whyMatters:"Elevated BNP signals cardiac stress, important in patients with hypertension or fluid retention." },
+  // ── CBC Indices ─────────────────────────────────────────────────────────────
+  { patterns: [/\bmcv\b/i], name:"MCV (Mean Corpuscular Volume)", description:"The average size of red blood cells. A low MCV (microcytic) suggests iron deficiency or thalassemia. A high MCV (macrocytic) suggests vitamin B12 or folate deficiency. Mycophenolate can cause macrocytosis (enlarged red blood cells), making MCV a useful monitoring tool in transplant patients.", normalRange:"80–100 fL", whyMatters:"Helps classify anemia type; mycophenolate-related macrocytosis (high MCV) is common in transplant patients." },
+  { patterns: [/\bmch\b(?!c)/i], name:"MCH (Mean Corpuscular Hemoglobin)", description:"The average amount of hemoglobin inside each red blood cell. Low MCH (hypochromic cells) usually accompanies iron deficiency anemia. High MCH may indicate vitamin B12 or folate deficiency, which can occur with certain medications including mycophenolate.", normalRange:"27–33 pg", whyMatters:"Low MCH suggests iron deficiency; high MCH may indicate B12/folate deficiency common in patients on immunosuppressants." },
+  { patterns: [/\bmchc\b/i], name:"MCHC (Mean Corpuscular Hemoglobin Concentration)", description:"The average concentration of hemoglobin packed into each red blood cell. Low MCHC occurs in iron deficiency or thalassemia. High MCHC may suggest hereditary spherocytosis. Used alongside MCV and MCH to characterize the type of anemia present.", normalRange:"32–36 g/dL", whyMatters:"Used alongside MCV and MCH to identify the specific type and likely cause of anemia post-transplant." },
+  { patterns: [/\brdw[- ]*sd\b/i], name:"RDW-SD (Red Cell Distribution Width — Standard Deviation)", description:"Measures the actual width of the red blood cell size distribution in femtoliters — a more absolute measure than the percentage-based RDW-CV. Elevated values indicate anisocytosis (variation in red blood cell size). Used alongside RDW-CV to fully characterize red blood cell size variation and anemia type.", normalRange:"39–46 fL", whyMatters:"Provides additional detail on red blood cell size variation; helps characterize anemia type alongside RDW-CV." },
+  { patterns: [/\brdw\b/i], name:"RDW (Red Cell Distribution Width)", description:"Measures the variation in size of red blood cells as a percentage (RDW-CV). A high RDW (anisocytosis) indicates that red blood cells vary widely in size, occurring in iron deficiency, B12/folate deficiency, and mixed anemias. Chronic disease and nutritional deficiencies common after transplant can elevate RDW.", normalRange:"11.5–14.5%", whyMatters:"An elevated RDW suggests mixed or nutritional anemia — common post-transplant; often rises before MCV changes are visible." },
+  // ── White Blood Cell Differential ───────────────────────────────────────────
+  { patterns: [/\bmonocyte/i], name:"Monocytes", description:"White blood cells that engulf and destroy pathogens and dead cells, playing a key role in immune surveillance. Elevated monocytes (monocytosis) may indicate chronic infection, inflammatory disease, or recovery from acute illness. Low counts are seen with severe immunosuppression. Reported as absolute count, percentage, or relative value.", normalRange:"0.2–0.8 ×10³/µL (Absolute); 2–8% (Differential)", whyMatters:"Monocyte counts reflect immune activity; significant changes may signal infection or altered immune status post-transplant." },
+  { patterns: [/\beosino/i], name:"Eosinophils", description:"White blood cells involved in allergic reactions and fighting parasites. Mild elevations are common with allergies or asthma. After transplant, elevated eosinophils can indicate drug hypersensitivity reactions, atypical infections, or in rare cases, eosinophilic rejection. Very low counts are typical during acute steroid therapy.", normalRange:"0.05–0.5 ×10³/µL (Absolute); 1–4% (Differential)", whyMatters:"Elevated eosinophils post-transplant may signal drug hypersensitivity or atypical infection worth investigating." },
+  { patterns: [/\bbasophil/i], name:"Basophils", description:"The rarest type of white blood cell, involved in allergic responses and inflammation. Basophils typically make up less than 1% of white blood cells. Low counts are common and rarely clinically significant. Very high counts (basophilia) may indicate allergic reactions, inflammatory conditions, or rarely blood disorders.", normalRange:"0–0.1 ×10³/µL (Absolute); 0–1% (Differential)", whyMatters:"Monitored as part of the CBC differential; significant elevations may indicate allergic or inflammatory conditions." },
+  // ── Metabolic / Chemistry ────────────────────────────────────────────────────
+  { patterns: [/\bbun\b|blood\s*urea\s*nitrogen|urea\s*nitrogen/i], name:"BUN (Blood Urea Nitrogen)", description:"A waste product from protein metabolism, filtered by the kidneys. Elevated BUN indicates impaired kidney function, dehydration, or high protein intake. In transplant patients on tacrolimus, rising BUN alongside creatinine suggests nephrotoxicity. The BUN-to-creatinine ratio helps distinguish kidney disease from dehydration.", normalRange:"7–20 mg/dL", whyMatters:"Monitors kidney filtration function alongside creatinine; tacrolimus nephrotoxicity is a key concern post-transplant." },
+  { patterns: [/\bco2\b|carbon\s*dioxide|bicarbonate/i], name:"CO2 (Carbon Dioxide / Bicarbonate)", description:"Reported as bicarbonate on a basic metabolic panel, CO2 reflects the body's acid-base balance. Low CO2 indicates metabolic acidosis, which can occur in kidney disease, diabetic ketoacidosis, or renal tubular acidosis — a known complication of tacrolimus. High CO2 suggests metabolic alkalosis from vomiting or diuretic use.", normalRange:"22–29 mEq/L", whyMatters:"Monitors acid-base status; declining CO2 in transplant patients may indicate worsening kidney function or tacrolimus-related renal tubular acidosis." },
+  { patterns: [/anion\s*gap/i], name:"Anion Gap", description:"The difference between measured positively and negatively charged ions in the blood. An elevated anion gap indicates that the body is producing or retaining excess acids (metabolic acidosis), occurring in sepsis, acute kidney injury, diabetic ketoacidosis, or toxic ingestions. In transplant patients, infections and kidney impairment are the most common causes.", normalRange:"3–11 mEq/L", whyMatters:"An elevated anion gap in transplant patients may signal acute kidney injury, sepsis, or metabolic complications requiring urgent evaluation." },
+  { patterns: [/\ba[\s/]?g\s*ratio|albumin.*globulin.*ratio/i], name:"A/G Ratio (Albumin/Globulin Ratio)", description:"The ratio of albumin to globulin proteins in the blood. A low A/G ratio (below 1.1) may indicate liver disease reducing albumin production, kidney disease causing protein loss, or immune activation increasing globulins. A high ratio may suggest hypogammaglobulinemia. In transplant patients, this ratio helps assess both liver synthetic function and immune status.", normalRange:"1.1–2.5", whyMatters:"Abnormal A/G ratio signals liver dysfunction or immune dysregulation — both critical to monitor after transplant." },
+  { patterns: [/osmolality/i], name:"Osmolality (Calculated / Serum)", description:"Measures the concentration of dissolved particles in the blood, reflecting hydration status and kidney concentrating ability. Elevated serum osmolality indicates dehydration or high sodium/glucose. A large difference between calculated and measured osmolality (osmol gap) can signal toxic alcohol ingestion or severe metabolic disturbance. Relevant in transplant patients with fluid management challenges.", normalRange:"275–295 mOsm/kg H₂O", whyMatters:"Monitors hydration status and fluid balance; helps detect dehydration and certain metabolic disturbances post-transplant." },
 ];
 
 function lookupLabDef(testName) {
@@ -271,6 +287,82 @@ function printAIResponse(question, answer, logoUrl) {
     <div class="footer">
       <span>Insina Health &mdash; Personal Health Intelligence</span>
       <span>Generated ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+function printLabReport(labs, logoUrl) {
+  // Most recent entry per test name
+  const latest = {};
+  labs.forEach(l => {
+    const key = (l.name || "").toLowerCase().trim();
+    if (!key) return;
+    if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) latest[key] = l;
+  });
+  const tests = Object.values(latest);
+
+  const LAB_CAT_ORDER = ["Chemistry","CBC / Hematology","Immunosuppression","Liver Panel","Lipid Panel","Electrolytes","Endocrine","Infection / Serology","Urinalysis","Other"];
+  const grouped = {};
+  tests.forEach(t => {
+    const cat = t.category || "Other";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(t);
+  });
+  Object.values(grouped).forEach(arr => arr.sort((a, b) => (a.name||"").localeCompare(b.name||"")));
+  const orderedCats = [...LAB_CAT_ORDER, ...Object.keys(grouped).filter(c => !LAB_CAT_ORDER.includes(c))];
+
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+
+  const tableRows = orderedCats.filter(c => grouped[c]?.length).map(cat => {
+    const rows = grouped[cat].map(t => {
+      const status = t.flag ? '<span style="color:#d97706;font-weight:700">⚠ Flagged</span>' : '<span style="color:#059669">✓ Normal</span>';
+      return `<tr>
+        <td>${(t.name||"").replace(/</g,"&lt;")}</td>
+        <td style="text-align:center;font-weight:600">${t.value||"—"}</td>
+        <td style="text-align:center">${t.unit||"—"}</td>
+        <td style="text-align:center">${t.refRange||"—"}</td>
+        <td style="text-align:center">${t.date||"—"}</td>
+        <td style="text-align:center">${status}</td>
+      </tr>`;
+    }).join("");
+    return `<tr><td colspan="6" class="cat-hdr">${cat}</td></tr>${rows}`;
+  }).join("");
+
+  const win = window.open("", "_blank", "width=1000,height=750");
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Lab Report — Insina Health</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Arial,sans-serif; max-width:900px; margin:40px auto; color:#1a1a1a; font-size:13px; line-height:1.5; padding:0 24px; }
+      .logo { height:50px; margin-bottom:18px; }
+      h1 { font-size:26px; font-weight:700; letter-spacing:-.4px; margin-bottom:4px; }
+      .subtitle { font-size:12px; color:#555; margin-bottom:20px; }
+      hr { border:none; border-top:2px solid #2563eb; margin-bottom:22px; }
+      table { width:100%; border-collapse:collapse; font-size:12px; }
+      th { background:#1e40af; color:#fff; padding:8px 10px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; }
+      td { padding:7px 10px; border-bottom:1px solid #e5e7eb; }
+      tr:nth-child(even) td { background:#f8faff; }
+      .cat-hdr { background:#dbeafe; color:#1e3a8a; font-weight:700; font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:8px 10px; }
+      .footer { margin-top:36px; border-top:1px solid #ddd; padding-top:10px; font-size:10px; color:#777; display:flex; justify-content:space-between; }
+      @media print { body { margin:18px; } }
+    </style>
+  </head><body>
+    <img src="${logoUrl}" class="logo" />
+    <h1>Lab Results Report</h1>
+    <div class="subtitle">Most recent value per test &nbsp;·&nbsp; Generated ${date}</div>
+    <hr />
+    <table>
+      <thead><tr>
+        <th>Test Name</th><th style="text-align:center">Value</th><th style="text-align:center">Unit</th>
+        <th style="text-align:center">Ref Range</th><th style="text-align:center">Date</th><th style="text-align:center">Status</th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+    <div class="footer">
+      <span>Insina Health &mdash; Personal Health Intelligence</span>
+      <span>Printed ${date} &nbsp;·&nbsp; ${tests.length} tests</span>
     </div>
     <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
@@ -559,7 +651,9 @@ CARE TEAM:
 ${careStr}
 Note: For liver/hepatic findings, reference ${liverDoc}.
 
-RESPONSE FORMAT: No emojis. No pipe tables. Bold section headers on their own line. Use ----- as section dividers. Bullet points for lists.`;
+RESPONSE FORMAT: No emojis. No pipe tables. Bold section headers on their own line. Use ----- as section dividers. Bullet points for lists.
+
+CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.`;
 
       const res = await fetch(`${PROXY_URL}/api/chat`, {
         method: "POST",
@@ -620,7 +714,7 @@ Be direct and clinically specific.`,
           `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}${l.flag ? " ⚠ FLAGGED" : ""}`
         ).join("\n")
       ).join("\n\n");
-      const qaSystem = `You are a personal health assistant for Greg Butler, a Living Donor Liver Transplant (LDLT) patient. Answer questions about his lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists.
+      const qaSystem = `You are a personal health assistant for Greg Butler, a Living Donor Liver Transplant (LDLT) patient. Answer questions about his lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best answer possible with available information.
 
 CONDITIONS:
 ${condStr}
@@ -738,7 +832,15 @@ ${labsStr}`;
 
           {/* Left column — lab list */}
           <div style={{ width: 292, minWidth: 292, borderRight: "1px solid #0d1a28", overflowY: "auto", padding: "20px 14px 20px 16px" }}>
-            <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px", marginBottom: 4 }}>Labs & Trends</h1>
+            <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:4 }}>
+              <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Labs & Trends</h1>
+              {dedupedLabs.length > 0 && (
+                <button onClick={() => printLabReport(importedLabs, PRINT_LOGO)}
+                  style={{ marginTop:4, padding:"4px 10px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:6, color:"#7eb8d8", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
+                  ⎙ Print Report
+                </button>
+              )}
+            </div>
             <p style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
               {dedupedLabs.length > 0 ? `${dedupedLabs.length} tests · ${flaggedCount} flagged` : "No imported labs yet"}
             </p>
@@ -841,7 +943,26 @@ ${labsStr}`;
                   const visible = dedupedLabs
                     .filter(l => importedCatFilter === "All" || (l.category || "Other") === importedCatFilter)
                     .filter(l => !showFlagged || l.flag);
-                  const sorted = [...visible].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+                  // Build flat items list: section headers when "All", flat when filtered
+                  const listItems = [];
+                  if (importedCatFilter === "All") {
+                    const grouped = {};
+                    visible.forEach(lab => {
+                      const cat = lab.category || "Other";
+                      if (!grouped[cat]) grouped[cat] = [];
+                      grouped[cat].push(lab);
+                    });
+                    Object.values(grouped).forEach(arr => arr.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
+                    const orderedCats = [...LAB_CATEGORIES, ...Object.keys(grouped).filter(c => !LAB_CATEGORIES.includes(c))];
+                    orderedCats.filter(c => grouped[c]?.length).forEach(cat => {
+                      listItems.push({ type: "header", cat });
+                      grouped[cat].forEach(lab => listItems.push({ type: "lab", lab }));
+                    });
+                  } else {
+                    [...visible].sort((a, b) => (a.name || "").localeCompare(b.name || "")).forEach(lab => listItems.push({ type: "lab", lab }));
+                  }
+
                   return (
                     <>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
@@ -854,14 +975,20 @@ ${labsStr}`;
                           </button>
                         ))}
                       </div>
-                      {sorted.map((lab, i) => {
-                        const { low, high } = parseRefRange(lab.refRange);
-                        const val = parseFloat(lab.value);
+                      {listItems.map((item, i) => {
+                        if (item.type === "header") {
+                          return (
+                            <div key={`hdr-${item.cat}`} style={{ fontSize: 9, fontWeight: 700, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #0d1a28" }}>
+                              {item.cat}
+                            </div>
+                          );
+                        }
+                        const { lab } = item;
                         const isSelected = selectedImportedLab && (selectedImportedLab.name || "").toLowerCase() === (lab.name || "").toLowerCase();
                         // Count how many readings exist for this test
                         const histCount = importedLabs.filter(l => (l.name || "").toLowerCase() === (lab.name || "").toLowerCase()).length;
                         return (
-                          <div key={i} className={`lab-row ${isSelected ? "sel" : ""}`}
+                          <div key={`${lab.name}-${i}`} className={`lab-row ${isSelected ? "sel" : ""}`}
                             onClick={() => selectImportedLab(lab)}
                             style={{ animationDelay: `${i * 18}ms`, flexDirection: "column", gap: 3, cursor: "pointer" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

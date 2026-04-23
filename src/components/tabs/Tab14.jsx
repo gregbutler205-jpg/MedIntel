@@ -331,7 +331,7 @@ Please provide:
         body:JSON.stringify({
           model:"claude-sonnet-4-6",
           max_tokens:1024,
-          system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers.", cache_control:{ type:"ephemeral" } }],
+          system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best guidance possible with available information.", cache_control:{ type:"ephemeral" } }],
           messages:[{ role:"user", content:buildPrompt() }],
         }),
       });

@@ -14,7 +14,7 @@ const NAV = [
   { id: "vitals",      icon: "♡", label: "Vitals" },
   { id: "symptoms",    icon: "◎", label: "Symptoms" },
   { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Plan" },
+  { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
   // ── System ─────────────────────────────────────────────────────────────────
   { id: "records",     icon: "▤", label: "Records" },
   { id: "documents",   icon: "▣", label: "Documents" },
