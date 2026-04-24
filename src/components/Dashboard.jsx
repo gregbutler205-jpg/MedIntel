@@ -230,8 +230,10 @@ export default function App() {
 
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
           <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>
+            {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })()}
+          </div>
+          {(() => { try { const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]"); const a = c.filter(x => x.status === "active"); return a.length > 0 ? <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>{a[0].name}</div> : null; } catch { return null; } })()}
         </div>
 
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
@@ -272,7 +274,10 @@ export default function App() {
 
         <div style={{ flex: 1, overflowY: "auto", padding: "28px" }}>
           <div style={{ marginBottom: 26 }}>
-            <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>Good afternoon, Greg.</h1>
+            <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>
+              {(new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening")}
+              {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); const f = (p.name || "").split(" ")[0]; return f ? `, ${f}.` : "."; } catch { return "."; } })()}
+            </h1>
             <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>3 upcoming events · 2 alerts need attention</p>
           </div>
 

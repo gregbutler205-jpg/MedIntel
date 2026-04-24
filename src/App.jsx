@@ -260,7 +260,7 @@ function AppSidebar({ activeNav, setActiveNav }) {
       <div style={{ padding: "12px 18px", borderBottom: "1px solid #0d1a28" }}>
         <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
         <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>
-          {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "Greg Butler"; } catch { return "Greg Butler"; } })()}
+          {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })()}
         </div>
       </div>
 
@@ -526,7 +526,9 @@ function AppShell() {
                   <div className="live-dot" />
                   <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
                 </div>
-                <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
+                <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return (p.name || "?")[0].toUpperCase(); } catch { return "?"; } })()}
+                </div>
               </div>
 
               {/* Content */}
@@ -542,7 +544,10 @@ function AppShell() {
                 {!ActiveTabComponent && (
                   <>
                     <div style={{ marginBottom: 26 }}>
-                      <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>Good afternoon, Greg.</h1>
+                      <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>
+                        {(time.getHours() < 12 ? "Good morning" : time.getHours() < 17 ? "Good afternoon" : "Good evening")}
+                        {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); const first = (p.name || "").split(" ")[0]; return first ? `, ${first}.` : "."; } catch { return "."; } })()}
+                      </h1>
                       <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>3 upcoming events · 2 alerts need attention</p>
                     </div>
 

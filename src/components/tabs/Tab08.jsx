@@ -15,20 +15,6 @@ const TEAM = (() => { try { return JSON.parse(localStorage.getItem("mi_care_team
 
 const PREVENTIVE = (() => { try { return JSON.parse(localStorage.getItem("mi_preventive") || "[]"); } catch { return []; } })();
 
-const MILESTONES = [
-  { label:"Transplant Surgery",             date:"Oct 1, 2024",       done:true,  note:"LDKT right iliac fossa. Immediate graft function. 5-day admission. Discharge Cr: 1.18 mg/dL." },
-  { label:"First Transplant Clinic Visit",  date:"Oct 7, 2024",       done:true,  note:"First business day post-discharge. Labs + nurse coordinator + pharmacist review." },
-  { label:"Months 0–1: Labs 2–3×/week",    date:"Oct–Nov 2024",      done:true,  note:"Frequent labs during Tacrolimus dose adjustment phase. Clinic 1–2× per week." },
-  { label:"Months 1–3: Labs Weekly",        date:"Nov–Dec 2024",      done:true,  note:"Labs every week. Clinic every 2–6 weeks. Highest rejection risk window." },
-  { label:"Months 3–6: Labs Every 2–3 wk", date:"Jan–Apr 2025",      done:true,  note:"Labs every 2–3 weeks. Clinic every 1–2 months. Immunosuppression stabilizing." },
-  { label:"Months 6–12: Labs Monthly",     date:"Apr–Oct 2025",      done:true,  note:"Labs every 4 weeks. Clinic every 2–3 months." },
-  { label:"Protocol Biopsy (12 months)",    date:"Oct 14, 2025",      done:true,  note:"No acute rejection. Mild IF/TA Grade 1 (ci1 ct1). No CNI toxicity. Continue current regimen." },
-  { label:"Bone Density Test",              date:"Due Oct 2025",      done:false, note:"Due at 12-month mark — not yet scheduled. Prednisone use affects bone density. Schedule ASAP." },
-  { label:"Months 12–18: Labs Every 6 wk", date:"Oct 2025–Apr 2026", done:false, note:"Labs every 6 weeks. Clinic every 3–6 months." },
-  { label:"Annual Dermatology Screen",      date:"Due Apr 2026",      done:false, note:"First annual skin cancer screening overdue. Immunosuppression significantly raises risk. Schedule ASAP." },
-  { label:"Months 18–24: Labs Every 8 wk", date:"Apr–Oct 2026",      done:false, note:"Labs every 8 weeks. Clinic every 6–12 months." },
-  { label:"Year 3+ Monitoring",            date:"Oct 2026+",         done:false, note:"Labs every 12 weeks. Annual transplant clinic visits. Lifelong anti-rejection medicine and monitoring." },
-];
 
 const EMERGENCY = [
   {
@@ -480,26 +466,82 @@ function Emergency() {
 }
 
 function Milestones() {
+  const [milestones, setMilestones] = useState(() => {
+    try { const s = localStorage.getItem("mi_milestones"); return s ? JSON.parse(s) : []; } catch { return []; }
+  });
+  const [showAdd, setShowAdd] = useState(false);
+  const [newM, setNewM] = useState({ label:"", date:"", done:false, note:"" });
+
+  const saveMilestones = (updated) => {
+    setMilestones(updated);
+    try { localStorage.setItem("mi_milestones", JSON.stringify(updated)); } catch {}
+  };
+  const addMilestone = () => {
+    if (!newM.label.trim()) return;
+    saveMilestones([...milestones, { ...newM, id: Date.now() }]);
+    setNewM({ label:"", date:"", done:false, note:"" });
+    setShowAdd(false);
+  };
+  const toggleDone = (id) => saveMilestones(milestones.map(m => m.id === id ? { ...m, done: !m.done } : m));
+  const deleteMilestone = (id) => saveMilestones(milestones.filter(m => m.id !== id));
+
   return (
     <div style={{ padding:"24px 28px", overflowY:"auto", height:"100%" }}>
-      <SL>Post-Transplant Milestones</SL>
-      {MILESTONES.map((m, i) => (
-        <div key={m.label} style={{ display:"flex", gap:14, marginBottom:14 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+        <SL mb={0}>Health Milestones</SL>
+        <button className="add-badge-btn" onClick={() => setShowAdd(true)}>+ Add Milestone</button>
+      </div>
+      {milestones.length === 0 && (
+        <div style={{ textAlign:"center", padding:"40px 0", fontSize:13, color:"#98afc4", fontFamily:mono }}>
+          No milestones yet. Add your first one to track your health journey.
+        </div>
+      )}
+      {milestones.map((m, i) => (
+        <div key={m.id || i} style={{ display:"flex", gap:14, marginBottom:14 }}>
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:20, flexShrink:0 }}>
-            <div style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${m.done ? "#10b981" : "#98afc4"}`, background: m.done ? "#10b981" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", flexShrink:0 }}>
+            <div onClick={() => toggleDone(m.id)} style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${m.done ? "#10b981" : "#98afc4"}`, background: m.done ? "#10b981" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", flexShrink:0, cursor:"pointer", transition:"all .15s" }}>
               {m.done ? "✓" : ""}
             </div>
-            {i < MILESTONES.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
+            {i < milestones.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
           </div>
           <div style={{ flex:1, background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"12px 16px" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:5, gap:8 }}>
               <div style={{ fontSize:13, fontWeight:600, color: m.done ? "#b0c4d8" : "#c4d8ee" }}>{m.label}</div>
-              <span style={{ fontSize:10, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono, flexShrink:0 }}>{m.date}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+                {m.date && <span style={{ fontSize:10, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono }}>{m.date}</span>}
+                <span onClick={() => deleteMilestone(m.id)} style={{ fontSize:10, color:"#a0b4c8", cursor:"pointer", lineHeight:1 }} title="Delete">✕</span>
+              </div>
             </div>
-            <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{m.note}</div>
+            {m.note && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{m.note}</div>}
           </div>
         </div>
       ))}
+
+      {showAdd && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:50 }} onClick={() => setShowAdd(false)}>
+          <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:26, width:420 }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily:serif, fontSize:19, color:"#dde8f5", marginBottom:18 }}>Add Milestone</div>
+            {[
+              { label:"Label", key:"label", placeholder:"e.g. 6-Month Biopsy" },
+              { label:"Date", key:"date", placeholder:"e.g. Apr 2025" },
+              { label:"Notes", key:"note", placeholder:"Outcome or details (optional)…" },
+            ].map(f => (
+              <div key={f.key} style={{ marginBottom:12 }}>
+                <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:mono, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>{f.label}</label>
+                <input className="modal-input" value={newM[f.key]} onChange={e => setNewM(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} onKeyDown={e => e.key === "Enter" && addMilestone()} />
+              </div>
+            ))}
+            <label style={{ display:"flex", alignItems:"center", gap:8, marginBottom:18, cursor:"pointer", fontSize:12, color:"#b0c4d8", fontFamily:sora }}>
+              <input type="checkbox" checked={newM.done} onChange={e => setNewM(p => ({ ...p, done: e.target.checked }))} />
+              Mark as completed
+            </label>
+            <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <button onClick={() => setShowAdd(false)} style={{ padding:"7px 16px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontFamily:sora, cursor:"pointer", fontSize:12 }}>Cancel</button>
+              <button onClick={addMilestone} style={{ padding:"7px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:sora, cursor:"pointer", fontSize:12 }}>Add</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

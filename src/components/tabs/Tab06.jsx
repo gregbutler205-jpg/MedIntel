@@ -518,8 +518,10 @@ export default function App({ onNavChange }) {
         </div>
         <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
           <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
-          <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize:11, color:"#98afc4", marginTop:2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>
+            {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })()}
+          </div>
+          {(() => { try { const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]"); const a = c.filter(x => x.status === "active"); return a.length > 0 ? <div style={{ fontSize:11, color:"#98afc4", marginTop:2 }}>{a[0].name}</div> : null; } catch { return null; } })()}
         </div>
         <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
           <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>

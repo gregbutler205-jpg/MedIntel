@@ -624,6 +624,9 @@ export default function App({ onNavChange }) {
       const hepatoDoc = careTeam.find(d => /hepat/i.test(d.role) || /hepat/i.test(d.name)) || { name: "Dr. Mariana Zapata" };
       const liverDoc = hepatoDoc.name;
 
+      // Patient name from profile
+      const patientName = (() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "the patient"; } catch { return "the patient"; } })();
+
       // Build lab summary from most recent imported results (deduplicated by name — latest per test)
       const dedupForAI = {};
       [...importedLabs].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).forEach(l => {
@@ -634,9 +637,9 @@ export default function App({ onNavChange }) {
         `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — OUT OF RANGE" : ""}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`
       ).join("\n");
 
-      const systemPrompt = `You are an intelligent health assistant analyzing lab results for Greg Butler, a Living Donor Liver Transplant (LDLT) patient. Cross-reference his profile when explaining findings. Never ask about conditions already listed — treat them as known facts.
+      const systemPrompt = `You are an intelligent health assistant analyzing lab results for ${patientName}. Cross-reference their profile when explaining findings. Never ask about conditions already listed — treat them as known facts.
 
-PATIENT IDENTITY: Greg Butler — Living Donor LIVER Transplant (LDLT) Oct 1, 2024. NOT a kidney transplant.
+PATIENT: ${patientName}
 
 ACTIVE CONDITIONS:
 ${condStr}
@@ -664,7 +667,7 @@ CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely can
           system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
           messages: [{
             role: "user",
-            content: `Analyze the following lab results in the context of Greg's profile. Cross-reference medications and surgical history with any abnormal findings. For each concern, name the specific doctor from the care team best suited to address it.
+            content: `Analyze the following lab results in the context of ${patientName}'s profile. Cross-reference medications and surgical history with any abnormal findings. For each concern, name the specific doctor from the care team best suited to address it.
 
 LAB RESULTS (most recent per test):
 ${labSummary || "No imported labs available yet."}
@@ -704,6 +707,7 @@ Be direct and clinically specific.`,
       const safeRead = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
       const conditions = safeRead("mi_conditions");
       const meds = safeRead("mi_meds_full");
+      const qaPatientName = (() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "the patient"; } catch { return "the patient"; } })();
       const condStr = conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}`).join("\n") || "None recorded";
       const medsStr = meds.filter(m => m.status !== "inactive").map(m => `- ${m.name} ${m.dose || ""} ${m.frequency || ""}`.trim()).join("\n") || "None recorded";
       const byDate = {};
@@ -714,7 +718,7 @@ Be direct and clinically specific.`,
           `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}${l.flag ? " ⚠ FLAGGED" : ""}`
         ).join("\n")
       ).join("\n\n");
-      const qaSystem = `You are a personal health assistant for Greg Butler, a Living Donor Liver Transplant (LDLT) patient. Answer questions about his lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best answer possible with available information.
+      const qaSystem = `You are a personal health assistant for ${qaPatientName}. Answer questions about their lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best answer possible with available information.
 
 CONDITIONS:
 ${condStr}
@@ -788,8 +792,10 @@ ${labsStr}`;
         </div>
         <div style={{ padding: "14px 18px", borderBottom: "1px solid #0d1a28" }}>
           <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>Greg Butler</div>
-          <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>Transplant · Immunosuppressed</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>
+            {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })()}
+          </div>
+          {(() => { try { const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]"); const a = c.filter(x => x.status === "active"); return a.length > 0 ? <div style={{ fontSize: 11, color: "#98afc4", marginTop: 2 }}>{a[0].name}</div> : null; } catch { return null; } })()}
         </div>
         <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
           <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>

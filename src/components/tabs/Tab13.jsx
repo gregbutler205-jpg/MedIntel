@@ -160,7 +160,7 @@ export default function DataBackup() {
     const exportData = {
       exported: new Date().toISOString(),
       exportType: type,
-      patient: "Greg Butler",
+      patient: (() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })(),
       version: "1.0",
       labs:         safeRead("mi_labs"),
       medications:  safeRead("mi_meds_full"),
@@ -171,6 +171,7 @@ export default function DataBackup() {
       notes:        safeRead("mi_notes"),
       appointments: safeRead("mi_appointments"),
       symptoms:     safeRead("mi_symptoms"),
+      milestones:   safeRead("mi_milestones"),
     };
 
     // Trim irrelevant sections for specific export types
@@ -190,6 +191,52 @@ export default function DataBackup() {
     a.click();
     URL.revokeObjectURL(url);
     showToast(`${type} downloaded`);
+  }
+
+  function handleImport() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          const MAP = {
+            labs:         "mi_labs",
+            medications:  "mi_meds_full",
+            readings:     "mi_readings",
+            conditions:   "mi_conditions",
+            surgeries:    "mi_surgeries",
+            careTeam:     "mi_care_team",
+            notes:        "mi_notes",
+            appointments: "mi_appointments",
+            symptoms:     "mi_symptoms",
+            milestones:   "mi_milestones",
+          };
+          let count = 0;
+          Object.entries(MAP).forEach(([jsonKey, storageKey]) => {
+            if (data[jsonKey] !== undefined) {
+              localStorage.setItem(storageKey, JSON.stringify(data[jsonKey]));
+              count++;
+            }
+          });
+          // Also restore profile keys if present
+          ["mi_profile_personal","mi_profile_insurance","mi_allergies","mi_emergency_contacts",
+           "mi_care_goals","mi_preventive","mi_care_team_selected","mi_lab_canonical"].forEach(k => {
+            if (data[k] !== undefined) { localStorage.setItem(k, JSON.stringify(data[k])); count++; }
+          });
+          showToast(`Restored ${count} data sections — reloading…`);
+          setTimeout(() => window.location.reload(), 1800);
+        } catch {
+          showToast("Import failed — invalid JSON file");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   function handleSaveApiKey(key) {
@@ -281,9 +328,17 @@ export default function DataBackup() {
         </div>
       </div>
 
-      {/* Row 2: Export */}
+      {/* Row 2: Export + Import */}
       <div style={{ ...cardStyle, marginBottom: 14 }}>
-        <div style={sectionLbl}>Export Your Data</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={sectionLbl}>Export Your Data</div>
+          <button
+            onClick={handleImport}
+            style={{ padding: "6px 14px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#10b981", fontFamily: "'DM Mono',monospace", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+          >
+            ↑ Restore from File
+          </button>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
           <ExportTile icon="📄" label="Full Export"     sub="All data as JSON — labs, meds, vitals, notes"  onClick={() => handleExport("Full Export")} />
           <ExportTile icon="📊" label="Labs CSV"        sub="All lab results in spreadsheet format"          onClick={() => handleExport("Labs CSV")} />

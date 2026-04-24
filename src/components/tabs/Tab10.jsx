@@ -236,7 +236,7 @@ function AIPanel({ note, onClose }) {
         headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514", max_tokens: 700,
-          system: "You are a medical note assistant for Greg Butler, a 61-year-old liver transplant recipient (12/17/2024) on tacrolimus immunosuppression. Summarize the note concisely, highlight any urgent items, and suggest 2–3 follow-up questions or actions. Use plain language. Keep your response under 250 words.",
+          system: `You are a medical note assistant for ${(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "the patient"; } catch { return "the patient"; } })()} — ${(() => { try { const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]"); const a = c.filter(x => x.status === "active"); return a.length > 0 ? a.map(x => x.name).join(", ") : "a patient"; } catch { return "a patient"; } })()}. Summarize the note concisely, highlight any urgent items, and suggest 2–3 follow-up questions or actions. Use plain language. Keep your response under 250 words.`,
           messages: [{ role: "user", content: `Note title: ${note.title}\n\n${noteText}\n\nProvide a brief pre-visit summary and action suggestions.` }]
         })
       });

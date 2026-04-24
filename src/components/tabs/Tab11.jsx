@@ -39,6 +39,10 @@ function buildSystemPrompt(mode = "standard") {
     try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
   };
 
+  // Patient identity from profile
+  const profile = safeRead("mi_profile_personal", {});
+  const patientName = profile.name || "the patient";
+
   const conditions = safeRead("mi_conditions", []);
   const surgeries  = safeRead("mi_surgeries",  []);
   const careTeam   = safeRead("mi_care_team",  []);
@@ -173,29 +177,20 @@ Other:
     ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- When appropriate, include differential considerations and nuanced clinical context\n- Flag any value that approaches critical thresholds, even if technically within range\n- Provide actionable guidance with specific questions to raise with each specialist`
     : `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSTANDARD MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide clear, well-organized responses focused on the most important insights\n- Flag any lab values that are critically abnormal and require urgent attention\n- Keep responses focused and actionable — prioritize what matters most\n- Always name the right doctor to contact for each concern`;
 
-  return `You are an intelligent personal health assistant for Greg Butler. You have deep, comprehensive knowledge of his entire medical history. Your job is to help Greg understand his health holistically — cross-referencing all of his data to surface insights, flag concerns, and prepare him for medical conversations.
+  return `You are an intelligent personal health assistant for ${patientName}. You have comprehensive knowledge of their entire medical history. Your job is to help ${patientName} understand their health holistically — cross-referencing all of their data to surface insights, flag concerns, and prepare them for medical conversations.
 
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-PATIENT IDENTITY — ABSOLUTE FACTS (override any conflicting data below)
+PATIENT IDENTITY
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-- Patient: Greg Butler
-- Transplant type: Living Donor LIVER Transplant (LDLT) — Oct 1, 2024, UMC Transplant Center
-- This is a LIVER transplant. NOT a kidney transplant. NOT LDKT. NOT renal transplant.
-- Surgeon: Dr. Ari Cohen (historical — not ongoing primary care)
-- Primary transplant follow-up physician: ${liverDoc}
-- Immunosuppression (Tacrolimus, Mycophenolate, Prednisone) protects the LIVER GRAFT
-- Creatinine/eGFR are secondary monitors due to tacrolimus nephrotoxicity — NOT indicators of kidney disease as primary diagnosis
-- If any data section below appears to reference a kidney transplant, it is a DATA ENTRY ERROR — disregard it and apply LDLT context
+- Patient: ${patientName}
+- Primary follow-up physician: ${liverDoc}
 
 CRITICAL RULES:
-- NEVER ask about or suggest screening for a condition already listed in his diagnoses — treat all listed conditions as confirmed, existing diagnoses.
-- ALWAYS cross-reference his medications and surgical history when explaining any abnormal lab value.
-- Greg had a Living Donor Liver Transplant (LDLT) — NOT a kidney transplant. Never reference kidney transplant, LDKT, ESRD, or right iliac fossa in any response.
-- For anything related to liver, bile ducts, hepatic enzymes (ALT, AST, Alk Phos, bilirubin, GGT), transplant graft health, tacrolimus management, or rejection risk: direct Greg to ${liverDoc}.
-- Creatinine and eGFR are monitored as SECONDARY markers because tacrolimus is nephrotoxic — but the primary concern is liver graft health, not kidney disease.
-- Dr. Ari Cohen was the liver transplant surgeon — he is largely out of the picture now that Greg is in maintenance phase. Do not list him as the ongoing primary contact for day-to-day care.
+- NEVER ask about or suggest screening for a condition already listed in the diagnoses — treat all listed conditions as confirmed, existing diagnoses.
+- ALWAYS cross-reference medications and surgical history when explaining any abnormal lab value.
+- For anything related to transplant graft health, immunosuppression management, organ function, or rejection risk: direct ${patientName} to ${liverDoc}.
 - For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
-- ALL lab results and vitals listed below come directly from Greg's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
+- ALL lab results and vitals listed below come directly from ${patientName}'s records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
 - CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -532,7 +527,7 @@ function Message({ role, text, streaming, questionText, logoUrl, mode }) {
         fontSize: isUser ? 11 : 14, fontWeight: 700,
         color: isUser ? "#fff" : "#4f8ef7",
       }}>
-        {isUser ? "G" : "✦"}
+        {isUser ? ((() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return (p.name || "?")[0].toUpperCase(); } catch { return "?"; } })()) : "✦"}
       </div>
       <div style={{
         maxWidth: "74%",
