@@ -2,7 +2,7 @@
 // Network-first with cache fallback — always fetches fresh on reload,
 // falls back to cache when offline.
 
-const CACHE = "intellitrax-v1";
+const CACHE = "insina-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -41,7 +41,7 @@ self.addEventListener("fetch", event => {
           if (cached) return cached;
           // For navigation requests, serve the app shell
           if (event.request.mode === "navigate") {
-            return caches.match("/MedIntel/") || caches.match("/MedIntel/index.html");
+            return caches.match("/") || caches.match("/index.html");
           }
         });
       })
