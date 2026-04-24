@@ -26,7 +26,9 @@ app.get("/health", (_req, res) => res.json({ status: "ok", ts: new Date().toISOS
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Allow the GitHub Pages origin. Add localhost for local dev.
 const ALLOWED_ORIGINS = [
-  "https://gregbutler205-jpg.github.io", // production GitHub Pages
+  "https://insinahealth.com",            // custom domain (apex)
+  "https://www.insinahealth.com",        // custom domain (www)
+  "https://gregbutler205-jpg.github.io", // GitHub Pages fallback
   "http://localhost:5173",               // Vite dev server
   "http://localhost:4173",               // Vite preview
 ];
