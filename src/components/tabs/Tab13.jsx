@@ -217,14 +217,17 @@ export default function DataBackup() {
             milestones:   "mi_milestones",
           };
           let count = 0;
+          // Format A: export format (camelCase keys like "labs", "medications")
           Object.entries(MAP).forEach(([jsonKey, storageKey]) => {
             if (data[jsonKey] !== undefined) {
               localStorage.setItem(storageKey, JSON.stringify(data[jsonKey]));
               count++;
             }
           });
-          // Also restore profile keys if present
-          ["mi_profile_personal","mi_profile_insurance","mi_allergies","mi_emergency_contacts",
+          // Format B: recovery format (mi_ prefixed keys like "mi_labs", "mi_meds_full")
+          ["mi_labs","mi_meds_full","mi_readings","mi_conditions","mi_surgeries",
+           "mi_care_team","mi_notes","mi_appointments","mi_symptoms","mi_milestones",
+           "mi_profile_personal","mi_profile_insurance","mi_allergies","mi_emergency_contacts",
            "mi_care_goals","mi_preventive","mi_care_team_selected","mi_lab_canonical"].forEach(k => {
             if (data[k] !== undefined) { localStorage.setItem(k, JSON.stringify(data[k])); count++; }
           });
