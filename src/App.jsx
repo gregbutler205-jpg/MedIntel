@@ -637,7 +637,7 @@ function AppShell() {
                     {(() => {
                       let team = [];
                       let selectedNames = null;
-                      try { team = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
+                      try { const t = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); if (Array.isArray(t)) team = t; } catch {}
                       try {
                         const raw = localStorage.getItem("mi_care_team_selected");
                         if (raw) selectedNames = new Set(JSON.parse(raw));
