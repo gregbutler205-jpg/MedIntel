@@ -4,12 +4,7 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
-const INITIAL_BACKUPS = [
-  { id: 1, type: "Auto-backup",   date: "Mar 18, 2026", size: "18.4 KB" },
-  { id: 2, type: "Auto-backup",   date: "Mar 11, 2026", size: "17.9 KB" },
-  { id: 3, type: "Manual backup", date: "Mar 4, 2026",  size: "17.1 KB" },
-  { id: 4, type: "Auto-backup",   date: "Feb 25, 2026", size: "16.6 KB" },
-];
+const INITIAL_BACKUPS = [];
 
 function Toast({ msg, onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, []);

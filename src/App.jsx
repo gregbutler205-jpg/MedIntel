@@ -309,32 +309,8 @@ export default function App() {
 function AppShell() {
   const [activeNav, setActiveNav]     = useState("dashboard");
   const [time, setTime]           = useState(new Date());
-  const [readings, setReadings]   = useState(() => {
-    const stored = getStore('readings');
-    if (stored.length > 0) return stored;
-    // Seed initial readings so dashboard shows data on first load
-    const SEED = [
-      { date:"Mar 10", ts:"2026-03-10", bp_s:131, bp_d:71, hr:64, weight:184.2, flag:false },
-      { date:"Mar 7",  ts:"2026-03-07", bp_s:138, bp_d:74, hr:67, weight:184.8, flag:false },
-      { date:"Mar 5",  ts:"2026-03-05", bp_s:143, bp_d:79, hr:71, weight:185.1, flag:false },
-    ];
-    setStore('readings', SEED);
-    return SEED;
-  });
-  const [meds, setMeds]           = useState(() => {
-    const stored = getStore('meds_full');
-    if (stored.length > 0) return stored;
-    // Seed default meds so Refills card shows data on first load
-    const SEED = [
-      { id:1, name:"Tacrolimus",     brand:"Prograf",   dose:"3 mg",   frequency:"Twice daily", category:"Immunosuppressant", refillDate:"Apr 28", status:"ok",  color:"#a78bfa" },
-      { id:2, name:"Mycophenolate",  brand:"CellCept",  dose:"500 mg", frequency:"Twice daily", category:"Immunosuppressant", refillDate:"May 2",  status:"ok",  color:"#a78bfa" },
-      { id:3, name:"Prednisone",     brand:"Deltasone", dose:"5 mg",   frequency:"Once daily",  category:"Corticosteroid",    refillDate:"Apr 16", status:"warn",color:"#f59e0b" },
-      { id:4, name:"Amlodipine",     brand:"Norvasc",   dose:"10 mg",  frequency:"Once daily",  category:"Blood Pressure",    refillDate:"May 10", status:"ok",  color:"#4f8ef7" },
-      { id:5, name:"Atorvastatin",   brand:"Lipitor",   dose:"20 mg",  frequency:"Once daily",  category:"Cholesterol",       refillDate:"May 20", status:"ok",  color:"#10b981" },
-    ];
-    setStore('meds_full', SEED);
-    return SEED;
-  });
+  const [readings, setReadings]   = useState(() => getStore('readings'));
+  const [meds, setMeds]           = useState(() => getStore('meds_full'));
   const [alerts, setAlerts]       = useState(() => {
     const stored = getStore('alerts');
     const auto = generateAutoAlerts();

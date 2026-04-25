@@ -376,23 +376,7 @@ const MEDS_SEED = [
   },
 ];
 
-const INTERACTIONS = [
-  {
-    sev: "warn",
-    drugs: ["Tacrolimus", "Valganciclovir"],
-    note: "Both are nephrotoxic — monitor creatinine closely",
-  },
-  {
-    sev: "warn",
-    drugs: ["Valganciclovir", "Mycophenolate"],
-    note: "Additive bone marrow suppression — monitor CBC",
-  },
-  {
-    sev: "info",
-    drugs: ["Furosemide", "Magnesium Oxide"],
-    note: "Furosemide may increase Mg loss — supplementing appropriately",
-  },
-];
+const INTERACTIONS = [];
 
 const CATEGORIES = ["All", "Immunosuppressant", "Blood Pressure", "Corticosteroid", "GI / Protective", "Antibiotic / Prophylaxis", "Antiviral / Prophylaxis", "Diuretic", "Cholesterol", "Supplement", "Antiplatelet", "Pain", "Mental Health", "Diabetes", "Other"];
 

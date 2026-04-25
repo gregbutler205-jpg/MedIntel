@@ -19,44 +19,10 @@ const NAV = [
   { id: "backup",    icon: "◈", label: "Data & Backup" },
 ];
 
-const ALERTS = [
-  { type: "warn", text: "Nephrology appt in 3 days — prepare questions", time: "Mar 15" },
-  { type: "info", text: "Creatinine lab due — last drawn Feb 12", time: "Overdue" },
-  { type: "ok",   text: "Tacrolimus refill confirmed at CVS #5777", time: "Today" },
-];
-
-const UPCOMING = [
-  { label: "Nephrology Follow-up", date: "Mar 15", urgency: "high", doctor: "Ari Cohen MD" },
-  { label: "Transplant Labs",      date: "Mar 18", urgency: "med",  doctor: "Quest Diagnostics" },
-  { label: "Primary Care",         date: "Mar 25", urgency: "low",  doctor: "Jonathan Hand MD" },
-];
-
-// status: "stable" | "watch" | "attention"
-// ── Health data (mirrors Tab06 MANUAL_READINGS & Tab04 MEDS_SEED) ────────────
-const MANUAL_READINGS = [
-  { date:"Mar 10", ts:"2026-03-10", bp_s:131, bp_d:71, weight:184.2 },
-  { date:"Mar 7",  ts:"2026-03-07", bp_s:138, bp_d:74, weight:184.8 },
-  { date:"Mar 5",  ts:"2026-03-05", bp_s:143, bp_d:79, weight:185.1 },
-  { date:"Mar 3",  ts:"2026-03-03", bp_s:164, bp_d:88, weight:185.6, flag:true },
-  { date:"Feb 28", ts:"2026-02-28", bp_s:136, bp_d:76, weight:185.0 },
-];
-
-const MEDS = [
-  { name:"Tacrolimus 3 mg",       refillDate:"Mar 28", status:"ok",     flag:true  },
-  { name:"Mycophenolate 500 mg",  refillDate:"Apr 2",  status:"ok",     flag:false },
-  { name:"Prednisone 5 mg",       refillDate:"Mar 16", status:"refill", flag:true  },
-  { name:"Amlodipine 10 mg",      refillDate:"Apr 10", status:"ok",     flag:false },
-  { name:"Metoprolol 25 mg",      refillDate:"Apr 5",  status:"ok",     flag:false },
-  { name:"Furosemide 40 mg",      refillDate:"Mar 22", status:"ok",     flag:false },
-  { name:"Pantoprazole 40 mg",    refillDate:"Apr 12", status:"ok",     flag:false },
-  { name:"Trimethoprim-SMX",      refillDate:"May 1",  status:"ok",     flag:false },
-  { name:"Valganciclovir 450 mg", refillDate:"Apr 8",  status:"ok",     flag:true  },
-  { name:"Atorvastatin 40 mg",    refillDate:"Apr 15", status:"ok",     flag:false },
-  { name:"Calcium Carbonate",     refillDate:"May 20", status:"ok",     flag:false },
-  { name:"Vitamin D3 2000 IU",    refillDate:"May 20", status:"ok",     flag:false },
-  { name:"Magnesium Oxide 400 mg",refillDate:"Apr 20", status:"ok",     flag:false },
-  { name:"Aspirin 81 mg",         refillDate:"Jun 1",  status:"ok",     flag:false },
-];
+const ALERTS = [];
+const UPCOMING = [];
+const MANUAL_READINGS = (() => { try { return JSON.parse(localStorage.getItem("mi_readings") || "[]"); } catch { return []; } })();
+const MEDS = (() => { try { return JSON.parse(localStorage.getItem("mi_meds_full") || "[]"); } catch { return []; } })();
 
 function parseRefillDate(str) {
   return new Date(`${str}, ${new Date().getFullYear()}`);

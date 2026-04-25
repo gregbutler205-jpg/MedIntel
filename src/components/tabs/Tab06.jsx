@@ -24,67 +24,9 @@ const NAV = [
   { id: "backup",      icon: "◈", label: "Data & Backup" },
 ];
 
-// Manual / sporadic readings (BP, Weight, Temp, Glucose, O2, Sleep)
-const MANUAL_READINGS_SEED = [
-  { date:"Mar 10", ts:"2026-03-10", bp_s:131,bp_d:71, hr:64, o2:99,  weight:184.2, temp:98.4, glucose:98,  sleep:6.5 },
-  { date:"Mar 7",  ts:"2026-03-07", bp_s:138,bp_d:74, hr:67, o2:99,  weight:184.8, temp:98.2, glucose:101, sleep:7.0 },
-  { date:"Mar 5",  ts:"2026-03-05", bp_s:143,bp_d:79, hr:71, o2:98,  weight:185.1, temp:98.5, glucose:103, sleep:5.8 },
-  { date:"Mar 3",  ts:"2026-03-03", bp_s:164,bp_d:88, hr:59, o2:100, weight:185.6, temp:98.3, glucose:99,  sleep:7.2, flag:true },
-  { date:"Feb 28", ts:"2026-02-28", bp_s:136,bp_d:76, hr:66, o2:99,  weight:185.0, temp:98.6, glucose:96,  sleep:6.8 },
-  { date:"Feb 25", ts:"2026-02-25", bp_s:141,bp_d:78, hr:69, o2:98,  weight:185.4, temp:98.4, glucose:102, sleep:6.2 },
-  { date:"Feb 22", ts:"2026-02-22", bp_s:133,bp_d:72, hr:63, o2:99,  weight:186.1, temp:98.2, glucose:94,  sleep:7.5 },
-  { date:"Feb 18", ts:"2026-02-18", bp_s:148,bp_d:82, hr:72, o2:97,  weight:186.5, temp:98.7, glucose:108, sleep:5.5, flag:true },
-  { date:"Feb 14", ts:"2026-02-14", bp_s:139,bp_d:75, hr:68, o2:99,  weight:186.2, temp:98.3, glucose:97,  sleep:7.0 },
-  { date:"Feb 10", ts:"2026-02-10", bp_s:155,bp_d:84, hr:74, o2:98,  weight:186.8, temp:98.4, glucose:105, sleep:6.0, flag:true },
-  { date:"Feb 6",  ts:"2026-02-06", bp_s:134,bp_d:73, hr:65, o2:99,  weight:187.0, temp:98.2, glucose:99,  sleep:6.8 },
-  { date:"Feb 2",  ts:"2026-02-02", bp_s:140,bp_d:77, hr:70, o2:98,  weight:187.3, temp:98.5, glucose:101, sleep:7.2 },
-  { date:"Jan 28", ts:"2026-01-28", bp_s:148,bp_d:78, hr:74, o2:96,  weight:187.8, temp:98.6, glucose:103, sleep:6.5 },
-];
-
-// Apple Watch daily data — denser (every day or nearly so for last ~35 days)
-const WATCH_DAILY = [
-  { date:"Mar 10", ts:"2026-03-10", resting_hr:58, hr_min:52, hr_max:128 },
-  { date:"Mar 9",  ts:"2026-03-09", resting_hr:60, hr_min:54, hr_max:142 },
-  { date:"Mar 8",  ts:"2026-03-08", resting_hr:59, hr_min:53, hr_max:135 },
-  { date:"Mar 7",  ts:"2026-03-07", resting_hr:61, hr_min:55, hr_max:138 },
-  { date:"Mar 6",  ts:"2026-03-06", resting_hr:60, hr_min:54, hr_max:130 },
-  { date:"Mar 5",  ts:"2026-03-05", resting_hr:62, hr_min:56, hr_max:141 },
-  { date:"Mar 4",  ts:"2026-03-04", resting_hr:59, hr_min:53, hr_max:129 },
-  { date:"Mar 3",  ts:"2026-03-03", resting_hr:58, hr_min:51, hr_max:122 },
-  { date:"Mar 2",  ts:"2026-03-02", resting_hr:61, hr_min:55, hr_max:144 },
-  { date:"Mar 1",  ts:"2026-03-01", resting_hr:60, hr_min:54, hr_max:136 },
-  { date:"Feb 28", ts:"2026-02-28", resting_hr:62, hr_min:56, hr_max:133 },
-  { date:"Feb 27", ts:"2026-02-27", resting_hr:63, hr_min:57, hr_max:145 },
-  { date:"Feb 26", ts:"2026-02-26", resting_hr:61, hr_min:55, hr_max:131 },
-  { date:"Feb 25", ts:"2026-02-25", resting_hr:64, hr_min:58, hr_max:148 },
-  { date:"Feb 24", ts:"2026-02-24", resting_hr:60, hr_min:54, hr_max:127 },
-  { date:"Feb 23", ts:"2026-02-23", resting_hr:59, hr_min:53, hr_max:139 },
-  { date:"Feb 22", ts:"2026-02-22", resting_hr:61, hr_min:55, hr_max:134 },
-  { date:"Feb 21", ts:"2026-02-21", resting_hr:62, hr_min:56, hr_max:142 },
-  { date:"Feb 20", ts:"2026-02-20", resting_hr:60, hr_min:54, hr_max:128 },
-  { date:"Feb 19", ts:"2026-02-19", resting_hr:63, hr_min:57, hr_max:151, flag:true },
-  { date:"Feb 18", ts:"2026-02-18", resting_hr:65, hr_min:59, hr_max:149, flag:true },
-  { date:"Feb 17", ts:"2026-02-17", resting_hr:62, hr_min:56, hr_max:136 },
-  { date:"Feb 16", ts:"2026-02-16", resting_hr:60, hr_min:54, hr_max:130 },
-  { date:"Feb 15", ts:"2026-02-15", resting_hr:59, hr_min:53, hr_max:126 },
-  { date:"Feb 14", ts:"2026-02-14", resting_hr:61, hr_min:55, hr_max:138 },
-  { date:"Feb 13", ts:"2026-02-13", resting_hr:60, hr_min:54, hr_max:132 },
-  { date:"Feb 12", ts:"2026-02-12", resting_hr:62, hr_min:56, hr_max:140 },
-  { date:"Feb 11", ts:"2026-02-11", resting_hr:64, hr_min:58, hr_max:147 },
-  { date:"Feb 10", ts:"2026-02-10", resting_hr:66, hr_min:60, hr_max:152, flag:true },
-  { date:"Feb 9",  ts:"2026-02-09", resting_hr:63, hr_min:57, hr_max:143 },
-  { date:"Feb 8",  ts:"2026-02-08", resting_hr:61, hr_min:55, hr_max:134 },
-  { date:"Feb 7",  ts:"2026-02-07", resting_hr:60, hr_min:54, hr_max:128 },
-  { date:"Feb 6",  ts:"2026-02-06", resting_hr:59, hr_min:53, hr_max:131 },
-  { date:"Feb 5",  ts:"2026-02-05", resting_hr:62, hr_min:56, hr_max:139 },
-  { date:"Feb 4",  ts:"2026-02-04", resting_hr:61, hr_min:55, hr_max:136 },
-  { date:"Feb 3",  ts:"2026-02-03", resting_hr:60, hr_min:54, hr_max:129 },
-  { date:"Feb 2",  ts:"2026-02-02", resting_hr:63, hr_min:57, hr_max:144 },
-  { date:"Feb 1",  ts:"2026-02-01", resting_hr:62, hr_min:56, hr_max:137 },
-];
 
 function filterByMonths(arr, months) {
-  const cutoff = new Date("2026-03-10");
+  const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - months);
   return arr.filter(r => new Date(r.ts) >= cutoff);
 }
@@ -431,6 +373,7 @@ export default function App({ onNavChange }) {
   const [timeRange, setTimeRange] = useState(1);
   const [showLog, setShowLog] = useState(false);
   const [manualReadings, setManualReadings] = useState(() => getStore('readings') ?? []);
+  const [watchReadings, setWatchReadings]   = useState(() => getStore('watch_daily') ?? []);
   const [time, setTime] = useState(new Date());
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
@@ -442,15 +385,18 @@ export default function App({ onNavChange }) {
 
   const config = VITALS.find(v => v.id === selectedId);
   const isWatch = config.data === "watch";
-  const sourceData = isWatch ? WATCH_DAILY : manualReadings;
+  const sourceData = isWatch ? watchReadings : manualReadings;
   const filteredData = filterByMonths(sourceData, timeRange);
   const latest = manualReadings[0];
-  const latestWatch = WATCH_DAILY[0];
+  const latestWatch = watchReadings[0];
   const prev = manualReadings[1];
 
   const handleSave = form => {
+    const now = new Date();
+    const ts = now.toISOString().split('T')[0];
+    const date = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const r = {
-      date: "Mar 18", ts: "2026-03-18",
+      date, ts,
       bp_s: +form.bp_s || null, bp_d: +form.bp_d || null,
       hr: +form.hr || null, o2: +form.o2 || null,
       weight: +form.weight || null, temp: +form.temp || null,
