@@ -162,8 +162,8 @@ function ApptModal({ appt, onSave, onClose }) {
     if (match) {
       setForm(f => ({
         ...f,
-        phone:   f.phone   || formatPhone(match.phone   || ""),
-        address: f.address || match.facility || "",
+        phone:    f.phone    || formatPhone(match.phone    || ""),
+        facility: f.facility || match.facility || "",
       }));
     }
   };
