@@ -164,6 +164,7 @@ function ApptModal({ appt, onSave, onClose }) {
         ...f,
         phone:    f.phone    || formatPhone(match.phone    || ""),
         facility: f.facility || match.facility || "",
+        address:  f.address  || match.address  || "",
       }));
     }
   };

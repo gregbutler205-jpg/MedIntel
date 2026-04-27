@@ -98,7 +98,7 @@ function formatPhone(val) {
 }
 
 // ── Care Team Modal ────────────────────────────────────────────────────────────
-const BLANK_PROVIDER = { id:null, name:"", role:"", specialty:"", facility:"", phone:"", email:"", pcp:false };
+const BLANK_PROVIDER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", email:"", pcp:false };
 function ProviderModal({ provider, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK_PROVIDER, ...provider });
   const set = (k,v) => setForm(f => ({ ...f, [k]:v }));
@@ -122,6 +122,10 @@ function ProviderModal({ provider, onSave, onClose }) {
           <div style={{ gridColumn:"1/-1" }}>
             <label style={lbl}>Facility / Practice</label>
             <input style={inp} value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="e.g. Baptist Medical Center" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Address</label>
+            <input style={inp} value={form.address} onChange={e => set("address", e.target.value)} placeholder="Street, City, State ZIP" />
           </div>
           <div>
             <label style={lbl}>Phone</label>
