@@ -873,6 +873,20 @@ export default function AIAnalysis() {
     localStorage.setItem("mi_ref_docs", JSON.stringify(updated));
   };
 
+  const analyzeDoc = (doc) => {
+    const prompt =
+`I have just uploaded a medical report titled "${doc.name}". Please analyze it and provide:
+
+**Plain English Explanation** — Explain what this report is saying in clear, simple language a non-medical person can understand. When medical terms are necessary, explain what they mean.
+
+**Key Findings** — Identify and explain the most important findings, both normal and abnormal. Cross-reference with my existing medical history, conditions, and medications where relevant.
+
+**Questions to Ask My Doctor** — Provide 6-8 specific questions I should ask my doctor when they contact me about this report, based on the specific findings in this document.
+
+Important: Do NOT make any diagnosis. Your role is to help me understand what this report says and prepare me for a productive conversation with my physician.`;
+    sendMessage(prompt);
+  };
+
   const isAdvanced = currentMode === "advanced";
 
   return (
@@ -1010,6 +1024,11 @@ export default function AIAnalysis() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 10, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
                     <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {d.addedDate}</div>
+                    <button
+                      onClick={() => analyzeDoc(d)}
+                      disabled={streaming}
+                      style={{ marginTop: 4, background: "none", border: "none", color: streaming ? "#3a4c5a" : "#a78bfa", fontSize: 9, fontFamily: "'DM Mono',monospace", cursor: streaming ? "not-allowed" : "pointer", padding: 0, letterSpacing: "0.3px" }}
+                    >Analyze ▸</button>
                   </div>
                   <button onClick={() => removeRefDoc(d.id)} style={{ background: "transparent", border: "none", color: "#6a8090", cursor: "pointer", fontSize: 11, flexShrink: 0, padding: 0 }}>✕</button>
                 </div>
