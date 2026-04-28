@@ -51,6 +51,7 @@ function buildSystemPrompt(mode = "standard") {
   const surgeries  = safeRead("mi_surgeries",  []);
   const careTeam   = safeRead("mi_care_team",  []);
   const meds       = safeRead("mi_meds_full",  []);
+  const allergies  = safeRead("mi_allergies",  []);
 
   // ── Conditions ─────────────────────────────────────────────────────────────
   const condStr = conditions.length > 0
@@ -224,6 +225,14 @@ ${surgStr}
 CURRENT MEDICATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 ${medsStr}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+ALLERGIES
+━━━━━━━━━━━━━━━━━━━━━━━━━
+${allergies.length > 0
+  ? allergies.map(a => `- ${a.name}${a.reaction ? ` — Reaction: ${a.reaction}` : ""}${a.severity ? ` (${a.severity})` : ""}`).join("\n")
+  : "- No known allergies on file"}
+CRITICAL: Always cross-check any medication suggestion, new prescription, or antibiotic recommendation against this allergy list before including it in a response.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 CARE TEAM
