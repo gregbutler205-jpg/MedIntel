@@ -151,20 +151,34 @@ function ApptModal({ appt, onSave, onClose }) {
     try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
   })();
 
-  // When the provider field loses focus, try to auto-fill phone/address from care team
+  // When the provider field loses focus, try to auto-fill phone/address from care team.
+  // Uses scored matching so "Dr. Clay Thames" won't accidentally match "Dr. Stone Thames"
+  // just because they share a last name.
   const handleProviderBlur = () => {
     const query = form.provider.trim().toLowerCase();
     if (query.length < 3 || !careTeam.length) return;
-    const match = careTeam.find(p => {
-      const name = p.name.toLowerCase();
-      return name.includes(query) || query.includes(name.replace(/^dr\.?\s*/i, "").trim().split(" ").slice(-1)[0]);
+    const cleanQuery = query.replace(/^dr\.?\s*/i, "").trim();
+
+    const scored = careTeam.map(p => {
+      const name       = p.name.toLowerCase();
+      const cleanName  = name.replace(/^dr\.?\s*/i, "").trim();
+      const nameParts  = cleanName.split(/\s+/).filter(Boolean);
+      let score = 0;
+      if (name === query || cleanName === cleanQuery)                       score = 100; // exact
+      else if (name.includes(query) || query.includes(cleanName))          score = 80;  // full substring
+      else if (nameParts.every(part => cleanQuery.includes(part)))          score = 60;  // all parts present
+      else if (nameParts.filter(part => cleanQuery.includes(part)).length >= nameParts.length - 1 && nameParts.length > 1)
+                                                                            score = 20;  // all but one part
+      return { p, score };
     });
-    if (match) {
+
+    const best = scored.reduce((a, b) => b.score > a.score ? b : a, { p: null, score: 0 });
+    if (best.score > 0 && best.p) {
       setForm(f => ({
         ...f,
-        phone:    f.phone    || formatPhone(match.phone    || ""),
-        facility: f.facility || match.facility || "",
-        address:  f.address  || match.address  || "",
+        phone:    f.phone    || formatPhone(best.p.phone    || ""),
+        facility: f.facility || best.p.facility || "",
+        address:  f.address  || best.p.address  || "",
       }));
     }
   };
