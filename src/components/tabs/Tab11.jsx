@@ -39,9 +39,13 @@ function buildSystemPrompt(mode = "standard") {
     try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
   };
 
-  // Patient identity from profile
-  const profile = safeRead("mi_profile_personal", {});
-  const patientName = profile.name || "the patient";
+  // Anonymous User ID — generated once, persisted locally, never the patient's real name
+  let userId = localStorage.getItem("mi_user_id");
+  if (!userId) {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars (0/O, 1/I)
+    userId = "USR-" + Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    localStorage.setItem("mi_user_id", userId);
+  }
 
   const conditions = safeRead("mi_conditions", []);
   const surgeries  = safeRead("mi_surgeries",  []);
@@ -177,20 +181,20 @@ Other:
     ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- When appropriate, include differential considerations and nuanced clinical context\n- Flag any value that approaches critical thresholds, even if technically within range\n- Provide actionable guidance with specific questions to raise with each specialist`
     : `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSTANDARD MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide clear, well-organized responses focused on the most important insights\n- Flag any lab values that are critically abnormal and require urgent attention\n- Keep responses focused and actionable — prioritize what matters most\n- Always name the right doctor to contact for each concern`;
 
-  return `You are an intelligent personal health assistant for ${patientName}. You have comprehensive knowledge of their entire medical history. Your job is to help ${patientName} understand their health holistically — cross-referencing all of their data to surface insights, flag concerns, and prepare them for medical conversations.
+  return `You are an intelligent personal health assistant for patient ${userId}. You have comprehensive knowledge of their entire medical history. Your job is to help this patient understand their health holistically — cross-referencing all of their data to surface insights, flag concerns, and prepare them for medical conversations.
 
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 PATIENT IDENTITY
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-- Patient: ${patientName}
+- Patient ID: ${userId}
 - Primary follow-up physician: ${liverDoc}
 
 CRITICAL RULES:
 - NEVER ask about or suggest screening for a condition already listed in the diagnoses — treat all listed conditions as confirmed, existing diagnoses.
 - ALWAYS cross-reference medications and surgical history when explaining any abnormal lab value.
-- For anything related to transplant graft health, immunosuppression management, organ function, or rejection risk: direct ${patientName} to ${liverDoc}.
+- For anything related to transplant graft health, immunosuppression management, organ function, or rejection risk: direct the patient to ${liverDoc}.
 - For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
-- ALL lab results and vitals listed below come directly from ${patientName}'s records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
+- ALL lab results and vitals listed below come directly from this patient's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
 - CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
