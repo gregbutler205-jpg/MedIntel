@@ -6,7 +6,7 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
-const STORAGE_KEY    = "intellitrax_ai_messages";
+const STORAGE_KEY    = "insina_ai_messages";
 const AI_MODE_KEY    = "insina_ai_mode";
 const AI_LOG_KEY     = "insina_ai_log";
 const PROXY_URL      = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
