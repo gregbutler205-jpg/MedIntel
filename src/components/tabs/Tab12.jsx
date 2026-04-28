@@ -162,6 +162,8 @@ export default function ImportTab({ onImport, onNavChange }) {
   const [pdfText, setPdfText]       = useState(""); // raw text (kept for AI handoff)
   const [pdfFileName, setPdfFileName] = useState("");
   const [uploadDocType, setUploadDocType] = useState("Lab Results");
+  const [batchProgress, setBatchProgress] = useState(null); // null | { done, total, current }
+  const [batchSummary, setBatchSummary]   = useState([]);   // [{ name, ok, title?, date?, color?, count?, error? }]
   const fileInputRef = useRef(null);
 
   const DOC_TYPES = [
@@ -230,42 +232,99 @@ export default function ImportTab({ onImport, onNavChange }) {
   }
 
   async function handlePdfUpload(e) {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files || []);
     if (!fileInputRef.current) return;
     fileInputRef.current.value = "";
-    if (file) setPdfFileName(file.name || "Lab Report.pdf");
-    if (!file || file.type !== "application/pdf") {
-      showToast("Please select a PDF file.");
-      return;
-    }
-    setPdfStatus("extracting");
+    if (files.length === 0) return;
+
+    const pdfs = files.filter(f => f.type === "application/pdf");
+    if (pdfs.length === 0) { showToast("Please select PDF files."); return; }
+
+    const isLabs      = uploadDocType === "Lab Results";
+    const docTypeMeta = DOC_TYPES.find(d => d.label === uploadDocType) || DOC_TYPES[DOC_TYPES.length - 1];
+
     setPdfError("");
     setPdfPreview([]);
     setDocPreview(null);
     setPdfText("");
-    try {
-      const text = await extractTextFromPdf(file);
-      setPdfText(text);
-      setPdfStatus("parsing");
+    setBatchSummary([]);
 
-      if (uploadDocType === "Lab Results") {
-        const extracted = await parseLabsWithClaude(text);
-        if (!Array.isArray(extracted) || extracted.length === 0)
-          throw new Error("No lab results found in PDF. If this is an imaging report or clinical note, select that type before uploading.");
-        setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
-        setPdfStatus("done");
-        showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
-      } else {
-        const docTypeMeta = DOC_TYPES.find(d => d.label === uploadDocType) || DOC_TYPES[DOC_TYPES.length - 1];
-        const extracted = await parseDocWithClaude(text, uploadDocType);
-        if (!extracted || !extracted.title) throw new Error("Could not extract document information from PDF.");
-        setDocPreview({ ...extracted, _label: uploadDocType, _recordType: docTypeMeta.type, _color: docTypeMeta.color });
-        setPdfStatus("done");
-        showToast("Document extracted — review and save to Records.");
+    // ── Single file — existing preview/review flow ──────────────────────────
+    if (pdfs.length === 1) {
+      const file = pdfs[0];
+      setPdfFileName(file.name || "Document.pdf");
+      setPdfStatus("extracting");
+      try {
+        const text = await extractTextFromPdf(file);
+        setPdfText(text);
+        setPdfStatus("parsing");
+        if (isLabs) {
+          const extracted = await parseLabsWithClaude(text);
+          if (!Array.isArray(extracted) || extracted.length === 0)
+            throw new Error("No lab results found in PDF. If this is an imaging report or clinical note, select that type before uploading.");
+          setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
+          setPdfStatus("done");
+          showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
+        } else {
+          const extracted = await parseDocWithClaude(text, uploadDocType);
+          if (!extracted || !extracted.title) throw new Error("Could not extract document information from PDF.");
+          setDocPreview({ ...extracted, _label: uploadDocType, _recordType: docTypeMeta.type, _color: docTypeMeta.color });
+          setPdfStatus("done");
+          showToast("Document extracted — review and save to Records.");
+        }
+      } catch (err) {
+        setPdfStatus("error");
+        setPdfError(err.message || "Failed to extract from PDF.");
       }
-    } catch (err) {
-      setPdfStatus("error");
-      setPdfError(err.message || "Failed to extract from PDF.");
+      return;
+    }
+
+    // ── Batch mode (multiple files) ─────────────────────────────────────────
+    const allLabs = [];
+    const summary = [];
+    setPdfStatus("idle");
+
+    for (let i = 0; i < pdfs.length; i++) {
+      const file = pdfs[i];
+      setBatchProgress({ done: i, total: pdfs.length, current: file.name });
+      try {
+        const text = await extractTextFromPdf(file);
+        if (isLabs) {
+          const extracted = await parseLabsWithClaude(text);
+          if (extracted.length === 0) throw new Error("No lab results found");
+          allLabs.push(...extracted);
+          summary.push({ name: file.name, ok: true, count: extracted.length });
+        } else {
+          const extracted = await parseDocWithClaude(text, uploadDocType);
+          if (!extracted?.title) throw new Error("Could not extract document info");
+          const record = {
+            id: Date.now() + i,
+            title:    extracted.title || file.name.replace(/\.pdf$/i, ""),
+            type:     extracted.type  || docTypeMeta.type,
+            date:     extracted.date  || new Date().toISOString().split("T")[0],
+            facility: extracted.facility || "",
+            provider: extracted.provider || "",
+            summary:  extracted.summary  || "",
+          };
+          mergeRecords([record]);
+          summary.push({ name: file.name, ok: true, title: record.title, date: record.date, color: docTypeMeta.color });
+        }
+      } catch (err) {
+        summary.push({ name: file.name, ok: false, error: err.message });
+      }
+    }
+
+    setBatchProgress(null);
+    setBatchSummary(summary);
+
+    if (isLabs && allLabs.length > 0) {
+      setPdfPreview(allLabs.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
+      const ok = summary.filter(s => s.ok).length;
+      showToast(`Found ${allLabs.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} — review and confirm.`);
+    } else if (!isLabs) {
+      const ok   = summary.filter(s => s.ok).length;
+      const fail = summary.filter(s => !s.ok).length;
+      if (ok > 0) showToast(`${ok} document${ok !== 1 ? "s" : ""} saved to Records${fail ? `, ${fail} failed` : ""}.`);
     }
   }
 
@@ -482,13 +541,69 @@ export default function ImportTab({ onImport, onNavChange }) {
           </div>
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={pdfStatus === "extracting" || pdfStatus === "parsing"}
+            disabled={batchProgress !== null || pdfStatus === "extracting" || pdfStatus === "parsing"}
             style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 16px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}
           >
-            {pdfStatus === "extracting" ? "⏳ Reading PDF…" : pdfStatus === "parsing" ? "✦ Extracting…" : `⬆ Upload ${uploadDocType} PDF`}
+            {batchProgress ? `⏳ ${batchProgress.done + 1} of ${batchProgress.total}…`
+              : pdfStatus === "extracting" ? "⏳ Reading PDF…"
+              : pdfStatus === "parsing"    ? "✦ Extracting…"
+              : `⬆ Upload ${uploadDocType} PDF${""}`}
           </button>
-          <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handlePdfUpload} style={{ display:"none" }} />
+          <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", alignSelf:"center" }}>select one or multiple</span>
+          <input ref={fileInputRef} type="file" accept="application/pdf" multiple onChange={handlePdfUpload} style={{ display:"none" }} />
         </div>
+
+        {/* Batch progress bar */}
+        {batchProgress !== null && (
+          <div style={{ background:"#0b1220", border:"1px solid rgba(167,139,250,.25)", borderRadius:10, padding:"14px 18px", marginBottom:20 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+              <span style={{ fontSize:11, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>
+                Processing {batchProgress.done + 1} of {batchProgress.total}
+              </span>
+              <span style={{ fontSize:11, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                {Math.round(((batchProgress.done) / batchProgress.total) * 100)}%
+              </span>
+            </div>
+            <div style={{ background:"#07090f", borderRadius:4, height:4, overflow:"hidden", marginBottom:10 }}>
+              <div style={{ height:"100%", background:"#a78bfa", borderRadius:4, width:`${(batchProgress.done / batchProgress.total) * 100}%`, transition:"width .3s ease" }} />
+            </div>
+            <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+              {batchProgress.current}
+            </div>
+          </div>
+        )}
+
+        {/* Batch summary (non-lab: auto-saved; lab: shows per-file counts above the preview grid) */}
+        {batchSummary.length > 0 && (
+          <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 18px", marginBottom:20, animation:"fadeUp .3s ease both" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+              <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
+                Batch Import — {batchSummary.filter(s=>s.ok).length} of {batchSummary.length} succeeded
+              </div>
+              <button onClick={() => setBatchSummary([])} style={{ background:"transparent", border:"none", color:"#6a8090", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Clear</button>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+              {batchSummary.map((item, i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 10px", background: item.ok ? "rgba(16,185,129,.04)" : "rgba(239,68,68,.04)", border:`1px solid ${item.ok ? "rgba(16,185,129,.15)" : "rgba(239,68,68,.2)"}`, borderRadius:7 }}>
+                  <span style={{ fontSize:11, color: item.ok ? "#10b981" : "#ef4444", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    {item.ok ? (
+                      <span style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace" }}>
+                        {item.title || item.name}
+                        {item.count !== undefined && <span style={{ color:"#6a8090" }}> — {item.count} result{item.count!==1?"s":""}</span>}
+                        {item.date && <span style={{ color:"#6a8090" }}> · {new Date(item.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
+                        {item.name} — {item.error}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* PDF error */}
         {pdfStatus === "error" && (
