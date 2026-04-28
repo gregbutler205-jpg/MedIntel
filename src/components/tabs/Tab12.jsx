@@ -48,7 +48,7 @@ async function parseDocWithClaude(pdfText, docType) {
 - date (string): document or service date in YYYY-MM-DD format, or ""
 - facility (string): hospital, clinic, or lab name, or ""
 - provider (string): ordering or authoring physician name, or ""
-- summary (string): 3-5 sentence plain English summary of the key findings, conclusions, or content — no diagnosis, just what the document says
+- summary (string): Explain what this document means in plain English for someone with no medical background. Translate medical terminology into everyday language, explain what any abnormal findings indicate, and describe what the results suggest for the patient's health. Do NOT just restate what the report says — interpret and explain it. 4-6 sentences.
 
 Return ONLY the JSON object, no markdown, no explanation.
 
@@ -145,7 +145,7 @@ function saveLabs(labs) {
   setStore("labs", labs);
 }
 
-export default function ImportTab() {
+export default function ImportTab({ onImport, onNavChange }) {
   const [labs, setLabs]       = useState(getLabs);
   const [form, setForm]       = useState(EMPTY_FORM);
   const [editId, setEditId]   = useState(null);
@@ -159,6 +159,7 @@ export default function ImportTab() {
   const [pdfError, setPdfError]     = useState("");
   const [pdfPreview, setPdfPreview] = useState([]); // extracted labs pending save
   const [docPreview, setDocPreview] = useState(null); // extracted non-lab doc pending save
+  const [pdfText, setPdfText]       = useState(""); // raw text (kept for AI handoff)
   const [pdfFileName, setPdfFileName] = useState("");
   const [uploadDocType, setUploadDocType] = useState("Lab Results");
   const fileInputRef = useRef(null);
@@ -241,8 +242,10 @@ export default function ImportTab() {
     setPdfError("");
     setPdfPreview([]);
     setDocPreview(null);
+    setPdfText("");
     try {
       const text = await extractTextFromPdf(file);
+      setPdfText(text);
       setPdfStatus("parsing");
 
       if (uploadDocType === "Lab Results") {
@@ -287,6 +290,34 @@ export default function ImportTab() {
     setDocPreview(null);
     setPdfStatus("idle");
     setPdfError("");
+  }
+
+  function sendToAI() {
+    if (!docPreview) return;
+    // Save metadata to Records
+    const record = {
+      id: Date.now(),
+      title: docPreview.title || pdfFileName.replace(/\.pdf$/i, "") || "Imported Document",
+      type: docPreview._recordType || "Other",
+      date: docPreview.date || new Date().toISOString().split("T")[0],
+      facility: docPreview.facility || "",
+      provider: docPreview.provider || "",
+      summary: docPreview.summary || "",
+    };
+    mergeRecords([record]);
+    // Save full text to AI Reference Docs
+    const docId = Date.now().toString();
+    try {
+      const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
+      const newDoc = { id: docId, name: record.title, text: pdfText, addedDate: new Date().toLocaleDateString() };
+      localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
+      // Flag for Tab11 to auto-analyze on mount
+      localStorage.setItem("mi_auto_analyze_doc", docId);
+    } catch {}
+    setDocPreview(null);
+    setPdfStatus("idle");
+    // Navigate to AI Analysis
+    if (onNavChange) onNavChange("ai");
   }
 
   function confirmPdfLabs() {
@@ -476,6 +507,7 @@ export default function ImportTab() {
               <div style={{ display:"flex", gap:8 }}>
                 <button onClick={discardDoc} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
                 <button onClick={confirmDoc} style={{ padding:"6px 14px", background:`${docPreview._color}18`, border:`1px solid ${docPreview._color}40`, borderRadius:7, color: docPreview._color, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save to Records</button>
+                <button onClick={sendToAI} style={{ padding:"6px 14px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:7, color:"#4f8ef7", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>✦ Interpret with AI ▸</button>
               </div>
             </div>
             <div style={{ background:"#07090f", border:"1px solid #111e30", borderRadius:10, padding:"14px 16px" }}>

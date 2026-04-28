@@ -887,6 +887,25 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
     sendMessage(prompt);
   };
 
+  // ── Auto-analyze: fired when user arrives from Import Records ────────────────
+  const autoAnalyzeRef = useRef(false);
+  useEffect(() => {
+    if (autoAnalyzeRef.current || streaming || showOnboarding) return;
+    const pendingDocId = localStorage.getItem("mi_auto_analyze_doc");
+    if (!pendingDocId) return;
+    localStorage.removeItem("mi_auto_analyze_doc");
+    autoAnalyzeRef.current = true;
+    try {
+      const docs = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
+      const doc = docs.find(d => d.id === pendingDocId);
+      if (doc) {
+        // Re-read refDocs state so the sidebar shows the new doc
+        setRefDocs(docs);
+        setTimeout(() => analyzeDoc(doc), 400);
+      }
+    } catch {}
+  }, [streaming, showOnboarding]); // re-check once streaming/onboarding state settles
+
   const isAdvanced = currentMode === "advanced";
 
   return (
