@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { getStore, setStore, mergeRecords } from "../../store.js";
 
+const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
+
 // ── PDF Lab Extractor ──────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
   const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
@@ -28,7 +30,7 @@ function repairTruncatedJsonArray(raw) {
   return trimmed + "]";
 }
 
-async function parseLabsWithClaude(pdfText, apiKey) {
+async function parseLabsWithClaude(pdfText) {
   // For very large PDFs, split into chunks and merge results
   const CHUNK = 14000;
   const chunks = [];
@@ -36,17 +38,13 @@ async function parseLabsWithClaude(pdfText, apiKey) {
 
   const allLabs = [];
   for (const chunk of chunks) {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch(`${PROXY_URL}/api/chat`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-opus-4-5",
-        max_tokens: 8192,
+        model: "claude-sonnet-4-6",
+        max_tokens: 4096,
+        stream: false,
         messages: [{
           role: "user",
           content: `Extract all lab results from this lab report text. Return ONLY a JSON array of objects with these exact fields:
@@ -189,18 +187,13 @@ export default function ImportTab() {
       showToast("Please select a PDF file.");
       return;
     }
-    const apiKey = localStorage.getItem("mi_ak");
-    if (!apiKey) {
-      showToast("API key required. Go to Data & Backup to add your key.");
-      return;
-    }
     setPdfStatus("extracting");
     setPdfError("");
     setPdfPreview([]);
     try {
       const text = await extractTextFromPdf(file);
       setPdfStatus("parsing");
-      const extracted = await parseLabsWithClaude(text, apiKey);
+      const extracted = await parseLabsWithClaude(text);
       if (!Array.isArray(extracted) || extracted.length === 0) throw new Error("No lab results found in PDF.");
       setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
       setPdfStatus("done");
