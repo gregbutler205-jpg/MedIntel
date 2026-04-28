@@ -30,6 +30,45 @@ function repairTruncatedJsonArray(raw) {
   return trimmed + "]";
 }
 
+// ── Non-lab document extractor (Imaging, Clinical Note, etc.) ─────────────────
+async function parseDocWithClaude(pdfText, docType) {
+  const text = pdfText.slice(0, 14000); // single chunk — metadata extraction only
+  const response = await fetch(`${PROXY_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      stream: false,
+      messages: [{
+        role: "user",
+        content: `Extract structured information from this medical document and return a JSON object with these exact fields:
+- title (string): concise descriptive title, e.g. "MRI Brain Without Contrast" or "Cardiology Follow-up Visit"
+- type (string): one of: Visit Note, Imaging, Procedure, Hospital, Lab Report, Other
+- date (string): document or service date in YYYY-MM-DD format, or ""
+- facility (string): hospital, clinic, or lab name, or ""
+- provider (string): ordering or authoring physician name, or ""
+- summary (string): 3-5 sentence plain English summary of the key findings, conclusions, or content — no diagnosis, just what the document says
+
+Return ONLY the JSON object, no markdown, no explanation.
+
+DOCUMENT TYPE HINT: ${docType}
+DOCUMENT TEXT:
+${text}`,
+      }],
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Proxy error: ${response.status} — ${err}`);
+  }
+  const data = await response.json();
+  let raw = data.content[0].text.trim();
+  raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  try { return JSON.parse(raw); }
+  catch { throw new Error("Could not parse document information from PDF."); }
+}
+
 async function parseLabsWithClaude(pdfText) {
   // For very large PDFs, split into chunks and merge results
   const CHUNK = 14000;
@@ -119,8 +158,19 @@ export default function ImportTab() {
   const [pdfStatus, setPdfStatus]   = useState("idle"); // idle | extracting | parsing | done | error
   const [pdfError, setPdfError]     = useState("");
   const [pdfPreview, setPdfPreview] = useState([]); // extracted labs pending save
+  const [docPreview, setDocPreview] = useState(null); // extracted non-lab doc pending save
   const [pdfFileName, setPdfFileName] = useState("");
+  const [uploadDocType, setUploadDocType] = useState("Lab Results");
   const fileInputRef = useRef(null);
+
+  const DOC_TYPES = [
+    { label: "Lab Results",     type: "Lab Report", color: "#10b981" },
+    { label: "Imaging Report",  type: "Imaging",    color: "#a78bfa" },
+    { label: "Clinical Note",   type: "Visit Note", color: "#4f8ef7" },
+    { label: "Pathology",       type: "Procedure",  color: "#f59e0b" },
+    { label: "Discharge",       type: "Hospital",   color: "#ef4444" },
+    { label: "Other",           type: "Other",      color: "#98afc4" },
+  ];
 
   // Reload from storage on mount (handles Clear Data reload)
   useEffect(() => { setLabs(getLabs()); }, []);
@@ -190,18 +240,53 @@ export default function ImportTab() {
     setPdfStatus("extracting");
     setPdfError("");
     setPdfPreview([]);
+    setDocPreview(null);
     try {
       const text = await extractTextFromPdf(file);
       setPdfStatus("parsing");
-      const extracted = await parseLabsWithClaude(text);
-      if (!Array.isArray(extracted) || extracted.length === 0) throw new Error("No lab results found in PDF.");
-      setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
-      setPdfStatus("done");
-      showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
+
+      if (uploadDocType === "Lab Results") {
+        const extracted = await parseLabsWithClaude(text);
+        if (!Array.isArray(extracted) || extracted.length === 0)
+          throw new Error("No lab results found in PDF. If this is an imaging report or clinical note, select that type before uploading.");
+        setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
+        setPdfStatus("done");
+        showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
+      } else {
+        const docTypeMeta = DOC_TYPES.find(d => d.label === uploadDocType) || DOC_TYPES[DOC_TYPES.length - 1];
+        const extracted = await parseDocWithClaude(text, uploadDocType);
+        if (!extracted || !extracted.title) throw new Error("Could not extract document information from PDF.");
+        setDocPreview({ ...extracted, _label: uploadDocType, _recordType: docTypeMeta.type, _color: docTypeMeta.color });
+        setPdfStatus("done");
+        showToast("Document extracted — review and save to Records.");
+      }
     } catch (err) {
       setPdfStatus("error");
-      setPdfError(err.message || "Failed to extract labs from PDF.");
+      setPdfError(err.message || "Failed to extract from PDF.");
     }
+  }
+
+  function confirmDoc() {
+    if (!docPreview) return;
+    const record = {
+      id: Date.now(),
+      title: docPreview.title || pdfFileName.replace(/\.pdf$/i, "") || "Imported Document",
+      type: docPreview._recordType || "Other",
+      date: docPreview.date || new Date().toISOString().split("T")[0],
+      facility: docPreview.facility || "",
+      provider: docPreview.provider || "",
+      summary: docPreview.summary || "",
+    };
+    mergeRecords([record]);
+    setDocPreview(null);
+    setPdfStatus("idle");
+    showToast("Document saved to Records.");
+  }
+
+  function discardDoc() {
+    setDocPreview(null);
+    setPdfStatus("idle");
+    setPdfError("");
   }
 
   function confirmPdfLabs() {
@@ -329,32 +414,82 @@ export default function ImportTab() {
       <div style={{ flex:1, overflowY:"auto", padding:"28px 28px" }}>
 
         {/* Header */}
-        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:26 }}>
+        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:16 }}>
           <div>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px" }}>
-              {editId !== null ? "Edit Lab Result" : "Lab Results"}
+              {editId !== null ? "Edit Lab Result" : "Import Records"}
             </h1>
             <p style={{ fontSize:12, color:"#98afc4", marginTop:5, fontFamily:"'DM Mono',monospace" }}>
-              {labs.length} result{labs.length !== 1 ? "s" : ""} recorded
+              {labs.length} lab result{labs.length !== 1 ? "s" : ""} recorded
             </p>
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"flex-start", marginTop:4 }}>
             <button className="imp-btn btn-ghost" onClick={handlePrint}>🖨 Print</button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={pdfStatus === "extracting" || pdfStatus === "parsing"}
-              style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}
-            >
-              {pdfStatus === "extracting" ? "⏳ Reading PDF…" : pdfStatus === "parsing" ? "✦ Extracting…" : "⬆ Upload PDF"}
-            </button>
-            <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handlePdfUpload} style={{ display:"none" }} />
           </div>
+        </div>
+
+        {/* Document type selector + upload */}
+        <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 18px", marginBottom:20 }}>
+          <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:10 }}>Upload Document Type</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:14 }}>
+            {DOC_TYPES.map(dt => {
+              const active = uploadDocType === dt.label;
+              return (
+                <button
+                  key={dt.label}
+                  onClick={() => setUploadDocType(dt.label)}
+                  disabled={pdfStatus === "extracting" || pdfStatus === "parsing"}
+                  style={{
+                    padding:"5px 13px", borderRadius:20, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", transition:"all .15s", border:"1px solid",
+                    background: active ? `${dt.color}18` : "#07090f",
+                    borderColor: active ? `${dt.color}50` : "#1a2f4a",
+                    color: active ? dt.color : "#98afc4",
+                  }}
+                >{dt.label}</button>
+              );
+            })}
+          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={pdfStatus === "extracting" || pdfStatus === "parsing"}
+            style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 16px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}
+          >
+            {pdfStatus === "extracting" ? "⏳ Reading PDF…" : pdfStatus === "parsing" ? "✦ Extracting…" : `⬆ Upload ${uploadDocType} PDF`}
+          </button>
+          <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handlePdfUpload} style={{ display:"none" }} />
         </div>
 
         {/* PDF error */}
         {pdfStatus === "error" && (
           <div style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.25)", borderRadius:10, padding:"12px 16px", marginBottom:20, fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
             ⚠ {pdfError} <button onClick={discardPdfLabs} style={{ marginLeft:12, background:"transparent", border:"none", color:"#f87171", cursor:"pointer", textDecoration:"underline", fontSize:11 }}>Dismiss</button>
+          </div>
+        )}
+
+        {/* Non-lab document preview */}
+        {docPreview && (
+          <div style={{ background:`rgba(${docPreview._color === "#a78bfa" ? "167,139,250" : docPreview._color === "#4f8ef7" ? "79,142,247" : docPreview._color === "#10b981" ? "16,185,129" : docPreview._color === "#f59e0b" ? "245,158,11" : docPreview._color === "#ef4444" ? "239,68,68" : "152,175,196"},.06)`, border:`1px solid ${docPreview._color}30`, borderRadius:12, padding:20, marginBottom:24, animation:"fadeUp .3s ease both" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+              <div style={{ fontSize:13, color: docPreview._color, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
+                ✦ Document extracted — review then save
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={discardDoc} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
+                <button onClick={confirmDoc} style={{ padding:"6px 14px", background:`${docPreview._color}18`, border:`1px solid ${docPreview._color}40`, borderRadius:7, color: docPreview._color, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save to Records</button>
+              </div>
+            </div>
+            <div style={{ background:"#07090f", border:"1px solid #111e30", borderRadius:10, padding:"14px 16px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <span style={{ fontSize:9, background:`${docPreview._color}18`, color: docPreview._color, border:`1px solid ${docPreview._color}30`, padding:"2px 8px", borderRadius:4, fontFamily:"'DM Mono',monospace", letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{docPreview._recordType || docPreview._label}</span>
+                <span style={{ fontSize:15, fontWeight:600, color:"#dde8f5" }}>{docPreview.title}</span>
+              </div>
+              <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:10 }}>
+                {docPreview.date    && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>📅 {new Date(docPreview.date + "T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</span>}
+                {docPreview.facility && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>🏥 {docPreview.facility}</span>}
+                {docPreview.provider && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>👤 {docPreview.provider}</span>}
+              </div>
+              {docPreview.summary && <p style={{ fontSize:12, color:"#b0c4d8", lineHeight:1.7 }}>{docPreview.summary}</p>}
+            </div>
           </div>
         )}
 
