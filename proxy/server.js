@@ -48,13 +48,13 @@ app.use(cors({
 app.use(express.json({ limit: "256kb" }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
-// 20 requests per hour per IP. Returns 429 when limit hit.
+// 300 requests per hour per IP — supports batch document imports (73+ files).
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Rate limit exceeded. You may send 20 AI requests per hour. Please try again later." },
+  message: { error: "Rate limit exceeded. You may send 300 AI requests per hour. Please try again later." },
   skip: () => false,
 });
 

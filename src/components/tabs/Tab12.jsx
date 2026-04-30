@@ -318,9 +318,24 @@ export default function ImportTab({ onImport, onNavChange }) {
     setBatchSummary(summary);
 
     if (isLabs && allLabs.length > 0) {
-      setPdfPreview(allLabs.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
-      const ok = summary.filter(s => s.ok).length;
-      showToast(`Found ${allLabs.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} — review and confirm.`);
+      // Auto-save in batch mode — no "Save All" confirmation step needed for large batches
+      const labeled = allLabs.map((l, idx) => ({ ...l, id: Date.now() + idx }));
+      const updatedLabs = [...labeled, ...getLabs()].sort((a, b) => new Date(b.date) - new Date(a.date));
+      saveLabs(updatedLabs);
+      setLabs(updatedLabs); // force list to refresh immediately
+      const ok   = summary.filter(s => s.ok).length;
+      const fail = summary.filter(s => !s.ok).length;
+      // Single Records entry for the whole batch
+      mergeRecords([{
+        id: Date.now(),
+        title: `Lab Import — ${ok} file${ok !== 1 ? "s" : ""}`,
+        type: "Lab Report",
+        date: labeled[0]?.date || new Date().toISOString().split("T")[0],
+        facility: labeled[0]?.facility || "",
+        provider: "",
+        summary: `${labeled.length} lab result${labeled.length !== 1 ? "s" : ""} imported from ${ok} PDF${ok !== 1 ? "s" : ""}${fail ? ` (${fail} file${fail !== 1 ? "s" : ""} failed)` : ""}.`,
+      }]);
+      showToast(`${labeled.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} saved.${fail ? ` ${fail} failed — see summary.` : ""}`);
     } else if (!isLabs) {
       const ok   = summary.filter(s => s.ok).length;
       const fail = summary.filter(s => !s.ok).length;
