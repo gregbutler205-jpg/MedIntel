@@ -399,9 +399,11 @@ export default function ImportTab({ onImport, onNavChange }) {
       provider: docPreview.provider || "",
       summary: docPreview.summary || "",
     };
+    const docId = Date.now().toString();
+    // Store refDocId in the record so the Records tab can link back to full text
+    record.refDocId = docId;
     mergeRecords([record]);
     // Save full text to AI Reference Docs
-    const docId = Date.now().toString();
     try {
       const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
       const newDoc = { id: docId, name: record.title, text: pdfText, addedDate: new Date().toLocaleDateString() };

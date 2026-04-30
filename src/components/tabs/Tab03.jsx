@@ -26,7 +26,7 @@ function Badge({ type }) {
   );
 }
 
-export default function Records() {
+export default function Records({ onNavChange }) {
   const [records, setRecordsState] = useState(() => getRecords());
   const [filter, setFilter]     = useState("All");
   const [search, setSearch]     = useState("");
@@ -35,6 +35,42 @@ export default function Records() {
   const [addType, setAddType]   = useState(null);
   const [addForm, setAddForm]   = useState({ title: "", facility: "", provider: "", date: "" });
   const [deleteId, setDeleteId] = useState(null);
+
+  // ── Ask AI about a record ─────────────────────────────────────────────────
+  const handleAskAI = (record) => {
+    let docId = null;
+    try {
+      const refDocs = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
+      // 1. Prefer the directly-linked ref doc (set when user clicked "Interpret with AI ▸")
+      if (record.refDocId) {
+        const linked = refDocs.find(d => d.id === record.refDocId);
+        if (linked) docId = linked.id;
+      }
+      // 2. Fall back to a ref doc with the same name
+      if (!docId) {
+        const byName = refDocs.find(d => d.name === record.title);
+        if (byName) docId = byName.id;
+      }
+      // 3. Build a ref doc from whatever metadata + summary we have
+      if (!docId) {
+        const newId = Date.now().toString();
+        const text = [
+          `Document: ${record.title}`,
+          record.type     && `Type: ${record.type}`,
+          record.date     && `Date: ${record.date}`,
+          record.facility && `Facility: ${record.facility}`,
+          record.provider && `Provider: ${record.provider}`,
+          "",
+          record.summary || "(No summary available)",
+        ].filter(Boolean).join("\n");
+        const newDoc = { id: newId, name: record.title, text, addedDate: new Date().toLocaleDateString() };
+        localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...refDocs]));
+        docId = newId;
+      }
+    } catch { return; }
+    localStorage.setItem("mi_auto_analyze_doc", docId);
+    if (onNavChange) onNavChange("ai");
+  };
 
   const filtered = records.filter(r => {
     const matchType   = filter === "All" || r.type === filter;
@@ -161,8 +197,14 @@ export default function Records() {
                   </a>
                 )}
                 <button
+                  onClick={() => handleAskAI(selected)}
+                  style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 7, color: "#4f8ef7", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                >
+                  ✦ Ask AI
+                </button>
+                <button
                   onClick={() => setDeleteId(selected.id)}
-                  style={{ marginLeft: "auto", padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                  style={{ padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                 >
                   Delete
                 </button>

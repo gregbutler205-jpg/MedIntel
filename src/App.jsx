@@ -513,7 +513,7 @@ function AppShell() {
                 {/* Non-dashboard Group B tabs */}
                 {ActiveTabComponent && activeNav === "import"
                   ? <ActiveTabComponent onImport={handleImport} onNavChange={setActiveNav} />
-                  : ActiveTabComponent && <ActiveTabComponent />
+                  : ActiveTabComponent && <ActiveTabComponent onNavChange={setActiveNav} />
                 }
 
                 {/* Dashboard home */}
