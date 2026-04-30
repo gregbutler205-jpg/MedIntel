@@ -3,6 +3,35 @@ import { getStore, setStore, mergeRecords } from "../../store.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 
+// ── Unified API caller: proxy first, fall back to direct Anthropic on 429 ─────
+// This lets batch imports continue even when the proxy rate limit is hit.
+async function callAI(payload) {
+  let res = await fetch(`${PROXY_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.status === 429) {
+    // Proxy rate-limited — fall back to direct Anthropic with personal key
+    const apiKey = localStorage.getItem("mi_ak");
+    if (!apiKey) {
+      throw new Error("Rate limit exceeded. Add your personal Anthropic API key in Data & Backup to continue, or wait an hour and retry.");
+    }
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({ ...payload, stream: false }),
+    });
+  }
+  return res;
+}
+
 // ── PDF Lab Extractor ──────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
   const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
@@ -33,16 +62,13 @@ function repairTruncatedJsonArray(raw) {
 // ── Non-lab document extractor (Imaging, Clinical Note, etc.) ─────────────────
 async function parseDocWithClaude(pdfText, docType) {
   const text = pdfText.slice(0, 14000); // single chunk — metadata extraction only
-  const response = await fetch(`${PROXY_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      stream: false,
-      messages: [{
-        role: "user",
-        content: `Extract structured information from this medical document and return a JSON object with these exact fields:
+  const response = await callAI({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1024,
+    stream: false,
+    messages: [{
+      role: "user",
+      content: `Extract structured information from this medical document and return a JSON object with these exact fields:
 - title (string): concise descriptive title, e.g. "MRI Brain Without Contrast" or "Cardiology Follow-up Visit"
 - type (string): one of: Visit Note, Imaging, Procedure, Hospital, Lab Report, Other
 - date (string): document or service date in YYYY-MM-DD format, or ""
@@ -55,12 +81,11 @@ Return ONLY the JSON object, no markdown, no explanation.
 DOCUMENT TYPE HINT: ${docType}
 DOCUMENT TEXT:
 ${text}`,
-      }],
-    }),
+    }],
   });
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Proxy error: ${response.status} — ${err}`);
+    throw new Error(`API error: ${response.status} — ${err}`);
   }
   const data = await response.json();
   let raw = data.content[0].text.trim();
@@ -77,10 +102,7 @@ async function parseLabsWithClaude(pdfText) {
 
   const allLabs = [];
   for (const chunk of chunks) {
-    const response = await fetch(`${PROXY_URL}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const response = await callAI({
         model: "claude-sonnet-4-6",
         max_tokens: 4096,
         stream: false,
@@ -102,7 +124,6 @@ Return ONLY the JSON array, no markdown, no explanation. If there are no lab res
 LAB REPORT TEXT:
 ${chunk}`
         }],
-      }),
     });
     if (!response.ok) {
       const err = await response.text();
