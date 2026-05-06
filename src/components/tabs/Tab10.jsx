@@ -244,7 +244,7 @@ function AIPanel({ note, onClose }) {
       if (data.error) throw new Error(data.error.message);
       setResult(data.content[0].text);
     } catch (e) {
-      setError(e.message || "Request failed. Check your API key in Data & Backup settings.");
+      setError(e.message || "Request failed. Check your API key in Settings & Backup.");
     }
     setLoading(false);
   }

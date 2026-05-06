@@ -177,6 +177,15 @@ Other:
       refDocs.map(d => `[Document: "${d.name}"]\n${d.text.slice(0, 8000)}${d.text.length > 8000 ? "\n…(truncated)" : ""}`).join("\n\n---\n\n")
     : "";
 
+  // ── Clinical findings (auto-extracted from uploaded documents) ──────────────
+  const clinicalFindings = safeRead("mi_clinical_findings", []);
+  const findingsSection = clinicalFindings.length > 0
+    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nCLINICAL FINDINGS (extracted from patient documents)\n━━━━━━━━━━━━━━━━━━━━━━━━━\nThese findings were automatically extracted from the patient's uploaded medical documents. Treat them as confirmed clinical data points — cross-reference with labs, vitals, and medications as appropriate.\n\n` +
+      clinicalFindings.map(f =>
+        `- [${(f.category || "other").toUpperCase()}] ${f.finding}${f.permanent ? " (permanent)" : ""}${f.docName ? ` — source: ${f.docName}` : ""}`
+      ).join("\n")
+    : "";
+
   // ── Mode-specific additions ─────────────────────────────────────────────────
   const modeInstructions = mode === "advanced"
     ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- When appropriate, include differential considerations and nuanced clinical context\n- Flag any value that approaches critical thresholds, even if technically within range\n- Provide actionable guidance with specific questions to raise with each specialist`
@@ -313,7 +322,8 @@ ASSISTANT GUIDELINES
 - Always name the specific doctor best suited to address each concern
 - Never diagnose or prescribe — inform, analyze, and guide
 - Cross-check any medication question against both his current med list AND the avoid list
-- Treat this as a comprehensive clinical intelligence tool, not a general chatbot${modeInstructions}${refDocsSection}`;
+- APPOINTMENT PREP: When preparing the patient for any upcoming medical appointment, always include as a final question to ask the doctor: "What reference materials, handbooks, or patient guides do you recommend for managing my condition long-term?"
+- Treat this as a comprehensive clinical intelligence tool, not a general chatbot${modeInstructions}${refDocsSection}${findingsSection}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -339,7 +349,7 @@ async function extractTextFromPdf(file) {
 const PRESETS = [
   { label: "Full health summary",      prompt: "Give me a comprehensive cross-referenced summary of my current health status — covering my diagnoses, recent labs, vitals, medications, and upcoming care." },
   { label: "Medication safety check",  prompt: "Review my full medication list for interactions, anything I should avoid (including OTCs and supplements), and flag any concerns to raise with my care team." },
-  { label: "Prep for Hepatology appt", prompt: "Help me prepare for my upcoming hepatology appointment. Cross-reference my recent liver panel labs (Bilirubin, ALT, AST, Alk Phos), current medications including tacrolimus and mycophenolate, and any relevant clinical findings or trends." },
+  { label: "Prep for Hepatology appt", prompt: "Help me prepare for my upcoming hepatology appointment. Cross-reference my recent liver panel labs (Bilirubin, ALT, AST, Alk Phos), current medications including tacrolimus and mycophenolate, and any relevant clinical findings or trends. Include a prioritized list of questions to bring, and end with this question to ask the doctor: What reference materials, handbooks, or patient guides do you recommend for managing my condition long-term?" },
   { label: "Rejection risk check",     prompt: "Based on my current liver enzymes (ALT, AST, Alk Phos, Bilirubin), Tacrolimus level, and any biopsy findings, what are my current signs or risk factors for liver graft rejection or decline?" },
   { label: "Foods & things to avoid",  prompt: "Give me a complete rundown of foods, drinks, OTC medications, supplements, and activities I need to avoid or be cautious about given my transplant and current medications." },
   { label: "Infection risk review",    prompt: "What are my current infection risks given my immunosuppression level, CMV status, and recent labs? What symptoms should prompt me to call the transplant team immediately?" },
@@ -989,7 +999,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <span style={{ fontSize: 12, color: "#f59e0b" }}>⚠</span>
           <span style={{ fontSize: 11, color: "#c4a060", fontFamily: "'DM Mono',monospace", flex: 1 }}>
             Advanced Mode consent has been updated. You have been switched to Standard Mode.
-            To re-enable Advanced Mode, go to <strong>Data &amp; Backup → AI Analysis Mode</strong> and re-consent.
+            To re-enable Advanced Mode, go to <strong>Settings &amp; Backup → AI Analysis Mode</strong> and re-consent.
           </span>
           <button
             onClick={() => setStaleConsent(false)}
@@ -1133,7 +1143,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               <textarea
                 className="chat-input"
                 rows={2}
-                placeholder={staleConsent ? "Re-consent to Advanced Mode required — switch to Standard in Data & Backup" : "Ask anything about your health data…"}
+                placeholder={staleConsent ? "Re-consent to Advanced Mode required — switch to Standard in Settings & Backup" : "Ask anything about your health data…"}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}

@@ -67,7 +67,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           }}>Choose Your AI Mode</div>
           <div style={{ fontSize: 12, color: "#7eb8d8", marginTop: 8, lineHeight: 1.6 }}>
             Select how you would like the AI Analysis feature to work. You can change this
-            at any time in Data &amp; Backup settings.
+            at any time in Settings &amp; Backup.
           </div>
         </div>
 
@@ -265,7 +265,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           fontFamily: "'DM Mono', monospace",
           textAlign: "center", marginTop: 12, lineHeight: 1.5,
         }}>
-          This choice is saved locally. You can change modes anytime in Data &amp; Backup.
+          This choice is saved locally. You can change modes anytime in Settings &amp; Backup.
         </div>
       </div>
 

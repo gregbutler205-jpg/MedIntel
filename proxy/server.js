@@ -3,12 +3,16 @@
 // Node.js / Express — deploy to Render (free tier)
 //
 // Responsibilities:
-//  • Accepts POST /api/chat from the browser
-//  • Forwards the request to Anthropic's messages API with SSE streaming
-//  • Pipes the raw SSE stream back to the browser unchanged
+//  • Accepts POST /api/chat from the browser (streaming or JSON)
+//  • Accepts POST /api/extract-pdf for Claude Vision OCR of scanned documents
+//  • Forwards requests to Anthropic's messages API
+//  • Pipes SSE streams or JSON back to the browser unchanged
 //  • Zero-logging: no request body, no health data, no API key fragments stored
-//  • Rate limiting: 20 requests per IP per hour
-//  • CORS: restricted to the GitHub Pages origin
+//  • Rate limiting: 60 requests per IP per hour (disabled; enable before public release)
+//  • CORS: restricted to approved origins
+//
+// Body limits are route-specific (not global) so large image batches can reach
+// /api/extract-pdf without blocking the smaller /api/chat endpoint.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import express           from "express";
@@ -24,7 +28,7 @@ const PORT = process.env.PORT || 3001;
 app.get("/health", (_req, res) => res.json({ status: "ok", ts: new Date().toISOString() }));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// Allow the GitHub Pages origin. Add localhost for local dev.
+// Allow approved origins. Add localhost entries for local dev.
 const ALLOWED_ORIGINS = [
   "https://insinahealth.com",            // custom domain (apex)
   "https://www.insinahealth.com",        // custom domain (www)
@@ -44,12 +48,13 @@ app.use(cors({
   allowedHeaders: ["Content-Type"],
 }));
 
-// ── Body parsing ───────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "256kb" }));
+// NOTE: No global body parser. Each route applies its own limit so that
+// /api/extract-pdf can accept large image batches (up to 30 MB) while
+// /api/chat stays capped at 256 KB.
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 // Disabled for internal use — re-enable before public release by setting
-// skip: () => false  and choosing an appropriate max (e.g. 60 per hour).
+// skip: () => false  and choosing an appropriate max.
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 60,
@@ -59,15 +64,15 @@ const limiter = rateLimit({
   skip: () => true, // ← disabled; set to false to enforce on public release
 });
 
-// ── Main proxy endpoint ────────────────────────────────────────────────────────
-app.post("/api/chat", limiter, async (req, res) => {
+// ── /api/chat — SSE streaming or JSON passthrough (256 KB body limit) ─────────
+app.post("/api/chat", express.json({ limit: "256kb" }), limiter, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: "Server configuration error: missing API key." });
   }
 
-  // Validate request shape — must have model + messages, nothing else needed
+  // Validate request shape — must have model + messages
   const { model, max_tokens, system, messages, stream } = req.body;
 
   if (!model || !messages || !Array.isArray(messages)) {
@@ -96,7 +101,7 @@ app.post("/api/chat", limiter, async (req, res) => {
       body: JSON.stringify({
         model,
         max_tokens: Math.min(max_tokens || 1024, 4096), // cap at 4096
-        stream: stream === true,  // respect client preference; default false (JSON response)
+        stream: stream === true,  // respect client preference; default false
         system,
         messages,
       }),
@@ -110,22 +115,113 @@ app.post("/api/chat", limiter, async (req, res) => {
 
     if (stream === true) {
       // ── SSE stream passthrough (Tab11 AI chat) ────────────────────────────
-      // Pipe raw SSE bytes from Anthropic directly to the browser.
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("X-Accel-Buffering", "no"); // disable Nginx buffering on Render
       anthropicRes.body.pipe(res);
-      // Clean up if client disconnects mid-stream
       req.on("close", () => { anthropicRes.body.destroy(); });
     } else {
-      // ── Non-streaming JSON passthrough (Tab05 labs, Tab14 consult prep) ───
-      // Anthropic returns application/json when stream=false — pipe it straight through.
+      // ── Non-streaming JSON passthrough (Tab05 labs, Tab09 extraction, Tab14 consult) ─
       res.setHeader("Content-Type", "application/json");
       anthropicRes.body.pipe(res);
     }
 
   } catch (err) {
     // Zero-logging: do NOT log err.message as it may contain request data
+    if (!res.headersSent) {
+      res.status(502).json({ error: "Upstream connection error." });
+    }
+  }
+});
+
+// ── /api/extract-pdf — Claude Vision OCR for scanned documents (30 MB body) ───
+//
+// Accepts batches of up to 15 rendered PDF pages (JPEG, base64-encoded).
+// Each page is rendered client-side via PDF.js, exported as a JPEG canvas
+// snapshot, and sent here for Vision-based OCR.
+//
+// Request body:  { pages: [{ pageNum: number, imageBase64: string }] }
+// Response body: { text: string, pageCount: number }
+//
+// The caller is responsible for splitting large PDFs into ≤15 page batches
+// and assembling the full text from multiple responses.
+// ─────────────────────────────────────────────────────────────────────────────
+app.post("/api/extract-pdf", express.json({ limit: "30mb" }), limiter, async (req, res) => {
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: "Server configuration error: missing API key." });
+  }
+
+  const { pages } = req.body;
+
+  if (!pages || !Array.isArray(pages) || pages.length === 0) {
+    return res.status(400).json({ error: "Invalid request: pages array is required." });
+  }
+  if (pages.length > 15) {
+    return res.status(400).json({ error: "Maximum 15 pages per batch." });
+  }
+  // Basic shape validation — each page needs pageNum and imageBase64
+  for (const p of pages) {
+    if (typeof p.pageNum !== "number" || typeof p.imageBase64 !== "string" || !p.imageBase64) {
+      return res.status(400).json({ error: "Each page must have pageNum (number) and imageBase64 (string)." });
+    }
+  }
+
+  // Build content array: system instruction + interleaved page labels and images
+  const content = [
+    {
+      type: "text",
+      text: "You are a medical document OCR assistant. Extract all text from the following document pages exactly as written. Preserve medical terminology, lab values, numbers, dates, medication names, dosages, and document structure. Do not summarize or interpret — transcribe only.",
+    },
+  ];
+
+  for (const page of pages) {
+    content.push({
+      type: "text",
+      text: `--- Page ${page.pageNum} ---`,
+    });
+    content.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/jpeg",
+        data: page.imageBase64,
+      },
+    });
+  }
+
+  content.push({
+    type: "text",
+    text: "Return the extracted text from each page with --- Page N --- headers separating them. Return extracted text only — no commentary, no summaries, no explanations.",
+  });
+
+  try {
+    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        // No prompt-caching header here — image content is unique per upload
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4096,
+        messages: [{ role: "user", content }],
+      }),
+    });
+
+    if (!anthropicRes.ok) {
+      const errBody = await anthropicRes.text().catch(() => "{}");
+      return res.status(anthropicRes.status).send(errBody);
+    }
+
+    const result = await anthropicRes.json();
+    const text = result.content?.[0]?.text || "";
+    res.json({ text, pageCount: pages.length });
+
+  } catch (err) {
     if (!res.headersSent) {
       res.status(502).json({ error: "Upstream connection error." });
     }

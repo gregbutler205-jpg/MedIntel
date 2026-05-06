@@ -53,6 +53,24 @@ function ApiKeyModal({ current, onSave, onClose }) {
   );
 }
 
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderTop: "1px solid #0d1a28" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", background: "none", border: "none", padding: "10px 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", gap: 10 }}
+      >
+        <span style={{ fontSize: 11, color: "#c4d8ee", textAlign: "left", lineHeight: 1.5 }}>{q}</span>
+        <span style={{ fontSize: 11, color: "#4f8ef7", flexShrink: 0 }}>{open ? "▾" : "▸"}</span>
+      </button>
+      {open && (
+        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.7, paddingBottom: 10, paddingRight: 16 }}>{a}</div>
+      )}
+    </div>
+  );
+}
+
 function ExportTile({ icon, label, sub, onClick }) {
   const [hovered, setHovered] = useState(false);
   return (
@@ -76,17 +94,42 @@ const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px so
 
 const AI_MODE_KEY = "insina_ai_mode";
 
+const DEFAULT_LAB_CATS = ["CBC / Hematology","Chemistry","Electrolytes","Endocrine","Immunosuppression","Infection / Serology","Lipid Panel","Liver Panel","Urinalysis","Other"];
+
 function loadAIMode() {
   try { return JSON.parse(localStorage.getItem(AI_MODE_KEY)); } catch { return null; }
 }
 
-export default function DataBackup() {
+export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle", lastSyncTs, onSync = () => {}, onSignOut = () => {} }) {
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem("mi_ak") || "");
-  const [backupFreq, setBackupFreq] = useState("Weekly");
-  const [backups, setBackups]     = useState(INITIAL_BACKUPS);
+  const [backupFreq, setBackupFreq] = useState(() => localStorage.getItem("mi_backup_freq") || "Weekly");
+  const [backups, setBackups]     = useState(() => { try { return JSON.parse(localStorage.getItem("mi_backup_history") || "[]"); } catch { return []; } });
   const [toast, setToast]         = useState("");
   const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "advanced_consent"
   const [restoreId, setRestoreId] = useState(null);
+
+  // Lab category order
+  const [labCatOrder, setLabCatOrderState] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mi_lab_category_order") || "null") || DEFAULT_LAB_CATS; }
+    catch { return DEFAULT_LAB_CATS; }
+  });
+
+  function moveCat(idx, dir) {
+    const arr = [...labCatOrder];
+    const swap = idx + dir;
+    if (swap < 0 || swap >= arr.length) return;
+    [arr[idx], arr[swap]] = [arr[swap], arr[idx]];
+    localStorage.setItem("mi_lab_category_order", JSON.stringify(arr));
+    window.dispatchEvent(new CustomEvent("mi_lab_cat_order_changed"));
+    setLabCatOrderState(arr);
+  }
+
+  function resetLabCatOrder() {
+    localStorage.setItem("mi_lab_category_order", JSON.stringify(DEFAULT_LAB_CATS));
+    window.dispatchEvent(new CustomEvent("mi_lab_cat_order_changed"));
+    setLabCatOrderState(DEFAULT_LAB_CATS);
+    showToast("Lab category order reset to alphabetical");
+  }
 
   // AI Mode state
   const [aiMode, setAiModeState]        = useState(() => loadAIMode());
@@ -128,7 +171,15 @@ export default function DataBackup() {
 
   function handleBackupNow() {
     const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    setBackups([{ id: Date.now(), type: "Manual backup", date: dateStr, size: "18.7 KB" }, ...backups]);
+    let totalBytes = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      totalBytes += (k.length + (localStorage.getItem(k) || "").length) * 2;
+    }
+    const size = `${(totalBytes / 1024).toFixed(1)} KB`;
+    const updated = [{ id: Date.now(), type: "Manual backup", date: dateStr, size }, ...backups];
+    setBackups(updated);
+    localStorage.setItem("mi_backup_history", JSON.stringify(updated.slice(0, 20)));
     showToast("Backup created successfully");
   }
 
@@ -265,13 +316,83 @@ export default function DataBackup() {
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
-        
+        <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>Settings &amp; Backup</div>
+        <div style={{ flex: 1 }} />
+        <button style={btnPrimary} onClick={handleBackupNow}>Backup Now</button>
       </div>
       <div style={{ overflowY: "auto", padding: "24px 28px", flex: 1 }}>
 
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Data & Backup</h1>
-        <p style={{ fontSize: 11, color: "#98afc4", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>Manage exports, connections, storage, and app settings</p>
+        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Settings & Backup</h1>
+        <p style={{ fontSize: 11, color: "#98afc4", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>App preferences, data exports, backups, and connected sources</p>
+      </div>
+
+      {/* Google Drive Sync */}
+      <div style={{ ...cardStyle, marginBottom: 14 }}>
+        <div style={sectionLbl}>Google Drive Backup</div>
+        {googleUser ? (
+          <div>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+              {googleUser.picture
+                ? <img src={googleUser.picture} alt="" style={{ width:42, height:42, borderRadius:"50%", border:"1px solid #1a2f4a", flexShrink:0 }} />
+                : <div style={{ width:42, height:42, borderRadius:"50%", background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17, fontWeight:700, color:"#fff", flexShrink:0 }}>{(googleUser.name||"G")[0].toUpperCase()}</div>
+              }
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:2 }}>{googleUser.name}</div>
+                <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{googleUser.email}</div>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                <div style={{ width:6, height:6, borderRadius:"50%", background:"#10b981", boxShadow:"0 0 6px #10b98160" }} />
+                <span style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace" }}>Connected</span>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:12, borderTop:"1px solid #0d1a28" }}>
+              <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+                {syncStatus==="syncing" ? "⟳ Syncing…" :
+                 syncStatus==="error"   ? "⚠ Sync failed — check connection" :
+                 lastSyncTs             ? `Last synced ${new Date(lastSyncTs).toLocaleDateString("en-US",{month:"short",day:"numeric"})} at ${new Date(lastSyncTs).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` :
+                 "Not yet synced"}
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button
+                  onClick={onSync}
+                  disabled={syncStatus==="syncing"}
+                  style={{ ...btnPrimary, opacity: syncStatus==="syncing" ? 0.6 : 1 }}
+                >
+                  {syncStatus==="syncing" ? "Syncing…" : "↑↓ Sync Now"}
+                </button>
+                <button
+                  onClick={() => { if (window.confirm("Disconnect Google Drive? Your local data will not be deleted.")) onSignOut(); }}
+                  style={{ ...btnGhost, color:"#ef4444", borderColor:"rgba(239,68,68,.2)" }}
+                >
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.7, marginBottom:14 }}>
+              Connect your Google account to automatically back up all your health data to your personal Google Drive.
+              Your data is stored only in <em>your</em> Drive — Insina Health servers never hold your health records.
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <button
+                onClick={onSync}
+                style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 16px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Connect Google Drive
+              </button>
+              <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>Free with your Google account · no health data stored on our servers</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Row 1: Sources + Storage */}
@@ -281,9 +402,9 @@ export default function DataBackup() {
         <div style={cardStyle}>
           <div style={sectionLbl}>Connected Data Sources</div>
           {[
-            { icon: "E", iconBg: "rgba(79,142,247,.12)", iconBorder: "rgba(79,142,247,.2)", iconColor: "#4f8ef7", name: "Epic MyChart",  sub: "Ochsner · Hattiesburg · SCRMC", status: "Live",    statusColor: "#10b981", mono: true },
-            { icon: "♡", iconBg: "rgba(239,68,68,.08)",  iconBorder: "rgba(239,68,68,.15)",  iconColor: "#ef4444", name: "Apple Health", sub: "iOS companion required",       status: "Pending", statusColor: "#f59e0b", mono: false },
-            { icon: "✎", iconBg: "rgba(167,139,250,.1)", iconBorder: "rgba(167,139,250,.2)", iconColor: "#a78bfa", name: "Manual Entry", sub: "Vitals, meds, symptoms",       status: "Active",  statusColor: "#10b981", mono: false },
+            { icon: "E", iconBg: "rgba(79,142,247,.12)", iconBorder: "rgba(79,142,247,.2)", iconColor: "#4f8ef7", name: "Epic MyChart",  sub: "Coming soon — Ochsner · Hattiesburg · SCRMC", status: "Pending", statusColor: "#f59e0b", mono: true },
+            { icon: "♡", iconBg: "rgba(239,68,68,.08)",  iconBorder: "rgba(239,68,68,.15)",  iconColor: "#ef4444", name: "Apple Health", sub: "Coming soon — iOS companion",                 status: "Pending", statusColor: "#f59e0b", mono: false },
+            { icon: "✎", iconBg: "rgba(167,139,250,.1)", iconBorder: "rgba(167,139,250,.2)", iconColor: "#a78bfa", name: "Manual Entry", sub: "Vitals, meds, symptoms, labs",               status: "Active",  statusColor: "#10b981", mono: false },
           ].map((src, i, arr) => (
             <div key={src.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #0d1a28" : "none" }}>
               <div style={{ width: 32, height: 32, background: src.iconBg, border: `1px solid ${src.iconBorder}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: src.mono ? 10 : 15, fontFamily: src.mono ? "'DM Mono', monospace" : "inherit", color: src.iconColor, fontWeight: src.mono ? 600 : 400, flexShrink: 0 }}>
@@ -302,28 +423,45 @@ export default function DataBackup() {
         </div>
 
         {/* Storage */}
-        <div style={cardStyle}>
-          <div style={sectionLbl}>Storage & Records</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-            {[
-              { val: "2,996", label: "Lab entries",  color: "#4f8ef7" },
-              { val: "48",    label: "Vitals logged", color: "#10b981" },
-              { val: "14",    label: "Active meds",   color: "#a78bfa" },
-              { val: "12",    label: "Notes saved",   color: "#f59e0b" },
-            ].map(s => (
-              <div key={s.label} style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.val}</div>
-                <div style={{ fontSize: 10, color: "#b0c4d8", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
+        {(() => {
+          const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+          const labCount  = safe("mi_labs").length;
+          const vitCount  = safe("mi_readings").length;
+          const medCount  = safe("mi_meds_full").length;
+          const noteCount = safe("mi_notes").length + safe("mi_records").length;
+          const liveStats = [
+            { val: labCount.toLocaleString(),  label: "Lab entries",    color: "#4f8ef7" },
+            { val: vitCount.toLocaleString(),  label: "Vitals logged",  color: "#10b981" },
+            { val: medCount.toLocaleString(),  label: "Medications",    color: "#a78bfa" },
+            { val: noteCount.toLocaleString(), label: "Notes & records",color: "#f59e0b" },
+          ];
+          let totalBytes = 0;
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            totalBytes += (k.length + (localStorage.getItem(k) || "").length) * 2;
+          }
+          const usedKB = (totalBytes / 1024).toFixed(1);
+          const pct = Math.min(100, (totalBytes / (5 * 1024 * 1024)) * 100).toFixed(1);
+          return (
+            <div style={cardStyle}>
+              <div style={sectionLbl}>Storage & Records</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                {liveStats.map(s => (
+                  <div key={s.label} style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: 12 }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.val}</div>
+                    <div style={{ fontSize: 10, color: "#b0c4d8", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
-            <span>Local storage used</span><span style={{ color: "#7eb8d8" }}>1.2 MB / 5 MB</span>
-          </div>
-          <div style={{ height: 4, background: "#0d1a28", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: "24%", background: "linear-gradient(90deg,#4f8ef7,#a78bfa)", borderRadius: 2 }} />
-          </div>
-        </div>
+              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+                <span>Local storage used</span><span style={{ color: "#7eb8d8" }}>{usedKB} KB / 5,120 KB</span>
+              </div>
+              <div style={{ height: 4, background: "#0d1a28", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#4f8ef7,#a78bfa)", borderRadius: 2 }} />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Row 2: Export + Import */}
@@ -344,6 +482,50 @@ export default function DataBackup() {
           <ExportTile icon="💊" label="Medication List" sub="Current meds + history as PDF"                  onClick={() => handleExport("Medication List")} />
         </div>
       </div>
+
+      {/* Help & Support */}
+      {(() => {
+        const [helpOpen, setHelpOpen] = [false, () => {}]; // static for now; expand if needed
+        const topics = [
+          { q: "How do I import lab results?", a: "Go to Import Records in the sidebar. Select 'Lab Results' as the document type, then upload one or more PDF files. The AI will extract your results automatically and save them to the Labs tab." },
+          { q: "How do I ask AI about a record or document?", a: "Open any record in the Records tab and tap '✦ Ask AI'. For lab analysis, open the Labs tab and use the AI Analysis panel. You can type follow-up questions in either view." },
+          { q: "What is Standard vs. Advanced AI mode?", a: "Standard mode uses Claude Sonnet — fast and clear for everyday analysis. Advanced mode uses Claude Opus — deeper cross-referenced reasoning for complex cases. Advanced mode requires separate consent and is available as a subscription upgrade." },
+          { q: "Is my data private?", a: "All your health data is stored only in your browser's local storage — it never leaves your device unless you explicitly export or back it up. AI analysis requests are routed through a secure proxy; no health data is logged or retained on any server." },
+          { q: "What happens if I clear my browser?", a: "Clearing browser data will erase all locally stored records. Always export a Full Backup before clearing, or connect Google Drive in Settings & Backup to automatically protect against data loss." },
+          { q: "How do I reorder lab categories?", a: "Go to Settings & Backup → Lab Category Order. Use the up/down arrows to set the order categories appear in the Labs tab." },
+        ];
+        return (
+          <div style={{ ...cardStyle, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={sectionLbl}>Help & Support</div>
+              <a
+                href="mailto:support@insinahealth.com"
+                style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", textDecoration: "none" }}
+              >✉ Contact Support</a>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+              {[
+                { icon: "◈", label: "Quick Start Guide", sub: "Get up and running in 5 minutes", href: null },
+                { icon: "▤", label: "Full Documentation", sub: "All features explained in detail", href: null },
+                { icon: "✦", label: "AI Tips & Prompts", sub: "Get the most from AI analysis", href: null },
+                { icon: "◷", label: "Video Walkthroughs", sub: "Step-by-step feature demos", href: null },
+              ].map(item => (
+                <div key={item.label} style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10, opacity: item.href ? 1 : 0.55 }}>
+                  <div style={{ fontSize: 14, color: "#4f8ef7", marginTop: 1, flexShrink: 0 }}>{item.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", marginBottom: 2 }}>{item.label}</div>
+                    <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>{item.href ? item.sub : item.sub + " — coming soon"}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 10, letterSpacing: "0.5px" }}>FREQUENTLY ASKED QUESTIONS</div>
+            {topics.map((t, i) => (
+              <FaqItem key={i} q={t.q} a={t.a} />
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Row 3: Backup history + Settings */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
@@ -374,38 +556,44 @@ export default function DataBackup() {
         </div>
 
         {/* App Settings */}
-        <div style={cardStyle}>
-          <div style={sectionLbl}>App Settings</div>
+        {(() => {
+          const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+          const allDated = [
+            ...safe("mi_labs"), ...safe("mi_readings"), ...safe("mi_meds_full"),
+            ...safe("mi_records"), ...safe("mi_notes"),
+          ].map(r => r.date || r.startDate || r.timestamp || "").filter(Boolean).sort();
+          const oldest = allDated[0] ? new Date(allDated[0]).toLocaleDateString("en-US", { year: "numeric", month: "long" }) : "No records yet";
+          return (
+            <div style={cardStyle}>
+              <div style={sectionLbl}>App Settings</div>
 
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Anthropic API Key</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-                {apiKey ? maskedKey : <span style={{ color: "#a0b4c8" }}>Not set</span>}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-backup frequency</div>
+                <select
+                  value={backupFreq}
+                  onChange={e => { setBackupFreq(e.target.value); localStorage.setItem("mi_backup_freq", e.target.value); showToast(`Backup frequency set to ${e.target.value}`); }}
+                  style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+                >
+                  {["Daily", "Weekly", "Monthly", "Never"].map(f => <option key={f}>{f}</option>)}
+                </select>
               </div>
-              <button style={btnPrimary} onClick={() => setModal("apikey")}>Edit</button>
-            </div>
-            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginTop: 5 }}>Stored locally · never sent to any server</div>
-          </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-backup frequency</div>
-            <select
-              value={backupFreq}
-              onChange={e => { setBackupFreq(e.target.value); showToast(`Backup frequency set to ${e.target.value}`); }}
-              style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
-            >
-              {["Daily", "Weekly", "Monthly", "Never"].map(f => <option key={f}>{f}</option>)}
-            </select>
-          </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Data since</div>
+                <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
+                  {oldest}
+                </div>
+              </div>
 
-          <div>
-            <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Data since</div>
-            <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
-              January 2020 (oldest record)
+              <div>
+                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>App version</div>
+                <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
+                  Insina Health v0.9 — Beta
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* AI Analysis Mode */}
@@ -514,6 +702,37 @@ export default function DataBackup() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Lab Category Order */}
+      <div style={{ ...cardStyle, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={sectionLbl}>Lab Category Order</div>
+          <button onClick={resetLabCatOrder} style={{ ...btnGhost, fontSize: 10 }}>↺ Reset to Alphabetical</button>
+        </div>
+        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 14, lineHeight: 1.6 }}>
+          Set the order categories appear in the Labs tab. Use the arrows to move categories up or down.
+        </div>
+        {labCatOrder.map((cat, idx) => (
+          <div key={cat} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: idx < labCatOrder.length - 1 ? "1px solid #0d1a28" : "none" }}>
+            <div style={{ width: 18, textAlign: "right", fontSize: 9, color: "#3a5060", fontFamily: "'DM Mono', monospace", flexShrink: 0 }}>{idx + 1}</div>
+            <div style={{ flex: 1, fontSize: 12, color: "#c4d8ee" }}>{cat}</div>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                onClick={() => moveCat(idx, -1)}
+                disabled={idx === 0}
+                style={{ width: 26, height: 26, background: "#07090f", border: "1px solid #111e30", borderRadius: 6, color: idx === 0 ? "#1e3040" : "#7eb8d8", cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
+                title="Move up"
+              >↑</button>
+              <button
+                onClick={() => moveCat(idx, 1)}
+                disabled={idx === labCatOrder.length - 1}
+                style={{ width: 26, height: 26, background: "#07090f", border: "1px solid #111e30", borderRadius: 6, color: idx === labCatOrder.length - 1 ? "#1e3040" : "#7eb8d8", cursor: idx === labCatOrder.length - 1 ? "not-allowed" : "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
+                title="Move down"
+              >↓</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Danger Zone */}

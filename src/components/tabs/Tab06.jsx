@@ -21,7 +21,7 @@ const NAV = [
   { id: "notes",       icon: "◻", label: "Notes" },
   { id: "ai",          icon: "✦", label: "AI Analysis" },
   { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Data & Backup" },
+  { id: "backup",      icon: "◈", label: "Settings & Backup" },
 ];
 
 
@@ -310,7 +310,8 @@ const VITALS = [
 
 // Log form
 function LogPanel({ onClose, onSave }) {
-  const [form, setForm] = useState({ bp_s: "", bp_d: "", hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
+  const todayISO = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState({ date: todayISO, bp_s: "", bp_d: "", hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const fields = [
@@ -333,6 +334,17 @@ function LogPanel({ onClose, onSave }) {
         <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
+        {/* Date */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Date of Reading</div>
+          <input type="date" value={form.date} onChange={e => set("date", e.target.value)}
+            style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${form.date !== todayISO ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+          {form.date !== todayISO && (
+            <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
+              Logging for past date — {new Date(form.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+            </div>
+          )}
+        </div>
         <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
         {fields.map(({ label, inputs, unit }) => (
           <div key={label} style={{ marginBottom: 16 }}>
@@ -378,6 +390,7 @@ export default function App({ onNavChange }) {
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
   const [showFlagged, setShowFlagged] = useState(false);
+  const [vitalSearch, setVitalSearch] = useState("");
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -392,23 +405,26 @@ export default function App({ onNavChange }) {
   const prev = manualReadings[1];
 
   const handleSave = form => {
-    const now = new Date();
-    const ts = now.toISOString().split('T')[0];
-    const date = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const ts   = form.date || new Date().toISOString().split('T')[0];
+    const date = new Date(ts + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const r = {
       date, ts,
       bp_s: +form.bp_s || null, bp_d: +form.bp_d || null,
       hr: +form.hr || null, o2: +form.o2 || null,
       weight: +form.weight || null, temp: +form.temp || null,
       glucose: +form.glucose || null, sleep: +form.sleep || null,
+      flag: (+form.bp_s || 0) >= 160,
     };
-    setManualReadings(prev => [r, ...prev]);
+    const merged = mergeReadings([r]);
+    setManualReadings(merged);
   };
 
   const handleSaveReading = () => {
     const today = new Date();
-    const ts = newReading.ts || today.toISOString().split('T')[0];
-    const dateLabel = newReading.date || today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
+    const ts = newReading.date || today.toISOString().split('T')[0];
+    const dateLabel = newReading.date
+      ? new Date(newReading.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" })
+      : today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
     // Carry forward most recent non-null value for each field independently
     const bp_s   = newReading.bp_s   ? parseInt(newReading.bp_s)     : manualReadings.find(r => r.bp_s   != null)?.bp_s;
     const bp_d   = newReading.bp_d   ? parseInt(newReading.bp_d)     : manualReadings.find(r => r.bp_d   != null)?.bp_d;
@@ -530,8 +546,16 @@ export default function App({ onNavChange }) {
               </div>
             </div>
 
+            {/* Search */}
+            <input
+              value={vitalSearch}
+              onChange={e => setVitalSearch(e.target.value)}
+              placeholder="Search vitals…"
+              style={{ width:"100%", background:"#080c14", border:"1px solid #111e30", borderRadius:8, padding:"7px 10px", fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", outline:"none", marginBottom:10 }}
+            />
+
             {/* Vital cards */}
-            {VITALS.map((vc, i) => {
+            {VITALS.filter(v => v.label.toLowerCase().includes(vitalSearch.toLowerCase())).map((vc, i) => {
               const isWatch = vc.data === "watch";
               const latestR = isWatch ? latestWatch : latest;
               const val = latestR ? vc.latestNum(latestR) : null;
@@ -570,7 +594,7 @@ export default function App({ onNavChange }) {
                 <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:14 }}>NEW VITAL READING</div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:12 }}>
                   {[
-                    { label:"DATE", key:"date", placeholder:"Mar 21" },
+                    { label:"DATE", key:"date", placeholder:"", type:"date" },
                     { label:"BP SYSTOLIC", key:"bp_s", placeholder:"131" },
                     { label:"BP DIASTOLIC", key:"bp_d", placeholder:"71" },
                     { label:"HEART RATE", key:"hr", placeholder:"64" },
@@ -582,6 +606,7 @@ export default function App({ onNavChange }) {
                     <div key={f.key}>
                       <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
                       <input
+                        type={f.type || "text"}
                         style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
                         placeholder={f.placeholder}
                         value={newReading[f.key]}
@@ -659,9 +684,24 @@ export default function App({ onNavChange }) {
                     ))}
                   </div>
                 </div>
-                {config.chartType === "line" && (
-                  <LineChart data={filteredData} keys={config.chartKeys} colors={config.chartColors} yMin={config.chartYMin} yMax={config.chartYMax} refLines={config.refLines ?? []} />
-                )}
+                {config.chartType === "line" && (() => {
+                  // Dynamic y-axis: expand config bounds to fit actual data + padding
+                  let yMin = config.chartYMin;
+                  let yMax = config.chartYMax;
+                  if (filteredData.length >= 2) {
+                    const vals = filteredData
+                      .flatMap(r => config.chartKeys.map(k => r[k]))
+                      .filter(v => v != null);
+                    if (vals.length >= 2) {
+                      const dMin = Math.min(...vals);
+                      const dMax = Math.max(...vals);
+                      const pad  = Math.max((dMax - dMin) * 0.2, 3);
+                      yMin = Math.floor(Math.min(yMin, dMin - pad));
+                      yMax = Math.ceil(Math.max(yMax, dMax + pad));
+                    }
+                  }
+                  return <LineChart data={filteredData} keys={config.chartKeys} colors={config.chartColors} yMin={yMin} yMax={yMax} refLines={config.refLines ?? []} />;
+                })()}
                 {config.chartType === "band" && (
                   <BandChart data={filteredData} minKey="hr_min" maxKey="hr_max" restingKey="resting_hr" color={config.color} yMin={config.chartYMin} yMax={config.chartYMax} />
                 )}

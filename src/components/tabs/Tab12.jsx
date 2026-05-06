@@ -16,7 +16,7 @@ async function callAI(payload) {
     // Proxy rate-limited — fall back to direct Anthropic with personal key
     const apiKey = localStorage.getItem("mi_ak");
     if (!apiKey) {
-      throw new Error("Rate limit exceeded. Add your personal Anthropic API key in Data & Backup to continue, or wait an hour and retry.");
+      throw new Error("Rate limit exceeded. Add your personal Anthropic API key in Settings & Backup to continue, or wait an hour and retry.");
     }
     res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

@@ -16,7 +16,7 @@ const NAV = [
   { id: "notes",     icon: "◻", label: "Notes" },
   { id: "ai",        icon: "✦", label: "AI Analysis" },
   { id: "import",    icon: "↓", label: "Import Records" },
-  { id: "backup",    icon: "◈", label: "Data & Backup" },
+  { id: "backup",    icon: "◈", label: "Settings & Backup" },
 ];
 
 const ALERTS = [];

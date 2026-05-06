@@ -134,7 +134,7 @@ export function printConsent(consentData = {}) {
   <ul>
     <li>Your data is never sold or shared with third parties.</li>
     <li>All health records remain in your browser's local storage under your control.</li>
-    <li>You can switch back to Standard Mode at any time from the Data &amp; Backup settings.</li>
+    <li>You can switch back to Standard Mode at any time from the Settings &amp; Backup.</li>
     <li>You can export or delete all your data at any time.</li>
   </ul>
 
@@ -216,7 +216,7 @@ export default function ConsentText({ style = {} }) {
       <ul style={{ paddingLeft: 16, marginBottom: 10 }}>
         <li style={li}>Your data is sent to Anthropic's API via Insina's zero-logging proxy.</li>
         <li style={li}>No health data is stored on Insina servers after your response is delivered.</li>
-        <li style={li}>You can return to Standard Mode at any time in Data &amp; Backup settings.</li>
+        <li style={li}>You can return to Standard Mode at any time in Settings &amp; Backup.</li>
       </ul>
 
       <div style={h2}>Your Acknowledgment</div>

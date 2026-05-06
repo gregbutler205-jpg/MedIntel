@@ -24,7 +24,7 @@ const NAV = [
   { id: "notes",       icon: "◻", label: "Notes" },
   { id: "ai",          icon: "✦", label: "AI Analysis" },
   { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Data & Backup" },
+  { id: "backup",      icon: "◈", label: "Settings & Backup" },
 ];
 
 
@@ -303,7 +303,7 @@ function printLabReport(labs, logoUrl) {
   });
   const tests = Object.values(latest);
 
-  const LAB_CAT_ORDER = ["Chemistry","CBC / Hematology","Immunosuppression","Liver Panel","Lipid Panel","Electrolytes","Endocrine","Infection / Serology","Urinalysis","Other"];
+  const LAB_CAT_ORDER = getLabCatOrder();
   const grouped = {};
   tests.forEach(t => {
     const cat = t.category || "Other";
@@ -437,6 +437,13 @@ function normalizeName(name) {
     .trim();
 }
 
+const ALL_LAB_CATEGORIES = ["CBC / Hematology","Chemistry","Electrolytes","Endocrine","Immunosuppression","Infection / Serology","Lipid Panel","Liver Panel","Urinalysis","Other"];
+
+function getLabCatOrder() {
+  try { return JSON.parse(localStorage.getItem("mi_lab_category_order") || "null") || ALL_LAB_CATEGORIES; }
+  catch { return ALL_LAB_CATEGORIES; }
+}
+
 function detectDuplicates(labs) {
   const groups = {};
   labs.forEach(l => {
@@ -490,7 +497,12 @@ export default function App({ onNavChange }) {
   // { [norm]: { canonical: string, skip: bool } }
   const [dupDecisions, setDupDecisions] = useState({});
 
-  const LAB_CATEGORIES = ["Chemistry","CBC / Hematology","Immunosuppression","Liver Panel","Lipid Panel","Electrolytes","Endocrine","Infection / Serology","Urinalysis","Other"];
+  const [labCatOrder, setLabCatOrder] = useState(getLabCatOrder);
+  useEffect(() => {
+    const refresh = () => setLabCatOrder(getLabCatOrder());
+    window.addEventListener("mi_lab_cat_order_changed", refresh);
+    return () => window.removeEventListener("mi_lab_cat_order_changed", refresh);
+  }, []);
 
   function handleAddLab() {
     if (!newLab.name.trim() || !newLab.value.trim()) return;
@@ -945,7 +957,8 @@ ${labsStr}`;
               <>
                 {/* Category filter */}
                 {(() => {
-                  const cats = ["All", ...Array.from(new Set(dedupedLabs.map(l => l.category || "Other"))).sort()];
+                  const rawCats = Array.from(new Set(dedupedLabs.map(l => l.category || "Other")));
+                  const cats = ["All", ...labCatOrder.filter(c => rawCats.includes(c)), ...rawCats.filter(c => !labCatOrder.includes(c)).sort()];
                   const visible = dedupedLabs
                     .filter(l => importedCatFilter === "All" || (l.category || "Other") === importedCatFilter)
                     .filter(l => !showFlagged || l.flag);
@@ -960,7 +973,7 @@ ${labsStr}`;
                       grouped[cat].push(lab);
                     });
                     Object.values(grouped).forEach(arr => arr.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
-                    const orderedCats = [...LAB_CATEGORIES, ...Object.keys(grouped).filter(c => !LAB_CATEGORIES.includes(c))];
+                    const orderedCats = [...labCatOrder, ...Object.keys(grouped).filter(c => !labCatOrder.includes(c))];
                     orderedCats.filter(c => grouped[c]?.length).forEach(cat => {
                       listItems.push({ type: "header", cat });
                       grouped[cat].forEach(lab => listItems.push({ type: "lab", lab }));

@@ -24,7 +24,7 @@ function printMedicationList(meds) {
   const medsHTML = Object.entries(grouped).map(([cat, catMeds]) => `
     <div class="category-header">${esc(cat)}</div>
     <table>
-      <thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Schedule</th><th>Prescriber</th><th>Refill</th></tr></thead>
+      <thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Schedule</th><th>Prescriber</th><th>Rx #</th><th>Refill</th></tr></thead>
       <tbody>
         ${catMeds.map(m => `<tr>
           <td><strong>${esc(m.name)}</strong>${m.brand ? `<br><span class="brand">${esc(m.brand)}</span>` : ""}${m.flag ? `<span class="flag-badge"> REVIEW</span>` : ""}</td>
@@ -32,6 +32,7 @@ function printMedicationList(meds) {
           <td>${esc(m.frequency||"—")}</td>
           <td>${esc(m.schedule||"—")}</td>
           <td>${esc(m.prescriber||"—")}</td>
+          <td>${esc(m.rxNumber||"—")}</td>
           <td>${esc(fmtRefill(m.refillDate))}</td>
         </tr>`).join("")}
       </tbody>
@@ -95,7 +96,7 @@ const NAV = [
   { id: "notes",       icon: "◻", label: "Notes" },
   { id: "ai",          icon: "✦", label: "AI Analysis" },
   { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Data & Backup" },
+  { id: "backup",      icon: "◈", label: "Settings & Backup" },
 ];
 
 // ── Refill date helpers ───────────────────────────────────────────────────────
@@ -393,11 +394,70 @@ export default function App({ onNavChange }) {
   const [time, setTime] = useState(new Date());
   const [pendingMeds, setPendingMedsState] = useState(() => getPendingMeds());
   const [showAddForm, setShowAddForm] = useState(false);
+  const [reminders, setReminders] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mi_med_reminders") || "[]"); } catch { return []; }
+  });
+  const [editingReminder, setEditingReminder] = useState(null); // medId being edited, or null
+  const [reminderForm, setReminderForm] = useState({ times: ["08:00"], endDate: "", enabled: true });
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(t);
   }, []);
+
+  // ── ICS calendar file helpers ─────────────────────────────────────────────────
+  function generateICS(med, reminder) {
+    const pad = n => String(n).padStart(2, "0");
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+
+    const events = reminder.times.map(time => {
+      const [hh, mm] = time.split(":").map(Number);
+      const dtStart = `${todayStr}T${pad(hh)}${pad(mm)}00`;
+      let rrule = "RRULE:FREQ=DAILY";
+      if (reminder.endDate) {
+        const [ey, em, ed] = reminder.endDate.split("-");
+        rrule += `;UNTIL=${ey}${em}${ed}T235959`;
+      }
+      const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}@intellitrax`;
+      const label = `${med.name}${med.dose ? " " + med.dose : ""}`;
+      return [
+        "BEGIN:VEVENT",
+        `DTSTART:${dtStart}`,
+        rrule,
+        `SUMMARY:💊 Take ${label}`,
+        `DESCRIPTION:IntelliTrax reminder — time to take your ${label}`,
+        "BEGIN:VALARM",
+        "TRIGGER:PT0S",
+        "ACTION:DISPLAY",
+        `DESCRIPTION:Time to take ${label}`,
+        "END:VALARM",
+        `UID:${uid}`,
+        "END:VEVENT",
+      ].join("\r\n");
+    });
+
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Insina Health//IntelliTrax//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      ...events,
+      "END:VCALENDAR",
+    ].join("\r\n");
+  }
+
+  function downloadICS(med, reminder) {
+    const ics  = generateICS(med, reminder);
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `${med.name.replace(/\s+/g, "_")}_reminder.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const fmt = (d) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = (d) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -455,6 +515,32 @@ export default function App({ onNavChange }) {
     setPendingMedsState(remaining);
     setPendingMeds(remaining);
   };
+
+  // ── Reminder helpers ──────────────────────────────────────────────────────────
+  function saveAllReminders(arr) {
+    localStorage.setItem("mi_med_reminders", JSON.stringify(arr));
+    setReminders(arr);
+  }
+
+  function handleSaveReminder() {
+    if (!selectedMed) return;
+    const times = reminderForm.times.filter(t => t).sort();
+    if (!times.length) return;
+    const reminder = { id: Date.now(), medId: selectedMed.id, medName: selectedMed.name, times, endDate: reminderForm.endDate };
+    const existing = reminders.find(r => r.medId === selectedMed.id);
+    const updated  = existing
+      ? reminders.map(r => r.medId === selectedMed.id ? { ...r, ...reminder } : r)
+      : [...reminders, reminder];
+    saveAllReminders(updated);
+    setEditingReminder(null);
+    downloadICS(selectedMed, reminder);
+  }
+
+  function handleDeleteReminder(medId) {
+    saveAllReminders(reminders.filter(r => r.medId !== medId));
+    setEditingReminder(null);
+  }
+
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#07090f", color: "#d4e2f0", fontFamily: "'Sora', sans-serif", overflow: "hidden" }}>
@@ -599,7 +685,7 @@ export default function App({ onNavChange }) {
                 >
                   {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
-                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", prescriber:"", pharmacy:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
                   + Add Med
                 </button>
               </div>
@@ -647,7 +733,7 @@ export default function App({ onNavChange }) {
                     key={med.id}
                     className={`med-row ${selectedMed?.id === med.id ? "selected" : ""}`}
                     style={{ animationDelay: `${i * 40}ms` }}
-                    onClick={() => setSelectedMed(med)}
+                    onClick={() => { setSelectedMed(med); setEditingReminder(null); }}
                   >
                     {/* Category dot */}
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: med.color, flexShrink: 0, boxShadow: `0 0 8px ${med.color}80` }} />
@@ -667,7 +753,7 @@ export default function App({ onNavChange }) {
                           <span style={{ fontSize: 9, background: "rgba(239,68,68,.12)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>RENEWAL DUE</span>
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}</div>
+                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}{med.rxNumber ? <span style={{ color:"#4a6070" }}> · Rx# {med.rxNumber}</span> : ""}</div>
                     </div>
 
                     {/* Refill badge */}
@@ -680,8 +766,13 @@ export default function App({ onNavChange }) {
                       <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{fmtRefillDate(med.refillDate)}</div>
                     </div>
 
-                    {/* Status dot */}
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor(med.status), boxShadow: `0 0 6px ${statusColor(med.status)}80`, flexShrink: 0 }} />
+                    {/* Status dot + reminder badge */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+                      {reminders.find(r => r.medId === med.id) && (
+                        <span style={{ fontSize: 9, color: "#f59e0b", fontFamily: "'DM Mono',monospace" }} title="Calendar reminder set">◷</span>
+                      )}
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor(med.status), boxShadow: `0 0 6px ${statusColor(med.status)}80` }} />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -726,6 +817,7 @@ export default function App({ onNavChange }) {
                       { label: "Schedule", key: "schedule" },
                       { label: "Prescriber", key: "prescriber" },
                       { label: "Pharmacy", key: "pharmacy" },
+                      { label: "Rx Number", key: "rxNumber" },
                     ].map(({ label, key }) => (
                       <div key={key} style={{ marginBottom: 12 }}>
                         <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
@@ -852,6 +944,7 @@ export default function App({ onNavChange }) {
 
                   <div className="section-label" style={{ marginTop: 18 }}>Refill & Pharmacy</div>
                   {[
+                    ["Rx Number", selectedMed.rxNumber || "—"],
                     ["Pharmacy", selectedMed.pharmacy],
                     ["Prescriber", selectedMed.prescriber],
                     ["Refill Date", fmtRefillDate(selectedMed.refillDate)],
@@ -900,7 +993,7 @@ export default function App({ onNavChange }) {
                 </div>
 
                 {/* AI quick actions */}
-                <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px" }}>
+                <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px", marginBottom: 12 }}>
                   <div className="section-label">AI Quick Actions</div>
                   {[
                     `Explain ${selectedMed.name} and its purpose for a post-liver-transplant patient`,
@@ -920,6 +1013,126 @@ export default function App({ onNavChange }) {
                     </button>
                   ))}
                 </div>
+
+                {/* ── Reminders ── */}
+                {(() => {
+                  const existing = reminders.find(r => r.medId === selectedMed.id);
+                  const isEditing = editingReminder === selectedMed.id;
+                  return (
+                    <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        <div className="section-label" style={{ marginBottom: 0 }}>Reminders</div>
+                        {!isEditing && (
+                          <button
+                            onClick={() => {
+                              setReminderForm(existing
+                                ? { times: [...existing.times], endDate: existing.endDate || "", enabled: existing.enabled }
+                                : { times: ["08:00"], endDate: "", enabled: true });
+                              setEditingReminder(selectedMed.id);
+                            }}
+                            style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                          >{existing ? "Edit" : "+ Set Reminder"}</button>
+                        )}
+                      </div>
+
+                      {/* Existing reminder summary */}
+                      {existing && !isEditing && (
+                        <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                            {existing.times.map(t => (
+                              <span key={t} style={{ fontSize: 11, color: "#7eb8d8", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.2)", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace" }}>
+                                {new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                              </span>
+                            ))}
+                          </div>
+                          {existing.endDate && (
+                            <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
+                              Until {new Date(existing.endDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </div>
+                          )}
+                          <button
+                            onClick={() => downloadICS(selectedMed, existing)}
+                            style={{ width: "100%", padding: "7px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 7, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                          >📅 Download Calendar File</button>
+                          <div style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 6, lineHeight: 1.55, textAlign: "center" }}>
+                            Open the downloaded file on your phone to add to Apple Calendar, Google Calendar, or Outlook
+                          </div>
+                        </div>
+                      )}
+
+                      {/* No reminder placeholder */}
+                      {!existing && !isEditing && (
+                        <div style={{ fontSize: 11, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", textAlign: "center", padding: "8px 0" }}>
+                          No reminders set for this medication
+                        </div>
+                      )}
+
+                      {/* Editor */}
+                      {isEditing && (
+                        <div>
+                          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Reminder Times</div>
+                          {reminderForm.times.map((t, i) => (
+                            <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
+                              <input
+                                type="time"
+                                value={t}
+                                onChange={e => {
+                                  const updated = [...reminderForm.times];
+                                  updated[i] = e.target.value;
+                                  setReminderForm(f => ({ ...f, times: updated }));
+                                }}
+                                style={{ flex: 1, padding: "7px 10px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
+                              />
+                              {reminderForm.times.length > 1 && (
+                                <button onClick={() => setReminderForm(f => ({ ...f, times: f.times.filter((_, j) => j !== i) }))}
+                                  style={{ background: "none", border: "none", color: "#ef4444", fontSize: 14, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>✕</button>
+                              )}
+                            </div>
+                          ))}
+                          {reminderForm.times.length < 5 && (
+                            <button onClick={() => setReminderForm(f => ({ ...f, times: [...f.times, "12:00"] }))}
+                              style={{ width: "100%", marginBottom: 14, padding: "6px 10px", fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", background: "none", border: "1px dashed rgba(79,142,247,.3)", borderRadius: 6, cursor: "pointer" }}>
+                              + Add another time
+                            </button>
+                          )}
+
+                          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>End Date (optional)</div>
+                          <input
+                            type="date"
+                            value={reminderForm.endDate}
+                            onChange={e => setReminderForm(f => ({ ...f, endDate: e.target.value }))}
+                            style={{ width: "100%", padding: "7px 10px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none", marginBottom: 4 }}
+                          />
+                          {reminderForm.endDate
+                            ? <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>Reminder stops after this date</div>
+                            : <div style={{ marginBottom: 12 }} />
+                          }
+
+                          <div style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginBottom: 10, padding: "7px 10px", background: "rgba(79,142,247,.05)", borderRadius: 6, border: "1px solid rgba(79,142,247,.1)", lineHeight: 1.6 }}>
+                            📅 Saving downloads a calendar file. Open it on your phone to add the reminder to Apple Calendar, Google Calendar, or Outlook — your device will handle all alerts.
+                          </div>
+
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button onClick={handleSaveReminder}
+                              style={{ flex: 1, padding: "9px", background: "#10b981", border: "none", borderRadius: 7, color: "#fff", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
+                              Save
+                            </button>
+                            <button onClick={() => setEditingReminder(null)}
+                              style={{ padding: "9px 12px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontSize: 12, cursor: "pointer" }}>
+                              Cancel
+                            </button>
+                            {existing && (
+                              <button onClick={() => handleDeleteReminder(selectedMed.id)}
+                                style={{ padding: "9px 12px", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 12, cursor: "pointer" }}>
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                   </>
                 )}
               </div>

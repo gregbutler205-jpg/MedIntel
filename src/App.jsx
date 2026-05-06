@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import LockScreen from './components/LockScreen.jsx';
+import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from './lib/googleAuth.js';
+import { fullSync, uploadToDrive } from './lib/driveSync.js';
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -61,6 +63,7 @@ const FEATURED_LAB_DEFS = [
 ];
 
 function generateAutoAlerts() {
+  const dismissed = (() => { try { return new Set(JSON.parse(localStorage.getItem("mi_dismissed_alerts") || "[]")); } catch { return new Set(); } })();
   const alerts = [];
   try {
     // Flagged labs
@@ -72,13 +75,17 @@ function generateAutoAlerts() {
       if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) latest[key] = l;
     });
     Object.values(latest).filter(l => l.flag).forEach(l => {
-      alerts.push({ type:"warn", text:`${l.name} flagged${l.value ? ` — value: ${l.value}${l.unit ? " " + l.unit : ""}` : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}`, time: l.date ? l.date.slice(5).replace("-","/") : "—" });
+      const text = `${l.name} flagged${l.value ? ` — value: ${l.value}${l.unit ? " " + l.unit : ""}` : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}`;
+      const fp = `auto:warn:${text.substring(0, 60)}`;
+      if (!dismissed.has(fp)) alerts.push({ type:"warn", text, time: l.date ? l.date.slice(5).replace("-","/") : "—", fp, source:"auto" });
     });
     // Flagged vitals
     const readings = JSON.parse(localStorage.getItem("mi_readings") || "[]");
     readings.filter(r => r.flag).slice(0,3).forEach(r => {
       const bpStr = (r.bp_s != null && r.bp_d != null) ? ` BP ${r.bp_s}/${r.bp_d}` : "";
-      alerts.push({ type:"warn", text:`Flagged vital reading${bpStr}`, time: r.date || "—" });
+      const text = `Flagged vital reading${bpStr}`;
+      const fp = `auto:warn:${text.substring(0,60)}:${r.date||""}`;
+      if (!dismissed.has(fp)) alerts.push({ type:"warn", text, time: r.date || "—", fp, source:"auto" });
     });
   } catch {}
   return alerts;
@@ -124,7 +131,7 @@ const NAV = [
   { id: "notes",       icon: "◻", label: "Notes" },
   { id: "ai",          icon: "✦", label: "AI Analysis" },
   { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Data & Backup" },
+  { id: "backup",      icon: "◈", label: "Settings & Backup" },
 ];
 
 // ── Helper functions (accept data as params so they work with live state) ─────
@@ -195,10 +202,13 @@ function RefillsCard({ meds }) {
           {refills.length === 0
             ? <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>No refills due in the next 7 days</div>
             : refills.map((r, i) => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", borderBottom:i<refills.length-1?"1px solid #0d1a28":"none" }}>
-                <div style={{ width:5, height:5, borderRadius:"50%", background:"#f59e0b", flexShrink:0 }} />
-                <div style={{ flex:1, fontSize:11, color:"#c4d8ee" }}>{r.name}</div>
-                <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{r.refillDate}</div>
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"5px 0", borderBottom:i<refills.length-1?"1px solid #0d1a28":"none" }}>
+                <div style={{ width:5, height:5, borderRadius:"50%", background:"#f59e0b", flexShrink:0, marginTop:3 }} />
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:11, color:"#c4d8ee" }}>{r.name}</div>
+                  {r.rxNumber && <div style={{ fontSize:9, color:"#4a6070", fontFamily:"'DM Mono',monospace", marginTop:1 }}>Rx# {r.rxNumber}</div>}
+                </div>
+                <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{r.refillDate}</div>
               </div>
             ))
           }
@@ -312,9 +322,8 @@ function AppShell() {
   const [readings, setReadings]   = useState(() => getStore('readings'));
   const [meds, setMeds]           = useState(() => getStore('meds_full'));
   const [alerts, setAlerts]       = useState(() => {
-    const stored = getStore('alerts');
+    const stored = getStore('alerts').map((a, i) => ({ ...a, fp: `stored:${i}:${(a.text||"").substring(0,40)}`, source:"stored" }));
     const auto = generateAutoAlerts();
-    // Merge: auto alerts first, then any manually stored alerts not duplicating them
     return [...auto, ...stored].slice(0, 10);
   });
   const [upcoming, setUpcoming]   = useState(() => {
@@ -348,6 +357,11 @@ function AppShell() {
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [quickReading, setQuickReading] = useState({ bp_s:"", bp_d:"", weight:"", date:"" });
 
+  // ── Google Drive auth & sync state ──────────────────────────────────────────
+  const [googleUser, setGoogleUser] = useState(() => getStoredUser());
+  const [syncStatus, setSyncStatus] = useState("idle"); // "idle" | "syncing" | "done" | "error"
+  const [lastSyncTs, setLastSyncTs] = useState(() => localStorage.getItem("mi_last_sync"));
+
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(t);
@@ -360,7 +374,7 @@ function AppShell() {
     setMeds(getStore('meds_full'));
     // Refresh auto-alerts from flagged labs + vitals
     const auto = generateAutoAlerts();
-    const stored = getStore('alerts');
+    const stored = getStore('alerts').map((a, i) => ({ ...a, fp: `stored:${i}:${(a.text||"").substring(0,40)}`, source:"stored" }));
     setAlerts([...auto, ...stored].slice(0, 10));
     try {
       const raw = localStorage.getItem("mi_appointments");
@@ -380,6 +394,48 @@ function AppShell() {
       }
     } catch {}
   }, [activeNav]);
+
+  // ── Google auth init ────────────────────────────────────────────────────────
+  useEffect(() => {
+    initGoogleAuth({
+      onSignIn: async ({ accessToken, user }) => {
+        if (user) setGoogleUser(user);
+        setSyncStatus("syncing");
+        try {
+          const ts = await fullSync(accessToken);
+          setLastSyncTs(ts);
+          setSyncStatus("done");
+          // Refresh dashboard data from the freshly-merged localStorage
+          setReadings(getStore('readings'));
+          setMeds(getStore('meds_full'));
+        } catch (e) {
+          console.error("[DriveSync]", e);
+          setSyncStatus("error");
+        }
+      },
+      onSignOut: () => {
+        setGoogleUser(null);
+        setSyncStatus("idle");
+        setLastSyncTs(null);
+      },
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Periodic background upload every 10 minutes while token is live ─────────
+  useEffect(() => {
+    if (!googleUser) return;
+    const id = setInterval(async () => {
+      const token = getAccessToken();
+      if (!token) return; // Token expired — wait for user to re-auth via Sync button
+      try {
+        const ts = await uploadToDrive(token);
+        setLastSyncTs(ts);
+      } catch (e) {
+        console.warn("[DriveSync] background upload failed:", e);
+      }
+    }, 10 * 60 * 1000); // 10 minutes
+    return () => clearInterval(id);
+  }, [googleUser]);
 
   // Called by ImportTab when the user confirms parsed data
   const handleImport = useCallback((parsed) => {
@@ -434,6 +490,25 @@ function AppShell() {
     setShowQuickEntry(false);
     setQuickReading({ bp_s:"", bp_d:"", weight:"", date:"" });
   };
+
+  const handleDismissAlert = useCallback((fp, source) => {
+    if (source === "stored") {
+      // Remove from mi_alerts by index encoded in fp ("stored:<idx>:<text>")
+      const idx = parseInt((fp.split(":")[1]) || "-1");
+      if (idx >= 0) {
+        const stored = getStore('alerts');
+        setStore('alerts', stored.filter((_, i) => i !== idx));
+      }
+    } else {
+      // Auto alert — add fingerprint to dismissed list so it won't re-appear
+      const dismissed = (() => { try { return JSON.parse(localStorage.getItem("mi_dismissed_alerts") || "[]"); } catch { return []; } })();
+      if (!dismissed.includes(fp)) {
+        dismissed.push(fp);
+        localStorage.setItem("mi_dismissed_alerts", JSON.stringify(dismissed));
+      }
+    }
+    setAlerts(prev => prev.filter(a => a.fp !== fp));
+  }, []);
 
   const fmt     = (d) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = (d) => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -502,9 +577,29 @@ function AppShell() {
                   <div className="live-dot" />
                   <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
                 </div>
-                <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                  {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return (p.name || "?")[0].toUpperCase(); } catch { return "?"; } })()}
-                </div>
+                {/* ── Google Drive sync ── */}
+                {googleUser ? (
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#ef4444" : lastSyncTs?"#10b981":"#4a5c6a" }}>
+                      {syncStatus==="syncing" ? "Syncing…" : syncStatus==="error" ? "Sync error" : lastSyncTs ? `↑ ${new Date(lastSyncTs).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` : ""}
+                    </span>
+                    <button onClick={signIn} title="Sync with Google Drive" style={{ padding:"3px 8px", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.2)", borderRadius:6, color:"#10b981", fontSize:9, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>↑↓</button>
+                    {googleUser.picture
+                      ? <img src={googleUser.picture} alt="" title={`${googleUser.name}\n${googleUser.email}\n\nClick to disconnect`} style={{ width:28, height:28, borderRadius:"50%", border:"1px solid #1a2f4a", cursor:"pointer" }} onClick={signOut} />
+                      : <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, cursor:"pointer" }} onClick={signOut}>{(googleUser.name||"G")[0].toUpperCase()}</div>
+                    }
+                  </div>
+                ) : (
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <button onClick={signIn} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", background:"rgba(255,255,255,.04)", border:"1px solid #1a2f4a", borderRadius:20, color:"#98afc4", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                      Backup
+                    </button>
+                    <div style={{ width:28, height:28, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700 }}>
+                      {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return (p.name || "?")[0].toUpperCase(); } catch { return "?"; } })()}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -513,6 +608,8 @@ function AppShell() {
                 {/* Non-dashboard Group B tabs */}
                 {ActiveTabComponent && activeNav === "import"
                   ? <ActiveTabComponent onImport={handleImport} onNavChange={setActiveNav} />
+                  : ActiveTabComponent && activeNav === "backup"
+                  ? <ActiveTabComponent onNavChange={setActiveNav} googleUser={googleUser} syncStatus={syncStatus} lastSyncTs={lastSyncTs} onSync={signIn} onSignOut={signOut} />
                   : ActiveTabComponent && <ActiveTabComponent onNavChange={setActiveNav} />
                 }
 
@@ -524,7 +621,7 @@ function AppShell() {
                         {(time.getHours() < 12 ? "Good morning" : time.getHours() < 17 ? "Good afternoon" : "Good evening")}
                         {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); const first = (p.name || "").split(" ")[0]; return first ? `, ${first}.` : "."; } catch { return "."; } })()}
                       </h1>
-                      <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>3 upcoming events · 2 alerts need attention</p>
+                      <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>{upcoming.length} upcoming event{upcoming.length !== 1 ? "s" : ""} · {alerts.length} alert{alerts.length !== 1 ? "s" : ""} need{alerts.length === 1 ? "s" : ""} attention</p>
                     </div>
 
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
@@ -568,7 +665,7 @@ function AppShell() {
                       <div>
                         <div className="section-label">Upcoming Care</div>
                         {upcoming.map(({ label, date, urgency, doctor }, i) => (
-                          <div className="upcoming-row" key={label} style={{ animationDelay: `${200 + i * 60}ms` }}>
+                          <div className="upcoming-row" key={label} style={{ animationDelay: `${200 + i * 60}ms` }} onClick={() => setActiveNav("appointments")}>
                             <div style={{ width: 8, height: 8, borderRadius: "50%", background: urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981", flexShrink: 0, boxShadow: `0 0 8px ${urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981"}80` }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 13, fontWeight: 500, color: "#c4d8ee", marginBottom: 2 }}>{label}</div>
@@ -581,13 +678,25 @@ function AppShell() {
 
                       <div>
                         <div className="section-label">Active Alerts</div>
-                        {alerts.map(({ type, text, time: t }, i) => (
-                          <div className="alert-row" key={i} style={{ animationDelay: `${260 + i * 60}ms`, borderLeft: `3px solid ${type === "warn" ? "#f59e0b" : type === "ok" ? "#10b981" : "#4f8ef7"}` }}>
+                        {alerts.length === 0 && (
+                          <div style={{ fontSize: 11, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", padding: "10px 0" }}>No active alerts</div>
+                        )}
+                        {alerts.map(({ type, text, time: t, fp, source }, i) => (
+                          <div className="alert-row" key={fp || i} style={{ animationDelay: `${260 + i * 60}ms`, borderLeft: `3px solid ${type === "warn" ? "#f59e0b" : type === "ok" ? "#10b981" : "#4f8ef7"}` }}>
                             <div className="badge-dot" style={{ background: type === "warn" ? "#f59e0b" : type === "ok" ? "#10b981" : "#4f8ef7", boxShadow: `0 0 6px ${type === "warn" ? "#f59e0b" : type === "ok" ? "#10b981" : "#4f8ef7"}60` }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.45 }}>{text}</div>
                             </div>
                             <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{t}</div>
+                            {fp && (
+                              <button
+                                onClick={() => handleDismissAlert(fp, source)}
+                                style={{ marginLeft: 8, background: "none", border: "none", color: "#6a8090", fontSize: 14, lineHeight: 1, padding: "0 4px", cursor: "pointer", flexShrink: 0, opacity: 0.75 }}
+                                title="Dismiss alert"
+                                onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                                onMouseLeave={e => e.currentTarget.style.opacity = "0.75"}
+                              >✕</button>
+                            )}
                           </div>
                         ))}
                       </div>
