@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, Component } from "react";
-import { initGoogleAuth, signIn, getAccessToken, getStoredUser } from "../../lib/googleAuth.js";
+import { initGoogleAuth, signIn, signInWithRedirect, extractTokenFromHash, getAccessToken, getStoredUser } from "../../lib/googleAuth.js";
 import { fullSync, uploadToDrive } from "../../lib/driveSync.js";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ function CompanionAppInner() {
   });
   const [, forceUpdate] = useState(0);
 
-  // Google auth init
+  // Google auth init — also handles popup-based sign-in (desktop)
   useEffect(() => {
     initGoogleAuth({
       onSignIn: async ({ accessToken }) => {
@@ -207,10 +207,37 @@ function CompanionAppInner() {
           const ts = await fullSync(accessToken);
           setLastSynced(new Date(ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }));
           setSyncState("done");
-          forceUpdate(n => n + 1); // re-render with fresh data
+          forceUpdate(n => n + 1);
         } catch { setSyncState("error"); }
       },
     });
+  }, []);
+
+  // Redirect-based sign-in return: check URL hash for token placed by Google
+  useEffect(() => {
+    const token = extractTokenFromHash();
+    if (!token) return;
+    // Fetch + persist user profile
+    fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(user => {
+        localStorage.setItem("mi_google_user", JSON.stringify({
+          name: user.name, email: user.email, picture: user.picture,
+        }));
+        forceUpdate(n => n + 1);
+      })
+      .catch(() => {});
+    // Sync with Drive
+    setSyncState("syncing");
+    fullSync(token)
+      .then(ts => {
+        setLastSynced(new Date(ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }));
+        setSyncState("done");
+        forceUpdate(n => n + 1);
+      })
+      .catch(() => setSyncState("error"));
   }, []);
 
   // Online/offline detection
@@ -251,7 +278,8 @@ function CompanionAppInner() {
         forceUpdate(n => n + 1);
       }).catch(() => setSyncState("error"));
     } else {
-      signIn(); // triggers onSignIn callback above
+      // Use redirect flow — works on iOS Safari where popups are blocked
+      signInWithRedirect();
     }
   }
 

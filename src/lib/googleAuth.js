@@ -75,6 +75,7 @@ async function _handleToken(response) {
 /**
  * Prompt the user to sign in / re-authenticate and obtain a Drive access token.
  * Shows a Google popup. On success, the onSignIn callback fires automatically.
+ * NOTE: Use signInWithRedirect() on mobile — iOS Safari blocks popups.
  */
 export function signIn() {
   if (!_tokenClient) {
@@ -82,6 +83,43 @@ export function signIn() {
     return;
   }
   _tokenClient.requestAccessToken({ prompt: "" });
+}
+
+/**
+ * Mobile-safe sign-in: navigates to Google OAuth and redirects back to the
+ * companion URL (?companion=1) with the access token in the URL hash.
+ * After redirect back, call extractTokenFromHash() on mount to capture it.
+ */
+export function signInWithRedirect() {
+  const redirectUri = `${window.location.origin}/?companion=1`;
+  const params = new URLSearchParams({
+    client_id:              CLIENT_ID,
+    redirect_uri:           redirectUri,
+    response_type:          "token",
+    scope:                  SCOPES,
+    include_granted_scopes: "true",
+  });
+  window.location.href =
+    `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+
+/**
+ * Call once on companion mount. Checks the URL hash for a token that Google
+ * placed there after a redirect-based sign-in. Returns the access token string
+ * if found (and clears the hash from the URL), or null if not present.
+ */
+export function extractTokenFromHash() {
+  if (!window.location.hash.includes("access_token")) return null;
+  const p       = new URLSearchParams(window.location.hash.slice(1));
+  const token   = p.get("access_token");
+  const expiry  = parseInt(p.get("expires_in") || "3600", 10);
+  if (!token) return null;
+  _accessToken = token;
+  _tokenExpiry = Date.now() + (expiry - 60) * 1000;
+  // Remove the token hash from the visible URL so it isn't bookmarked / leaked
+  history.replaceState(null, "",
+    window.location.pathname + window.location.search);
+  return token;
 }
 
 /**
