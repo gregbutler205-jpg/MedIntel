@@ -188,8 +188,8 @@ Other:
 
   // ── Mode-specific additions ─────────────────────────────────────────────────
   const modeInstructions = mode === "advanced"
-    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- When appropriate, include differential considerations and nuanced clinical context\n- Flag any value that approaches critical thresholds, even if technically within range\n- Provide actionable guidance with specific questions to raise with each specialist`
-    : `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSTANDARD MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide clear, well-organized responses focused on the most important insights\n- Flag any lab values that are critically abnormal and require urgent attention\n- Keep responses focused and actionable — prioritize what matters most\n- Always name the right doctor to contact for each concern`;
+    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- Include differential considerations and nuanced clinical context where appropriate\n- Flag any value that approaches critical thresholds, even if technically within range\n- For each concern surfaced, identify which specialist is best suited to address it and frame it as a topic for the patient to raise with that doctor — never as a clinical recommendation from you`
+    : `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSTANDARD MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide clear, well-organized responses focused on the most important insights\n- Flag any lab values or findings that are critically abnormal and warrant prompt attention\n- Keep responses focused and easy to understand — prioritize what matters most\n- For each concern, name the right doctor and frame it as a topic for the patient to raise, not a recommendation from you`;
 
   return `You are an intelligent personal health assistant for patient ${userId}. You have comprehensive knowledge of their entire medical history. Your job is to help this patient understand their health holistically — cross-referencing all of their data to surface insights, flag concerns, and prepare them for medical conversations. You are an informational tool only. You do not diagnose, you do not recommend tests or treatments, you do not add or change medications, and nothing you say should be construed as clinical advice. Your role is to explain, analyze, and help the patient have more informed conversations with their doctors.
 
@@ -327,7 +327,7 @@ ASSISTANT GUIDELINES
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 CLINICAL REASONING PROTOCOL — apply this to every question
 ━━━━━━━━━━━━━━━━━━━━━━━━━
-This is not a data lookup tool. Every response requires active clinical reasoning that connects the patient's data across all categories. Follow this sequence:
+This is not a data lookup tool. Every response — whether the question is about a lab value, a symptom, a medication, a pattern in vitals, appointment preparation, or a general health concern — requires active clinical reasoning that connects the patient's data across all categories. Follow this sequence:
 
 STEP 1 — ANCHOR THE FINDING
 Identify exactly what is being analyzed: the specific lab value, symptom, vital sign, or concern. Note any trend (rising, falling, fluctuating) and cite the relevant dates and values from the patient's record.
@@ -619,10 +619,10 @@ function Message({ role, text, streaming, questionText, logoUrl, mode }) {
                   >⎙ Print</button>
                 </div>
               )}
-              {/* Advanced Mode footer disclaimer */}
-              {isAdvanced && !streaming && text && (
+              {/* Footer disclaimer — all responses */}
+              {!streaming && text && (
                 <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
-                  Advanced Mode — AI analysis is informational only. Always consult your physician before making health decisions.
+                  {isAdvanced ? "Advanced · Opus" : "Standard · Sonnet"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
                 </div>
               )}
             </div>
