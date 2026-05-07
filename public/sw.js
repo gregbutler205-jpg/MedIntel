@@ -2,7 +2,7 @@
 // Network-first with cache fallback — always fetches fresh on reload,
 // falls back to cache when offline.
 
-const CACHE = "insina-v2";
+const CACHE = "insina-v3";
 
 self.addEventListener("install", () => {
   self.skipWaiting();

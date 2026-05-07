@@ -4,7 +4,7 @@
 // Reads/writes the same localStorage as the main app, synced via Google Drive.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Component } from "react";
 import { initGoogleAuth, signIn, getAccessToken, getStoredUser } from "../../lib/googleAuth.js";
 import { fullSync, uploadToDrive } from "../../lib/driveSync.js";
 
@@ -163,9 +163,32 @@ function DriveSyncBar({ syncState, onSync, lastSynced }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ERROR BOUNDARY
+// ─────────────────────────────────────────────────────────────────────────────
+class CompanionErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div style={{ background: "#07090f", minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "'DM Mono',monospace" }}>
+        <div style={{ fontSize: 32, marginBottom: 16 }}>⚠️</div>
+        <div style={{ fontSize: 14, color: "#ef4444", fontWeight: 700, marginBottom: 8 }}>Companion failed to load</div>
+        <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 20, textAlign: "center", lineHeight: 1.6 }}>
+          {this.state.error?.message || "Unknown error"}
+        </div>
+        <button onClick={() => window.location.reload()} style={{ background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, padding: "10px 20px", color: "#4f8ef7", fontSize: 12, cursor: "pointer" }}>
+          Reload
+        </button>
+      </div>
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ROOT COMPANION APP
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CompanionApp() {
+function CompanionAppInner() {
   const [screen, setScreen]     = useState("home");
   const [online, setOnline]     = useState(navigator.onLine);
   const [syncState, setSyncState] = useState("idle");
@@ -272,6 +295,14 @@ export default function CompanionApp() {
         {screen === "contacts"     && <CompanionContacts nav={nav} />}
       </div>
     </div>
+  );
+}
+
+export default function CompanionApp() {
+  return (
+    <CompanionErrorBoundary>
+      <CompanionAppInner />
+    </CompanionErrorBoundary>
   );
 }
 
