@@ -51,11 +51,17 @@ function snippet(text, query, radius = 100) {
   return (s > 0 ? "…" : "") + text.slice(s, e) + (e < text.length ? "…" : "");
 }
 
-// Detect natural-language questions vs. keyword searches
+// Detect natural-language questions vs. keyword searches.
+// Rules:
+//   1. Ends with "?" → always a question
+//   2. Single-word queries are always treated as keywords (medication names,
+//      lab names, condition names, etc. — never route those to AI)
+//   3. Multi-word queries starting with a clear question-word → AI
 function isQuestion(query) {
   const q = query.trim().toLowerCase();
   if (q.endsWith("?")) return true;
-  return /^(what|why|how|when|where|who|is|are|was|were|has|have|had|does|do|did|can|could|should|would|will|tell me|explain|show me|give me|compare|analyze|review|list|find|summarize)\b/.test(q);
+  if (!q.includes(" ")) return false;   // single word → keyword search
+  return /^(what|why|how|when|where|who|is|are|was|were|has|have|had|does|do|did|can|could|should|would|will|tell me|explain|show me|give me|compare|analyze)\b/.test(q);
 }
 
 // ── Core search ───────────────────────────────────────────────────────────────
