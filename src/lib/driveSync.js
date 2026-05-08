@@ -7,8 +7,8 @@ const BACKUP_FILENAME = "insina-health-backup.json";
 const DRIVE_API    = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
 
-// Keys excluded from backup (auth state, session flags)
-const EXCLUDE_KEYS = new Set(["mi_google_user", "mi_unlocked"]);
+// Keys excluded from backup (auth state, session flags, device-specific security)
+const EXCLUDE_KEYS = new Set(["mi_google_user", "mi_unlocked", "mi_auth_hash"]);
 
 // ── Local data helpers ────────────────────────────────────────────────────────
 
@@ -125,7 +125,9 @@ export function mergeIntoLocal(driveData) {
       }
       count++;
     } catch {
-      localStorage.setItem(key, JSON.stringify(value));
+      // Local value exists but couldn't be parsed — keep it as-is rather than
+      // overwriting with a JSON.stringify'd copy that would corrupt raw strings
+      // (e.g. hex hashes, plain-string values stored without JSON encoding).
       count++;
     }
   }
