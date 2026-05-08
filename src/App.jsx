@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import LockScreen from './components/LockScreen.jsx';
+import SearchPopup from './components/SearchPopup.jsx';
 import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from './lib/googleAuth.js';
 import { fullSync, uploadToDrive } from './lib/driveSync.js';
 
@@ -356,6 +357,7 @@ function AppShell() {
   });
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [quickReading, setQuickReading] = useState({ bp_s:"", bp_d:"", weight:"", date:"" });
+  const [showSearch, setShowSearch] = useState(false);
 
   // ── Google Drive auth & sync state ──────────────────────────────────────────
   const [googleUser, setGoogleUser] = useState(() => getStoredUser());
@@ -420,6 +422,18 @@ function AppShell() {
       },
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Global search keyboard shortcut (Cmd+K / Ctrl+K) ──────────────────────
+  useEffect(() => {
+    const h = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowSearch(s => !s);
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
 
   // ── Periodic background upload every 10 minutes while token is live ─────────
   useEffect(() => {
@@ -563,7 +577,7 @@ function AppShell() {
           {/* AI Analysis: has own topbar + height:100vh — give it the full remaining area */}
           {activeNav === "ai" && (
             <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-              <ActiveTabComponent />
+              <ActiveTabComponent onNavChange={setActiveNav} />
             </div>
           )}
 
@@ -574,8 +588,31 @@ function AppShell() {
               {/* Topbar */}
               <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 16px", gap: 12, flexShrink: 0 }}>
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+                  {activeNav !== "dashboard" && (
+                    <button
+                      onClick={() => setActiveNav("dashboard")}
+                      title="Back to Dashboard"
+                      style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:11, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:2 }}
+                      onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = "#4a5c6a"; e.currentTarget.style.background = "none"; }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                      Dashboard
+                    </button>
+                  )}
                   <div className="live-dot" />
                   <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+                  <button
+                    onClick={() => setShowSearch(true)}
+                    title="Search health data"
+                    style={{ display:"flex", alignItems:"center", justifyContent:"center", background:"none", border:"none", cursor:"pointer", padding:"4px 6px", borderRadius:6, color:"#4a5c6a", marginLeft:4 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.color = "#7eb8d8"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#4a5c6a"; }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </button>
                 </div>
                 {/* ── Google Drive sync ── */}
                 {googleUser ? (
@@ -831,6 +868,14 @@ function AppShell() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Global Search Popup (fixed overlay — works over standalone tabs too) ── */}
+      {showSearch && (
+        <SearchPopup
+          onClose={() => setShowSearch(false)}
+          onNavChange={(nav) => { setActiveNav(nav); setShowSearch(false); }}
+        />
       )}
     </div>
   );
