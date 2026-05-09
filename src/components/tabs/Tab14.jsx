@@ -75,6 +75,7 @@ const STATUS_CFG = {
   upcoming:  { color: "#4f8ef7", label: "Upcoming"  },
   completed: { color: "#10b981", label: "Completed" },
   cancelled: { color: "#6b7a8d", label: "Cancelled" },
+  suggested: { color: "#f59e0b", label: "Suggested" },
 };
 
 const SPECIALTIES = [
@@ -272,6 +273,7 @@ function ApptModal({ appt, onSave, onClose }) {
             <label style={lbl}>Status</label>
             <select style={inp} value={form.status} onChange={e=>set("status",e.target.value)}>
               <option value="upcoming">Upcoming</option>
+              <option value="suggested">Suggested</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -428,6 +430,7 @@ export default function AppointmentsTab() {
 
   const upcomingCount   = appts.filter(a => a.status === "upcoming").length;
   const completedCount  = appts.filter(a => a.status === "completed").length;
+  const suggestedCount  = appts.filter(a => a.status === "suggested").length;
   const nextAppt        = appts.filter(a => a.status === "upcoming").sort((a,b) => new Date(a.date)-new Date(b.date))[0];
   const nextDays        = nextAppt ? daysUntil(nextAppt.date) : null;
 
@@ -457,7 +460,7 @@ export default function AppointmentsTab() {
           <div>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px" }}>Appointments</h1>
             <p style={{ fontSize:12, color:"#98afc4", marginTop:5, fontFamily:"'DM Mono',monospace" }}>
-              {upcomingCount} upcoming · {completedCount} completed
+              {upcomingCount} upcoming · {completedCount} completed{suggestedCount > 0 ? ` · ${suggestedCount} suggested` : ""}
             </p>
           </div>
           <button
@@ -540,7 +543,7 @@ export default function AppointmentsTab() {
 
         {/* Filter pills */}
         <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-          {[["upcoming","Upcoming"],["completed","Completed"],["cancelled","Cancelled"],["all","All"]].map(([val,lbl]) => (
+          {[["upcoming","Upcoming"],["suggested",`Suggested${suggestedCount > 0 ? ` (${suggestedCount})` : ""}`],["completed","Completed"],["cancelled","Cancelled"],["all","All"]].map(([val,lbl]) => (
             <button key={val} className={`filter-pill${filter===val?" active":""}`} onClick={() => setFilter(val)}>{lbl}</button>
           ))}
         </div>
@@ -560,8 +563,8 @@ export default function AppointmentsTab() {
             return (
               <div key={appt.id} style={{ animationDelay:`${idx*40}ms` }}>
                 <div className="apt-row" onClick={() => setExpanded(isOpen ? null : appt.id)}>
-                  {/* Urgency bar */}
-                  <div style={{ width:3, height:44, borderRadius:2, background:urgCfg.color, flexShrink:0, boxShadow:`0 0 8px ${urgCfg.color}60` }} />
+                  {/* Urgency bar — amber for suggested */}
+                  <div style={{ width:3, height:44, borderRadius:2, background: appt.status === "suggested" ? "#f59e0b" : urgCfg.color, flexShrink:0, boxShadow:`0 0 8px ${appt.status === "suggested" ? "#f59e0b" : urgCfg.color}60` }} />
 
                   {/* Date block */}
                   <div style={{ flexShrink:0, width:48, textAlign:"center" }}>
@@ -602,6 +605,13 @@ export default function AppointmentsTab() {
                 {/* Expanded detail */}
                 {isOpen && (
                   <div style={{ margin:"-4px 0 8px 0", padding:"16px 18px", background:"#07090f", border:"1px solid #0d1a28", borderTop:"none", borderRadius:"0 0 10px 10px", animation:"fadeUp .2s ease both" }}>
+                    {/* Suggested-from banner */}
+                    {appt.status === "suggested" && appt.suggestedFrom && (
+                      <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 12px", background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.2)", borderRadius:8, marginBottom:12 }}>
+                        <span style={{ fontSize:11, color:"#f59e0b" }}>✦</span>
+                        <span style={{ fontSize:11, color:"#c4a44a", fontFamily:"'DM Mono',monospace" }}>Auto-suggested from: <strong style={{ color:"#f59e0b" }}>{appt.suggestedFrom}</strong></span>
+                      </div>
+                    )}
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
                       {appt.address && <Detail label="Address"  value={appt.address} />}
                       {appt.phone   && <Detail label="Phone"    value={appt.phone}   />}
@@ -609,22 +619,41 @@ export default function AppointmentsTab() {
                       {appt.notes   && <Detail label="Notes"    value={appt.notes}   full />}
                     </div>
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                      <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={e => { e.stopPropagation(); setModal(appt); }}>
-                        ✎ Edit
-                      </button>
-                      <button className="apt-btn" style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.25)", color:"#10b981" }}
-                        onClick={e => { e.stopPropagation(); handleSave({ ...appt, status:"completed" }); }}>
-                        ✓ Mark Complete
-                      </button>
-                      <button className="apt-btn"
-                        style={{ background: showAI === appt.id ? "rgba(167,139,250,.15)" : "rgba(79,142,247,.08)", borderColor: showAI === appt.id ? "rgba(167,139,250,.4)" : "rgba(79,142,247,.2)", color: showAI === appt.id ? "#a78bfa" : "#7eb8d8" }}
-                        onClick={e => { e.stopPropagation(); setShowAI(prev => prev === appt.id ? null : appt.id); }}>
-                        ✦ {showAI === appt.id ? "Hide AI Prep" : "AI Prep Analysis"}
-                      </button>
-                      <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#ef4444", marginLeft:"auto" }}
-                        onClick={e => { e.stopPropagation(); setDeleteConfirm(appt.id); }}>
-                        ✕ Delete
-                      </button>
+                      {appt.status === "suggested" ? (
+                        <>
+                          <button className="apt-btn" style={{ background:"rgba(16,185,129,.12)", borderColor:"rgba(16,185,129,.3)", color:"#10b981" }}
+                            onClick={e => { e.stopPropagation(); handleSave({ ...appt, status:"upcoming" }); }}>
+                            ✓ Confirm Appointment
+                          </button>
+                          <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }}
+                            onClick={e => { e.stopPropagation(); setModal(appt); }}>
+                            ✎ Edit
+                          </button>
+                          <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#ef4444", marginLeft:"auto" }}
+                            onClick={e => { e.stopPropagation(); setDeleteConfirm(appt.id); }}>
+                            ✕ Dismiss
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={e => { e.stopPropagation(); setModal(appt); }}>
+                            ✎ Edit
+                          </button>
+                          <button className="apt-btn" style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.25)", color:"#10b981" }}
+                            onClick={e => { e.stopPropagation(); handleSave({ ...appt, status:"completed" }); }}>
+                            ✓ Mark Complete
+                          </button>
+                          <button className="apt-btn"
+                            style={{ background: showAI === appt.id ? "rgba(167,139,250,.15)" : "rgba(79,142,247,.08)", borderColor: showAI === appt.id ? "rgba(167,139,250,.4)" : "rgba(79,142,247,.2)", color: showAI === appt.id ? "#a78bfa" : "#7eb8d8" }}
+                            onClick={e => { e.stopPropagation(); setShowAI(prev => prev === appt.id ? null : appt.id); }}>
+                            ✦ {showAI === appt.id ? "Hide AI Prep" : "AI Prep Analysis"}
+                          </button>
+                          <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#ef4444", marginLeft:"auto" }}
+                            onClick={e => { e.stopPropagation(); setDeleteConfirm(appt.id); }}>
+                            ✕ Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                     {showAI === appt.id && <ApptAIPanel appt={appt} />}
                   </div>

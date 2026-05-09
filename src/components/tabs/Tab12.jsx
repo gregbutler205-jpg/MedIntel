@@ -75,6 +75,8 @@ async function parseDocWithClaude(pdfText, docType) {
 - facility (string): hospital, clinic, or lab name, or ""
 - provider (string): ordering or authoring physician name, or ""
 - summary (string): Explain what this document means in plain English for someone with no medical background. Translate medical terminology into everyday language, explain what any abnormal findings indicate, and describe what the results suggest for the patient's health. Do NOT just restate what the report says — interpret and explain it. 4-6 sentences.
+- followUpDate (string): If the document explicitly recommends a follow-up, repeat imaging, return visit, or interval review, compute the actual target date in YYYY-MM-DD format. Use the document's own date field as the reference point for relative timeframes (e.g. if the document date is 2026-05-08 and it says "annual follow-up" return "2027-05-08"; "6 months" → "2026-11-08"; "3 months" → "2026-08-08"). Return "" if no follow-up is mentioned.
+- followUpNote (string): Brief plain-English description of the follow-up recommendation, e.g. "Annual MRI recommended for surveillance." Return "" if followUpDate is "".
 
 Return ONLY the JSON object, no markdown, no explanation.
 
@@ -92,6 +94,32 @@ ${text}`,
   raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
   try { return JSON.parse(raw); }
   catch { throw new Error("Could not parse document information from PDF."); }
+}
+
+/** Write a suggested follow-up appointment to mi_appointments if the document contains one. */
+function suggestAppointment(record, followUpDate, followUpNote) {
+  if (!followUpDate) return;
+  try {
+    const existing = JSON.parse(localStorage.getItem("mi_appointments") || "[]");
+    const appt = {
+      id: Date.now(),
+      title: followUpNote ? followUpNote.replace(/\.$/, "") : `Follow-up: ${record.title}`,
+      provider: record.provider || "",
+      specialty: "",
+      facility: record.facility || "",
+      date: followUpDate,
+      time: "",
+      phone: "",
+      address: "",
+      notes: `Auto-suggested from: "${record.title}"`,
+      prepInstructions: "",
+      status: "suggested",
+      urgency: "med",
+      reminder: true,
+      suggestedFrom: record.title,
+    };
+    localStorage.setItem("mi_appointments", JSON.stringify([...existing, appt]));
+  } catch {}
 }
 
 async function parseLabsWithClaude(pdfText) {
@@ -335,6 +363,8 @@ export default function ImportTab({ onImport, onNavChange }) {
             const newDoc = { id: docId, name: record.title, text, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
             localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
           } catch {}
+          // Auto-suggest follow-up appointment if the document contains one
+          suggestAppointment(record, extracted.followUpDate, extracted.followUpNote);
           summary.push({ name: file.name, ok: true, title: record.title, date: record.date, color: docTypeMeta.color });
         }
       } catch (err) {
@@ -392,6 +422,8 @@ export default function ImportTab({ onImport, onNavChange }) {
         localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
       } catch {}
     }
+    // Auto-suggest follow-up appointment if the document contains one
+    suggestAppointment(record, docPreview.followUpDate, docPreview.followUpNote);
     setDocPreview(null);
     setPdfStatus("idle");
     showToast("Document saved to Records.");
@@ -427,6 +459,8 @@ export default function ImportTab({ onImport, onNavChange }) {
       // Flag for Tab11 to auto-analyze on mount
       localStorage.setItem("mi_auto_analyze_doc", docId);
     } catch {}
+    // Auto-suggest follow-up appointment if the document contains one
+    suggestAppointment(record, docPreview.followUpDate, docPreview.followUpNote);
     setDocPreview(null);
     setPdfStatus("idle");
     // Navigate to AI Analysis
