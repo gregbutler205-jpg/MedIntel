@@ -356,11 +356,12 @@ export default function ImportTab({ onImport, onNavChange }) {
             summary:  extracted.summary  || "",
           };
           mergeRecords([record]);
-          // Save full text to AI Reference Docs so it appears in AI context
+          // Save to AI Reference Docs — always, even if text extraction returned empty
           try {
             const docId = (Date.now() + i).toString();
             const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
-            const newDoc = { id: docId, name: record.title, text, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
+            const docText = text || (record.summary ? `[PDF text could not be extracted — possible scanned document]\n\nDocument summary: ${record.summary}` : "[PDF text could not be extracted — possible scanned document]");
+            const newDoc = { id: docId, name: record.title, text: docText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
             localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
           } catch {}
           // Auto-suggest follow-up appointment if the document contains one
@@ -413,15 +414,15 @@ export default function ImportTab({ onImport, onNavChange }) {
       summary: docPreview.summary || "",
     };
     mergeRecords([record]);
-    // Always save full text to AI Reference Docs so it appears in AI context
-    if (pdfText) {
-      try {
-        const docId = Date.now().toString();
-        const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
-        const newDoc = { id: docId, name: record.title, text: pdfText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
-        localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
-      } catch {}
-    }
+    // Save to AI Reference Docs — always, even if text extraction returned empty
+    // (scanned PDFs get a summary fallback so the AI at least knows the doc exists)
+    try {
+      const docId = Date.now().toString();
+      const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
+      const docText = pdfText || (record.summary ? `[PDF text could not be extracted — possible scanned document]\n\nDocument summary: ${record.summary}` : "[PDF text could not be extracted — possible scanned document]");
+      const newDoc = { id: docId, name: record.title, text: docText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
+      localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
+    } catch {}
     // Auto-suggest follow-up appointment if the document contains one
     suggestAppointment(record, docPreview.followUpDate, docPreview.followUpNote);
     setDocPreview(null);
