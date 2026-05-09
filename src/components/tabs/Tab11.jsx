@@ -172,10 +172,37 @@ Other:
 
   // ── Reference docs ──────────────────────────────────────────────────────────
   const refDocs = safeRead("mi_ref_docs", []);
-  const refDocsSection = refDocs.length > 0
-    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nREFERENCE DOCUMENTS (uploaded by patient)\n━━━━━━━━━━━━━━━━━━━━━━━━━\nWhen information from these documents is relevant to a response, cite the document name.\n\n` +
-      refDocs.map(d => `[Document: "${d.name}"]\n${d.text.slice(0, 8000)}${d.text.length > 8000 ? "\n…(truncated)" : ""}`).join("\n\n---\n\n")
-    : "";
+  let refDocsSection = "";
+  if (refDocs.length > 0) {
+    // Group by docType (fall back to "Other" for legacy docs without the field)
+    const groups = {};
+    for (const d of refDocs) {
+      const key = (d.docType || "Other").trim();
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(d);
+    }
+    // Sort each group by studyDate ascending (oldest first → newest last, mirrors how comparison reports read)
+    for (const key of Object.keys(groups)) {
+      groups[key].sort((a, b) => {
+        const da = a.studyDate ? new Date(a.studyDate) : new Date(a.addedDate || 0);
+        const db = b.studyDate ? new Date(b.studyDate) : new Date(b.addedDate || 0);
+        return da - db;
+      });
+    }
+    const docText = Object.entries(groups).map(([type, docs]) => {
+      const isSequential = docs.length > 1;
+      const groupHeader = isSequential
+        ? `SEQUENTIAL STUDIES — ${type} (${docs.length} reports, oldest → newest — analyze for interval changes between studies)`
+        : type !== "Other" ? `${type}` : null;
+      const docEntries = docs.map(d => {
+        const dateLine = d.studyDate ? ` | Study date: ${d.studyDate}` : "";
+        const facilityLine = d.facility ? ` | Facility: ${d.facility}` : "";
+        return `[Document: "${d.name}"${dateLine}${facilityLine}]\n${d.text.slice(0, 8000)}${d.text.length > 8000 ? "\n…(truncated)" : ""}`;
+      }).join("\n\n---\n\n");
+      return groupHeader ? `${groupHeader}\n\n${docEntries}` : docEntries;
+    }).join("\n\n═══════════════════════════\n\n");
+    refDocsSection = `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nREFERENCE DOCUMENTS (uploaded by patient)\n━━━━━━━━━━━━━━━━━━━━━━━━━\nCite document names when referencing them. For sequential studies of the same type, identify and summarize interval changes between the earliest and most recent report.\n\n${docText}`;
+  }
 
   // ── Clinical findings (auto-extracted from uploaded documents) ──────────────
   const clinicalFindings = safeRead("mi_clinical_findings", []);

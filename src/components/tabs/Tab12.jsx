@@ -328,6 +328,13 @@ export default function ImportTab({ onImport, onNavChange }) {
             summary:  extracted.summary  || "",
           };
           mergeRecords([record]);
+          // Save full text to AI Reference Docs so it appears in AI context
+          try {
+            const docId = (Date.now() + i).toString();
+            const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
+            const newDoc = { id: docId, name: record.title, text, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
+            localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
+          } catch {}
           summary.push({ name: file.name, ok: true, title: record.title, date: record.date, color: docTypeMeta.color });
         }
       } catch (err) {
@@ -376,6 +383,15 @@ export default function ImportTab({ onImport, onNavChange }) {
       summary: docPreview.summary || "",
     };
     mergeRecords([record]);
+    // Always save full text to AI Reference Docs so it appears in AI context
+    if (pdfText) {
+      try {
+        const docId = Date.now().toString();
+        const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
+        const newDoc = { id: docId, name: record.title, text: pdfText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
+        localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
+      } catch {}
+    }
     setDocPreview(null);
     setPdfStatus("idle");
     showToast("Document saved to Records.");
@@ -406,7 +422,7 @@ export default function ImportTab({ onImport, onNavChange }) {
     // Save full text to AI Reference Docs
     try {
       const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
-      const newDoc = { id: docId, name: record.title, text: pdfText, addedDate: new Date().toLocaleDateString() };
+      const newDoc = { id: docId, name: record.title, text: pdfText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
       localStorage.setItem("mi_ref_docs", JSON.stringify([newDoc, ...existing]));
       // Flag for Tab11 to auto-analyze on mount
       localStorage.setItem("mi_auto_analyze_doc", docId);
