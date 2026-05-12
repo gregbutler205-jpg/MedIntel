@@ -146,20 +146,7 @@ function parseRefillDate(str) {
   if (d < new Date(Date.now() - 180 * 86400000)) d.setFullYear(yr + 1);
   return d;
 }
-function computeFlags(meds, readings) {
-  const cutoff = new Date(Date.now() - 14 * 86400000);
-  const flags = [];
-  meds.filter(m => m.status === "warn").forEach(m =>
-    flags.push({ color: "#ef4444", label: m.name || "Medication", note: "flagged" })
-  );
-  meds.filter(m => m.status === "refill").forEach(m =>
-    flags.push({ color: "#f59e0b", label: m.name || "Medication", note: "refill due" })
-  );
-  readings.filter(r => r.flag && new Date(r.ts) >= cutoff).forEach(r =>
-    flags.push({ color: "#f59e0b", label: `Vitals – ${r.date || "recent entry"}`, note: "flagged" })
-  );
-  return flags;
-}
+
 function get7DayRefills(meds) {
   const now = new Date(); now.setHours(0,0,0,0);
   const end = new Date(now); end.setDate(now.getDate() + 7); end.setHours(23,59,59,999);
@@ -167,35 +154,39 @@ function get7DayRefills(meds) {
 }
 
 // ── Dashboard stat cards (receive live data as props) ─────────────────────────
-function StatusCard({ meds, readings }) {
-  const [open, setOpen] = useState(false);
-  const flags = computeFlags(meds, readings);
-  const hasFlags = flags.length > 0;
-  const accentColor = hasFlags ? "#f59e0b" : "#10b981";
+function DataFreshnessCard() {
+  function lastUpdated(key, dateFn) {
+    try {
+      const items = JSON.parse(localStorage.getItem(key) || "[]");
+      if (!items.length) return null;
+      const dates = items.map(dateFn).filter(Boolean).map(d => new Date(d)).filter(d => !isNaN(d));
+      if (!dates.length) return null;
+      const latest = new Date(Math.max(...dates));
+      return latest.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch { return null; }
+  }
+
+  const rows = [
+    { label: "Labs",      date: lastUpdated("mi_labs",       l => l.date) },
+    { label: "Meds",      date: lastUpdated("mi_meds_full",  m => m.updatedAt || m.startDate) },
+    { label: "Vitals",    date: lastUpdated("mi_readings",   r => r.date || (r.ts ? new Date(r.ts).toISOString().slice(0,10) : null)) },
+    { label: "Documents", date: lastUpdated("mi_ref_docs",   d => d.studyDate || d.addedDate || d.addedAt) },
+  ];
+
   return (
-    <div className="stat-card" style={{ cursor: hasFlags ? "pointer" : "default" }} onClick={() => hasFlags && setOpen(o => !o)}>
-      <div style={{ width:28, height:3, background:accentColor, borderRadius:2, marginBottom:14, boxShadow:`0 0 10px ${accentColor}60` }} />
-      <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <span>Flagged Items</span>
-        {hasFlags && <span style={{ fontSize:13, color:accentColor, transition:"transform .2s", display:"inline-block", transform:open?"rotate(180deg)":"rotate(0deg)" }}>▾</span>}
+    <div className="stat-card">
+      <div style={{ width:28, height:3, background:"#4f8ef7", borderRadius:2, marginBottom:14, boxShadow:"0 0 10px #4f8ef760" }} />
+      <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:12 }}>Last Updated</div>
+      <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+        {rows.map(({ label, date }) => (
+          <div key={label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontSize:11, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>{label}</span>
+            <span style={{ fontSize:11, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily:"'DM Mono',monospace" }}>
+              {date ?? "—"}
+            </span>
+          </div>
+        ))}
       </div>
-      <div style={{ fontSize:26, fontWeight:700, letterSpacing:"-1px", lineHeight:1, marginBottom:6, color: hasFlags ? "#dde8f5" : "#10b981" }}>
-        {hasFlags ? flags.length : "None"}
-      </div>
-      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
-        {hasFlags ? `${flags.length} item${flags.length !== 1 ? "s" : ""} · past 14 days` : "Nothing flagged · past 14 days"}
-      </div>
-      {open && hasFlags && (
-        <div style={{ marginTop:12, paddingTop:10, borderTop:"1px solid #0d1a28" }}>
-          {flags.map((f, i) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", borderBottom:i < flags.length - 1 ? "1px solid #0d1a28" : "none" }}>
-              <div style={{ width:5, height:5, borderRadius:"50%", background:f.color, flexShrink:0 }} />
-              <div style={{ flex:1, fontSize:11, color:"#c4d8ee" }}>{f.label}</div>
-              <div style={{ fontSize:9, color:f.color, fontFamily:"'DM Mono',monospace" }}>{f.note}</div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -710,7 +701,7 @@ function AppShell() {
                     )}
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
-                      <StatusCard meds={meds} readings={readings} />
+                      <DataFreshnessCard />
                       <RefillsCard meds={meds} />
                       <BPCard readings={readings} />
                       <WeightCard readings={readings} />
