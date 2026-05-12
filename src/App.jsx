@@ -146,13 +146,19 @@ function parseRefillDate(str) {
   if (d < new Date(Date.now() - 180 * 86400000)) d.setFullYear(yr + 1);
   return d;
 }
-function computeStatus(meds, readings) {
-  if (meds.some(m => m.status === "warn")) return "attention";
+function computeFlags(meds, readings) {
   const cutoff = new Date(Date.now() - 14 * 86400000);
-  const recentFlags = readings.filter(r => r.flag && new Date(r.ts) >= cutoff).length;
-  if (recentFlags >= 2) return "attention";
-  if (recentFlags === 1 || meds.some(m => m.status === "refill")) return "watch";
-  return "stable";
+  const flags = [];
+  meds.filter(m => m.status === "warn").forEach(m =>
+    flags.push({ color: "#ef4444", label: m.name || "Medication", note: "flagged" })
+  );
+  meds.filter(m => m.status === "refill").forEach(m =>
+    flags.push({ color: "#f59e0b", label: m.name || "Medication", note: "refill due" })
+  );
+  readings.filter(r => r.flag && new Date(r.ts) >= cutoff).forEach(r =>
+    flags.push({ color: "#f59e0b", label: `Vitals – ${r.date || "recent entry"}`, note: "flagged" })
+  );
+  return flags;
 }
 function get7DayRefills(meds) {
   const now = new Date(); now.setHours(0,0,0,0);
@@ -162,22 +168,34 @@ function get7DayRefills(meds) {
 
 // ── Dashboard stat cards (receive live data as props) ─────────────────────────
 function StatusCard({ meds, readings }) {
-  const statusKey = computeStatus(meds, readings);
-  const cfg = {
-    stable:    { color:"#10b981", bg:"rgba(16,185,129,.10)", border:"rgba(16,185,129,.25)", label:"Stable" },
-    watch:     { color:"#f59e0b", bg:"rgba(245,158,11,.10)", border:"rgba(245,158,11,.25)", label:"Watch" },
-    attention: { color:"#ef4444", bg:"rgba(239,68,68,.10)",  border:"rgba(239,68,68,.25)",  label:"Needs Attention" },
-  }[statusKey];
-  const updated = new Date().toLocaleDateString("en-US", { month:"short", day:"numeric" });
+  const [open, setOpen] = useState(false);
+  const flags = computeFlags(meds, readings);
+  const hasFlags = flags.length > 0;
+  const accentColor = hasFlags ? "#f59e0b" : "#10b981";
   return (
-    <div className="stat-card">
-      <div style={{ width:28, height:3, background:cfg.color, borderRadius:2, marginBottom:14, boxShadow:`0 0 10px ${cfg.color}60` }} />
-      <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6, display:"flex", alignItems:"center", gap:6 }}>
-        Status
-        <div style={{ background:cfg.bg, border:`1px solid ${cfg.border}`, borderRadius:20, padding:"1px 6px", fontSize:9, color:cfg.color, fontFamily:"'DM Mono',monospace" }}>AI</div>
+    <div className="stat-card" style={{ cursor: hasFlags ? "pointer" : "default" }} onClick={() => hasFlags && setOpen(o => !o)}>
+      <div style={{ width:28, height:3, background:accentColor, borderRadius:2, marginBottom:14, boxShadow:`0 0 10px ${accentColor}60` }} />
+      <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <span>Flagged Items</span>
+        {hasFlags && <span style={{ fontSize:13, color:accentColor, transition:"transform .2s", display:"inline-block", transform:open?"rotate(180deg)":"rotate(0deg)" }}>▾</span>}
       </div>
-      <div style={{ fontSize:24, fontWeight:700, color:cfg.color, letterSpacing:"-0.5px", lineHeight:1, marginBottom:6 }}>{cfg.label}</div>
-      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Updated {updated}</div>
+      <div style={{ fontSize:26, fontWeight:700, letterSpacing:"-1px", lineHeight:1, marginBottom:6, color: hasFlags ? "#dde8f5" : "#10b981" }}>
+        {hasFlags ? flags.length : "None"}
+      </div>
+      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+        {hasFlags ? `${flags.length} item${flags.length !== 1 ? "s" : ""} · past 14 days` : "Nothing flagged · past 14 days"}
+      </div>
+      {open && hasFlags && (
+        <div style={{ marginTop:12, paddingTop:10, borderTop:"1px solid #0d1a28" }}>
+          {flags.map((f, i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", borderBottom:i < flags.length - 1 ? "1px solid #0d1a28" : "none" }}>
+              <div style={{ width:5, height:5, borderRadius:"50%", background:f.color, flexShrink:0 }} />
+              <div style={{ flex:1, fontSize:11, color:"#c4d8ee" }}>{f.label}</div>
+              <div style={{ fontSize:9, color:f.color, fontFamily:"'DM Mono',monospace" }}>{f.note}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
