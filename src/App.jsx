@@ -167,10 +167,12 @@ function DataFreshnessCard() {
   }
 
   const rows = [
-    { label: "Labs",      date: lastUpdated("mi_labs",       l => l.date) },
-    { label: "Meds",      date: lastUpdated("mi_meds_full",  m => m.updatedAt || m.startDate) },
-    { label: "Vitals",    date: lastUpdated("mi_readings",   r => r.date || (r.ts ? new Date(r.ts).toISOString().slice(0,10) : null)) },
-    { label: "Documents", date: lastUpdated("mi_ref_docs",   d => d.studyDate || d.addedDate || d.addedAt) },
+    { label: "Labs",         date: lastUpdated("mi_labs",         l => l.date) },
+    { label: "Meds",         date: lastUpdated("mi_meds_full",    m => m.updatedAt || m.startDate) },
+    { label: "Vitals",       date: lastUpdated("mi_readings",     r => r.date || (r.ts ? new Date(r.ts).toISOString().slice(0,10) : null)) },
+    { label: "Appointments", date: lastUpdated("mi_appointments", a => a.date) },
+    { label: "Conditions",   date: lastUpdated("mi_conditions",   c => c.since || c.diagnosedDate) },
+    { label: "Documents",    date: lastUpdated("mi_ref_docs",     d => d.studyDate || d.addedDate || d.addedAt) },
   ];
 
   return (
