@@ -159,7 +159,13 @@ function DataFreshnessCard() {
     try {
       const items = JSON.parse(localStorage.getItem(key) || "[]");
       if (!items.length) return null;
-      const dates = items.map(dateFn).filter(Boolean).map(d => new Date(d)).filter(d => !isNaN(d));
+      const dates = items.map(dateFn).filter(Boolean).map(raw => {
+        // Numeric timestamp (e.g. id: Date.now()) — already local-time-safe
+        if (typeof raw === "number") return new Date(raw);
+        // ISO date string "YYYY-MM-DD" — parse as local noon to avoid UTC-offset day-shift
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw + "T12:00:00");
+        return new Date(raw);
+      }).filter(d => !isNaN(d));
       if (!dates.length) return null;
       const latest = new Date(Math.max(...dates));
       return latest.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -168,8 +174,8 @@ function DataFreshnessCard() {
 
   const rows = [
     { label: "Labs",         date: lastUpdated("mi_labs",         l => l.date) },
-    { label: "Meds",         date: lastUpdated("mi_meds_full",    m => m.updatedAt || m.startDate) },
-    { label: "Vitals",       date: lastUpdated("mi_readings",     r => r.date || (r.ts ? new Date(r.ts).toISOString().slice(0,10) : null)) },
+    { label: "Meds",         date: lastUpdated("mi_meds_full",    m => m.id ? Number(m.id) : null) },
+    { label: "Vitals",       date: lastUpdated("mi_readings",     r => r.date || (r.ts ? Number(r.ts) : null)) },
     { label: "Appointments", date: lastUpdated("mi_appointments", a => a.date) },
     { label: "Conditions",   date: lastUpdated("mi_conditions",   c => c.since || c.diagnosedDate) },
     { label: "Documents",    date: lastUpdated("mi_ref_docs",     d => d.studyDate || d.addedDate || d.addedAt) },
