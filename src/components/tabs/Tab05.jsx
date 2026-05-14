@@ -28,18 +28,35 @@ const NAV = [
 ];
 
 
-// Range bar — amber outside, green inside, badge + caret at value position,
-// range labels sit directly below the start and end of the green zone.
-function RangeBar({ value, low, high, compact = false }) {
-  if (value === null) return <div style={{ width: compact ? 90 : "100%", height: compact ? 28 : 48 }} />;
-  const span = high - low || 1;
-  const pad = span * 0.45;
-  const minD = low - pad, maxD = high + pad;
+// Range bar — amber outside, green inside, badge + caret at value position.
+// When customLow/customHigh are provided, the bar shows BOTH the lab's
+// printed range (dim green) and the doctor's custom range (solid green),
+// with labels for each set anchored to their zone boundaries.
+function RangeBar({ value, low, high, customLow = null, customHigh = null, compact = false }) {
+  if (value === null) return <div style={{ width: compact ? 90 : "100%", height: compact ? 28 : 52 }} />;
+  const hasCustom = customLow !== null && customHigh !== null;
+
+  // Display window spans the outermost edges of whichever ranges exist
+  const allLow  = [low, hasCustom ? customLow  : null].filter(v => v !== null);
+  const allHigh = [high, hasCustom ? customHigh : null].filter(v => v !== null);
+  const winLow  = allLow.length  ? Math.min(...allLow)  : value * 0.7;
+  const winHigh = allHigh.length ? Math.max(...allHigh) : value * 1.3;
+  const span = winHigh - winLow || 1;
+  const pad  = span * 0.45;
+  const minD = winLow - pad, maxD = winHigh + pad;
   const total = maxD - minD;
-  const lowPct  = ((low  - minD) / total) * 100;
-  const highPct = ((high - minD) / total) * 100;
-  const valPct  = Math.min(98, Math.max(2, ((value - minD) / total) * 100));
-  const inRange = value >= low && value <= high;
+
+  const pct = v => ((v - minD) / total) * 100;
+  const labLowPct  = low  !== null ? pct(low)  : null;
+  const labHighPct = high !== null ? pct(high) : null;
+  const custLowPct  = hasCustom ? pct(customLow)  : null;
+  const custHighPct = hasCustom ? pct(customHigh) : null;
+  const valPct = Math.min(98, Math.max(2, pct(value)));
+
+  // In-range: prefer custom range when set
+  const inCustom = hasCustom && value >= customLow && value <= customHigh;
+  const inLab    = low !== null && high !== null && value >= low && value <= high;
+  const inRange  = hasCustom ? inCustom : inLab;
   const badgeColor = inRange ? "#10b981" : "#f59e0b";
   const h = compact ? 6 : 11;
 
@@ -61,24 +78,47 @@ function RangeBar({ value, low, high, compact = false }) {
         borderLeft: "4px solid transparent", borderRight: "4px solid transparent",
         borderTop: `4px solid ${badgeColor}`,
       }} />
-      {/* Track — solid amber background, green normal zone */}
+      {/* Track */}
       <div style={{ position: "relative", height: h, borderRadius: 3, overflow: "hidden", background: "#f59e0b" }}>
-        <div style={{
-          position: "absolute", left: `${lowPct}%`, width: `${highPct - lowPct}%`,
-          height: "100%", background: "#10b981",
-        }} />
+        {/* Lab printed range — dim green when custom exists, solid when no custom */}
+        {labLowPct !== null && (
+          <div style={{
+            position: "absolute", left: `${labLowPct}%`, width: `${labHighPct - labLowPct}%`,
+            height: "100%", background: hasCustom ? "rgba(16,185,129,0.32)" : "#10b981",
+          }} />
+        )}
+        {/* Doctor's custom range — solid bright green on top */}
+        {hasCustom && (
+          <div style={{
+            position: "absolute", left: `${custLowPct}%`, width: `${custHighPct - custLowPct}%`,
+            height: "100%", background: "#10b981",
+          }} />
+        )}
       </div>
-      {/* Range labels anchored to the green zone boundaries */}
+      {/* Labels */}
       {!compact && (
-        <div style={{ position: "relative", height: 14, marginTop: 3 }}>
-          <span style={{
-            position: "absolute", left: `${lowPct}%`, transform: "translateX(-50%)",
-            fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap",
-          }}>{low}</span>
-          <span style={{
-            position: "absolute", left: `${highPct}%`, transform: "translateX(-50%)",
-            fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap",
-          }}>{high}</span>
+        <div style={{ position: "relative", marginTop: 3 }}>
+          {/* Custom range labels — bright green, primary */}
+          {hasCustom && (
+            <div style={{ position: "relative", height: 14 }}>
+              <span style={{ position: "absolute", left: `${custLowPct}%`, transform: "translateX(-50%)", fontSize: 8, color: "#10b981", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{customLow}</span>
+              <span style={{ position: "absolute", left: `${custHighPct}%`, transform: "translateX(-50%)", fontSize: 8, color: "#10b981", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{customHigh}</span>
+            </div>
+          )}
+          {/* Lab range labels — dim when custom present, normal when sole range */}
+          {labLowPct !== null && (
+            <div style={{ position: "relative", height: 13 }}>
+              <span style={{ position: "absolute", left: `${labLowPct}%`, transform: "translateX(-50%)", fontSize: hasCustom ? 7.5 : 8, color: hasCustom ? "#4a5c6a" : "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{low}</span>
+              <span style={{ position: "absolute", left: `${labHighPct}%`, transform: "translateX(-50%)", fontSize: hasCustom ? 7.5 : 8, color: hasCustom ? "#4a5c6a" : "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{high}</span>
+            </div>
+          )}
+          {/* Legend when both ranges shown */}
+          {hasCustom && labLowPct !== null && (
+            <div style={{ display: "flex", gap: 10, marginTop: 3 }}>
+              <span style={{ fontSize: 7.5, color: "#10b981", fontFamily: "'DM Mono',monospace" }}>▬ Your range</span>
+              <span style={{ fontSize: 7.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>▬ Lab range</span>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -507,6 +547,31 @@ export default function App({ onNavChange }) {
     window.addEventListener("mi_lab_cat_order_changed", refresh);
     return () => window.removeEventListener("mi_lab_cat_order_changed", refresh);
   }, []);
+
+  // ── Custom reference ranges ────────────────────────────────────────────────
+  const [customRanges, setCustomRanges] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mi_lab_custom_ranges") || "{}"); } catch { return {}; }
+  });
+  const [editingCustomRange, setEditingCustomRange] = useState(null); // lab name being edited
+  const [customRangeForm, setCustomRangeForm] = useState({ low: "", high: "" });
+
+  function saveCustomRange(labName, low, high) {
+    const key = (labName || "").toLowerCase().trim();
+    const lo = parseFloat(low), hi = parseFloat(high);
+    if (!key || isNaN(lo) || isNaN(hi) || lo >= hi) return;
+    const updated = { ...customRanges, [key]: { low: lo, high: hi } };
+    setCustomRanges(updated);
+    localStorage.setItem("mi_lab_custom_ranges", JSON.stringify(updated));
+    setEditingCustomRange(null);
+  }
+
+  function removeCustomRange(labName) {
+    const key = (labName || "").toLowerCase().trim();
+    const updated = { ...customRanges };
+    delete updated[key];
+    setCustomRanges(updated);
+    localStorage.setItem("mi_lab_custom_ranges", JSON.stringify(updated));
+  }
 
   function handleAddLab() {
     if (!newLab.name.trim() || !newLab.value.trim()) return;
@@ -1056,6 +1121,10 @@ ${labsStr}`;
             {selectedImportedLab && (() => {
               const { low, high } = parseRefRange(selectedImportedLab.refRange);
               const val = parseFloat(selectedImportedLab.value);
+              const labKey = (selectedImportedLab.name || "").toLowerCase().trim();
+              const customRange = customRanges[labKey] || null;
+              const customLow  = customRange?.low  ?? null;
+              const customHigh = customRange?.high ?? null;
               const inRange = low !== null && high !== null && !isNaN(val) ? (val >= low && val <= high) : null;
               // All historical readings for this test, sorted oldest → newest
               const allHistory = [...importedLabs]
@@ -1125,12 +1194,55 @@ ${labsStr}`;
                     </div>
                     {selectedImportedLab.refRange && (
                       <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
-                        Normal range: {selectedImportedLab.refRange} {selectedImportedLab.unit}
+                        Lab range: {selectedImportedLab.refRange} {selectedImportedLab.unit}
+                        {customRange && <span style={{ color: "#10b981", marginLeft: 12 }}>· Your range: {customRange.low}–{customRange.high}</span>}
                       </div>
                     )}
                     {low !== null && high !== null && !isNaN(val) && (
-                      <RangeBar value={val} low={low} high={high} />
+                      <RangeBar value={val} low={low} high={high} customLow={customLow} customHigh={customHigh} />
                     )}
+
+                    {/* ── Custom Range Editor ── */}
+                    <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #111e30" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: customRange && editingCustomRange !== labKey ? 8 : 0 }}>
+                        <span style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontWeight: 600, letterSpacing: "0.5px" }}>YOUR DOCTOR'S RANGE</span>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {customRange && editingCustomRange !== labKey && <>
+                            <button onClick={() => { setCustomRangeForm({ low: String(customRange.low), high: String(customRange.high) }); setEditingCustomRange(labKey); }}
+                              style={{ fontSize: 9, color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✎ Edit</button>
+                            <button onClick={() => removeCustomRange(selectedImportedLab.name)}
+                              style={{ fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✕ Remove</button>
+                          </>}
+                          {!customRange && editingCustomRange !== labKey && (
+                            <button onClick={() => { setCustomRangeForm({ low: "", high: "" }); setEditingCustomRange(labKey); }}
+                              style={{ fontSize: 9, color: "#10b981", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>+ Set Range</button>
+                          )}
+                        </div>
+                      </div>
+                      {/* Display current custom range */}
+                      {customRange && editingCustomRange !== labKey && (
+                        <div style={{ fontSize: 12, color: "#10b981", fontFamily: "'DM Mono',monospace" }}>
+                          {customRange.low} – {customRange.high} {selectedImportedLab.unit}
+                        </div>
+                      )}
+                      {/* Inline edit form */}
+                      {editingCustomRange === labKey && (
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                          {[["LOW", "low"], ["HIGH", "high"]].map(([label, field]) => (
+                            <div key={field}>
+                              <label style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "block", marginBottom: 3 }}>{label}</label>
+                              <input type="number" step="any" value={customRangeForm[field]}
+                                onChange={e => setCustomRangeForm(p => ({ ...p, [field]: e.target.value }))}
+                                style={{ width: 72, padding: "6px 8px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 6, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+                            </div>
+                          ))}
+                          <button onClick={() => saveCustomRange(selectedImportedLab.name, customRangeForm.low, customRangeForm.high)}
+                            style={{ padding: "6px 14px", background: "#10b981", border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", fontWeight: 600 }}>Save</button>
+                          <button onClick={() => setEditingCustomRange(null)}
+                            style={{ padding: "6px 10px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 7, color: "#7eb8d8", fontSize: 11, cursor: "pointer" }}>✕</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Details grid */}

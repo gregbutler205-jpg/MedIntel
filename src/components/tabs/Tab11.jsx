@@ -124,6 +124,28 @@ Other:
 
   // ── Labs ────────────────────────────────────────────────────────────────────
   const labs = safeRead("mi_labs", []);
+  const customRanges = safeRead("mi_lab_custom_ranges", {});
+
+  // Auto-detect which labs are condition-linked (for "ask your team" note)
+  const CONDITION_LAB_MAP = [
+    { condPat: /liver|hepat|cirr|fibrosis|psc|pbc|nash|transplant|biliary/i,
+      labPat:  /alt|ast|alp|alk.*phos|bilirubin|ggt|albumin|inr|prothrombin|\bpt\b/i },
+    { condPat: /transplant|immuno|rejection/i,
+      labPat:  /tacrolimus|prograf|fk506|cyclosporin|creatinine|egfr|\bgfr\b|wbc|white.*blood/i },
+    { condPat: /diabet|glucose|ptdm/i,
+      labPat:  /glucose|hba1c|hemoglobin\s*a1c/i },
+    { condPat: /kidney|renal|nephro/i,
+      labPat:  /creatinine|egfr|bun|potassium|phosphorus/i },
+    { condPat: /thyroid/i,
+      labPat:  /tsh|t3\b|t4\b|thyroid/i },
+  ];
+  const conditionNames = conditions.map(c => c.name || "").join(" ");
+  function isConditionLinked(labName) {
+    return CONDITION_LAB_MAP.some(({ condPat, labPat }) =>
+      condPat.test(conditionNames) && labPat.test(labName)
+    );
+  }
+
   let labStr;
   if (labs.length > 0) {
     const byDate = {};
@@ -139,12 +161,20 @@ Other:
     });
     labStr = sortedDates.map(date => {
       const items = byDate[date];
-      return `[${date}]\n` + items.map(l =>
-        `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}` +
-        `${l.refRange ? ` (ref: ${l.refRange})` : ""}` +
-        `${l.flag ? " ⚠ FLAGGED" : ""}` +
-        `${l.notes ? ` — ${l.notes}` : ""}`
-      ).join("\n");
+      return `[${date}]\n` + items.map(l => {
+        const key = (l.name || "").toLowerCase().trim();
+        const cr  = customRanges[key];
+        let line  = `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}`;
+        if (cr)        line += ` (lab ref: ${l.refRange || "n/a"} | patient's doctor range: ${cr.low}–${cr.high})`;
+        else if (l.refRange) line += ` (ref: ${l.refRange})`;
+        if (l.flag)    line += " ⚠ FLAGGED";
+        if (l.notes)   line += ` — ${l.notes}`;
+        // Add condition-link note for flagged labs without a custom range set
+        if (l.flag && !cr && isConditionLinked(l.name)) {
+          line += " [condition-linked: patient may have an individual target range — include a note to confirm their personal range with their care team]";
+        }
+        return line;
+      }).join("\n");
     }).join("\n\n");
   } else {
     labStr = "No lab results loaded yet.";
@@ -233,6 +263,8 @@ CRITICAL RULES:
 - For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
 - ALL lab results and vitals listed below come directly from this patient's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
 - CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.
+- CUSTOM LAB RANGES: Where a lab shows "patient's doctor range: X–Y", treat that as the primary reference range for this patient. Always mention both the standard lab range and the doctor's range when discussing that result.
+- CONDITION-LINKED FLAGS: Where a lab is annotated "[condition-linked: patient may have an individual target range]", include an action item in your analysis reminding the patient to confirm their personal target range with their care team — phrase it as something to bring up at their next visit, not a clinical concern.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 RESPONSE FORMATTING RULES (follow exactly — these control on-screen rendering)
