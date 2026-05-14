@@ -28,10 +28,10 @@ const NAV = [
 ];
 
 
-// Range bar — amber outside, green inside, badge showing current value
+// Range bar — amber outside, green inside, badge + caret at value position,
+// range labels sit directly below the start and end of the green zone.
 function RangeBar({ value, low, high, compact = false }) {
-  if (value === null) return <div style={{ width: compact ? 90 : "100%", height: compact ? 28 : 44 }} />;
-  // Display window: 20% padding on each side beyond low/high
+  if (value === null) return <div style={{ width: compact ? 90 : "100%", height: compact ? 28 : 48 }} />;
   const span = high - low || 1;
   const pad = span * 0.45;
   const minD = low - pad, maxD = high + pad;
@@ -41,40 +41,44 @@ function RangeBar({ value, low, high, compact = false }) {
   const valPct  = Math.min(98, Math.max(2, ((value - minD) / total) * 100));
   const inRange = value >= low && value <= high;
   const badgeColor = inRange ? "#10b981" : "#f59e0b";
-  const h = compact ? 6 : 7;
-  const badgeY = compact ? 0 : 0;
+  const h = compact ? 6 : 11;
 
   return (
-    <div style={{ width: compact ? 90 : "100%", position: "relative", paddingTop: compact ? 18 : 20, flexShrink: 0 }}>
+    <div style={{ width: compact ? 90 : "100%", position: "relative", paddingTop: compact ? 18 : 22, flexShrink: 0 }}>
       {/* Value badge */}
       <div style={{
-        position: "absolute", top: badgeY, left: `${valPct}%`, transform: "translateX(-50%)",
+        position: "absolute", top: 0, left: `${valPct}%`, transform: "translateX(-50%)",
         background: badgeColor, color: "#fff", fontSize: compact ? 8.5 : 9.5,
         fontWeight: 700, fontFamily: "'DM Mono',monospace",
-        padding: compact ? "1px 5px" : "2px 6px", borderRadius: 20,
+        padding: compact ? "1px 5px" : "2px 7px", borderRadius: 20,
         whiteSpace: "nowrap", lineHeight: 1.4,
         boxShadow: `0 0 8px ${badgeColor}60`,
       }}>{value}</div>
       {/* Caret */}
       <div style={{
-        position: "absolute", top: compact ? 14 : 16, left: `${valPct}%`, transform: "translateX(-50%)",
+        position: "absolute", top: compact ? 14 : 17, left: `${valPct}%`, transform: "translateX(-50%)",
         width: 0, height: 0,
         borderLeft: "4px solid transparent", borderRight: "4px solid transparent",
         borderTop: `4px solid ${badgeColor}`,
       }} />
-      {/* Track */}
-      <div style={{ position: "relative", height: h, borderRadius: h, overflow: "hidden", background: "#f59e0b55" }}>
-        {/* Green normal zone */}
+      {/* Track — solid amber background, green normal zone */}
+      <div style={{ position: "relative", height: h, borderRadius: 3, overflow: "hidden", background: "#f59e0b" }}>
         <div style={{
           position: "absolute", left: `${lowPct}%`, width: `${highPct - lowPct}%`,
           height: "100%", background: "#10b981",
         }} />
       </div>
-      {/* Labels */}
+      {/* Range labels anchored to the green zone boundaries */}
       {!compact && (
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-          <span style={{ fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{low}</span>
-          <span style={{ fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{high}</span>
+        <div style={{ position: "relative", height: 14, marginTop: 3 }}>
+          <span style={{
+            position: "absolute", left: `${lowPct}%`, transform: "translateX(-50%)",
+            fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap",
+          }}>{low}</span>
+          <span style={{
+            position: "absolute", left: `${highPct}%`, transform: "translateX(-50%)",
+            fontSize: 8, color: "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap",
+          }}>{high}</span>
         </div>
       )}
     </div>
