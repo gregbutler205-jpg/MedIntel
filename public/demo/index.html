@@ -44,12 +44,11 @@
   <div class="sub">Demo Environment</div>
   <div class="spinner"></div>
   <div class="msg">Loading demo patient data…</div>
-  <div class="pin">Demo PIN: <strong>1234</strong></div>
 </div>
 
 <script>
-// ── Demo PIN hash (SHA-256 of "1234" + app salt) ─────────────────────────────
-const DEMO_PIN_HASH = "fc72e05e2a2c820e5cd0aa1c610ebb093bd5e1f86dc3b485d30d17dc45efccbf";
+// ── PIN disabled for demo ─────────────────────────────────────────────────────
+// No mi_auth_hash is written; sessionStorage mi_unlocked bypasses the lock screen.
 
 // ── Demo dataset ─────────────────────────────────────────────────────────────
 const DEMO = {
@@ -192,9 +191,8 @@ mi_lab_custom_ranges: {
     const apiKey = localStorage.getItem("mi_ak");
     localStorage.clear();
     if (apiKey) localStorage.setItem("mi_ak", apiKey);
-    localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
     Object.entries(DEMO).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
-    // Small delay so the user can read the PIN
+    sessionStorage.setItem("mi_unlocked", "1");
     setTimeout(() => { window.location.href = "/"; }, 1800);
   } catch(e) {
     document.querySelector(".msg").textContent = "Error loading demo: " + e.message;
