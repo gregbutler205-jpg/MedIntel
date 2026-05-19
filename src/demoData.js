@@ -496,11 +496,15 @@ export const DEMO_DATA = {
 
 };
 
+// Demo PIN is 1234 — pre-hashed with the app's salt (intellitrax-salt-2026)
+const DEMO_PIN_HASH = "fc72e05e2a2c820e5cd0aa1c610ebb093bd5e1f86dc3b485d30d17dc45efccbf";
+
 // ── Load function — call this to populate localStorage ──────────────────────
 export function loadDemoData() {
   const apiKey = localStorage.getItem("mi_ak"); // preserve API key
   localStorage.clear();
   if (apiKey) localStorage.setItem("mi_ak", apiKey);
+  localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
   Object.entries(DEMO_DATA).forEach(([key, value]) => {
     localStorage.setItem(key, JSON.stringify(value));
   });
