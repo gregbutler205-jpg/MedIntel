@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
+import { loadDemoData } from "../../demoData.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -302,9 +303,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   }
 
   function handleReset() {
+    loadDemoData();
     setBackups(INITIAL_BACKUPS);
     setModal(null);
-    showToast("Reset to demo state");
+    showToast("Demo data loaded — reloading…");
+    setTimeout(() => window.location.reload(), 1500);
   }
 
   function confirmRestore() {

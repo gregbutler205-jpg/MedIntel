@@ -922,6 +922,14 @@ export default function App({ onNavChange }) {
                         <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>{selectedMed.brand} · {selectedMed.category}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <a
+                          href={`https://medlineplus.gov/search.html?query=${encodeURIComponent(selectedMed.name)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ padding: "5px 12px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 6, color: "#10b981", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600, textDecoration: "none", display: "inline-block" }}
+                        >
+                          Learn More ↗
+                        </a>
                         <button onClick={() => { setEditingMed({ ...selectedMed, refillDate: toIsoDate(selectedMed.refillDate) || selectedMed.refillDate }); setDeleteConfirm(false); }}
                           style={{ padding: "5px 12px", background: "#0f1e30", border: "1px solid #1a3050", borderRadius: 6, color: "#7eb8d8", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
                           Edit
