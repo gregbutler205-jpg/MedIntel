@@ -106,7 +106,10 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   const [backupFreq, setBackupFreq] = useState(() => localStorage.getItem("mi_backup_freq") || "Weekly");
   const [backups, setBackups]     = useState(() => { try { return JSON.parse(localStorage.getItem("mi_backup_history") || "[]"); } catch { return []; } });
   const [toast, setToast]         = useState("");
-  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "advanced_consent"
+  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "advanced_consent" | "changepin"
+  const [pinForm, setPinForm]     = useState({ current: "", next: "", confirm: "" });
+  const [pinError, setPinError]   = useState("");
+  const [pinSuccess, setPinSuccess] = useState(false);
   const [restoreId, setRestoreId] = useState(null);
 
   // Lab category order
@@ -293,6 +296,29 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
     localStorage.setItem("mi_ak", key);
     setApiKey(key);
     showToast("API key saved");
+  }
+
+  async function hashPin(pin) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin + "intellitrax-salt-2026"));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function handleChangePin() {
+    setPinError("");
+    const { current, next, confirm } = pinForm;
+    if (next.length !== 4 || !/^\d{4}$/.test(next)) { setPinError("New PIN must be exactly 4 digits."); return; }
+    if (next !== confirm) { setPinError("New PINs don't match."); return; }
+    const stored = localStorage.getItem("mi_auth_hash");
+    if (stored) {
+      const currentHash = await hashPin(current);
+      if (currentHash !== stored) { setPinError("Current PIN is incorrect."); return; }
+    }
+    const newHash = await hashPin(next);
+    localStorage.setItem("mi_auth_hash", newHash);
+    sessionStorage.setItem("mi_unlocked", "1");
+    setPinForm({ current: "", next: "", confirm: "" });
+    setPinSuccess(true);
+    setTimeout(() => { setPinSuccess(false); setModal(null); }, 2000);
   }
 
   function handleClearData() {
@@ -738,6 +764,25 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         ))}
       </div>
 
+      {/* Security */}
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "18px 20px" }}>
+        <div style={sectionLbl}>Security</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>App PIN</div>
+            <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
+              {localStorage.getItem("mi_auth_hash") ? "PIN is set — tap to change it." : "No PIN set — tap to create one."}
+            </div>
+          </div>
+          <button
+            onClick={() => { setPinForm({ current: "", next: "", confirm: "" }); setPinError(""); setPinSuccess(false); setModal("changepin"); }}
+            style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
+          >
+            {localStorage.getItem("mi_auth_hash") ? "Change PIN" : "Set PIN"}
+          </button>
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div style={{ background: "#0b1220", border: "1px solid rgba(239,68,68,.2)", borderRadius: 14, padding: "18px 20px" }}>
         <div style={{ fontSize: 10, color: "rgba(239,68,68,.5)", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
@@ -787,6 +832,57 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           onConfirm={confirmRestore}
           onCancel={() => setModal(null)}
         />
+      )}
+
+      {modal === "changepin" && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: "28px 28px 24px", width: "100%", maxWidth: 340, fontFamily: "'Sora', sans-serif" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>
+              {localStorage.getItem("mi_auth_hash") ? "Change PIN" : "Set PIN"}
+            </div>
+            <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>Enter a 4-digit numeric PIN.</div>
+
+            {localStorage.getItem("mi_auth_hash") && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current PIN</div>
+                <input
+                  type="password" inputMode="numeric" maxLength={4} value={pinForm.current}
+                  onChange={e => setPinForm(f => ({ ...f, current: e.target.value.replace(/\D/g, "") }))}
+                  style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'DM Mono', monospace", letterSpacing: 6, boxSizing: "border-box" }}
+                  placeholder="••••"
+                />
+              </div>
+            )}
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New PIN</div>
+              <input
+                type="password" inputMode="numeric" maxLength={4} value={pinForm.next}
+                onChange={e => setPinForm(f => ({ ...f, next: e.target.value.replace(/\D/g, "") }))}
+                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'DM Mono', monospace", letterSpacing: 6, boxSizing: "border-box" }}
+                placeholder="••••"
+              />
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New PIN</div>
+              <input
+                type="password" inputMode="numeric" maxLength={4} value={pinForm.confirm}
+                onChange={e => setPinForm(f => ({ ...f, confirm: e.target.value.replace(/\D/g, "") }))}
+                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'DM Mono', monospace", letterSpacing: 6, boxSizing: "border-box" }}
+                placeholder="••••"
+              />
+            </div>
+
+            {pinError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
+            {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ PIN updated successfully.</div>}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setModal(null)} style={{ flex: 1, padding: "9px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#98afc4", fontSize: 12, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Cancel</button>
+              <button onClick={handleChangePin} style={{ flex: 1, padding: "9px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Save PIN</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {toast && <Toast msg={toast} onDone={() => setToast("")} />}
