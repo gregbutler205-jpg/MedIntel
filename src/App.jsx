@@ -3,7 +3,7 @@ import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, 
 import LockScreen from './components/LockScreen.jsx';
 import SearchPopup from './components/SearchPopup.jsx';
 import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from './lib/googleAuth.js';
-import { fullSync, uploadToDrive } from './lib/driveSync.js';
+import { fullSync, uploadToDrive, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -380,6 +380,8 @@ function AppShell() {
   const [googleUser, setGoogleUser] = useState(() => getStoredUser());
   const [syncStatus, setSyncStatus] = useState("idle"); // "idle" | "syncing" | "done" | "error"
   const [lastSyncTs, setLastSyncTs] = useState(() => localStorage.getItem("mi_last_sync"));
+  const [lastWeeklyBackup, setLastWeeklyBackup] = useState(() => localStorage.getItem("mi_last_weekly_backup"));
+  const [showBackupBanner, setShowBackupBanner] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 60000);
@@ -467,6 +469,24 @@ function AppShell() {
     }, 10 * 60 * 1000); // 10 minutes
     return () => clearInterval(id);
   }, [googleUser]);
+
+  // ── Weekly backup check on mount ─────────────────────────────────────────────
+  useEffect(() => {
+    const last  = localStorage.getItem("mi_last_weekly_backup");
+    const overdue = !last || (Date.now() - new Date(last).getTime()) > WEEKLY_INTERVAL_MS;
+    if (!overdue) return;
+
+    const token = getAccessToken();
+    if (googleUser && token) {
+      // Drive connected — auto-backup silently
+      uploadWeeklyBackup(token)
+        .then(ts => setLastWeeklyBackup(ts))
+        .catch(e => console.warn("[WeeklyBackup] auto-backup failed:", e));
+    } else if (!googleUser) {
+      // No Drive — show reminder banner
+      setShowBackupBanner(true);
+    }
+  }, []); // intentionally once on mount
 
   // Called by ImportTab when the user confirms parsed data
   const handleImport = useCallback((parsed) => {
@@ -670,6 +690,44 @@ function AppShell() {
                 {/* Dashboard home */}
                 {!ActiveTabComponent && (
                   <>
+                    {/* Weekly backup reminder — shown only when Drive not connected and backup is overdue */}
+                    {showBackupBanner && (
+                      <div style={{ display:"flex", alignItems:"center", gap:12, background:"rgba(79,142,247,.07)", border:"1px solid rgba(79,142,247,.22)", borderRadius:12, padding:"11px 16px", marginBottom:18, flexWrap:"wrap" }}>
+                        <span style={{ fontSize:16 }}>💾</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:"#dde8f5" }}>Weekly backup overdue</div>
+                          <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
+                            {lastWeeklyBackup
+                              ? `Last backed up ${Math.floor((Date.now() - new Date(lastWeeklyBackup).getTime()) / 86400000)} days ago.`
+                              : "Your data has never been backed up."}
+                            {" "}Connect Google Drive in Settings for automatic weekly backups.
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const data = collectLocalData();
+                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                            const a = document.createElement("a");
+                            a.href = URL.createObjectURL(blob);
+                            a.download = `insina-health-weekly-${new Date().toISOString().split("T")[0]}.json`;
+                            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                            const ts = new Date().toISOString();
+                            localStorage.setItem("mi_last_weekly_backup", ts);
+                            setLastWeeklyBackup(ts);
+                            setShowBackupBanner(false);
+                          }}
+                          style={{ padding:"7px 14px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}
+                        >
+                          Download backup
+                        </button>
+                        <button
+                          onClick={() => setShowBackupBanner(false)}
+                          style={{ background:"transparent", border:"none", color:"#4a5c6a", fontSize:18, cursor:"pointer", padding:"0 4px", lineHeight:1 }}
+                          title="Dismiss"
+                        >×</button>
+                      </div>
+                    )}
+
                     <div style={{ marginBottom: 26 }}>
                       <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>
                         {(time.getHours() < 12 ? "Good morning" : time.getHours() < 17 ? "Good afternoon" : "Good evening")}

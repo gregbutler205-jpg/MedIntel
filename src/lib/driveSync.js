@@ -3,7 +3,11 @@
 // This is a hidden folder only accessible by Insina Health — users can't see
 // these files in their Drive UI, and Insina Health servers never touch them.
 
-const BACKUP_FILENAME = "insina-health-backup.json";
+const BACKUP_FILENAME        = "insina-health-backup.json";
+const WEEKLY_BACKUP_PREFIX   = "insina-health-weekly-";
+const WEEKLY_BACKUP_MAX      = 4;         // rolling window
+export const WEEKLY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;   // 7 days
+
 const DRIVE_API    = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
 
@@ -145,6 +149,58 @@ export async function fullSync(token) {
   const driveData = await downloadFromDrive(token);
   mergeIntoLocal(driveData);
   return await uploadToDrive(token);
+}
+
+// ── Weekly snapshot backups ───────────────────────────────────────────────────
+
+/** List all weekly snapshot files in appDataFolder, sorted newest-first. */
+async function listWeeklyFiles(token) {
+  const q = encodeURIComponent(`name contains '${WEEKLY_BACKUP_PREFIX}' and trashed = false`);
+  const url = `${DRIVE_API}?spaces=appDataFolder&q=${q}&fields=files(id,name,createdTime)&orderBy=createdTime desc`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`Drive list weekly ${res.status}`);
+  const json = await res.json();
+  return json.files ?? [];
+}
+
+/** Delete a Drive file by ID. */
+async function deleteFile(token, fileId) {
+  await fetch(`${DRIVE_API}/${fileId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+/**
+ * Create a new dated weekly snapshot in appDataFolder.
+ * Prunes oldest files so only WEEKLY_BACKUP_MAX copies are kept.
+ * Returns the ISO timestamp of the backup.
+ */
+export async function uploadWeeklyBackup(token) {
+  const dateStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const filename = `${WEEKLY_BACKUP_PREFIX}${dateStr}.json`;
+  const content  = JSON.stringify({ ...collectLocalData(), _weeklyBackup: true }, null, 2);
+  const blob     = new Blob([content], { type: "application/json" });
+
+  // Upload new snapshot
+  const meta = JSON.stringify({ name: filename, parents: ["appDataFolder"] });
+  const form = new FormData();
+  form.append("metadata", new Blob([meta], { type: "application/json" }));
+  form.append("file", blob);
+  const res = await fetch(
+    `${DRIVE_UPLOAD}?uploadType=multipart&fields=id`,
+    { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form }
+  );
+  if (!res.ok) throw new Error(`Drive weekly POST ${res.status}`);
+
+  // Prune — keep newest WEEKLY_BACKUP_MAX, delete the rest
+  const existing = await listWeeklyFiles(token);
+  const toDelete = existing.slice(WEEKLY_BACKUP_MAX - 1); // already sorted newest-first; new one not yet in list
+  await Promise.all(toDelete.map(f => deleteFile(token, f.id)));
+
+  const ts = new Date().toISOString();
+  localStorage.setItem("mi_last_weekly_backup", ts);
+  return ts;
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────

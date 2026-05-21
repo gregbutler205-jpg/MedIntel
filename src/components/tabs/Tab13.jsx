@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
+import { uploadWeeklyBackup } from "../../lib/driveSync.js";
+import { getAccessToken } from "../../lib/googleAuth.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -397,6 +399,33 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                   Disconnect
                 </button>
               </div>
+            </div>
+            {/* Weekly backup status row */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
+              <div>
+                <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>WEEKLY SNAPSHOT</div>
+                <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                  {(() => {
+                    const ts = localStorage.getItem("mi_last_weekly_backup");
+                    if (!ts) return "No weekly backup yet — will run automatically on next app open.";
+                    const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
+                    return `Last snapshot ${days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`} · keeps 4 rolling weeks on Drive`;
+                  })()}
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  const token = getAccessToken();
+                  if (!token) { showToast("Session expired — click Sync Now to reconnect"); return; }
+                  showToast("Running weekly snapshot…");
+                  uploadWeeklyBackup(token)
+                    .then(() => showToast("Weekly snapshot saved to Drive ✓"))
+                    .catch(() => showToast("Snapshot failed — try Sync Now first"));
+                }}
+                style={{ ...btnGhost, whiteSpace:"nowrap", flexShrink:0 }}
+              >
+                Snapshot now
+              </button>
             </div>
           </div>
         ) : (
