@@ -850,15 +850,29 @@ function AppShell() {
                             <div className="section-label" style={{ marginBottom:0 }}>Care Team</div>
                             <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
                           </div>
-                          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:10 }}>
-                            {visible.slice(0,10).map((d, i) => (
-                              <div key={i} style={{ background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"12px 14px" }}>
-                                <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{d.name || "—"}</div>
-                                {d.role && <div style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>{d.role}</div>}
-                                {d.facility && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>{d.facility}</div>}
-                                {d.phone && <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{d.phone}</div>}
-                              </div>
-                            ))}
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:10 }}>
+                            {visible.slice(0,10).map((d, i) => {
+                              const initials = (d.name || "").split(" ").filter(w => /^[A-Z]/.test(w)).slice(0,2).map(w=>w[0]).join("") || "?";
+                              const accentColor = d.color || "#4f8ef7";
+                              return (
+                                <div key={i} style={{ background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"flex-start", gap:10 }}>
+                                  {/* Avatar */}
+                                  <div style={{ width:36, height:36, borderRadius:"50%", background: d.pcp ? "linear-gradient(135deg,rgba(79,142,247,.3),rgba(167,139,250,.2))" : `${accentColor}18`, border:`1px solid ${d.pcp ? "rgba(79,142,247,.4)" : accentColor + "28"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:600, color: accentColor, flexShrink:0 }}>
+                                    {initials}
+                                  </div>
+                                  {/* Info */}
+                                  <div style={{ flex:1, minWidth:0 }}>
+                                    <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
+                                      <span style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{d.name || "—"}</span>
+                                      {d.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#4f8ef7", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
+                                    </div>
+                                    {(d.role || d.specialty) && <div style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.role}{d.specialty ? ` · ${d.specialty}` : ""}</div>}
+                                    {d.facility && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.facility}</div>}
+                                    {d.phone && <div style={{ fontSize:11, color:"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{d.phone}</div>}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );

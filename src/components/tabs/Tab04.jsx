@@ -78,6 +78,101 @@ function printMedicationList(meds) {
   win.document.close();
 }
 
+function printRefillReport(meds) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const patientName = (() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })();
+
+  // Active meds with a refill date due in ≤7 days (including overdue)
+  const due = meds
+    .filter(m => m.status !== "inactive" && m.refillDate)
+    .filter(m => calcDaysLeft(m.refillDate) <= 7)
+    .sort((a, b) => (a.pharmacy || "zzz").localeCompare(b.pharmacy || "zzz"));
+
+  if (due.length === 0) {
+    alert("No medications are due for refill within the next 7 days.");
+    return;
+  }
+
+  // Group by pharmacy
+  const byPharmacy = {};
+  due.forEach(m => {
+    const ph = m.pharmacy || "Unknown Pharmacy";
+    if (!byPharmacy[ph]) byPharmacy[ph] = [];
+    byPharmacy[ph].push(m);
+  });
+
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const fmtD = str => {
+    if (!str) return "—";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    return str;
+  };
+
+  const bodyHTML = Object.entries(byPharmacy).map(([ph, phMeds]) => `
+    <div class="pharmacy-header">${esc(ph)}</div>
+    <table>
+      <thead><tr><th>Medication</th><th>Dose / Frequency</th><th>Rx Number</th><th>Prescriber</th><th>Refill Date</th><th>Days Left</th></tr></thead>
+      <tbody>
+        ${phMeds.map(m => {
+          const dl = calcDaysLeft(m.refillDate);
+          const urgent = dl <= 3;
+          return `<tr class="${urgent ? "urgent" : ""}">
+            <td><strong>${esc(m.name)}</strong>${m.brand ? `<br><span class="brand">${esc(m.brand)}</span>` : ""}</td>
+            <td>${esc(m.dose||"—")} · ${esc(m.frequency||"—")}</td>
+            <td>${esc(m.rxNumber||"—")}</td>
+            <td>${esc(m.prescriber||"—")}</td>
+            <td>${esc(fmtD(m.refillDate))}</td>
+            <td class="${urgent ? "urgent-cell" : "days-cell"}">${dl === 0 ? "OVERDUE" : `${dl}d`}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  `).join("");
+
+  const win = window.open("", "_blank", "width=920,height=680");
+  if (!win) return;
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Refill Report — Insina Health</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Georgia,serif; max-width:880px; margin:36px auto; color:#1a1a1a; font-size:13px; line-height:1.6; padding:0 24px; }
+      .logo { height:46px; margin-bottom:14px; }
+      h1 { text-align:center; font-size:24px; font-weight:700; margin-bottom:4px; }
+      .subtitle { text-align:center; font-size:12px; color:#555; margin-bottom:4px; }
+      .meta { text-align:center; font-size:11px; color:#777; margin-bottom:18px; font-family:monospace; }
+      .rule { border:none; border-top:2.5px solid #dc2626; margin-bottom:22px; }
+      .notice { background:#fef2f2; border:1px solid #fecaca; border-left:3px solid #dc2626; padding:8px 12px; margin-bottom:20px; border-radius:3px; font-size:11.5px; color:#7f1d1d; font-family:monospace; }
+      .pharmacy-header { font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#1d4ed8; background:#eff6ff; padding:7px 12px; margin-top:22px; margin-bottom:0; border-left:3px solid #1d4ed8; font-family:monospace; font-weight:600; }
+      table { width:100%; border-collapse:collapse; margin-bottom:4px; }
+      th { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:#555; font-family:monospace; text-align:left; padding:7px 8px; border-bottom:1.5px solid #ddd; background:#f8f8f8; }
+      td { font-size:12px; padding:7px 8px; border-bottom:1px solid #eee; vertical-align:top; }
+      tr.urgent td { background:#fef9f0; }
+      tr:last-child td { border-bottom:none; }
+      .brand { font-size:10.5px; color:#777; font-style:italic; }
+      .days-cell { font-family:monospace; color:#92400e; font-weight:600; }
+      .urgent-cell { font-family:monospace; color:#dc2626; font-weight:700; }
+      .footer { margin-top:32px; border-top:1px solid #ddd; padding-top:10px; font-size:11px; color:#777; display:flex; justify-content:space-between; }
+      .disclaimer { margin-top:12px; font-size:10px; color:#999; border-top:1px dashed #ddd; padding-top:8px; }
+      @media print { body { margin:20px; } .notice { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+    </style>
+  </head><body>
+    <img src="${PRINT_LOGO}" class="logo" />
+    <h1>Medication Refill Report</h1>
+    <div class="subtitle">${patientName ? patientName + " &mdash; " : ""}Insina Health</div>
+    <div class="meta">${due.length} medication${due.length !== 1 ? "s" : ""} due within 7 days &nbsp;·&nbsp; ${date}</div>
+    <hr class="rule" />
+    <div class="notice">⚠ These medications are due for refill within 7 days. Contact your pharmacy or prescriber promptly.</div>
+    ${bodyHTML}
+    <div class="disclaimer">This report is for reference only. Always verify refill status with your pharmacy.</div>
+    <div class="footer">
+      <span>Insina Health — Personal Health Intelligence</span>
+      <span>Printed ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
 const NAV = [
   // ── Core ───────────────────────────────────────────────────────────────────
   { id: "dashboard",   icon: "⬡", label: "Dashboard" },
@@ -98,6 +193,24 @@ const NAV = [
   { id: "import",      icon: "↓", label: "Import Records" },
   { id: "backup",      icon: "◈", label: "Settings & Backup" },
 ];
+
+// ── Refill / renewal calculation helpers ─────────────────────────────────────
+
+/** Add N days to an ISO or "Mon DD" date string. Returns ISO string. */
+function addDays(dateStr, days) {
+  let base;
+  if (!dateStr) {
+    base = new Date();
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    base = new Date(dateStr + "T12:00:00");
+  } else {
+    const yr = new Date().getFullYear();
+    const d  = new Date(`${dateStr}, ${yr}`);
+    base = !isNaN(d.getTime()) ? d : new Date();
+  }
+  const result = new Date(base.getTime() + days * 86400000);
+  return result.toISOString().split("T")[0];
+}
 
 // ── Refill date helpers ───────────────────────────────────────────────────────
 function calcDaysLeft(refillDate) {
@@ -500,6 +613,34 @@ export default function App({ onNavChange }) {
     setDeleteConfirm(false);
   };
 
+  const [completeFlash, setCompleteFlash] = useState(null); // "refill" | "renewal" | null
+
+  function flashComplete(type) {
+    setCompleteFlash(type);
+    setTimeout(() => setCompleteFlash(null), 2500);
+  }
+
+  function handleCompleteRefill(med) {
+    const supply = parseInt(med.daysSupply) || 30;
+    const newRefill = addDays(med.refillDate, supply);
+    const updated = { ...med, refillDate: newRefill };
+    const newMeds = meds.map(m => m.id === med.id ? updated : m);
+    setMeds(newMeds);
+    setMedsFull(newMeds);
+    setSelectedMed(updated);
+    flashComplete("refill");
+  }
+
+  function handleCompleteRenewal(med) {
+    const newRenewal = addDays(med.renewalDate || null, 365);
+    const updated = { ...med, renewalDate: newRenewal };
+    const newMeds = meds.map(m => m.id === med.id ? updated : m);
+    setMeds(newMeds);
+    setMedsFull(newMeds);
+    setSelectedMed(updated);
+    flashComplete("renewal");
+  }
+
   const handleApprovePending = (med) => {
     const newMed = { ...med, id: Date.now(), status: "ok", flag: false };
     const newMeds = [...meds, newMed];
@@ -637,6 +778,9 @@ export default function App({ onNavChange }) {
           <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
             Last import: Mar 12, 2026
           </div>
+          <button onClick={() => printRefillReport(meds)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#f87171", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+            ⎙ Refill Report
+          </button>
           <button onClick={() => printMedicationList(meds)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
             ⎙ Print Med List
           </button>
@@ -695,7 +839,7 @@ export default function App({ onNavChange }) {
                 >
                   {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
-                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", daysSupply:30, prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
                   + Add Med
                 </button>
               </div>
@@ -840,7 +984,20 @@ export default function App({ onNavChange }) {
                       </div>
                     ))}
 
-                    {/* Refill Date — date picker, days calculated automatically */}
+                    {/* Days Supply */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Days Supply</div>
+                      <input
+                        type="number"
+                        min="1" max="365"
+                        value={editingMed.daysSupply ?? 30}
+                        onChange={e => setEditingMed(prev => ({ ...prev, daysSupply: parseInt(e.target.value) || 30 }))}
+                        style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
+                      />
+                      <div style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>Used by Complete Refill to calculate the next fill date</div>
+                    </div>
+
+                    {/* Refill Date */}
                     <div style={{ marginBottom: 12 }}>
                       <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Refill Date</div>
                       <input
@@ -856,6 +1013,22 @@ export default function App({ onNavChange }) {
                       )}
                     </div>
 
+                    {/* Renewal Date */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Renewal Date (Rx from doctor)</div>
+                      <input
+                        type="date"
+                        value={editingMed.renewalDate ?? ""}
+                        onChange={e => setEditingMed(prev => ({ ...prev, renewalDate: e.target.value }))}
+                        style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
+                      />
+                      {editingMed.renewalDate && (
+                        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
+                          {calcDaysLeft(editingMed.renewalDate)} days until renewal
+                        </div>
+                      )}
+                    </div>
+
                     {/* Category */}
                     <div style={{ marginBottom: 18 }}>
                       <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Category</div>
@@ -864,12 +1037,6 @@ export default function App({ onNavChange }) {
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}>
                         {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                    </div>
-
-                    {/* Renewal Date */}
-                    <div style={{ marginBottom: 18 }}>
-                      <label style={{ fontSize:10, color:"#b0c4d8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>RENEWAL DATE (manual)</label>
-                      <input className="search-input" value={editingMed?.renewalDate ?? ""} onChange={e => setEditingMed(prev => ({ ...prev, renewalDate: e.target.value }))} placeholder="e.g. Jun 15" />
                     </div>
 
                     {/* Save / Cancel */}
@@ -930,7 +1097,7 @@ export default function App({ onNavChange }) {
                         >
                           Learn More ↗
                         </a>
-                        <button onClick={() => { setEditingMed({ ...selectedMed, refillDate: toIsoDate(selectedMed.refillDate) || selectedMed.refillDate }); setDeleteConfirm(false); }}
+                        <button onClick={() => { setEditingMed({ ...selectedMed, refillDate: toIsoDate(selectedMed.refillDate) || selectedMed.refillDate, renewalDate: toIsoDate(selectedMed.renewalDate) || selectedMed.renewalDate || "", daysSupply: selectedMed.daysSupply ?? 30 }); setDeleteConfirm(false); }}
                           style={{ padding: "5px 12px", background: "#0f1e30", border: "1px solid #1a3050", borderRadius: 6, color: "#7eb8d8", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
                           Edit
                         </button>
@@ -962,27 +1129,34 @@ export default function App({ onNavChange }) {
 
                   <div className="section-label" style={{ marginTop: 18 }}>Refill & Pharmacy</div>
                   {[
-                    ["Rx Number", selectedMed.rxNumber || "—"],
-                    ["Pharmacy", selectedMed.pharmacy],
-                    ["Prescriber", selectedMed.prescriber],
-                    ["Refill Date", fmtRefillDate(selectedMed.refillDate)],
+                    ["Rx Number",     selectedMed.rxNumber || "—"],
+                    ["Pharmacy",      selectedMed.pharmacy  || "—"],
+                    ["Prescriber",    selectedMed.prescriber || "—"],
+                    ["Days Supply",   `${selectedMed.daysSupply ?? 30} days`],
+                    ["Refill Date",   fmtRefillDate(selectedMed.refillDate)],
                     ["Days Remaining", `${calcDaysLeft(selectedMed.refillDate)} days`],
                   ].map(([k, v]) => {
                     const dl = calcDaysLeft(selectedMed.refillDate);
                     return (
-                    <div className="detail-row" key={k}>
-                      <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
-                      <span style={{ fontSize: 12, color: dl <= 10 && k === "Days Remaining" ? "#f59e0b" : "#a8c4dc", fontWeight: dl <= 10 && k === "Days Remaining" ? 600 : 500, textAlign: "right" }}>{v}</span>
-                    </div>
+                      <div className="detail-row" key={k}>
+                        <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
+                        <span style={{ fontSize: 12, color: dl <= 10 && k === "Days Remaining" ? "#f59e0b" : "#a8c4dc", fontWeight: dl <= 10 && k === "Days Remaining" ? 600 : 500, textAlign: "right" }}>{v}</span>
+                      </div>
                     );
                   })}
-                  {selectedMed.renewalDate && (() => {
-                    const rd = calcDaysLeft(selectedMed.renewalDate);
+                  {(() => {
+                    const rd = selectedMed.renewalDate ? calcDaysLeft(selectedMed.renewalDate) : null;
+                    const display = selectedMed.renewalDate
+                      ? (/^\d{4}-\d{2}-\d{2}$/.test(selectedMed.renewalDate)
+                          ? new Date(selectedMed.renewalDate + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
+                          : selectedMed.renewalDate)
+                      : null;
+                    if (!display) return null;
                     return (
                       <div className="detail-row">
                         <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>Renewal Date</span>
                         <span style={{ fontSize: 12, color: rd <= 30 ? "#f87171" : "#a8c4dc", fontWeight: rd <= 30 ? 600 : 500, textAlign: "right" }}>
-                          {selectedMed.renewalDate}
+                          {display}
                           {rd <= 30 && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, marginLeft: 6 }}>DUE IN {rd}d</span>}
                         </span>
                       </div>
@@ -991,22 +1165,38 @@ export default function App({ onNavChange }) {
 
                   {/* Refill progress */}
                   <div style={{ marginTop: 16 }}>
-                    {(() => { const dl = calcDaysLeft(selectedMed.refillDate); const pct = Math.min(100, Math.round(dl / 90 * 100)); return (<>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
-                      <span style={{ fontSize: 10, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{pct}%</span>
-                    </div>
-                    <div style={{ height: 4, background: "#0d1a28", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{
-                        height: "100%",
-                        width: `${pct}%`,
-                        background: dl <= 10 ? "#f59e0b" : selectedMed.color,
-                        borderRadius: 4,
-                        boxShadow: `0 0 8px ${dl <= 10 ? "#f59e0b" : selectedMed.color}60`,
-                        transition: "width .4s ease"
-                      }} />
-                    </div>
-                    </>); })()}
+                    {(() => {
+                      const dl  = calcDaysLeft(selectedMed.refillDate);
+                      const sup = selectedMed.daysSupply ?? 30;
+                      const pct = Math.min(100, Math.round(dl / sup * 100));
+                      return (<>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
+                          <span style={{ fontSize: 10, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: 4, background: "#0d1a28", borderRadius: 4, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${pct}%`, background: dl <= 10 ? "#f59e0b" : selectedMed.color, borderRadius: 4, boxShadow: `0 0 8px ${dl <= 10 ? "#f59e0b" : selectedMed.color}60`, transition: "width .4s ease" }} />
+                        </div>
+                      </>);
+                    })()}
+                  </div>
+
+                  {/* ── Complete Refill / Renewal actions ── */}
+                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => handleCompleteRefill(selectedMed)}
+                      title={`Advance refill date by ${selectedMed.daysSupply ?? 30} days`}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                    >
+                      {completeFlash === "refill" ? "✓ Refill Recorded!" : "✓ Complete Refill"}
+                    </button>
+                    <button
+                      onClick={() => handleCompleteRenewal(selectedMed)}
+                      title="Advance renewal date by 1 year"
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#7eb8d8", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                    >
+                      {completeFlash === "renewal" ? "✓ Renewal Recorded!" : "↺ Complete Renewal"}
+                    </button>
                   </div>
                 </div>
 

@@ -341,8 +341,68 @@ function Goals() {
   );
 }
 
+// ── Team Member Modal ──────────────────────────────────────────────────────────
+const BLANK_MEMBER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", email:"", pcp:false, color:"#4f8ef7" };
+
+const lbl8 = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:mono, letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
+
+function TeamMemberModal({ member, onSave, onClose }) {
+  const [form, setForm] = useState({ ...BLANK_MEMBER, ...member });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:20 }}>
+      <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:28, width:480, maxHeight:"90vh", overflowY:"auto" }}>
+        <div style={{ fontFamily:serif, fontSize:20, color:"#dde8f5", marginBottom:20 }}>
+          {form.id ? "Edit Team Member" : "Add Team Member"}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl8}>Full Name *</label>
+            <input className="modal-input" value={form.name} onChange={e => set("name", e.target.value)} placeholder="e.g. Dr. Jane Smith, MD" />
+          </div>
+          <div>
+            <label style={lbl8}>Role / Title</label>
+            <input className="modal-input" value={form.role} onChange={e => set("role", e.target.value)} placeholder="e.g. Primary Care Physician" />
+          </div>
+          <div>
+            <label style={lbl8}>Specialty</label>
+            <input className="modal-input" value={form.specialty} onChange={e => set("specialty", e.target.value)} placeholder="e.g. Nephrology" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl8}>Facility / Practice</label>
+            <input className="modal-input" value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="e.g. Baptist Medical Center" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl8}>Address</label>
+            <input className="modal-input" value={form.address} onChange={e => set("address", e.target.value)} placeholder="Street, City, State ZIP" />
+          </div>
+          <div>
+            <label style={lbl8}>Phone</label>
+            <input className="modal-input" value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="(601) 555-0000" />
+          </div>
+          <div>
+            <label style={lbl8}>Email / Portal</label>
+            <input className="modal-input" value={form.email} onChange={e => set("email", e.target.value)} placeholder="optional" />
+          </div>
+          <div style={{ gridColumn:"1/-1", display:"flex", alignItems:"center", gap:8, marginTop:4 }}>
+            <input type="checkbox" id="pcp-chk" checked={!!form.pcp} onChange={e => set("pcp", e.target.checked)} style={{ width:14, height:14, cursor:"pointer" }} />
+            <label htmlFor="pcp-chk" style={{ fontSize:12, color:"#b0c4d8", cursor:"pointer", fontFamily:sora }}>Primary Care Provider (PCP)</label>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+          <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
+          <button
+            onClick={() => { if (!form.name.trim()) return; onSave({ ...form, id: form.id ?? Date.now() }); }}
+            style={{ padding:"8px 18px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:sora, fontSize:12, cursor:"pointer" }}
+          >Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CareTeam() {
-  const [team] = useState(() => {
+  const [team, setTeam] = useState(() => {
     try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
   });
   const [selected, setSelected] = useState(() => {
@@ -354,6 +414,13 @@ function CareTeam() {
       return new Set(all.map(t => t.name));
     } catch { return new Set(); }
   });
+  const [editingDoc, setEditingDoc]   = useState(null);   // null | member object
+  const [deleteTarget, setDeleteTarget] = useState(null);  // null | member object
+
+  function persistTeam(updated) {
+    setTeam(updated);
+    try { localStorage.setItem("mi_care_team", JSON.stringify(updated)); } catch {}
+  }
 
   function toggleDoctor(name) {
     setSelected(prev => {
@@ -365,48 +432,122 @@ function CareTeam() {
     });
   }
 
+  function handleSaveDoc(doc) {
+    const existing = team.find(t => t.id === doc.id);
+    const oldName  = existing?.name;
+    const isNew    = !existing;
+    const updated  = isNew
+      ? [...team, { ...doc, id: Date.now(), color: doc.color || "#4f8ef7" }]
+      : team.map(t => t.id === doc.id ? { ...t, ...doc } : t);
+    persistTeam(updated);
+
+    // Keep selected in sync when name changes or member is new
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (!isNew && oldName && oldName !== doc.name) {
+        next.delete(oldName);
+        next.add(doc.name);
+      }
+      if (isNew) next.add(doc.name);
+      try { localStorage.setItem("mi_care_team_selected", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+    setEditingDoc(null);
+  }
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    persistTeam(team.filter(t => t.id !== deleteTarget.id));
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.delete(deleteTarget.name);
+      try { localStorage.setItem("mi_care_team_selected", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+    setDeleteTarget(null);
+  }
+
   return (
     <div style={{ padding:"24px 28px", overflowY:"auto", height:"100%" }}>
-      <div style={{ display:"flex", alignItems:"baseline", gap:10, marginBottom:4 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
         <SL mb={0}>Care Team</SL>
+        <button className="add-badge-btn" onClick={() => setEditingDoc({ ...BLANK_MEMBER })}>+ Add Member</button>
       </div>
       <p style={{ fontSize:11, color:"#6a8090", fontFamily:mono, fontStyle:"italic", marginBottom:16, lineHeight:1.55 }}>
-        Select which doctors to show on the Dashboard and in printed reports. Up to 10 may be selected.
+        Check which doctors to show on the Dashboard and in printed reports. Up to 10 may be selected.
       </p>
       <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
         {team.map(t => {
           const isChecked = selected.has(t.name);
+          const color = t.color || "#4f8ef7";
+          const initials = t.name.split(" ").filter(w => /^[A-Z]/.test(w)).slice(0,2).map(w=>w[0]).join("") || "?";
           return (
-            <div key={t.name} style={{ background:"#0b1220", border:`1px solid ${isChecked ? "#1a3a5c" : "#111e30"}`, borderRadius:12, padding:"14px 18px", display:"flex", alignItems:"center", gap:16, cursor:"pointer", transition:"border-color .15s" }}
-              onClick={() => toggleDoctor(t.name)}>
+            <div key={t.id || t.name} style={{ background:"#0b1220", border:`1px solid ${isChecked ? "#1a3a5c" : "#111e30"}`, borderRadius:12, padding:"14px 18px", display:"flex", alignItems:"center", gap:14, transition:"border-color .15s" }}>
               {/* Checkbox */}
-              <div style={{ width:18, height:18, borderRadius:4, border:`2px solid ${isChecked ? "#4f8ef7" : "#2a3a50"}`, background: isChecked ? "#4f8ef7" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .15s" }}>
+              <div onClick={() => toggleDoctor(t.name)} style={{ width:18, height:18, borderRadius:4, border:`2px solid ${isChecked ? "#4f8ef7" : "#2a3a50"}`, background: isChecked ? "#4f8ef7" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .15s", cursor:"pointer" }}>
                 {isChecked && <span style={{ color:"#fff", fontSize:11, lineHeight:1, fontWeight:700 }}>✓</span>}
               </div>
               {/* Avatar */}
-              <div style={{ width:40, height:40, borderRadius:"50%", background:`${t.color}18`, border:`1px solid ${t.color}28`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:t.color, flexShrink:0 }}>
-                {t.name.split(" ").filter(w => w.match(/^[A-Z]/)).slice(0,2).map(w=>w[0]).join("")}
+              <div onClick={() => toggleDoctor(t.name)} style={{ width:40, height:40, borderRadius:"50%", background:`${color}18`, border:`1px solid ${color}28`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color, flexShrink:0, cursor:"pointer" }}>
+                {initials}
               </div>
               {/* Info */}
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:13, fontWeight:600, color: isChecked ? "#c4d8ee" : "#7a8fa0", marginBottom:2 }}>{t.name}</div>
-                <div style={{ fontSize:11, color: isChecked ? "#b0c4d8" : "#5a6e7a" }}>{t.role}</div>
+              <div style={{ flex:1, cursor:"pointer" }} onClick={() => toggleDoctor(t.name)}>
+                <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
+                  <span style={{ fontSize:13, fontWeight:600, color: isChecked ? "#c4d8ee" : "#7a8fa0" }}>{t.name}</span>
+                  {t.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#4f8ef7", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:mono }}>PCP</span>}
+                </div>
+                <div style={{ fontSize:11, color: isChecked ? "#b0c4d8" : "#5a6e7a" }}>{t.role}{t.specialty ? ` · ${t.specialty}` : ""}</div>
                 <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
               </div>
               {/* Contact */}
-              <div style={{ textAlign:"right", flexShrink:0 }}>
-                <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:4 }}>{t.phone}</div>
-                <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>
+              <div style={{ textAlign:"right", flexShrink:0, marginRight:6 }}>
+                {t.phone && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{t.phone}</div>}
+                {t.next  && <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>}
+              </div>
+              {/* Edit / Delete */}
+              <div style={{ display:"flex", gap:4, flexShrink:0 }}>
+                <button
+                  onClick={e => { e.stopPropagation(); setEditingDoc(t); }}
+                  style={{ background:"transparent", border:"1px solid #111e30", borderRadius:6, color:"#b0c4d8", fontSize:11, padding:"3px 8px", cursor:"pointer" }}
+                  title="Edit"
+                >✎</button>
+                <button
+                  onClick={e => { e.stopPropagation(); setDeleteTarget(t); }}
+                  style={{ background:"transparent", border:"1px solid #111e30", borderRadius:6, color:"#b0c4d8", fontSize:11, padding:"3px 8px", cursor:"pointer" }}
+                  title="Remove"
+                >✕</button>
               </div>
             </div>
           );
         })}
         {team.length === 0 && (
           <div style={{ fontSize:12, color:"#5a6e7a", fontFamily:mono, textAlign:"center", padding:"24px 0" }}>
-            No care team members added yet.<br />Add doctors in the Profile tab.
+            No care team members yet.<br />Click <strong>+ Add Member</strong> above to get started.
           </div>
         )}
       </div>
+
+      {/* Edit / Add modal */}
+      {editingDoc && (
+        <TeamMemberModal member={editingDoc} onSave={handleSaveDoc} onClose={() => setEditingDoc(null)} />
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300 }}>
+          <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:14, padding:28, width:360 }}>
+            <div style={{ fontFamily:serif, fontSize:18, color:"#dde8f5", marginBottom:10 }}>Remove Member?</div>
+            <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, marginBottom:22, lineHeight:1.6 }}>
+              Remove <strong style={{ color:"#c4d8ee" }}>{deleteTarget.name}</strong> from your care team? This cannot be undone.
+            </div>
+            <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <button onClick={() => setDeleteTarget(null)} style={{ padding:"8px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
+              <button onClick={handleDelete} style={{ padding:"8px 18px", background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.35)", borderRadius:8, color:"#ef4444", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -53,6 +53,7 @@ function printConsultationPrep(appt, analysis) {
       <div class="appt-field"><label>Specialty</label><span>${esc(appt.specialty||"—")}</span></div>
       ${appt.facility ? `<div class="appt-field" style="grid-column:1/-1"><label>Facility</label><span>${esc(appt.facility)}</span></div>` : ""}
       ${appt.prepInstructions ? `<div class="appt-field" style="grid-column:1/-1"><label>Prep Instructions</label><span>${esc(appt.prepInstructions)}</span></div>` : ""}
+      ${appt.notes ? `<div class="appt-field" style="grid-column:1/-1"><label>Notes</label><span style="font-weight:400;white-space:pre-wrap">${esc(appt.notes)}</span></div>` : ""}
     </div>
     <div class="section-title">AI Preparation Analysis</div>
     ${renderText(analysis)}
@@ -310,6 +311,128 @@ function ApptModal({ appt, onSave, onClose }) {
 const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:8, padding:"9px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" };
 
+// ── Keyword / date extractor for smart record matching ───────────────────────
+const STOP_WORDS = new Set([
+  "the","and","for","with","from","this","that","have","will","been","were","your",
+  "about","what","when","which","they","their","there","here","also","any","all",
+  "our","you","how","can","not","but","are","was","has","its","may","than","then",
+  "into","over","after","during","would","should","could","just","each","more",
+  "very","some","make","like","need","ask","help","use","per","via","my","is","in",
+  "at","to","of","on","or","be","do","if","so","by","an","as","it","me","we","he",
+  "she","him","her","his","hers","them","us","get","got","let","now","see","did",
+  "new","old","day","days","week","weeks","month","months","year","years","time",
+  "please","provide","bring","discuss","prepare","relevant","current","recent",
+  "upcoming","appointment","medical","visit","doctor","specialist","follow","up",
+]);
+
+function extractSearchTerms(text) {
+  if (!text) return { keywords: [], dates: [] };
+
+  // Date patterns: 1/5/24, 01/05/2024, Jan 2024, January 2024, 2024-01-05, etc.
+  const dateRe = /\b(?:\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{2,4}|\d{4}[\/\-]\d{2}[\/\-]\d{2})\b/gi;
+  const dates = (text.match(dateRe) || []).map(d => d.toLowerCase());
+
+  // Keywords: words > 3 chars, not stop words, letters only (captures "tacrolimus", "MRI", "knee", etc.)
+  const keywords = text
+    .split(/[\s\-\/,;:.!?()\[\]]+/)
+    .map(w => w.replace(/[^a-zA-Z0-9]/g, "").toLowerCase())
+    .filter(w => w.length > 3 && !STOP_WORDS.has(w) && !/^\d+$/.test(w));
+
+  return { keywords: [...new Set(keywords)], dates: [...new Set(dates)] };
+}
+
+function scoreMatch(text, keywords, dates) {
+  if (!text) return 0;
+  const lower = text.toLowerCase();
+  let score = 0;
+  for (const kw of keywords) if (lower.includes(kw)) score += 1;
+  for (const dt of dates)    if (lower.includes(dt))  score += 2; // dates are stronger signals
+  return score;
+}
+
+/**
+ * Build a "RELEVANT RECORDS" section by searching all stored records for
+ * items matching keywords/dates extracted from the appointment context.
+ */
+function buildDocContext(searchText) {
+  const { keywords, dates } = extractSearchTerms(searchText);
+  if (!keywords.length && !dates.length) return "";
+
+  const sections = [];
+
+  // ── Matching documents ───────────────────────────────────────────────────
+  try {
+    const refDocs  = JSON.parse(localStorage.getItem("mi_ref_docs")  || "[]");
+    const fullDocs = JSON.parse(localStorage.getItem("mi_documents")  || "[]");
+
+    // Build a lookup: fullDoc by id
+    const fullById = new Map(fullDocs.map(d => [d.id, d]));
+
+    const matched = [];
+    for (const rd of refDocs) {
+      const nameScore = scoreMatch(rd.name || "", keywords, dates);
+      const dateScore = scoreMatch(rd.addedDate || "", keywords, dates);
+      if (nameScore + dateScore === 0) continue;
+
+      // Try to get extractedText from fullDocs first
+      const full = fullById.get(rd.id);
+      const body = full?.extractedText
+        ? full.extractedText.slice(0, 3000)
+        : rd.text || "";  // fall back to AI summary
+
+      if (body) matched.push({ name: rd.name, date: rd.addedDate, body });
+    }
+
+    // Also check fullDocs not in refDocs
+    for (const fd of fullDocs) {
+      if (refDocs.find(r => r.id === fd.id)) continue; // already handled
+      const titleScore = scoreMatch(fd.title || "", keywords, dates);
+      const dateScore  = scoreMatch(fd.studyDate || "", keywords, dates);
+      if (titleScore + dateScore === 0) continue;
+      if (fd.extractedText) {
+        matched.push({ name: fd.title, date: fd.studyDate, body: fd.extractedText.slice(0, 3000) });
+      }
+    }
+
+    for (const doc of matched) {
+      sections.push(`Document: ${doc.name}${doc.date ? ` (${doc.date})` : ""}\n${doc.body}`);
+    }
+  } catch {}
+
+  // ── Matching conditions ──────────────────────────────────────────────────
+  try {
+    const conditions = JSON.parse(localStorage.getItem("mi_conditions") || "[]");
+    const matched = conditions.filter(c => scoreMatch(
+      `${c.name || ""} ${c.notes || ""} ${c.category || ""}`, keywords, dates
+    ) > 0);
+    for (const c of matched) {
+      const parts = [c.name];
+      if (c.diagnosedDate) parts.push(`diagnosed ${c.diagnosedDate}`);
+      if (c.status)        parts.push(`status: ${c.status}`);
+      if (c.notes)         parts.push(`notes: ${c.notes}`);
+      sections.push(`Condition: ${parts.join(" | ")}`);
+    }
+  } catch {}
+
+  // ── Matching surgeries ───────────────────────────────────────────────────
+  try {
+    const surgeries = JSON.parse(localStorage.getItem("mi_surgeries") || "[]");
+    const matched = surgeries.filter(s => scoreMatch(
+      `${s.procedure || ""} ${s.notes || ""} ${s.outcome || ""}`, keywords, dates
+    ) > 0);
+    for (const s of matched) {
+      const parts = [s.procedure || s.name];
+      if (s.date)    parts.push(`date: ${s.date}`);
+      if (s.outcome) parts.push(`outcome: ${s.outcome}`);
+      if (s.notes)   parts.push(`notes: ${s.notes}`);
+      sections.push(`Surgery: ${parts.join(" | ")}`);
+    }
+  } catch {}
+
+  if (!sections.length) return "";
+  return `\n\nRELEVANT RECORDS (referenced in this appointment):\n${sections.map((s,i) => `\n[${i+1}] ${s}`).join("\n")}`;
+}
+
 // ── AI Analysis Panel for an Appointment ────────────────────────────────────
 function ApptAIPanel({ appt }) {
   const [additionalQ, setAdditionalQ] = useState("");
@@ -325,11 +448,19 @@ function ApptAIPanel({ appt }) {
       if (conditions.length) ctx += `\nActive Conditions: ${conditions.map(c=>c.name).join(", ")}`;
       if (meds.length) ctx += `\nCurrent Medications: ${meds.filter(m=>m.status!=="inactive").map(m=>`${m.name} ${m.dose||""}`).join(", ")}`;
     } catch {}
+
+    // Build search corpus from all appointment fields + user's additional questions
+    const searchText = [
+      appt.title, appt.specialty, appt.provider, appt.facility,
+      appt.notes, appt.prepInstructions, additionalQ,
+    ].filter(Boolean).join(" ");
+    const docCtx = buildDocContext(searchText);
+
     const base = `Help me prepare for my upcoming ${appt.specialty || "medical"} appointment.
 Appointment: ${appt.title}
 Provider: ${appt.provider || "—"}${appt.specialty ? ` (${appt.specialty})` : ""}
 Facility: ${appt.facility || "—"}
-Date: ${fmtDate(appt.date)}${appt.prepInstructions ? `\nPrep Instructions: ${appt.prepInstructions}` : ""}${ctx}
+Date: ${fmtDate(appt.date)}${appt.prepInstructions ? `\nPrep Instructions: ${appt.prepInstructions}` : ""}${appt.notes ? `\nAppointment Notes: ${appt.notes}` : ""}${ctx}${docCtx}
 
 Please provide:
 1. What to discuss or ask during this appointment
