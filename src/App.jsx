@@ -246,6 +246,48 @@ function BPCard({ readings }) {
     </div>
   );
 }
+function getHeightInchesApp() {
+  try {
+    const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}");
+    const h = (p.height || "").trim();
+    if (!h) return null;
+    const m1 = h.match(/(\d+)\s*['′ft]+\s*(\d+)/i);
+    if (m1) return parseInt(m1[1]) * 12 + parseInt(m1[2]);
+    const m2 = h.match(/^(\d+\.?\d*)\s*(in|")?$/i);
+    if (m2) { const n = parseFloat(m2[1]); if (n > 48 && n < 110) return n; }
+    const m3 = h.match(/(\d+\.?\d*)\s*cm/i);
+    if (m3) return parseFloat(m3[1]) / 2.54;
+    return null;
+  } catch { return null; }
+}
+function calcBMIApp(weightLbs) {
+  const h = getHeightInchesApp();
+  if (!h || !weightLbs) return null;
+  return +((weightLbs / (h * h)) * 703).toFixed(1);
+}
+
+function BMICard({ readings }) {
+  const weight = readings.find(r => r.weight != null)?.weight;
+  const bmi = calcBMIApp(weight);
+  const { label, color } = bmi == null
+    ? { label: weight ? "Set height in Profile" : "No weight data", color: "#98afc4" }
+    : bmi < 18.5 ? { label: "Underweight", color: "#4f8ef7" }
+    : bmi < 25   ? { label: "Normal",      color: "#10b981" }
+    : bmi < 30   ? { label: "Overweight",  color: "#f59e0b" }
+    :              { label: "Obese",        color: "#ef4444" };
+  return (
+    <div className="stat-card">
+      <div style={{ width:28, height:3, background:"#10b981", borderRadius:2, marginBottom:14, boxShadow:"0 0 10px #10b98160" }} />
+      <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6 }}>BMI</div>
+      <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:6 }}>{bmi != null ? bmi : "--"}</div>
+      <div style={{ fontSize:11, color, fontWeight:600, marginBottom:3 }}>{label}</div>
+      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+        {weight != null ? `From ${weight} lbs · auto-calculated` : "Log weight in Vitals"}
+      </div>
+    </div>
+  );
+}
+
 function WeightCard({ readings }) {
   const cur  = readings[0]?.weight;
   const prev = readings[1]?.weight;
@@ -766,11 +808,12 @@ function AppShell() {
                       </div>
                     )}
 
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14, marginBottom: 24 }}>
                       <DataFreshnessCard />
                       <RefillsCard meds={meds} />
                       <BPCard readings={readings} />
                       <WeightCard readings={readings} />
+                      <BMICard readings={readings} />
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 300px", gap: 14, marginBottom: 24 }}>

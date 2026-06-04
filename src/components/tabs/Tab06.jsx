@@ -33,6 +33,39 @@ function filterByMonths(arr, months) {
 
 const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : null;
 
+// ── BMI helpers ───────────────────────────────────────────────────────────────
+function getHeightInches() {
+  try {
+    const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}");
+    const h = (p.height || "").trim();
+    if (!h) return null;
+    // "5'11"", "5'11\"", "5 ft 11", "5ft11in"
+    const m1 = h.match(/(\d+)\s*['′ft]+\s*(\d+)/i);
+    if (m1) return parseInt(m1[1]) * 12 + parseInt(m1[2]);
+    // "71 in" or just "71"
+    const m2 = h.match(/^(\d+\.?\d*)\s*(in|")?$/i);
+    if (m2) { const n = parseFloat(m2[1]); if (n > 48 && n < 110) return n; }
+    // "180 cm"
+    const m3 = h.match(/(\d+\.?\d*)\s*cm/i);
+    if (m3) return parseFloat(m3[1]) / 2.54;
+    return null;
+  } catch { return null; }
+}
+
+function calcBMI(weightLbs) {
+  const h = getHeightInches();
+  if (!h || !weightLbs) return null;
+  return +((weightLbs / (h * h)) * 703).toFixed(1);
+}
+
+function bmiLabel(bmi) {
+  if (bmi == null) return { label: "No data", color: "#98afc4" };
+  if (bmi < 18.5) return { label: "Underweight", color: "#4f8ef7" };
+  if (bmi < 25)   return { label: "Normal",      color: "#10b981" };
+  if (bmi < 30)   return { label: "Overweight",  color: "#f59e0b" };
+  return              { label: "Obese",       color: "#ef4444" };
+}
+
 // ── Chart components ──────────────────────────────────────────────────────────
 
 function LineChart({ data, keys, colors, yMin, yMax, refLines = [], height = 150, dateKey = "date" }) {
@@ -232,15 +265,16 @@ const VITALS = [
     data: "manual",
   },
   {
-    id: "resting_hr", label: "Resting Heart Rate", unit: "bpm", color: "#f87171", source: "watch",
+    id: "resting_hr", label: "Resting Heart Rate", unit: "bpm", color: "#f87171", source: "manual",
     goodMin: 50, goodMax: 70, yMin: 40, yMax: 90,
-    latestFn: r => `${r.resting_hr}`,
+    latestFn: r => r.resting_hr != null ? `${r.resting_hr}` : "—",
     latestNum: r => r.resting_hr,
-    statusFn: r => r.resting_hr > 70 ? { label: "Elevated", color: "#f59e0b" } : r.resting_hr < 50 ? { label: "Low", color: "#4f8ef7" } : { label: "Good", color: "#10b981" },
-    chartType: "band",
-    chartLabels: ["Daily Range", "Resting HR"],
-    chartYMin: 30, chartYMax: 170,
-    data: "watch",
+    statusFn: r => r.resting_hr == null ? { label: "No data", color: "#98afc4" } : r.resting_hr > 70 ? { label: "Elevated", color: "#f59e0b" } : r.resting_hr < 50 ? { label: "Low", color: "#4f8ef7" } : { label: "Good", color: "#10b981" },
+    chartType: "line", chartKeys: ["resting_hr"], chartColors: ["#f87171"],
+    chartLabels: ["Resting HR"],
+    refLines: [{ val: 60, color: "#10b981" }, { val: 70, color: "#f59e0b" }],
+    chartYMin: 40, chartYMax: 100,
+    data: "manual",
   },
   {
     id: "o2", label: "O2 Saturation", unit: "%", color: "#10b981", source: "manual",
@@ -296,6 +330,18 @@ const VITALS = [
     data: "manual",
   },
   {
+    id: "bmi", label: "BMI", unit: "", color: "#10b981", source: "manual",
+    goodMin: 18.5, goodMax: 24.9, yMin: 15, yMax: 40,
+    latestFn: r => { const b = calcBMI(r.weight); return b != null ? `${b}` : "—"; },
+    latestNum: r => calcBMI(r.weight),
+    statusFn: r => bmiLabel(calcBMI(r.weight)),
+    chartType: "line", chartKeys: ["bmi_calc"], chartColors: ["#10b981"],
+    chartLabels: ["BMI"],
+    refLines: [{ val: 18.5, color: "#4f8ef7" }, { val: 25, color: "#f59e0b" }, { val: 30, color: "#ef4444" }],
+    chartYMin: 15, chartYMax: 40,
+    data: "manual",
+  },
+  {
     id: "sleep", label: "Sleep", unit: "hrs", color: "#60a5fa", source: "manual",
     goodMin: 7, goodMax: 9, yMin: 3, yMax: 11,
     latestFn: r => r.sleep != null ? `${r.sleep}h` : "—",
@@ -311,12 +357,13 @@ const VITALS = [
 // Log form
 function LogPanel({ onClose, onSave }) {
   const todayISO = new Date().toISOString().split("T")[0];
-  const [form, setForm] = useState({ date: todayISO, bp_s: "", bp_d: "", hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
+  const [form, setForm] = useState({ date: todayISO, bp_s: "", bp_d: "", hr: "", resting_hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const fields = [
     { label: "Blood Pressure", inputs: [{ k: "bp_s", ph: "Systolic" }, { k: "bp_d", ph: "Diastolic" }], unit: "mmHg" },
     { label: "Heart Rate", inputs: [{ k: "hr", ph: "BPM" }], unit: "bpm" },
+    { label: "Resting Heart Rate", inputs: [{ k: "resting_hr", ph: "BPM" }], unit: "bpm" },
     { label: "O2 Saturation", inputs: [{ k: "o2", ph: "SpO2" }], unit: "%" },
     { label: "Weight", inputs: [{ k: "weight", ph: "lbs" }], unit: "lbs" },
     { label: "Temperature", inputs: [{ k: "temp", ph: "°F" }], unit: "°F" },
@@ -360,8 +407,7 @@ function LogPanel({ onClose, onSave }) {
           </div>
         ))}
         <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "10px 12px", marginTop: 4 }}>
-          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>WATCH DATA</div>
-          <div style={{ fontSize: 11, color: "#98afc4", lineHeight: 1.6 }}>Resting HR and Daily HR Range are auto-synced from Apple Watch via HealthKit.</div>
+          <div style={{ fontSize: 11, color: "#98afc4", lineHeight: 1.6 }}>Leave any field blank to skip it. BMI is calculated automatically from your weight and height in Profile.</div>
         </div>
       </div>
       <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
@@ -388,7 +434,7 @@ export default function App({ onNavChange }) {
   const [watchReadings, setWatchReadings]   = useState(() => getStore('watch_daily') ?? []);
   const [time, setTime] = useState(new Date());
   const [showEntryForm, setShowEntryForm] = useState(false);
-  const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"" });
+  const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
   const [showFlagged, setShowFlagged] = useState(false);
   const [vitalSearch, setVitalSearch] = useState("");
 
@@ -399,7 +445,11 @@ export default function App({ onNavChange }) {
   const config = VITALS.find(v => v.id === selectedId);
   const isWatch = config.data === "watch";
   const sourceData = isWatch ? watchReadings : manualReadings;
-  const filteredData = filterByMonths(sourceData, timeRange);
+  const filteredRaw = filterByMonths(sourceData, timeRange);
+  // For BMI, inject calculated bmi_calc field into each data point
+  const filteredData = config.id === "bmi"
+    ? filteredRaw.map(r => ({ ...r, bmi_calc: calcBMI(r.weight) })).filter(r => r.bmi_calc != null)
+    : filteredRaw;
   const latest = manualReadings[0];
   const latestWatch = watchReadings[0];
   const prev = manualReadings[1];
@@ -410,7 +460,8 @@ export default function App({ onNavChange }) {
     const r = {
       date, ts,
       bp_s: +form.bp_s || null, bp_d: +form.bp_d || null,
-      hr: +form.hr || null, o2: +form.o2 || null,
+      hr: +form.hr || null, resting_hr: +form.resting_hr || null,
+      o2: +form.o2 || null,
       weight: +form.weight || null, temp: +form.temp || null,
       glucose: +form.glucose || null, sleep: +form.sleep || null,
       flag: (+form.bp_s || 0) >= 160,
@@ -426,23 +477,24 @@ export default function App({ onNavChange }) {
       ? new Date(newReading.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" })
       : today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
     // Carry forward most recent non-null value for each field independently
-    const bp_s   = newReading.bp_s   ? parseInt(newReading.bp_s)     : manualReadings.find(r => r.bp_s   != null)?.bp_s;
-    const bp_d   = newReading.bp_d   ? parseInt(newReading.bp_d)     : manualReadings.find(r => r.bp_d   != null)?.bp_d;
-    const hr     = newReading.hr     ? parseInt(newReading.hr)       : manualReadings.find(r => r.hr     != null)?.hr;
-    const o2     = newReading.o2     ? parseFloat(newReading.o2)     : manualReadings.find(r => r.o2     != null)?.o2;
-    const weight = newReading.weight ? parseFloat(newReading.weight) : manualReadings.find(r => r.weight != null)?.weight;
-    const temp   = newReading.temp   ? parseFloat(newReading.temp)   : manualReadings.find(r => r.temp   != null)?.temp;
-    const glucose= newReading.glucose? parseInt(newReading.glucose)  : manualReadings.find(r => r.glucose!= null)?.glucose;
-    const sleep  = newReading.sleep  ? parseFloat(newReading.sleep)  : manualReadings.find(r => r.sleep  != null)?.sleep;
+    const bp_s      = newReading.bp_s      ? parseInt(newReading.bp_s)        : manualReadings.find(r => r.bp_s      != null)?.bp_s;
+    const bp_d      = newReading.bp_d      ? parseInt(newReading.bp_d)        : manualReadings.find(r => r.bp_d      != null)?.bp_d;
+    const hr        = newReading.hr        ? parseInt(newReading.hr)          : manualReadings.find(r => r.hr        != null)?.hr;
+    const resting_hr= newReading.resting_hr? parseInt(newReading.resting_hr)  : manualReadings.find(r => r.resting_hr!= null)?.resting_hr;
+    const o2        = newReading.o2        ? parseFloat(newReading.o2)        : manualReadings.find(r => r.o2        != null)?.o2;
+    const weight    = newReading.weight    ? parseFloat(newReading.weight)    : manualReadings.find(r => r.weight    != null)?.weight;
+    const temp      = newReading.temp      ? parseFloat(newReading.temp)      : manualReadings.find(r => r.temp      != null)?.temp;
+    const glucose   = newReading.glucose   ? parseInt(newReading.glucose)     : manualReadings.find(r => r.glucose   != null)?.glucose;
+    const sleep     = newReading.sleep     ? parseFloat(newReading.sleep)     : manualReadings.find(r => r.sleep     != null)?.sleep;
     const reading = {
       date: dateLabel, ts,
-      bp_s, bp_d, hr, o2, weight, temp, glucose, sleep,
+      bp_s, bp_d, hr, resting_hr, o2, weight, temp, glucose, sleep,
       flag: bp_s >= 160,
     };
     const merged = mergeReadings([reading]);
     setManualReadings(merged);
     setShowEntryForm(false);
-    setNewReading({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+    setNewReading({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
   };
 
   const flaggedManual = manualReadings.filter(r => r.flag).length;
@@ -608,10 +660,12 @@ export default function App({ onNavChange }) {
                     { label:"BP SYSTOLIC", key:"bp_s", placeholder:"131" },
                     { label:"BP DIASTOLIC", key:"bp_d", placeholder:"71" },
                     { label:"HEART RATE", key:"hr", placeholder:"64" },
+                    { label:"RESTING HR", key:"resting_hr", placeholder:"58" },
                     { label:"O2 SAT %", key:"o2", placeholder:"99" },
                     { label:"WEIGHT (lbs)", key:"weight", placeholder:"184.2" },
                     { label:"TEMP (°F)", key:"temp", placeholder:"98.4" },
                     { label:"GLUCOSE", key:"glucose", placeholder:"98" },
+                    { label:"SLEEP (hrs)", key:"sleep", placeholder:"7.5" },
                   ].map(f => (
                     <div key={f.key}>
                       <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
@@ -748,6 +802,15 @@ export default function App({ onNavChange }) {
                       ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Glucose mg/dL", fn:r=>r.glucose??'—', c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.glucose>125?"High":r.glucose>100?"Pre-diabetic":r.glucose<70?"Low":"Normal", c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981" }]
+                    : id === "resting_hr"
+                      ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                         { h:"Resting HR", fn:r=>r.resting_hr!=null?`${r.resting_hr} bpm`:'—', c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981", bold:true },
+                         { h:"Status", fn:r=>r.resting_hr==null?"—":r.resting_hr>70?"Elevated":r.resting_hr<50?"Low":"Good", c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981" }]
+                    : id === "bmi"
+                      ? [{ h:"Date",   fn:r=><>{r.date}</>, c:r=>"#98afc4" },
+                         { h:"Weight", fn:r=>r.weight!=null?`${r.weight} lbs`:'—', c:r=>"#f59e0b" },
+                         { h:"BMI",    fn:r=>{const b=calcBMI(r.weight);return b!=null?`${b}`:'—';}, c:r=>{const b=calcBMI(r.weight);return bmiLabel(b).color;}, bold:true },
+                         { h:"Category", fn:r=>bmiLabel(calcBMI(r.weight)).label, c:r=>bmiLabel(calcBMI(r.weight)).color }]
                     : id === "sleep"
                       ? [{ h:"Date",     fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Sleep hrs", fn:r=>r.sleep?`${r.sleep}h`:'—', c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981", bold:true },
