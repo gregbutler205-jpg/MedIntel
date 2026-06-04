@@ -102,6 +102,9 @@ export function setAllergies(v) { setStore('allergies', v); }
 export function getEmergencyContacts() { return getStore('emergency_contacts') ?? []; }
 export function setEmergencyContacts(v) { setStore('emergency_contacts', v); }
 
+export function getImaging() { return getStore('imaging') ?? []; }
+export function setImaging(v) { setStore('imaging', v); }
+
 // Cross-section reads used by Profile
 export function getConditions() {
   try { const r = localStorage.getItem('mi_conditions'); return r ? JSON.parse(r) : []; }

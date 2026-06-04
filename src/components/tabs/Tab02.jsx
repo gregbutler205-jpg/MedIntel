@@ -6,6 +6,7 @@ import {
   getCareTeam, setCareTeam,
   getAllergies, setAllergies,
   getEmergencyContacts, setEmergencyContacts,
+  getImaging, setImaging,
   getConditions, getSurgeries, getMedsFull, getLatestReading,
 } from "../../store.js";
 
@@ -220,6 +221,57 @@ function ECModal({ contact, onSave, onClose }) {
   );
 }
 
+// ── Imaging Modal ──────────────────────────────────────────────────────────────
+const IMAGE_TYPES = ["MRI","CT Scan","X-ray","PET Scan","Ultrasound","Mammogram","DEXA Scan","Echocardiogram","Fluoroscopy","Other"];
+const IMAGE_COLORS = {
+  "MRI":"#a78bfa","CT Scan":"#4f8ef7","X-ray":"#06b6d4",
+  "PET Scan":"#f97316","Ultrasound":"#10b981","Mammogram":"#ec4899",
+  "DEXA Scan":"#f59e0b","Echocardiogram":"#ef4444",
+  "Fluoroscopy":"#6b7280","Other":"#6b7a8d",
+};
+const BLANK_IMAGING = { id:null, type:"MRI", bodyPart:"", facility:"", date:"" };
+
+function ImagingModal({ entry, onSave, onClose }) {
+  const [form, setForm] = useState({ ...BLANK_IMAGING, ...entry });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
+      <div style={{ background:T.card, border:`1px solid ${T.borderActive}`, borderRadius:16, padding:28, width:460 }}>
+        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:T.p, marginBottom:20 }}>
+          {form.id ? "Edit Imaging Study" : "Add Imaging Study"}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:20 }}>
+          <div>
+            <label style={lbl}>Image Type *</label>
+            <select style={inp} value={form.type} onChange={e => set("type", e.target.value)}>
+              {IMAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>Date</label>
+            <input type="date" style={inp} value={form.date} onChange={e => set("date", e.target.value)} />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Body Part / Region *</label>
+            <input style={inp} value={form.bodyPart} onChange={e => set("bodyPart", e.target.value)} placeholder="e.g. Right Knee, Abdomen, Chest" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Facility / Location</label>
+            <input style={inp} value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="e.g. Ochsner Medical Center" />
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+          <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
+          <button
+            onClick={() => { if (!form.bodyPart.trim()) return; onSave({ ...form, id: form.id ?? Date.now() }); }}
+            style={{ padding:"8px 18px", background:"rgba(167,139,250,.12)", border:"1px solid rgba(167,139,250,.35)", borderRadius:8, color:"#a78bfa", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}
+          >Save Study</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Delete confirm ─────────────────────────────────────────────────────────────
 function DeleteConfirm({ label, onConfirm, onCancel }) {
   return (
@@ -258,6 +310,9 @@ export default function ProfileTab() {
   const [surgeries, setSurgeries]   = useState([]);
   const [latestVitals, setLatestVitals] = useState(null);
 
+  // Imaging history
+  const [imaging, setImagingState] = useState(() => getImaging());
+
   // Edit mode flags
   const [edPersonal, setEdPersonal]   = useState(false);
   const [edInsurance, setEdInsurance] = useState(false);
@@ -268,6 +323,7 @@ export default function ProfileTab() {
   const [providerModal, setProviderModal]   = useState(null); // null | BLANK | existing
   const [allergyModal, setAllergyModal]     = useState(null);
   const [ecModal, setEcModal]               = useState(null);
+  const [imagingModal, setImagingModal]     = useState(null);
   const [deleteTarget, setDeleteTarget]     = useState(null); // { type, id, label }
 
   useEffect(() => {
@@ -341,15 +397,35 @@ export default function ProfileTab() {
     setDeleteTarget(null);
   }
 
+  // Imaging studies
+  function saveImagingEntry(entry) {
+    const updated = entry.id && imaging.find(x => x.id === entry.id)
+      ? imaging.map(x => x.id === entry.id ? entry : x)
+      : [...imaging, entry];
+    setImagingState(updated);
+    setImaging(updated);
+    setImagingModal(null);
+  }
+  function deleteImagingEntry(id) {
+    const updated = imaging.filter(x => x.id !== id);
+    setImagingState(updated);
+    setImaging(updated);
+    setDeleteTarget(null);
+  }
+
   function handleDelete() {
     if (!deleteTarget) return;
     if (deleteTarget.type === "provider") deleteProvider(deleteTarget.id);
     else if (deleteTarget.type === "allergy") deleteAllergy(deleteTarget.id);
     else if (deleteTarget.type === "contact") deleteContact(deleteTarget.id);
+    else if (deleteTarget.type === "imaging") deleteImagingEntry(deleteTarget.id);
   }
 
   // All surgeries sorted newest first
   const allSurgeries = [...surgeries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // All imaging sorted newest first
+  const allImaging = [...imaging].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
   // Active meds
   const activeMeds = meds.filter(m => m.status !== "inactive");
@@ -651,6 +727,41 @@ export default function ProfileTab() {
             }
           </div>
 
+          {/* ── Imaging History ── */}
+          <div style={{ ...card, gridColumn:"1/-1" }}>
+            <CardHeader title="Imaging History" onAdd={() => setImagingModal({ ...BLANK_IMAGING })} />
+            {allImaging.length === 0
+              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No imaging studies recorded. Click + Add to log an MRI, CT scan, X-ray, or other study.</div>
+              : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
+                  {allImaging.map((img, i) => {
+                    const color = IMAGE_COLORS[img.type] || "#6b7a8d";
+                    const dateStr = img.date
+                      ? new Date(img.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
+                      : "—";
+                    return (
+                      <div key={img.id} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < allImaging.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                        {/* Type badge */}
+                        <div style={{ flexShrink:0, marginTop:2, background:`${color}18`, border:`1px solid ${color}30`, borderRadius:6, padding:"2px 8px", fontSize:9, fontFamily:"'DM Mono',monospace", color, textTransform:"uppercase", letterSpacing:"0.5px", whiteSpace:"nowrap" }}>
+                          {img.type}
+                        </div>
+                        {/* Info */}
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{img.bodyPart || "—"}</div>
+                          {img.facility && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{img.facility}</div>}
+                        </div>
+                        {/* Date + actions */}
+                        <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+                          <span style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace" }}>{dateStr}</span>
+                          <button className="icon-btn" onClick={() => setImagingModal(img)}>✎</button>
+                          <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"imaging", id:img.id, label:`${img.type} — ${img.bodyPart}` })}>✕</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+            }
+          </div>
+
           {/* ── Featured Lab Results ── */}
           {(() => {
             const featuredLabs = getFeaturedLabs();
@@ -722,9 +833,10 @@ export default function ProfileTab() {
       </div>
 
       {/* Modals */}
-      {providerModal && <ProviderModal provider={providerModal} onSave={saveProvider} onClose={() => setProviderModal(null)} />}
-      {allergyModal  && <AllergyModal  allergy={allergyModal}  onSave={saveAllergy}  onClose={() => setAllergyModal(null)}  />}
-      {ecModal       && <ECModal       contact={ecModal}       onSave={saveContact}  onClose={() => setEcModal(null)}       />}
+      {providerModal && <ProviderModal provider={providerModal} onSave={saveProvider}       onClose={() => setProviderModal(null)} />}
+      {allergyModal  && <AllergyModal  allergy={allergyModal}  onSave={saveAllergy}        onClose={() => setAllergyModal(null)}  />}
+      {ecModal       && <ECModal       contact={ecModal}       onSave={saveContact}        onClose={() => setEcModal(null)}       />}
+      {imagingModal  && <ImagingModal  entry={imagingModal}    onSave={saveImagingEntry}   onClose={() => setImagingModal(null)}  />}
       {deleteTarget  && <DeleteConfirm label={deleteTarget.label} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />}
 
       {/* ── Print layout (screen:hidden, print:visible) ── */}
@@ -872,6 +984,24 @@ export default function ProfileTab() {
               </span>
             </div>
           ))}
+        </>}
+
+        {/* Imaging History */}
+        {allImaging.length > 0 && <>
+          <h2>Imaging History</h2>
+          <div className="grid2">
+            {allImaging.map((img, i) => (
+              <div key={i} className="pr">
+                <span className="pr-lbl">
+                  {img.date ? new Date(img.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "—"}
+                </span>
+                <span className="pr-val">
+                  <strong>{img.type}</strong>{img.bodyPart ? ` — ${img.bodyPart}` : ""}
+                  {img.facility ? <span style={{ fontSize:"9pt", color:"#555" }}> · {img.facility}</span> : null}
+                </span>
+              </div>
+            ))}
+          </div>
         </>}
 
         {/* Footer */}
