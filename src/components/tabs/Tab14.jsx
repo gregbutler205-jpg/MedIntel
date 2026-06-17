@@ -486,7 +486,8 @@ Please provide:
       if (!res.ok) {
         const e = await res.json().catch(()=>({}));
         const isServerSleep = res.status === 503 || String(e?.error||"").includes("503");
-        throw new Error(isServerSleep ? "Server is waking up (takes ~30 sec) — wait and try again." : (e?.error || `Server error ${res.status}`));
+        const errMsg = typeof e?.error === "string" ? e.error : e?.error?.message || e?.message || `Server error ${res.status}`;
+        throw new Error(isServerSleep ? "Server is waking up (takes ~30 sec) — wait and try again." : errMsg);
       }
       const data = await res.json();
       setAnalysis(data.content?.[0]?.text || "No response");
