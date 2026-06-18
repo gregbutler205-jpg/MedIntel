@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
+import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -158,32 +159,15 @@ function ApptModal({ appt, onSave, onClose }) {
   // Uses scored matching so "Dr. Clay Thames" won't accidentally match "Dr. Stone Thames"
   // just because they share a last name.
   const handleProviderBlur = () => {
-    const query = form.provider.trim().toLowerCase();
-    if (query.length < 3 || !careTeam.length) return;
-    const cleanQuery = query.replace(/^dr\.?\s*/i, "").trim();
-
-    const scored = careTeam.map(p => {
-      const name       = p.name.toLowerCase();
-      const cleanName  = name.replace(/^dr\.?\s*/i, "").trim();
-      const nameParts  = cleanName.split(/\s+/).filter(Boolean);
-      let score = 0;
-      if (name === query || cleanName === cleanQuery)                       score = 100; // exact
-      else if (name.includes(query) || query.includes(cleanName))          score = 80;  // full substring
-      else if (nameParts.every(part => cleanQuery.includes(part)))          score = 60;  // all parts present
-      else if (nameParts.filter(part => cleanQuery.includes(part)).length >= nameParts.length - 1 && nameParts.length > 1)
-                                                                            score = 20;  // all but one part
-      return { p, score };
-    });
-
-    const best = scored.reduce((a, b) => b.score > a.score ? b : a, { p: null, score: 0 });
-    if (best.score > 0 && best.p) {
-      setForm(f => ({
-        ...f,
-        phone:    f.phone    || formatPhone(best.p.phone    || ""),
-        facility: f.facility || best.p.facility || "",
-        address:  f.address  || best.p.address  || "",
-      }));
-    }
+    const match = matchCareTeamMember(form.provider, careTeam);
+    if (!match) return;
+    setForm(f => ({
+      ...f,
+      specialty: f.specialty || match.specialty || "",
+      phone:     f.phone     || formatPhone(match.phone || ""),
+      facility:  f.facility  || match.facility || "",
+      address:   f.address   || match.address  || "",
+    }));
   };
 
   const handleSave = () => {
@@ -589,9 +573,12 @@ export default function AppointmentsTab() {
     setSyncMsg(null);
     try {
       const events = await listEvents(cal.id);
+      const careTeam = (() => {
+        try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
+      })();
       let added = 0;
       setAppts(prev => {
-        const fresh = diffNewAppointments(events, prev).map(a => ({ ...BLANK, ...a, id: genId() }));
+        const fresh = diffNewAppointments(events, prev, careTeam).map(a => ({ ...BLANK, ...a, id: genId() }));
         added = fresh.length;
         return [...fresh, ...prev];
       });

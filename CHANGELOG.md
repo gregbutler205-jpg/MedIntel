@@ -12,6 +12,18 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.6.1 — 2026-06-17
+
+### Added
+- **Calendar sync auto-fills from Care Team.** When a synced event's title ends
+  with a doctor's name (convention: `… - Dr. Barclay`), Insina reads that name,
+  matches it against your Care Team, and fills in any **blank** fields —
+  specialty, phone, facility, address. Values already in the event are kept.
+- The Care Team matcher is now shared between calendar sync and the Add
+  Appointment form, and the form's auto-fill now also fills specialty.
+
+---
+
 ## v1.6.0 — 2026-06-17
 
 ### Added

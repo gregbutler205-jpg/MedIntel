@@ -3,6 +3,7 @@
 // appointment objects. One-way only (Calendar → Insina); never writes to Google.
 
 import { ensureAccessToken, CALENDAR_SCOPE } from "./googleAuth.js";
+import { matchCareTeamMember, providerFromTitle } from "./careTeamMatch.js";
 
 const CAL_API = "https://www.googleapis.com/calendar/v3";
 
@@ -86,6 +87,7 @@ export function eventToAppointment(ev) {
   }
   return {
     title: ev.summary || "(untitled appointment)",
+    provider: providerFromTitle(ev.summary), // text after the last " - "
     date,
     time,
     address: ev.location || "",
@@ -96,16 +98,34 @@ export function eventToAppointment(ev) {
 }
 
 /**
- * Given existing appointments and freshly fetched events, return only the
- * mapped appointments that are NOT already present. Match on the Google event
- * id first, then fall back to date + title (case-insensitive).
+ * Fill an appointment's missing provider details from a matching Care Team
+ * member. Only empty fields are filled — values already on the event are kept.
  */
-export function diffNewAppointments(events, existing) {
+export function enrichWithCareTeam(appt, careTeam) {
+  const match = matchCareTeamMember(appt.provider, careTeam);
+  if (!match) return appt;
+  return {
+    ...appt,
+    provider:  appt.provider  || match.name      || "",
+    specialty: appt.specialty || match.specialty || "",
+    facility:  appt.facility  || match.facility  || "",
+    address:   appt.address   || match.address   || "",
+    phone:     appt.phone     || match.phone     || "",
+  };
+}
+
+/**
+ * Given existing appointments and freshly fetched events, return only the
+ * mapped appointments that are NOT already present, each enriched from the Care
+ * Team. Match on the Google event id first, then fall back to date + title.
+ */
+export function diffNewAppointments(events, existing, careTeam = []) {
   const key = a => `${a.date}|${String(a.title || "").trim().toLowerCase()}`;
   const existingIds = new Set(existing.map(a => a.gcalId).filter(Boolean));
   const existingKeys = new Set(existing.map(key));
   return events
     .map(eventToAppointment)
     .filter(a => a.date) // skip anything without a usable date
-    .filter(a => !(a.gcalId && existingIds.has(a.gcalId)) && !existingKeys.has(key(a)));
+    .filter(a => !(a.gcalId && existingIds.has(a.gcalId)) && !existingKeys.has(key(a)))
+    .map(a => enrichWithCareTeam(a, careTeam));
 }
