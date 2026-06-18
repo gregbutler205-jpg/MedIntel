@@ -262,7 +262,7 @@ CRITICAL RULES:
 - For anything related to transplant graft health, immunosuppression management, organ function, or rejection risk: direct the patient to ${liverDoc}.
 - For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
 - ALL lab results and vitals listed below come directly from this patient's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
-- CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.
+- CLARIFYING QUESTIONS: Only ask clarifying questions when the answer genuinely cannot be given without them — this should be rare. When you do ask, include them inline as part of your response (never as a standalone reply with no analysis), number them, and ask at most 3 at a time.
 - CUSTOM LAB RANGES: Where a lab shows "patient's doctor range: X–Y", treat that as the primary reference range for this patient. Always mention both the standard lab range and the doctor's range when discussing that result.
 - CONDITION-LINKED FLAGS: Where a lab is annotated "[condition-linked: patient may have an individual target range]", include an action item in your analysis reminding the patient to confirm their personal target range with their care team — phrase it as something to bring up at their next visit, not a clinical concern.
 
@@ -544,6 +544,40 @@ function printAIResponse(question, answer, logoUrl, mode = "standard") {
   win.document.close();
 }
 
+function printConvSummary(summaryText, logoUrl, mode) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
+  const win = window.open("", "_blank", "width=900,height=700");
+  if (!win) return;
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>AI Analysis Summary — Insina Health</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Georgia,serif; max-width:760px; margin:48px auto; color:#1a1a1a; font-size:14px; line-height:1.65; padding:0 24px; }
+      .logo { height:52px; margin-bottom:18px; }
+      h1 { text-align:center; font-size:28px; font-weight:700; letter-spacing:-.5px; margin-bottom:8px; }
+      .subtitle { text-align:center; font-size:12px; color:#555; margin-bottom:22px; }
+      .rule { border:none; border-top:2px solid #2563eb; margin-bottom:24px; }
+      .mode-badge { display:inline-block; background:#f0f6ff; border:1px solid #2563eb; border-radius:4px; padding:2px 8px; font-size:9px; font-family:monospace; color:#2563eb; margin-bottom:18px; }
+      .footer { margin-top:48px; border-top:1px solid #ddd; padding-top:12px; font-size:10px; color:#777; display:flex; justify-content:space-between; }
+      @media print { body { margin:28px; } }
+    </style>
+  </head><body>
+    <img src="${logoUrl}" class="logo" alt="Insina Health" />
+    <h1>AI Analysis Summary</h1>
+    <div class="subtitle">Insina Health &mdash; Personal Health Intelligence</div>
+    <hr class="rule" />
+    <div class="mode-badge">${modeLabel}</div>
+    ${summaryText ? answerToHTML(summaryText) : "<p style='color:#777;font-style:italic'>Summary could not be generated.</p>"}
+    <div class="footer">
+      <span>Insina Health &mdash; Informational only. This is not medical advice. Always consult your physician.</span>
+      <span>Generated ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Markdown renderer
 // ─────────────────────────────────────────────────────────────────────────────
@@ -626,9 +660,8 @@ function renderMarkdown(rawText) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Message component
 // ─────────────────────────────────────────────────────────────────────────────
-function Message({ role, text, streaming, questionText, logoUrl, mode }) {
+function Message({ role, text, streaming, mode }) {
   const isUser = role === "user";
-  const canPrint = !isUser && !streaming && questionText && text;
   const isAdvanced = mode === "advanced";
   return (
     <div style={{ display: "flex", gap: 12, marginBottom: 20, flexDirection: isUser ? "row-reverse" : "row", alignItems: "flex-start" }}>
@@ -670,14 +703,6 @@ function Message({ role, text, streaming, questionText, logoUrl, mode }) {
               )}
               {renderMarkdown(text)}
               {streaming && <span style={{ display: "inline-block", width: 8, height: 14, background: "#4f8ef7", marginLeft: 2, animation: "cursorBlink 1s step-end infinite", verticalAlign: "text-bottom" }} />}
-              {canPrint && (
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30" }}>
-                  <button
-                    onClick={() => printAIResponse(questionText, text, logoUrl, mode)}
-                    style={{ background: "none", border: "none", color: "#4f8ef7", fontSize: 11, cursor: "pointer", fontFamily: "'DM Mono',monospace", opacity: 0.65, display: "flex", alignItems: "center", gap: 5, padding: 0 }}
-                  >⎙ Print</button>
-                </div>
-              )}
               {/* Footer disclaimer — all responses */}
               {!streaming && text && (
                 <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
@@ -722,7 +747,10 @@ export default function AIAnalysis({ onNavChange }) {
   const refFileRef                    = useRef(null);
   const bottomRef                     = useRef(null);
   const abortRef                      = useRef(null);
+  const textareaRef                   = useRef(null);
   const contextCounts                 = getContextCounts();
+  const [printingSummary, setPrintingSummary] = useState(false);
+  const [newConvConfirm, setNewConvConfirm]   = useState(false);
 
   // ── Mode state ─────────────────────────────────────────────────────────────
   const [modeData, setModeDataState]  = useState(() => loadModeData());
@@ -941,11 +969,75 @@ export default function AIAnalysis({ onNavChange }) {
   };
 
   const newConversation = () => {
-    if (streaming) { abortRef.current?.abort(); }
+    if (!newConvConfirm) { setNewConvConfirm(true); return; }
+    if (streaming) abortRef.current?.abort();
     saveConversationToNotes(messages);
     setMessages([]);
     setError("");
     setStreaming(false);
+    setNewConvConfirm(false);
+  };
+
+  // Reset textarea height after send
+  useEffect(() => {
+    if (!input && textareaRef.current) textareaRef.current.style.height = "auto";
+  }, [input]);
+
+  const handlePrintSummary = async () => {
+    if (messages.length === 0 || printingSummary || streaming) return;
+    setPrintingSummary(true);
+    const mode = loadModeData()?.mode || "standard";
+    const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
+    const summaryPrompt = `Based on our entire conversation above, write a structured summary the patient can bring to their next medical appointment. Use this exact format:
+
+**Conversation Summary**
+A brief paragraph (3–5 sentences) describing the overall topics and themes we discussed.
+
+-----
+
+**Your Questions**
+List every question the patient asked in this conversation, verbatim, numbered.
+
+-----
+
+**Key Findings & Insights**
+Bullet-point list of the most important health information, patterns, or concerns surfaced during this conversation.
+
+-----
+
+**Topics to Raise with Your Doctor**
+Numbered list of specific talking points for the patient's next appointment, framed as patient-initiated conversation starters — not clinical recommendations.
+
+-----
+
+**Bottom Line**
+One paragraph: what matters most from this conversation and which doctor to contact.
+
+Keep the summary concise — it should fit on one to two printed pages.`;
+    const apiMessages = [
+      ...messages.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
+      { role: "user", content: summaryPrompt },
+    ];
+    try {
+      const res = await fetch(`${PROXY_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          max_tokens: 1400,
+          stream: false,
+          system: [{ type: "text", text: buildSystemPrompt(mode), cache_control: { type: "ephemeral" } }],
+          messages: apiMessages,
+        }),
+      });
+      if (!res.ok) throw new Error("Server error");
+      const data = await res.json();
+      printConvSummary(data.content?.[0]?.text || "", PRINT_LOGO, mode);
+    } catch {
+      printConvSummary("", PRINT_LOGO, mode);
+    } finally {
+      setPrintingSummary(false);
+    }
   };
 
   const handleRefDocUpload = async (e) => {
@@ -1024,7 +1116,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         .send-btn:disabled { opacity:.4; cursor:not-allowed; }
         .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#ef4444; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
         .stop-btn:hover { background:rgba(239,68,68,.15); }
-        .chat-input { flex:1; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; }
+        .chat-input { flex:1; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
         .chat-input::placeholder { color:#98afc4; }
         .chat-input:focus { border-color:#1a2f4a; }
         .icon-btn { background:transparent; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; font-size:13px; flex-shrink:0; }
@@ -1059,8 +1151,12 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
-        <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-          ⎙ Print
+        <button
+          onClick={handlePrintSummary}
+          disabled={messages.length === 0 || printingSummary || streaming}
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", opacity: messages.length === 0 || printingSummary ? 0.4 : 1 }}
+        >
+          {printingSummary ? "⏳ Generating…" : "⎙ Print Summary"}
         </button>
       </div>
 
@@ -1168,13 +1264,32 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           </div>
 
           <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #0d1a28" }}>
-            <button className="new-conv-btn" onClick={newConversation} style={{ width: "100%", justifyContent: "center" }}>
-              ↺ Clear &amp; Save to Notes
-            </button>
-            {messages.length > 0 && (
-              <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 8 }}>
-                {messages.length} message{messages.length !== 1 ? "s" : ""} · saves to Notes on clear
+            {newConvConfirm ? (
+              <div>
+                <div style={{ fontSize: 10, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 8, textAlign: "center", lineHeight: 1.5 }}>
+                  Save conversation to Notes and start fresh?
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={newConversation} style={{ flex: 1, padding: "6px 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Yes, clear</button>
+                  <button onClick={() => setNewConvConfirm(false)} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Cancel</button>
+                </div>
               </div>
+            ) : (
+              <>
+                <button
+                  className="new-conv-btn"
+                  onClick={newConversation}
+                  disabled={messages.length === 0}
+                  style={{ width: "100%", justifyContent: "center", opacity: messages.length === 0 ? 0.4 : 1 }}
+                >
+                  ↺ New Conversation
+                </button>
+                {messages.length > 0 && (
+                  <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 7, lineHeight: 1.5 }}>
+                    {messages.length} message{messages.length !== 1 ? "s" : ""} · saves to Notes on clear
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -1197,8 +1312,6 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             {messages.map((m, i) => {
               const prevIsAssistant = i > 0 && messages[i-1].role === "assistant";
               const isNewTurn = m.role === "user" && prevIsAssistant;
-              const questionText = m.role === "assistant" && i > 0 && messages[i-1].role === "user"
-                ? messages[i-1].text : null;
               return (
                 <div key={i}>
                   {isNewTurn && (
@@ -1207,8 +1320,6 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                   <Message
                     role={m.role} text={m.text}
                     streaming={m.streaming && i === messages.length - 1}
-                    questionText={questionText}
-                    logoUrl={PRINT_LOGO}
                     mode={m.mode || currentMode}
                   />
                 </div>
@@ -1243,11 +1354,16 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <div style={{ borderTop: "1px solid #0d1a28", padding: "14px 24px", background: "#07090f", flexShrink: 0 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
               <textarea
+                ref={textareaRef}
                 className="chat-input"
-                rows={2}
+                rows={1}
                 placeholder={staleConsent ? "Re-consent to Advanced Mode required — switch to Standard in Settings & Backup" : "Ask anything about your health data…"}
                 value={input}
                 onChange={e => setInput(e.target.value)}
+                onInput={e => {
+                  e.target.style.height = "auto";
+                  e.target.style.height = Math.min(e.target.scrollHeight, 180) + "px";
+                }}
                 onKeyDown={handleKeyDown}
                 disabled={staleConsent}
               />
