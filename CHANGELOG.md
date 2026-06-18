@@ -12,6 +12,19 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.7.1 — 2026-06-18
+
+### Fixed
+- **AI Print Summary no longer fails silently.** When the browser blocked the
+  print pop-up, the button finished with no window and no file. It now (a) falls
+  back to downloading the summary as an `.html` file to your Downloads folder,
+  and (b) shows a clear on-screen message explaining what happened — whether the
+  pop-up was blocked or the AI server was still waking up. (Note: the in-app
+  button opens a print dialog / saves to Downloads; it does not write to the
+  Insina Reports folder.)
+
+---
+
 ## v1.7.0 — 2026-06-17
 
 ### Added

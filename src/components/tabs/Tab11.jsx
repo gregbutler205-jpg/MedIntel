@@ -544,12 +544,12 @@ function printAIResponse(question, answer, logoUrl, mode = "standard") {
   win.document.close();
 }
 
+// Returns "printed" (popup opened + print dialog), "downloaded" (popup blocked,
+// saved an .html file to Downloads instead), or "failed".
 function printConvSummary(summaryText, logoUrl, mode) {
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
-  const win = window.open("", "_blank", "width=900,height=700");
-  if (!win) return;
-  win.document.write(`<!DOCTYPE html><html><head>
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
     <title>AI Analysis Summary — Insina Health</title>
     <style>
       * { box-sizing:border-box; margin:0; padding:0; }
@@ -574,8 +574,30 @@ function printConvSummary(summaryText, logoUrl, mode) {
       <span>Generated ${date}</span>
     </div>
     <script>window.onload = function(){ window.print(); }<\/script>
-  </body></html>`);
-  win.document.close();
+  </body></html>`;
+
+  const win = window.open("", "_blank", "width=900,height=700");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    return "printed";
+  }
+
+  // Popup blocked — download the summary so it is never silently lost.
+  try {
+    const blob = new Blob([html], { type: "text/html" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `Insina Health — AI Analysis Summary ${date}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return "downloaded";
+  } catch {
+    return "failed";
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -750,6 +772,7 @@ export default function AIAnalysis({ onNavChange }) {
   const textareaRef                   = useRef(null);
   const contextCounts                 = getContextCounts();
   const [printingSummary, setPrintingSummary] = useState(false);
+  const [summaryNote, setSummaryNote] = useState("");
   const [newConvConfirm, setNewConvConfirm]   = useState(false);
 
   // ── Mode state ─────────────────────────────────────────────────────────────
@@ -986,6 +1009,7 @@ export default function AIAnalysis({ onNavChange }) {
   const handlePrintSummary = async () => {
     if (messages.length === 0 || printingSummary || streaming) return;
     setPrintingSummary(true);
+    setSummaryNote("");
     const mode = loadModeData()?.mode || "standard";
     const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
     const summaryPrompt = `Based on our entire conversation above, write a structured summary the patient can bring to their next medical appointment. Use this exact format:
@@ -1030,11 +1054,18 @@ Keep the summary concise — it should fit on one to two printed pages.`;
           messages: apiMessages,
         }),
       });
-      if (!res.ok) throw new Error("Server error");
+      if (!res.ok) throw new Error("server");
       const data = await res.json();
-      printConvSummary(data.content?.[0]?.text || "", PRINT_LOGO, mode);
+      const text = data.content?.[0]?.text || "";
+      if (!text) throw new Error("empty");
+      const how = printConvSummary(text, PRINT_LOGO, mode);
+      if (how === "downloaded") {
+        setSummaryNote("Your browser blocked the print pop-up, so the summary was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site and click Print Summary again.");
+      } else if (how === "failed") {
+        setSummaryNote("Couldn't open or save the summary. Check that pop-ups and downloads are allowed for this site, then try again.");
+      }
     } catch {
-      printConvSummary("", PRINT_LOGO, mode);
+      setSummaryNote("Couldn't generate the summary — the AI server may be waking up (about 30 seconds on the free tier). Wait a moment, then click Print Summary again.");
     } finally {
       setPrintingSummary(false);
     }
@@ -1344,6 +1375,13 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             {error && (
               <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
                 ⚠ {error}
+              </div>
+            )}
+
+            {summaryNote && (
+              <div style={{ background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10, lineHeight: 1.55 }}>
+                <span style={{ flex: 1 }}>⎙ {summaryNote}</span>
+                <button onClick={() => setSummaryNote("")} style={{ background: "none", border: "none", color: "#c4a060", cursor: "pointer", fontSize: 13, padding: 0, flexShrink: 0 }}>✕</button>
               </div>
             )}
 
