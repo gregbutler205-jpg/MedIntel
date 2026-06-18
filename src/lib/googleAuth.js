@@ -5,9 +5,12 @@
 const CLIENT_ID =
   "1097733210710-b1lmasjb68kcv8ptet4s4a6asgbbv7ui.apps.googleusercontent.com";
 
+export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
+
 const SCOPES = [
   "https://www.googleapis.com/auth/drive.appdata",
   "https://www.googleapis.com/auth/drive.file",
+  CALENDAR_SCOPE,
   "openid",
   "email",
   "profile",
@@ -16,6 +19,8 @@ const SCOPES = [
 let _tokenClient = null;
 let _accessToken  = null;
 let _tokenExpiry  = 0;
+let _grantedScopes = "";
+let _pendingResolvers = [];
 let _callbacks    = { onSignIn: null, onSignOut: null };
 
 /**
@@ -48,11 +53,14 @@ export function initGoogleAuth({ onSignIn, onSignOut } = {}) {
 async function _handleToken(response) {
   if (response.error) {
     console.error("[GoogleAuth] token error:", response.error);
+    _pendingResolvers.forEach(p => p.reject(new Error(response.error)));
+    _pendingResolvers = [];
     return;
   }
 
   _accessToken = response.access_token;
   _tokenExpiry = Date.now() + (response.expires_in - 60) * 1000; // 60 s grace
+  _grantedScopes = response.scope || _grantedScopes;
 
   // Fetch user profile
   let user = null;
@@ -70,6 +78,29 @@ async function _handleToken(response) {
   }
 
   _callbacks.onSignIn?.({ accessToken: _accessToken, user });
+  _pendingResolvers.forEach(p => p.resolve(_accessToken));
+  _pendingResolvers = [];
+}
+
+/**
+ * Resolve to a valid access token, prompting the Google sign-in popup only if
+ * needed. Pass a required scope (e.g. CALENDAR_SCOPE) to force a re-request when
+ * the cached token was granted without it. Rejects if sign-in fails or is
+ * cancelled. Used by on-demand actions like the calendar sync button.
+ */
+export function ensureAccessToken(requiredScope) {
+  const tok = getAccessToken();
+  if (tok && (!requiredScope || _grantedScopes.includes(requiredScope))) {
+    return Promise.resolve(tok);
+  }
+  return new Promise((resolve, reject) => {
+    if (!_tokenClient) {
+      reject(new Error("Google sign-in is still loading — try again in a moment."));
+      return;
+    }
+    _pendingResolvers.push({ resolve, reject });
+    _tokenClient.requestAccessToken({ prompt: "" });
+  });
 }
 
 /**

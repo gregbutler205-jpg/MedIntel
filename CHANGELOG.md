@@ -12,6 +12,25 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.6.0 — 2026-06-17
+
+### Added
+- **Google Calendar sync (one-way)** — a "⟳ Sync Google Calendar" button on the
+  Appointments tab pulls events from a calendar you choose into your
+  appointments. Reuses the existing Google sign-in (adds read-only Calendar
+  permission). Pick your medical calendar the first time; the choice is
+  remembered and can be changed. New events are matched on Google event id, then
+  date + title, so re-syncing only adds genuinely new appointments — your edits
+  are never overwritten. Event title → appointment title, start → date/time,
+  location → address, description → notes.
+
+### Setup required (one-time)
+- The Calendar permission must be enabled on the app's Google OAuth consent
+  screen, and you must be listed as a test user. Until then, sign-in will refuse
+  the Calendar scope.
+
+---
+
 ## v1.5.0 — 2026-06-17
 
 This is the first formally versioned release. Everything below was built prior

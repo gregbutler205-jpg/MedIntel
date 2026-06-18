@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -531,6 +532,35 @@ Please provide:
   );
 }
 
+// ── Google Calendar picker modal ────────────────────────────────────────────
+function CalendarPickerModal({ calendars, onPick, onClose }) {
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1100, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+      <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:460, maxHeight:"80vh", overflowY:"auto", padding:24 }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+          <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400 }}>Choose your medical calendar</h2>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
+        </div>
+        <p style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>
+          Insina will pull appointments from the calendar you pick. You can change this later.
+        </p>
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          {calendars.map(c => (
+            <button key={c.id} onClick={() => onPick(c)}
+              style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 13px", background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, cursor:"pointer", textAlign:"left", transition:"border-color .15s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "#1a2f4a"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "#0d1a28"}>
+              <span style={{ width:10, height:10, borderRadius:"50%", background:c.color, flexShrink:0 }} />
+              <span style={{ flex:1, fontSize:13, color:"#c4d8ee" }}>{c.summary}</span>
+              {c.primary && <span style={{ fontSize:9, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", border:"1px solid #1a2f4a", borderRadius:8, padding:"1px 7px" }}>primary</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AppointmentsTab() {
   const [appts, setAppts]     = useState(() => loadAppts());
@@ -540,7 +570,64 @@ export default function AppointmentsTab() {
   const [showAI, setShowAI]   = useState(null);  // appt.id for which AI panel is open
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Google Calendar sync
+  const [syncing, setSyncing]       = useState(false);
+  const [syncMsg, setSyncMsg]       = useState(null);   // { kind:"ok"|"err", text }
+  const [calPicker, setCalPicker]   = useState(null);   // array of calendars when picking
+
   useEffect(() => { saveAppts(appts); }, [appts]);
+
+  useEffect(() => {
+    if (!syncMsg) return;
+    const t = setTimeout(() => setSyncMsg(null), 6000);
+    return () => clearTimeout(t);
+  }, [syncMsg]);
+
+  // Pull events from a chosen calendar and add only the new ones.
+  const pullFromCalendar = useCallback(async (cal) => {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const events = await listEvents(cal.id);
+      let added = 0;
+      setAppts(prev => {
+        const fresh = diffNewAppointments(events, prev).map(a => ({ ...BLANK, ...a, id: genId() }));
+        added = fresh.length;
+        return [...fresh, ...prev];
+      });
+      setSyncMsg({ kind:"ok", text: added > 0
+        ? `Added ${added} new appointment${added !== 1 ? "s" : ""} from "${cal.summary}".`
+        : `No new appointments in "${cal.summary}" — you're up to date.` });
+    } catch (e) {
+      setSyncMsg({ kind:"err", text: e.message || "Calendar sync failed." });
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
+  const handleSyncCalendar = useCallback(async () => {
+    if (syncing) return;
+    const saved = getSelectedCalendar();
+    if (saved) { pullFromCalendar(saved); return; }
+    // First time: let the user choose which calendar
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const cals = await listCalendars();
+      if (!cals.length) { setSyncMsg({ kind:"err", text:"No calendars found on your Google account." }); return; }
+      setCalPicker(cals);
+    } catch (e) {
+      setSyncMsg({ kind:"err", text: e.message || "Could not reach Google Calendar." });
+    } finally {
+      setSyncing(false);
+    }
+  }, [syncing, pullFromCalendar]);
+
+  const handlePickCalendar = (cal) => {
+    setSelectedCalendar(cal);
+    setCalPicker(null);
+    pullFromCalendar(cal);
+  };
 
   const handleSave = (appt) => {
     setAppts(prev => {
@@ -595,14 +682,48 @@ export default function AppointmentsTab() {
               {upcomingCount} upcoming · {completedCount} completed{suggestedCount > 0 ? ` · ${suggestedCount} suggested` : ""}
             </p>
           </div>
-          <button
-            className="apt-btn"
-            style={{ background:"rgba(79,142,247,.15)", borderColor:"rgba(79,142,247,.35)", color:"#7eb8d8", marginTop:4 }}
-            onClick={() => setModal({ ...BLANK })}
-          >
-            + New Appointment
-          </button>
+          <div style={{ display:"flex", gap:10, marginTop:4, alignItems:"center" }}>
+            <button
+              className="apt-btn"
+              style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.30)", color:"#10b981", opacity: syncing ? 0.6 : 1, cursor: syncing ? "wait" : "pointer" }}
+              onClick={handleSyncCalendar}
+              disabled={syncing}
+              title="Pull medical appointments from your Google Calendar"
+            >
+              {syncing ? "⟳ Syncing…" : "⟳ Sync Google Calendar"}
+            </button>
+            <button
+              className="apt-btn"
+              style={{ background:"rgba(79,142,247,.15)", borderColor:"rgba(79,142,247,.35)", color:"#7eb8d8" }}
+              onClick={() => setModal({ ...BLANK })}
+            >
+              + New Appointment
+            </button>
+          </div>
         </div>
+
+        {/* Calendar sync result + change-calendar control */}
+        {(syncMsg || getSelectedCalendar()) && (
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, flexWrap:"wrap" }}>
+            {syncMsg && (
+              <div style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace",
+                background: syncMsg.kind === "ok" ? "rgba(16,185,129,.08)" : "rgba(239,68,68,.08)",
+                border: `1px solid ${syncMsg.kind === "ok" ? "rgba(16,185,129,.25)" : "rgba(239,68,68,.25)"}`,
+                color: syncMsg.kind === "ok" ? "#10b981" : "#ef4444" }}>
+                {syncMsg.kind === "ok" ? "✓ " : "⚠ "}{syncMsg.text}
+              </div>
+            )}
+            {getSelectedCalendar() && (
+              <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+                Calendar: {getSelectedCalendar().summary}
+                <button onClick={() => { setSelectedCalendar(null); setSyncMsg(null); }}
+                  style={{ marginLeft:8, background:"none", border:"none", color:"#7eb8d8", fontSize:10, cursor:"pointer", textDecoration:"underline", fontFamily:"'DM Mono',monospace" }}>
+                  change
+                </button>
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Summary cards */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:24 }}>
@@ -798,6 +919,9 @@ export default function AppointmentsTab() {
 
       {/* Add/Edit modal */}
       {modal && <ApptModal appt={modal} onSave={handleSave} onClose={() => setModal(null)} />}
+
+      {/* Google Calendar picker */}
+      {calPicker && <CalendarPickerModal calendars={calPicker} onPick={handlePickCalendar} onClose={() => setCalPicker(null)} />}
 
       {/* Delete confirm */}
       {deleteConfirm && (
