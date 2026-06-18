@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 
@@ -95,6 +95,12 @@ const BLANK = {
 };
 
 function genId() { return Math.random().toString(36).slice(2); }
+
+const GCAL_LAST_SYNC_KEY = "mi_gcal_last_sync";
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
 
 function loadAppts() {
   try {
@@ -568,9 +574,11 @@ export default function AppointmentsTab() {
   }, [syncMsg]);
 
   // Pull events from a chosen calendar and add only the new ones.
-  const pullFromCalendar = useCallback(async (cal) => {
+  // `auto` mode runs quietly: only announces when it actually adds something,
+  // and swallows errors (the manual button stays available for explicit syncs).
+  const pullFromCalendar = useCallback(async (cal, { auto = false } = {}) => {
     setSyncing(true);
-    setSyncMsg(null);
+    if (!auto) setSyncMsg(null);
     try {
       const events = await listEvents(cal.id);
       const careTeam = (() => {
@@ -582,15 +590,32 @@ export default function AppointmentsTab() {
         added = fresh.length;
         return [...fresh, ...prev];
       });
-      setSyncMsg({ kind:"ok", text: added > 0
-        ? `Added ${added} new appointment${added !== 1 ? "s" : ""} from "${cal.summary}".`
-        : `No new appointments in "${cal.summary}" — you're up to date.` });
+      localStorage.setItem(GCAL_LAST_SYNC_KEY, todayISO());
+      if (added > 0) {
+        setSyncMsg({ kind:"ok", text: `${auto ? "Auto-synced — added" : "Added"} ${added} new appointment${added !== 1 ? "s" : ""} from "${cal.summary}".` });
+      } else if (!auto) {
+        setSyncMsg({ kind:"ok", text: `No new appointments in "${cal.summary}" — you're up to date.` });
+      }
     } catch (e) {
-      setSyncMsg({ kind:"err", text: e.message || "Calendar sync failed." });
+      if (!auto) setSyncMsg({ kind:"err", text: e.message || "Calendar sync failed." });
+      else console.warn("[CalendarAutoSync]", e.message);
     } finally {
       setSyncing(false);
     }
   }, []);
+
+  // Auto-sync once per day: the first time the tab mounts on a new calendar day,
+  // if a calendar is already connected, sync quietly in the background.
+  const autoSyncRanRef = useRef(false);
+  useEffect(() => {
+    if (autoSyncRanRef.current) return;
+    const cal = getSelectedCalendar();
+    if (!cal) return;                                   // not connected yet
+    if (localStorage.getItem(GCAL_LAST_SYNC_KEY) === todayISO()) return; // already today
+    autoSyncRanRef.current = true;
+    const t = setTimeout(() => pullFromCalendar(cal, { auto: true }), 1500); // let Google auth settle
+    return () => clearTimeout(t);
+  }, [pullFromCalendar]);
 
   const handleSyncCalendar = useCallback(async () => {
     if (syncing) return;
@@ -702,7 +727,7 @@ export default function AppointmentsTab() {
             )}
             {getSelectedCalendar() && (
               <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
-                Calendar: {getSelectedCalendar().summary}
+                Calendar: {getSelectedCalendar().summary} · auto-syncs daily
                 <button onClick={() => { setSelectedCalendar(null); setSyncMsg(null); }}
                   style={{ marginLeft:8, background:"none", border:"none", color:"#7eb8d8", fontSize:10, cursor:"pointer", textDecoration:"underline", fontFamily:"'DM Mono',monospace" }}>
                   change

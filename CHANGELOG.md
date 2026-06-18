@@ -12,6 +12,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.6.2 — 2026-06-17
+
+### Added
+- **Daily auto-sync (on open).** Once you've connected a calendar, Insina
+  auto-syncs it the first time you open the Appointments tab each day, quietly in
+  the background — it only shows a message when it actually adds appointments.
+  Tracked via `mi_gcal_last_sync` (date), so it runs at most once per day whether
+  triggered automatically or by the manual button. The connected-calendar line
+  now notes "auto-syncs daily".
+- Note: this runs when the app is open (browser-only app, no background server),
+  so it catches you up on first open each day rather than at a fixed clock time.
+
+---
+
 ## v1.6.1 — 2026-06-17
 
 ### Added
