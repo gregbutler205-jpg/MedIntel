@@ -4,6 +4,7 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup } from "../../lib/driveSync.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
+import { APP_VERSION } from "../../version.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -646,7 +647,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <div>
                 <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>App version</div>
                 <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
-                  Insina Health v0.9 — Beta
+                  Insina Health v{APP_VERSION}
                 </div>
               </div>
             </div>
