@@ -5,6 +5,7 @@ import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup } from "../../lib/driveSync.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { APP_VERSION } from "../../version.js";
+import { getAutoLockMinutes, setAutoLockMinutes, AUTOLOCK_OPTIONS } from "../../lib/autoLock.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -107,6 +108,7 @@ function loadAIMode() {
 export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle", lastSyncTs, onSync = () => {}, onSignOut = () => {} }) {
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem("mi_ak") || "");
   const [backupFreq, setBackupFreq] = useState(() => localStorage.getItem("mi_backup_freq") || "Weekly");
+  const [autoLockMin, setAutoLockMin] = useState(() => getAutoLockMinutes());
   const [backups, setBackups]     = useState(() => { try { return JSON.parse(localStorage.getItem("mi_backup_history") || "[]"); } catch { return []; } });
   const [toast, setToast]         = useState("");
   const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "advanced_consent" | "changepin"
@@ -635,6 +637,20 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 >
                   {["Daily", "Weekly", "Monthly", "Never"].map(f => <option key={f}>{f}</option>)}
                 </select>
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-lock after inactivity</div>
+                <select
+                  value={autoLockMin}
+                  onChange={e => { const v = parseInt(e.target.value, 10); setAutoLockMin(v); setAutoLockMinutes(v); showToast(v === 0 ? "Auto-lock turned off" : `Auto-lock set to ${AUTOLOCK_OPTIONS.find(o => o.value === v)?.label}`); }}
+                  style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+                >
+                  {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
+                  Locks back to the PIN screen when idle. Your data is hidden until you re-enter your PIN.
+                </div>
               </div>
 
               <div style={{ marginBottom: 16 }}>

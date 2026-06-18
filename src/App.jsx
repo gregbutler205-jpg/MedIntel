@@ -3,6 +3,7 @@ import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, 
 import LockScreen from './components/LockScreen.jsx';
 import SearchPopup from './components/SearchPopup.jsx';
 import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from './lib/googleAuth.js';
+import { getAutoLockMinutes } from './lib/autoLock.js';
 import { fullSync, uploadToDrive, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
@@ -368,6 +369,37 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(
     () => sessionStorage.getItem("mi_unlocked") === "1"
   );
+  const [autoLockVersion, setAutoLockVersion] = useState(0);
+
+  const lock = useCallback(() => {
+    sessionStorage.removeItem("mi_unlocked");
+    setUnlocked(false);
+  }, []);
+
+  // Re-arm the timer when the auto-lock setting changes mid-session.
+  useEffect(() => {
+    const h = () => setAutoLockVersion(v => v + 1);
+    window.addEventListener("mi-autolock-changed", h);
+    return () => window.removeEventListener("mi-autolock-changed", h);
+  }, []);
+
+  // Inactivity auto-lock: after the configured idle time, return to the lock
+  // screen. AppShell unmounts when locked, so no data remains on screen.
+  useEffect(() => {
+    if (!unlocked) return;
+    const minutes = getAutoLockMinutes();
+    if (!minutes) return; // 0 = disabled
+    const ms = minutes * 60 * 1000;
+    let timer;
+    const reset = () => { clearTimeout(timer); timer = setTimeout(lock, ms); };
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "click"];
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }));
+    reset();
+    return () => {
+      clearTimeout(timer);
+      events.forEach(e => window.removeEventListener(e, reset));
+    };
+  }, [unlocked, lock, autoLockVersion]);
 
   if (!unlocked) {
     return <LockScreen onUnlock={() => setUnlocked(true)} />;

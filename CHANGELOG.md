@@ -12,6 +12,24 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.7.0 — 2026-06-17
+
+### Added
+- **Inactivity auto-lock.** After a configurable idle period (default 30 minutes)
+  Insina returns to the PIN lock screen. Because the app unmounts when locked, no
+  data is visible behind the lock — you re-enter your PIN to resume. Activity
+  (mouse, keyboard, scroll, touch) resets the timer; the setting lives in
+  Settings & Backup → App Settings → "Auto-lock after inactivity" (Off / 5 / 10 /
+  15 / 30 / 60 min) and re-arms immediately when changed.
+
+### Notes
+- The existing 4-digit PIN is unchanged. An alphanumeric **password** option and
+  **two-step authentication** are planned for when other users keep their own
+  data in Insina (deferred for now while the app is PIN-protected for testing and
+  demos).
+
+---
+
 ## v1.6.2 — 2026-06-17
 
 ### Added
