@@ -81,6 +81,7 @@ app.post("/api/chat", express.json({ limit: "256kb" }), limiter, async (req, res
 
   // Only allow approved models
   const ALLOWED_MODELS = [
+    "claude-haiku-4-5",   // companion: cheap/short work (AI Lite, Quick Log, short visit summaries)
     "claude-sonnet-4-6",
     "claude-opus-4-6",
   ];

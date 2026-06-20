@@ -1,0 +1,85 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// companionUI.jsx — Shared design tokens & primitive components for the companion
+// Dark-navy theme matching the web app. DO NOT alter color values.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+export const C = {
+  bg:     "#07090f",
+  card:   "#0b1220",
+  b1:     "#1a2f4a",
+  b2:     "#111e30",
+  blue:   "#4f8ef7",
+  green:  "#10b981",
+  amber:  "#f59e0b",
+  red:    "#ef4444",
+  purple: "#a78bfa",
+  p:      "#dde8f5",
+  s:      "#7eb8d8",
+  dim:    "#98afc4",
+  ghost:  "#4a5c6a",
+};
+
+export const mono  = "'DM Mono',monospace";
+export const serif = "'DM Serif Display',serif";
+export const sans  = "'Sora',sans-serif";
+
+// Severity → color, shared by symptoms / flags / safety levels
+export const LEVEL_COLOR = { critical: C.red, caution: C.amber, info: C.blue, ok: C.green };
+
+// ── Section label ───────────────────────────────────────────────────────────
+export function SL({ children, mb = 8 }) {
+  return (
+    <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: C.dim, fontFamily: mono, marginBottom: mb }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────────
+export function Card({ children, style = {}, onClick }) {
+  return (
+    <div onClick={onClick} style={{ background: C.card, border: `1px solid ${C.b2}`, borderRadius: 12, padding: "14px 16px", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+// ── In-screen back bar (for screens reached from a tab, e.g. Emergency, Visit) ──
+export function BackBar({ title, onBack, right }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: C.card, borderBottom: `1px solid ${C.b2}`, flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.blue, fontSize: 20, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>←</button>
+      <div style={{ fontFamily: serif, fontSize: 18, color: C.p, fontWeight: 400, flex: 1 }}>{title}</div>
+      {right}
+    </div>
+  );
+}
+
+// ── Pill / chip ─────────────────────────────────────────────────────────────
+export function Pill({ children, color = C.blue }) {
+  return (
+    <span style={{ fontSize: 9, background: color + "22", color, border: `1px solid ${color}40`, borderRadius: 10, padding: "2px 8px", fontFamily: mono, flexShrink: 0 }}>
+      {children}
+    </span>
+  );
+}
+
+// ── Primary action button ─────────────────────────────────────────────────────
+export function Btn({ children, onClick, disabled, color = C.blue, style = {} }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      style={{
+        width: "100%", padding: 12, background: `${color}1a`, border: `1px solid ${color}4d`,
+        borderRadius: 10, color, fontSize: 13, fontFamily: sans, fontWeight: 600,
+        cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.45 : 1, ...style,
+      }}>
+      {children}
+    </button>
+  );
+}
+
+// ── Empty-state line ──────────────────────────────────────────────────────────
+export function Empty({ children }) {
+  return <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, padding: "20px 0", textAlign: "center", lineHeight: 1.8 }}>{children}</div>;
+}

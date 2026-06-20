@@ -12,6 +12,53 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.8.0 — 2026-06-19
+
+### Added — Insina Health Mobile companion (`/?companion=1`)
+A rebuilt mobile companion PWA following the principle **"Mobile captures, the web
+app organizes."** Reads and writes the same Google-Drive-synced record as the web
+app — one record, two front doors. Five-tab bottom navigation:
+
+- **Today** — greeting + sync status, an at-a-glance row (next visit / labs /
+  refills), the latest vital, and quick-capture buttons. Surfaces **proactive
+  pattern flags** computed from the record (e.g. blood pressure drifting up across
+  recent readings, a drug-level trough trending toward its low bound, a flagged lab
+  moving further from range) — conservative and dismissible. Emergency Info and
+  Notifications are one tap away.
+- **Meds** — the daily screen, built for a large pill burden. Tracking **modes**
+  (Reminders only / Quick confirm / Full logging / Off, default Quick); **whole-group
+  one-tap confirmation** (morning / midday / evening) so a drug is named only when
+  **flagging an exception** (skipped / late / reaction / as-needed). Refills surface
+  at the top.
+- **Log** — fast structured Vitals and Symptoms capture, plus **Quick Log / Talk to
+  Insina**: say it in plain language and Insina drafts a structured entry you confirm
+  before it's filed.
+- **Care** — upcoming appointments with countdowns, provider, location + Maps
+  directions, and the entry into Doctor Visit Capture; lists captured visits.
+- **AI** — a lite, record-grounded assistant for quick questions on the go.
+
+- **Doctor Visit Capture** — Pre-Visit Brief (safety flags, what's changed,
+  suggested questions) → **Consent (cannot be skipped; Mississippi/Louisiana
+  recording-law notice)** → a deliberately minimal During-Visit screen (record /
+  pause / stop, timer, optional note, optional "mark moment") → AI summary
+  (Discussed / Plan / When to call / Still open) → Action Items, where a detected
+  **medication change must be explicitly confirmed** before the med list updates.
+- **Emergency Info** — offline-first must-know status, meds, allergies, key labs,
+  and care-team phone numbers; loads instantly to show an EMT or ER nurse.
+- **Offline-first + notifications** — all capture works offline and queues a Drive
+  sync via an outbox that drains when back online; three independently-switchable
+  notification types (medication, appointment, attention alerts).
+
+### Notes
+- **Audio transcription is intentionally deferred** behind a clean interface — the
+  Anthropic stack can't transcribe audio. Visits record, save, and summarize from
+  manual notes today; full audio transcription will be wired to a provider later.
+- Companion AI runs through the existing proxy (no client API key on the phone);
+  `claude-haiku-4-5` was added to the proxy allow-list for cheap/short work. **The
+  proxy must be redeployed** for companion AI to work in production.
+
+---
+
 ## v1.7.1 — 2026-06-18
 
 ### Fixed
