@@ -1,9 +1,10 @@
 {
+  "id": "/companion/",
   "name": "Insina Companion",
   "short_name": "Insina",
   "description": "Insina Health mobile companion — capture on the go",
-  "start_url": "/?companion=1",
-  "scope": "/",
+  "start_url": "/companion/",
+  "scope": "/companion/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#07090f",

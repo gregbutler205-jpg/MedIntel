@@ -12,6 +12,25 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.8.2 — 2026-06-19
+
+### Fixed
+- **Companion home-screen icon still opened the full app (v1.8.1 follow-up).**
+  Swapping only the manifest wasn't enough: both apps shared `scope: "/"`, so iOS
+  couldn't tell the companion webclip apart from the already-installed full-app
+  webclip and resolved to the full app (companion would flash, then the full app
+  loaded). The companion now lives at its **own path and scope, `/companion/`**,
+  with a distinct manifest `id` — so iOS installs it as a genuinely separate app.
+  `src/main.jsx` routes the companion for `/companion/` (or the legacy
+  `?companion=1`); the build now emits a second `/companion/` entry point.
+  Bumped the service-worker cache (`insina-v4`) so devices drop the stale shell.
+
+### Note
+- New companion URL is **`insinahealth.com/companion/`** (the old `?companion=1`
+  still works). Existing home-screen icons must be deleted and re-added once.
+
+---
+
 ## v1.8.1 — 2026-06-19
 
 ### Fixed

@@ -2,7 +2,7 @@
 // Network-first with cache fallback — always fetches fresh on reload,
 // falls back to cache when offline.
 
-const CACHE = "insina-v3";
+const CACHE = "insina-v4";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -39,8 +39,12 @@ self.addEventListener("fetch", event => {
         // Offline: serve from cache
         return caches.match(event.request).then(cached => {
           if (cached) return cached;
-          // For navigation requests, serve the app shell
+          // For navigation requests, serve the matching app shell
           if (event.request.mode === "navigate") {
+            const path = new URL(event.request.url).pathname;
+            if (path.startsWith("/companion")) {
+              return caches.match("/companion/") || caches.match("/companion/index.html");
+            }
             return caches.match("/") || caches.match("/index.html");
           }
         });
