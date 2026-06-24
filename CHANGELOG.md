@@ -12,6 +12,18 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.8.1 — 2026-06-19
+
+### Fixed
+- **Companion "Add to Home Screen" launched the full web app instead of the
+  companion.** iOS reads the linked Web App Manifest's `start_url` when you add to
+  the home screen, and the single manifest pointed at `/` (the full app). Added a
+  dedicated companion manifest (`start_url: /?companion=1`) that is swapped in
+  whenever the page is loaded in companion mode, so the home-screen icon now opens
+  the companion. The full web app's icon is unchanged.
+
+---
+
 ## v1.8.0 — 2026-06-19
 
 ### Added — Insina Health Mobile companion (`/?companion=1`)

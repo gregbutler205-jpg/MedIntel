@@ -23,6 +23,20 @@
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+    <!-- Companion mode: swap to the companion manifest so "Add to Home Screen"
+         launches /?companion=1 instead of the full web app. iOS reads the linked
+         manifest's start_url at add-to-home-screen time. -->
+    <script>
+      (function () {
+        if (location.search.indexOf('companion') === -1) return;
+        var link = document.querySelector('link[rel="manifest"]');
+        if (link) link.setAttribute('href', '/manifest-companion.json');
+        var title = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (title) title.setAttribute('content', 'Insina');
+        document.title = 'Insina Companion';
+      })();
+    </script>
+
     <!-- Service Worker registration -->
     <script>
       if ('serviceWorker' in navigator) {
