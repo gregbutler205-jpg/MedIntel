@@ -13,8 +13,9 @@ import { enqueue, flush } from "../../lib/outbox.js";
 import { cleanupOldAudio } from "../../lib/visitCapture.js";
 import { scheduleMedReminder, runOpenNotifications } from "../../lib/notify.js";
 import { computePatternFlags } from "../../lib/patternFlags.js";
-import { C, mono } from "./companionUI.jsx";
+import { C, mono, sans } from "./companionUI.jsx";
 
+import SignIn     from "./screens/SignIn.jsx";
 import Today      from "./screens/Today.jsx";
 import Meds       from "./screens/Meds.jsx";
 import Log        from "./screens/Log.jsx";
@@ -101,6 +102,8 @@ function CompanionInner() {
   const [online, setOnline] = useState(navigator.onLine);
   const [syncState, setSyncState] = useState("idle");
   const [lastSynced, setLastSynced] = useState(() => fmtTime(localStorage.getItem("mi_last_sync")));
+  const [user, setUser] = useState(() => getStoredUser());
+  const [skippedSignIn, setSkippedSignIn] = useState(false);
 
   const runSync = useCallback((token) => {
     setSyncState("syncing");
@@ -111,12 +114,16 @@ function CompanionInner() {
 
   // Google auth init (popup path, desktop) + redirect-return token capture (mobile)
   useEffect(() => {
-    initGoogleAuth({ onSignIn: ({ accessToken }) => runSync(accessToken) });
+    initGoogleAuth({ onSignIn: ({ accessToken }) => { setUser(getStoredUser()); runSync(accessToken); } });
     const token = extractTokenFromHash();
     if (token) {
       fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${token}` } })
         .then(r => r.json())
-        .then(u => localStorage.setItem("mi_google_user", JSON.stringify({ name: u.name, email: u.email, picture: u.picture })))
+        .then(u => {
+          const profile = { name: u.name, email: u.email, picture: u.picture };
+          localStorage.setItem("mi_google_user", JSON.stringify(profile));
+          setUser(profile);
+        })
         .catch(() => {});
       runSync(token);
     }
@@ -158,8 +165,18 @@ function CompanionInner() {
   const openVisit     = (visitId) => setOverlay({ name: "visit", appt: null, visitId });
   const closeOverlay  = () => setOverlay(null);
 
+  // Sign-in gate: a full screen before the app handles Google connection. Optional —
+  // "Continue without signing in" lets offline capture proceed.
+  if (!user && !skippedSignIn) {
+    return (
+      <div style={{ background: C.bg, height: "100dvh", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", fontFamily: sans, overflow: "hidden" }}>
+        <SignIn onSignIn={signInWithRedirect} onSkip={() => setSkippedSignIn(true)} />
+      </div>
+    );
+  }
+
   return (
-    <div style={{ background: C.bg, height: "100dvh", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", fontFamily: "'Sora',sans-serif", overflow: "hidden" }}>
+    <div style={{ background: C.bg, height: "100dvh", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", fontFamily: sans, overflow: "hidden", paddingTop: "env(safe-area-inset-top)" }}>
       {!online && (
         <div style={{ background: "#141f00", borderBottom: "1px solid #3a5a00", padding: "5px 16px", fontSize: 10, color: "#a3e635", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
           📶 Offline — you can still capture; it’ll sync when you’re back online

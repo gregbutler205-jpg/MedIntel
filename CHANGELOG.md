@@ -12,6 +12,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.8.3 — 2026-06-19
+
+### Added
+- **Companion sign-in screen.** A full-screen welcome now handles Google
+  connection before the app, replacing the cramped top-bar "Sign in" button that
+  sat under the iOS status bar and couldn't be tapped. Large Google sign-in button
+  plus an optional "Continue without signing in" (capture still works offline).
+
+### Fixed
+- **Top bar hidden under the status bar / notch.** The app now respects
+  `safe-area-inset-top`, so the sync bar and content clear the status bar and
+  Dynamic Island.
+- **Sign-in returns you to where you started.** The OAuth redirect now comes back
+  to the launch path (e.g. `/companion/`) instead of always `/?companion=1`, so an
+  installed standalone app stays in its own scope. **Requires** adding
+  `https://insinahealth.com/companion/` to the Google OAuth client's Authorized
+  redirect URIs.
+
+---
+
 ## v1.8.2 — 2026-06-19
 
 ### Fixed

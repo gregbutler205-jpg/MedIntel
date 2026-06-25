@@ -118,11 +118,15 @@ export function signIn() {
 
 /**
  * Mobile-safe sign-in: navigates to Google OAuth and redirects back to the
- * companion URL (?companion=1) with the access token in the URL hash.
- * After redirect back, call extractTokenFromHash() on mount to capture it.
+ * page it was launched from (e.g. /companion/) with the access token in the URL
+ * hash. Returning to the same path keeps an installed standalone PWA inside its
+ * own scope. After redirect back, call extractTokenFromHash() on mount to capture
+ * it. NOTE: the redirect URI must be registered in the Google OAuth client's
+ * "Authorized redirect URIs" (e.g. https://insinahealth.com/companion/).
  */
 export function signInWithRedirect() {
-  const redirectUri = `${window.location.origin}/?companion=1`;
+  const { origin, pathname, search } = window.location;
+  const redirectUri = `${origin}${pathname}${search}`;
   const params = new URLSearchParams({
     client_id:              CLIENT_ID,
     redirect_uri:           redirectUri,
