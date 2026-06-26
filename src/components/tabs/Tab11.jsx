@@ -506,62 +506,55 @@ function answerToHTML(rawText) {
   }).join("");
 }
 
-function printAIResponse(question, answer, logoUrl, mode = "standard") {
-  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
-  const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
+const PRINT_STYLE = `
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Georgia,serif; max-width:760px; margin:48px auto; color:#1a1a1a; font-size:14px; line-height:1.65; padding:0 24px; }
+  .logo { height:52px; margin-bottom:18px; }
+  h1 { text-align:center; font-size:28px; font-weight:700; letter-spacing:-.5px; margin-bottom:8px; }
+  .subtitle { text-align:center; font-size:12px; color:#555; margin-bottom:22px; }
+  .rule { border:none; border-top:2px solid #2563eb; margin-bottom:24px; }
+  .mode-badge { display:inline-block; background:#f0f6ff; border:1px solid #2563eb; border-radius:4px; padding:2px 8px; font-size:9px; font-family:monospace; color:#2563eb; margin-bottom:18px; }
+  .q-label { font-weight:700; font-size:13px; margin:18px 0 5px; color:#2563eb; }
+  .q-text { margin-bottom:6px; font-size:14px; }
+  .a-block { margin-bottom:8px; padding-bottom:14px; border-bottom:1px solid #eee; }
+  .footer { margin-top:48px; border-top:1px solid #ddd; padding-top:12px; font-size:10px; color:#777; display:flex; justify-content:space-between; }
+  @media print { body { margin:28px; } }
+`;
+
+// Open the printable HTML in a new window and trigger print. If the pop-up is
+// blocked, download the HTML so it is never silently lost.
+// Returns "printed", "downloaded", or "failed".
+function openPrintable(html, filenameBase) {
   const win = window.open("", "_blank", "width=900,height=700");
-  if (!win) return;
-  win.document.write(`<!DOCTYPE html><html><head>
-    <title>AI Analysis — Insina Health</title>
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: Georgia, serif; max-width: 760px; margin: 48px auto; color: #1a1a1a; font-size: 14px; line-height: 1.65; padding: 0 24px; }
-      .logo { height: 56px; margin-bottom: 20px; }
-      h1 { text-align: center; font-size: 30px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 10px; }
-      .rule { border: none; border-top: 2px solid #2563eb; margin-bottom: 26px; }
-      .q-label { font-weight: 700; font-size: 13px; margin-bottom: 5px; }
-      .q-text  { margin-bottom: 22px; font-size: 14px; }
-      .a-label { font-weight: 700; font-size: 16px; margin-bottom: 14px; }
-      .mode-badge { display:inline-block; background:#f0f6ff; border:1px solid #2563eb; borderRadius:4px; padding:2px 8px; font-size:10px; font-family:monospace; color:#2563eb; margin-bottom:18px; }
-      .footer  { margin-top: 48px; border-top: 1px solid #ddd; padding-top: 12px; font-size: 11px; color: #777; display: flex; justify-content: space-between; }
-      @media print { body { margin: 28px; } button { display: none; } }
-    </style>
-  </head><body>
-    <img src="${logoUrl}" class="logo" />
-    <h1>AI Analysis</h1>
-    <hr class="rule" />
-    <div class="q-label">Question:</div>
-    <div class="q-text">${question.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-    <div class="a-label">Analysis</div>
-    <div class="mode-badge">${modeLabel}</div>
-    ${answerToHTML(answer)}
-    <div class="footer">
-      <span>Insina Health &mdash; Personal Health Intelligence</span>
-      <span>Generated ${date}</span>
-    </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
-  </body></html>`);
-  win.document.close();
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    return "printed";
+  }
+  try {
+    const blob = new Blob([html], { type: "text/html" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `${filenameBase}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return "downloaded";
+  } catch {
+    return "failed";
+  }
 }
 
-// Returns "printed" (popup opened + print dialog), "downloaded" (popup blocked,
-// saved an .html file to Downloads instead), or "failed".
-function printConvSummary(summaryText, logoUrl, mode) {
+const esc = s => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// AI-written summary of one conversation.
+function buildSummaryHtml(summaryText, logoUrl, mode) {
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <title>AI Analysis Summary — Insina Health</title>
-    <style>
-      * { box-sizing:border-box; margin:0; padding:0; }
-      body { font-family:Georgia,serif; max-width:760px; margin:48px auto; color:#1a1a1a; font-size:14px; line-height:1.65; padding:0 24px; }
-      .logo { height:52px; margin-bottom:18px; }
-      h1 { text-align:center; font-size:28px; font-weight:700; letter-spacing:-.5px; margin-bottom:8px; }
-      .subtitle { text-align:center; font-size:12px; color:#555; margin-bottom:22px; }
-      .rule { border:none; border-top:2px solid #2563eb; margin-bottom:24px; }
-      .mode-badge { display:inline-block; background:#f0f6ff; border:1px solid #2563eb; border-radius:4px; padding:2px 8px; font-size:9px; font-family:monospace; color:#2563eb; margin-bottom:18px; }
-      .footer { margin-top:48px; border-top:1px solid #ddd; padding-top:12px; font-size:10px; color:#777; display:flex; justify-content:space-between; }
-      @media print { body { margin:28px; } }
-    </style>
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>AI Analysis Summary — Insina Health</title><style>${PRINT_STYLE}</style>
   </head><body>
     <img src="${logoUrl}" class="logo" alt="Insina Health" />
     <h1>AI Analysis Summary</h1>
@@ -575,29 +568,31 @@ function printConvSummary(summaryText, logoUrl, mode) {
     </div>
     <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`;
+}
 
-  const win = window.open("", "_blank", "width=900,height=700");
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-    return "printed";
-  }
-
-  // Popup blocked — download the summary so it is never silently lost.
-  try {
-    const blob = new Blob([html], { type: "text/html" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url;
-    a.download = `Insina Health — AI Analysis Summary ${date}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    return "downloaded";
-  } catch {
-    return "failed";
-  }
+// Verbatim transcript of one conversation (your questions + full AI replies).
+function buildTranscriptHtml(convMessages, logoUrl, mode) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
+  const bodyHtml = convMessages.map(m => m.role === "user"
+    ? `<div class="q-label">You asked:</div><div class="q-text">${esc(m.text)}</div>`
+    : `<div class="a-block">${answerToHTML(m.text)}</div>`
+  ).join("");
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>AI Analysis Transcript — Insina Health</title><style>${PRINT_STYLE}</style>
+  </head><body>
+    <img src="${logoUrl}" class="logo" alt="Insina Health" />
+    <h1>AI Analysis Transcript</h1>
+    <div class="subtitle">Insina Health &mdash; Personal Health Intelligence</div>
+    <hr class="rule" />
+    <div class="mode-badge">${modeLabel}</div>
+    ${bodyHtml}
+    <div class="footer">
+      <span>Insina Health &mdash; Informational only. This is not medical advice. Always consult your physician.</span>
+      <span>Generated ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -756,8 +751,20 @@ function TypingIndicator() {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AIAnalysis({ onNavChange }) {
   const [messages, setMessages]       = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      // Migrate pre-v1.8 messages (no conversation id) into conversation 0.
+      return raw.map(m => ({ ...m, conv: m.conv ?? 0 }));
+    } catch { return []; }
   });
+  // Which conversation new messages are added to. Starts at the last one loaded.
+  const [currentConv, setCurrentConv] = useState(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      return raw.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0);
+    } catch { return 0; }
+  });
+  const [summaryBusyConv, setSummaryBusyConv] = useState(null); // conv id being summarized
   const [input, setInput]             = useState("");
   const [streaming, setStreaming]     = useState(false);
   const [error, setError]             = useState("");
@@ -771,7 +778,6 @@ export default function AIAnalysis({ onNavChange }) {
   const abortRef                      = useRef(null);
   const textareaRef                   = useRef(null);
   const contextCounts                 = getContextCounts();
-  const [printingSummary, setPrintingSummary] = useState(false);
   const [summaryNote, setSummaryNote] = useState("");
   const [newConvConfirm, setNewConvConfirm]   = useState(false);
 
@@ -860,19 +866,24 @@ export default function AIAnalysis({ onNavChange }) {
     const mode = loadModeData()?.mode || "standard";
     const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
 
-    const userMsg  = { role: "user", text: trimmed };
+    const conv = currentConv;
+    const userMsg  = { role: "user", text: trimmed, conv };
     const baseMessages = messagesOverride !== null ? messagesOverride : messages;
     const newMsgs  = [...baseMessages, userMsg];
     setMessages(newMsgs);
     setInput("");
     setStreaming(true);
 
-    const apiMessages = newMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
+    // Only send THIS conversation's history to the AI — each conversation has
+    // its own independent context.
+    const apiMessages = newMsgs
+      .filter(m => (m.conv ?? 0) === conv)
+      .map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
 
     let accum = "";
     const assistantIdx = newMsgs.length;
 
-    setMessages(prev => [...prev, { role: "assistant", text: "", streaming: true, mode }]);
+    setMessages(prev => [...prev, { role: "assistant", text: "", streaming: true, mode, conv }]);
 
     // Build system prompt with prompt caching blocks
     const systemPromptText = buildSystemPrompt(mode);
@@ -926,7 +937,7 @@ export default function AIAnalysis({ onNavChange }) {
               accum += parsed.delta.text;
               setMessages(prev => {
                 const copy = [...prev];
-                copy[assistantIdx] = { role: "assistant", text: accum, streaming: true, mode };
+                copy[assistantIdx] = { role: "assistant", text: accum, streaming: true, mode, conv };
                 return copy;
               });
             }
@@ -936,7 +947,7 @@ export default function AIAnalysis({ onNavChange }) {
 
       setMessages(prev => {
         const copy = [...prev];
-        copy[assistantIdx] = { role: "assistant", text: accum, mode };
+        copy[assistantIdx] = { role: "assistant", text: accum, mode, conv };
         return copy;
       });
 
@@ -946,7 +957,7 @@ export default function AIAnalysis({ onNavChange }) {
       if (e.name === "AbortError") {
         setMessages(prev => {
           const copy = [...prev];
-          copy[assistantIdx] = { role: "assistant", text: accum || "_(stopped)_", mode };
+          copy[assistantIdx] = { role: "assistant", text: accum || "_(stopped)_", mode, conv };
           return copy;
         });
       } else {
@@ -955,13 +966,13 @@ export default function AIAnalysis({ onNavChange }) {
           setColdStartRetry(trimmed);
           setMessages(prev => {
             const copy = [...prev];
-            copy[assistantIdx] = { role: "assistant", text: "**Server is waking up** (Render free tier sleeps after 15 minutes of inactivity).\n\nThis takes about 30–60 seconds. Click **Retry** when ready.", mode };
+            copy[assistantIdx] = { role: "assistant", text: "**Server is waking up** (Render free tier sleeps after 15 minutes of inactivity).\n\nThis takes about 30–60 seconds. Click **Retry** when ready.", mode, conv };
             return copy;
           });
         } else {
           setMessages(prev => {
             const copy = [...prev];
-            copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}`, mode };
+            copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}`, mode, conv };
             return copy;
           });
           setError(e.message);
@@ -971,7 +982,7 @@ export default function AIAnalysis({ onNavChange }) {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming, staleConsent]);
+  }, [messages, streaming, staleConsent, currentConv]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
@@ -991,11 +1002,24 @@ export default function AIAnalysis({ onNavChange }) {
     } catch {}
   };
 
-  const newConversation = () => {
+  // Start a new conversation segment without clearing the screen. Earlier
+  // conversations stay visible above, each independently printable.
+  const startNewConversation = () => {
+    if (streaming) return;
+    const currentHasMessages = messages.some(m => (m.conv ?? 0) === currentConv);
+    if (!currentHasMessages) return; // nothing to close off yet
+    const nextId = messages.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1;
+    setCurrentConv(nextId);
+    setError("");
+  };
+
+  // Wipe every conversation from the screen (saved to Notes first).
+  const clearAll = () => {
     if (!newConvConfirm) { setNewConvConfirm(true); return; }
     if (streaming) abortRef.current?.abort();
     saveConversationToNotes(messages);
     setMessages([]);
+    setCurrentConv(0);
     setError("");
     setStreaming(false);
     setNewConvConfirm(false);
@@ -1006,13 +1030,26 @@ export default function AIAnalysis({ onNavChange }) {
     if (!input && textareaRef.current) textareaRef.current.style.height = "auto";
   }, [input]);
 
-  const handlePrintSummary = async () => {
-    if (messages.length === 0 || printingSummary || streaming) return;
-    setPrintingSummary(true);
+  // Print one conversation verbatim — instant, no AI call.
+  const printConversationTranscript = (convMessages) => {
+    setSummaryNote("");
+    const mode = convMessages.find(m => m.mode)?.mode || currentMode;
+    const how = openPrintable(buildTranscriptHtml(convMessages, PRINT_LOGO, mode), "Insina Health — AI Analysis Transcript");
+    if (how === "downloaded") {
+      setSummaryNote("Your browser blocked the print pop-up, so the transcript was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site.");
+    } else if (how === "failed") {
+      setSummaryNote("Couldn't open or save the transcript. Check that pop-ups and downloads are allowed for this site, then try again.");
+    }
+  };
+
+  // Print an AI-written summary of one conversation — makes one AI call.
+  const printConversationSummary = async (convId, convMessages) => {
+    if (!convMessages.length || summaryBusyConv !== null || streaming) return;
+    setSummaryBusyConv(convId);
     setSummaryNote("");
     const mode = loadModeData()?.mode || "standard";
     const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
-    const summaryPrompt = `Based on our entire conversation above, write a structured summary the patient can bring to their next medical appointment. Use this exact format:
+    const summaryPrompt = `Based on the conversation above, write a structured summary the patient can bring to their next medical appointment. Use this exact format:
 
 **Conversation Summary**
 A brief paragraph (3–5 sentences) describing the overall topics and themes we discussed.
@@ -1039,7 +1076,7 @@ One paragraph: what matters most from this conversation and which doctor to cont
 
 Keep the summary concise — it should fit on one to two printed pages.`;
     const apiMessages = [
-      ...messages.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
+      ...convMessages.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
       { role: "user", content: summaryPrompt },
     ];
     try {
@@ -1058,16 +1095,16 @@ Keep the summary concise — it should fit on one to two printed pages.`;
       const data = await res.json();
       const text = data.content?.[0]?.text || "";
       if (!text) throw new Error("empty");
-      const how = printConvSummary(text, PRINT_LOGO, mode);
+      const how = openPrintable(buildSummaryHtml(text, PRINT_LOGO, mode), "Insina Health — AI Analysis Summary");
       if (how === "downloaded") {
-        setSummaryNote("Your browser blocked the print pop-up, so the summary was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site and click Print Summary again.");
+        setSummaryNote("Your browser blocked the print pop-up, so the summary was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site and click Summary again.");
       } else if (how === "failed") {
         setSummaryNote("Couldn't open or save the summary. Check that pop-ups and downloads are allowed for this site, then try again.");
       }
     } catch {
-      setSummaryNote("Couldn't generate the summary — the AI server may be waking up (about 30 seconds on the free tier). Wait a moment, then click Print Summary again.");
+      setSummaryNote("Couldn't generate the summary — the AI server may be waking up (about 30 seconds on the free tier). Wait a moment, then click Summary again.");
     } finally {
-      setPrintingSummary(false);
+      setSummaryBusyConv(null);
     }
   };
 
@@ -1154,6 +1191,12 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .new-conv-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:transparent; border:1px solid #111e30; border-radius:12px; color:#98afc4; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; }
         .new-conv-btn:hover { border-color:#1a2f4a; color:#b0c4d8; }
+        .conv-head { display:flex; align-items:center; gap:10px; margin:0 0 14px; }
+        .conv-head .line { flex:1; height:1px; background:#1a2840; }
+        .conv-label { font-size:10px; color:#6a8090; font-family:'DM Mono',monospace; letterSpacing:.5px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .conv-print-btn { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; background:rgba(79,142,247,.08); border:1px solid rgba(79,142,247,.25); border-radius:6px; color:#7eb8d8; font-size:10px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; white-space:nowrap; }
+        .conv-print-btn:hover { background:rgba(79,142,247,.16); border-color:rgba(79,142,247,.45); }
+        .conv-print-btn:disabled { opacity:.5; cursor:default; }
         @media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }
       `}</style>
 
@@ -1182,13 +1225,9 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
-        <button
-          onClick={handlePrintSummary}
-          disabled={messages.length === 0 || printingSummary || streaming}
-          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", opacity: messages.length === 0 || printingSummary ? 0.4 : 1 }}
-        >
-          {printingSummary ? "⏳ Generating…" : "⎙ Print Summary"}
-        </button>
+        <span style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+          Print buttons are on each conversation ↓
+        </span>
       </div>
 
       {/* Mode indicator bar */}
@@ -1298,10 +1337,10 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             {newConvConfirm ? (
               <div>
                 <div style={{ fontSize: 10, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 8, textAlign: "center", lineHeight: 1.5 }}>
-                  Save conversation to Notes and start fresh?
+                  Save all conversations to Notes and clear the screen?
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={newConversation} style={{ flex: 1, padding: "6px 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Yes, clear</button>
+                  <button onClick={clearAll} style={{ flex: 1, padding: "6px 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Yes, clear all</button>
                   <button onClick={() => setNewConvConfirm(false)} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Cancel</button>
                 </div>
               </div>
@@ -1309,11 +1348,11 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               <>
                 <button
                   className="new-conv-btn"
-                  onClick={newConversation}
+                  onClick={clearAll}
                   disabled={messages.length === 0}
                   style={{ width: "100%", justifyContent: "center", opacity: messages.length === 0 ? 0.4 : 1 }}
                 >
-                  ↺ New Conversation
+                  🗑 Clear All
                 </button>
                 {messages.length > 0 && (
                   <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 7, lineHeight: 1.5 }}>
@@ -1340,22 +1379,50 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               </div>
             )}
 
-            {messages.map((m, i) => {
-              const prevIsAssistant = i > 0 && messages[i-1].role === "assistant";
-              const isNewTurn = m.role === "user" && prevIsAssistant;
-              return (
-                <div key={i}>
-                  {isNewTurn && (
-                    <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 20px" }} />
-                  )}
-                  <Message
-                    role={m.role} text={m.text}
-                    streaming={m.streaming && i === messages.length - 1}
-                    mode={m.mode || currentMode}
-                  />
-                </div>
-              );
-            })}
+            {(() => {
+              // Group messages into conversations by their conv id (consecutive).
+              const groups = [];
+              messages.forEach((m, idx) => {
+                const last = groups[groups.length - 1];
+                if (last && last.conv === (m.conv ?? 0)) last.items.push({ m, idx });
+                else groups.push({ conv: m.conv ?? 0, items: [{ m, idx }] });
+              });
+              return groups.map((g, gi) => {
+                const convMsgs = g.items.map(x => x.m);
+                const firstQ = convMsgs.find(m => m.role === "user")?.text || "Conversation";
+                const label = firstQ.length > 42 ? firstQ.slice(0, 42) + "…" : firstQ;
+                const busy = summaryBusyConv === g.conv;
+                return (
+                  <div key={g.conv} style={{ marginTop: gi === 0 ? 0 : 26 }}>
+                    {/* Conversation header with its own print controls */}
+                    <div className="conv-head no-print">
+                      <span className="conv-label" title={firstQ}>{gi + 1}. {label}</span>
+                      <div className="line" />
+                      <button className="conv-print-btn" onClick={() => printConversationTranscript(convMsgs)} title="Print this conversation word-for-word">⎙ Transcript</button>
+                      <button className="conv-print-btn" disabled={busy || streaming} onClick={() => printConversationSummary(g.conv, convMsgs)} title="Print an AI summary of this conversation">
+                        {busy ? "⏳ …" : "✦ Summary"}
+                      </button>
+                    </div>
+                    {g.items.map(({ m, idx }, j) => {
+                      const prev = j > 0 ? g.items[j - 1].m : null;
+                      const isNewTurn = m.role === "user" && prev?.role === "assistant";
+                      return (
+                        <div key={idx}>
+                          {isNewTurn && (
+                            <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 20px" }} />
+                          )}
+                          <Message
+                            role={m.role} text={m.text}
+                            streaming={m.streaming && idx === messages.length - 1}
+                            mode={m.mode || currentMode}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              });
+            })()}
 
             {streaming && messages[messages.length - 1]?.text === "" && <TypingIndicator />}
 
@@ -1390,6 +1457,21 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
 
           {/* Input */}
           <div style={{ borderTop: "1px solid #0d1a28", padding: "14px 24px", background: "#07090f", flexShrink: 0 }}>
+            {messages.some(m => (m.conv ?? 0) === currentConv) && (
+              <div style={{ marginBottom: 10 }}>
+                <button
+                  className="new-conv-btn"
+                  onClick={startNewConversation}
+                  disabled={streaming}
+                  title="Finish this topic and start a separate conversation below"
+                >
+                  ＋ New Conversation
+                </button>
+                <span style={{ marginLeft: 10, fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+                  starts a fresh topic — earlier ones stay above, each printable
+                </span>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
               <textarea
                 ref={textareaRef}

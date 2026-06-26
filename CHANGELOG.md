@@ -12,6 +12,27 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.9.0 — 2026-06-25
+
+### Added
+- **Per-conversation printing in AI Analysis.** The chat is now split into
+  separate conversations on screen. A **＋ New Conversation** button (by the
+  input) starts a fresh topic without clearing — earlier conversations stay
+  visible above, each under its own header. Every conversation has its own two
+  print buttons: **⎙ Transcript** (verbatim, instant) and **✦ Summary** (an
+  AI-written brief of just that conversation).
+- Each conversation also has its **own independent AI context** — starting a new
+  conversation gives the AI a clean slate, so topics don't bleed together.
+
+### Changed
+- Removed the top "Print Summary" button (which summarized *everything*); printing
+  is now per-conversation.
+- The sidebar action is now **🗑 Clear All** (saves all conversations to Notes,
+  then clears the screen).
+- Pop-up-blocked fallback now applies to both transcript and summary prints.
+
+---
+
 ## v1.8.3 — 2026-06-19
 
 ### Added
