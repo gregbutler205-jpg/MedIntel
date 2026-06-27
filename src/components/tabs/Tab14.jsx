@@ -5,6 +5,24 @@ import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
+// Shared consultation prep, keyed by appointment id and synced via Drive so the
+// mobile companion reads the same prep. `prepSig` must match the companion's
+// (src/lib/companionData.js) so both detect when the appointment has changed.
+function prepSig(appt) {
+  return [appt?.title, appt?.specialty, appt?.provider, appt?.facility, appt?.date, appt?.notes, appt?.prepInstructions]
+    .map(x => (x == null ? "" : String(x).trim())).join("|");
+}
+function loadVisitPrep(apptId) {
+  try { return (JSON.parse(localStorage.getItem("mi_visit_prep") || "{}"))[String(apptId)] || null; } catch { return null; }
+}
+function saveVisitPrep(apptId, entry) {
+  try {
+    const all = JSON.parse(localStorage.getItem("mi_visit_prep") || "{}");
+    all[String(apptId)] = { ...entry, generatedAt: new Date().toISOString() };
+    localStorage.setItem("mi_visit_prep", JSON.stringify(all));
+  } catch {}
+}
+
 function printConsultationPrep(appt, analysis) {
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const apptDate = appt.date ? new Date(appt.date + "T12:00:00").toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" }) : "—";
@@ -430,6 +448,15 @@ function ApptAIPanel({ appt }) {
   const [analysis, setAnalysis]       = useState("");
   const [loading, setLoading]         = useState(false);
   const [error, setError]             = useState("");
+  const [stale, setStale]             = useState(false);
+  const sig = prepSig(appt);
+
+  // Load any prep already generated for this appointment (here or on the
+  // companion, synced via Drive), so it shows without regenerating.
+  useEffect(() => {
+    const saved = loadVisitPrep(appt.id);
+    if (saved?.text) { setAnalysis(saved.text); setStale(saved.sig !== sig); }
+  }, [appt.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const buildPrompt = useCallback(() => {
     let ctx = "";
@@ -481,7 +508,10 @@ Please provide:
         throw new Error(isServerSleep ? "Server is waking up (takes ~30 sec) — wait and try again." : errMsg);
       }
       const data = await res.json();
-      setAnalysis(data.content?.[0]?.text || "No response");
+      const text = data.content?.[0]?.text || "No response";
+      setAnalysis(text);
+      saveVisitPrep(appt.id, { text, sig });   // persist so the companion reads it
+      setStale(false);
     } catch(e) {
       const isNetworkErr = e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("waking up");
       setError(isNetworkErr ? "Server is waking up (Render free tier). Wait ~30 seconds then try again." : e.message);
@@ -493,6 +523,7 @@ Please provide:
     <div style={{ marginTop:16, background:"rgba(79,142,247,.04)", border:"1px solid rgba(79,142,247,.15)", borderRadius:12, padding:18 }}>
       <div style={{ fontSize:11, fontWeight:600, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
         <span>✦</span> AI Appointment Prep
+        {stale && <span style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:0 }}>· details changed — regenerate</span>}
         {analysis && <button onClick={() => printConsultationPrep(appt, analysis)} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ Print</button>}
       </div>
       <div style={{ marginBottom:10 }}>

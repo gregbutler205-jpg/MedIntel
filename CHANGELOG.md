@@ -12,6 +12,30 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.13.0 — 2026-06-27
+
+### Added — shared consultation prep (web ⇄ companion)
+- **The companion now shows the same visit-specific Consultation Prep as the web
+  app, instead of a generic template.** Prep is generated once per appointment
+  (Claude Sonnet) from that appointment's details plus your conditions and meds,
+  and **saved into your record** keyed by appointment id, so it syncs over Google
+  Drive between the web app and the phone.
+  - Generate it on the **web app** → it appears on the **companion** after the next
+    sync (no rebuild).
+  - Open a visit's brief on the **companion** with no prep yet → the companion
+    generates it and saves it back, so the **web app** then has it too.
+  - A **Regenerate** button refreshes it; if the appointment's details change, both
+    apps flag the saved prep as stale.
+  - Offline with nothing cached, the brief falls back to a few record-grounded
+    questions so it's never empty.
+
+### Notes
+- Requires Google sign-in on both surfaces (Drive is the sync transport) and the
+  proxy to be reachable for generation. Prep propagates on the next sync, not
+  instantly.
+
+---
+
 ## v1.12.0 — 2026-06-27
 
 ### Added — web app Vitals

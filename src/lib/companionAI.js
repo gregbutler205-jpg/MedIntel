@@ -28,6 +28,34 @@ Recent Vitals: ${vitals}
 Always advise consulting their physician for clinical decisions. In an emergency, tell them to call 911 immediately.${extra ? "\n\n" + extra : ""}`;
 }
 
+/**
+ * Generate visit-specific consultation prep (markdown) using the same inputs as
+ * the web app's Appointment Prep — appointment fields plus the patient's active
+ * conditions and medications. Returns the prep text.
+ */
+export async function generateVisitPrep(appt) {
+  const conds = activeConditions().map(c => c.name).join(", ") || "none on file";
+  const ms = activeMeds().map(m => `${m.name}${m.dose ? " " + m.dose : ""}`).join(", ") || "none on file";
+  const prompt = `Help me prepare for my upcoming ${appt.specialty || "medical"} appointment.
+Appointment: ${appt.title || "Visit"}
+Provider: ${appt.provider || "—"}${appt.specialty ? ` (${appt.specialty})` : ""}
+Facility: ${appt.facility || "—"}
+Date: ${appt.date || "—"}${appt.prepInstructions ? `\nPrep Instructions: ${appt.prepInstructions}` : ""}${appt.notes ? `\nAppointment Notes: ${appt.notes}` : ""}
+Active Conditions: ${conds}
+Current Medications: ${ms}
+
+Please provide:
+1. What to discuss or ask during this appointment
+2. What to bring or prepare
+3. Any relevant concerns from my medical history to raise
+4. Questions to ask about my current medications or conditions`;
+  return askInsina({
+    system: "You are a personal health assistant helping prepare a patient for a specific medical appointment. Be direct, specific, and clinically relevant to THIS visit and provider. No emojis. Put each section header on its own line wrapped in ** (e.g. **What to discuss**). Use '- ' bullets for lists. Keep it concise and mobile-friendly.",
+    messages: [{ role: "user", content: prompt }],
+    model: MODEL_STRONG, max_tokens: 1024,
+  });
+}
+
 const toApiMsgs = (messages) => messages.map(m => ({
   role: m.role === "user" ? "user" : "assistant",
   content: m.content ?? m.text ?? "",

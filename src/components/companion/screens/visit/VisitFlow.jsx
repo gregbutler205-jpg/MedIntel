@@ -2,9 +2,9 @@
 // Pre-Visit Brief → Consent (cannot be skipped) → During → (processing) → Summary
 // + Action Items. Capture works offline; transcription/summary defer to network.
 import { useState, useEffect } from "react";
-import { C, mono, serif, Card, SL, Btn, LEVEL_COLOR } from "../../companionUI.jsx";
-import { safetyFlags, flagsForSpecialty, flaggedLabs, relDate, fmtShort, conditions } from "../../../../lib/companionData.js";
-import { selectRelevantFlags } from "../../../../lib/companionAI.js";
+import { C, mono, serif, Card, SL, Btn, Prose, LEVEL_COLOR } from "../../companionUI.jsx";
+import { safetyFlags, flagsForSpecialty, flaggedLabs, relDate, fmtShort, conditions, appointments, prepSig, getVisitPrep, saveVisitPrep } from "../../../../lib/companionData.js";
+import { selectRelevantFlags, generateVisitPrep } from "../../../../lib/companionAI.js";
 import { newVisit, getVisit, saveVisit } from "../../../../lib/visitCapture.js";
 import { enqueue } from "../../../../lib/outbox.js";
 import DuringVisit from "./DuringVisit.jsx";
@@ -69,14 +69,40 @@ function PreVisitBrief({ visit, onStart }) {
 
   const flags = showAll ? allFlags : shown;
   const hiddenCount = allFlags.length - shown.length;
-  // "What's changed" — recent active conditions + flagged labs as review items
+  // "What's changed" — recent active conditions as review items
   const recentConditions = conditions().filter(c => c.status === "active" && c.since && new Date(c.since) > new Date(Date.now() - 365 * 86400000));
-  // Suggested questions, grounded in the record (web app refines these further)
-  const questions = [
+
+  // ── Shared consultation prep: read it if either app already generated it for
+  // this appointment (synced via Drive); otherwise generate + save here. ───────
+  const appt = appointments().find(a => String(a.id) === String(visit.apptId)) ||
+    { id: visit.apptId, title: visit.apptTitle, provider: visit.provider, specialty: visit.specialty, date: visit.date };
+  const sig = prepSig(appt);
+  const prepKey = visit.apptId || sig;
+  const [prep, setPrep] = useState(() => { const s = getVisitPrep(prepKey); return s && s.sig === sig ? s.text : ""; });
+  const [prepLoading, setPrepLoading] = useState(false);
+  const [prepErr, setPrepErr] = useState("");
+
+  const runPrep = () => {
+    setPrepLoading(true); setPrepErr("");
+    generateVisitPrep(appt)
+      .then(text => { setPrep(text); saveVisitPrep(prepKey, { text, sig }); })
+      .catch(e => {
+        const net = /failed to fetch|networkerror|load failed/i.test(e.message || "");
+        setPrepErr(net ? "Couldn’t reach the AI server — check your connection and try again." : (e.message || "Couldn’t generate prep — try again when online."));
+      })
+      .finally(() => setPrepLoading(false));
+  };
+
+  // Auto-generate on first open when nothing is cached and we're online.
+  useEffect(() => {
+    if (!prep && navigator.onLine) runPrep();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Offline + nothing cached → a few record-grounded questions so it's not empty.
+  const fallbackQuestions = [
     ...labs.slice(0, 3).map(l => `Ask about your ${l.name} (${l.value}${l.unit ? " " + l.unit : ""}).`),
     "Any interactions among my current medications I should watch?",
-    "What should change before my next visit?",
-  ].slice(0, 5);
+  ].slice(0, 4);
 
   return (
     <div style={{ overflowY: "auto", padding: 16 }}>
@@ -115,12 +141,30 @@ function PreVisitBrief({ visit, onStart }) {
       )}
 
       <Card style={{ marginBottom: 16 }}>
-        <SL>Questions to Ask</SL>
-        {questions.map((q, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", fontSize: 12, color: C.dim }}>
-            <span style={{ color: C.blue, fontFamily: mono }}>{i + 1}.</span><span style={{ lineHeight: 1.45 }}>{q}</span>
-          </div>
-        ))}
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <SL mb={0}>Consultation Prep</SL>
+          {prep && !prepLoading && (
+            <button onClick={runPrep} style={{ marginLeft: "auto", background: "none", border: "none", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer" }}>↻ Regenerate</button>
+          )}
+        </div>
+        {prepLoading ? (
+          <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>✦ Preparing for this visit…</div>
+        ) : prep ? (
+          <Prose text={prep} />
+        ) : (
+          <>
+            {prepErr && <div style={{ fontSize: 11, color: C.amber, fontFamily: mono, marginBottom: 8 }}>{prepErr}</div>}
+            <div style={{ fontSize: 11, color: C.dim, marginBottom: 8 }}>
+              {navigator.onLine ? "Tailored prep will appear here." : "You’re offline — here are a few questions from your record. Tailored prep generates when you’re back online."}
+            </div>
+            {fallbackQuestions.map((q, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, padding: "4px 0", fontSize: 12, color: C.dim }}>
+                <span style={{ color: C.blue, fontFamily: mono }}>{i + 1}.</span><span style={{ lineHeight: 1.45 }}>{q}</span>
+              </div>
+            ))}
+            {navigator.onLine && <button onClick={runPrep} style={{ background: "none", border: "none", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", padding: "8px 0 0" }}>✦ Generate prep</button>}
+          </>
+        )}
       </Card>
 
       <Btn onClick={onStart}>Start Visit Capture →</Btn>

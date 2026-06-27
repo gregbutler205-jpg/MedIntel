@@ -79,6 +79,42 @@ export function Btn({ children, onClick, disabled, color = C.blue, style = {} })
   );
 }
 
+// ── Lightweight prose renderer for AI markdown (bold headers, bullets, dividers)
+function inlineBold(text, keyBase) {
+  return text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((seg, i) =>
+    seg.startsWith("**") && seg.endsWith("**")
+      ? <strong key={`${keyBase}-${i}`} style={{ color: C.p }}>{seg.slice(2, -2)}</strong>
+      : <span key={`${keyBase}-${i}`}>{seg}</span>
+  );
+}
+export function Prose({ text }) {
+  const lines = String(text || "").split("\n");
+  return (
+    <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6 }}>
+      {lines.map((raw, i) => {
+        const line = raw.trim();
+        if (!line) return <div key={i} style={{ height: 6 }} />;
+        if (/^[-—*_]{3,}$/.test(line)) return <div key={i} style={{ borderTop: `1px solid ${C.b2}`, margin: "8px 0" }} />;
+        const header = line.match(/^\*\*(.+)\*\*:?$/);
+        if (header) return <div key={i} style={{ color: C.s, fontWeight: 700, fontSize: 12, margin: "8px 0 3px" }}>{header[1]}</div>;
+        const bullet = line.match(/^[-•]\s+(.*)$/);
+        if (bullet) return (
+          <div key={i} style={{ display: "flex", gap: 7, padding: "2px 0" }}>
+            <span style={{ color: C.blue }}>•</span><span style={{ flex: 1 }}>{inlineBold(bullet[1], i)}</span>
+          </div>
+        );
+        const numbered = line.match(/^(\d+)\.\s+(.*)$/);
+        if (numbered) return (
+          <div key={i} style={{ display: "flex", gap: 7, padding: "2px 0" }}>
+            <span style={{ color: C.blue, fontFamily: mono }}>{numbered[1]}.</span><span style={{ flex: 1 }}>{inlineBold(numbered[2], i)}</span>
+          </div>
+        );
+        return <div key={i} style={{ padding: "2px 0" }}>{inlineBold(line, i)}</div>;
+      })}
+    </div>
+  );
+}
+
 // ── Empty-state line ──────────────────────────────────────────────────────────
 export function Empty({ children }) {
   return <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, padding: "20px 0", textAlign: "center", lineHeight: 1.8 }}>{children}</div>;

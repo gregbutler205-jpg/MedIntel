@@ -184,6 +184,24 @@ export function removeException(id) {
 }
 
 // ── Conditions / allergies / labs / care team ─────────────────────────────────
+// ── Per-appointment consultation prep (shared with the web app, synced via Drive)
+// Stored as a single object keyed by appointment id so Drive's object-merge keeps
+// per-appointment entries; either app generates it, both read it. `sig` lets us
+// detect when the appointment changed and offer to regenerate.
+export function prepSig(appt) {
+  return [appt?.title, appt?.specialty, appt?.provider, appt?.facility, appt?.date, appt?.notes, appt?.prepInstructions]
+    .map(x => (x == null ? "" : String(x).trim())).join("|");
+}
+export function getVisitPrep(key) {
+  const all = rls("mi_visit_prep", {});
+  return all[String(key)] || null;
+}
+export function saveVisitPrep(key, entry) {
+  const all = rls("mi_visit_prep", {});
+  all[String(key)] = { ...entry, generatedAt: new Date().toISOString() };
+  wls("mi_visit_prep", all);
+}
+
 export function conditions() { return rls("mi_conditions", []); }
 export function surgeries() {
   return rls("mi_surgeries", []).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
