@@ -12,15 +12,26 @@ const PROMPTS = [
   "How is my tacrolimus trend?",
 ];
 
-export default function AILite() {
+export default function AILite({ initialPrompt, onPromptConsumed }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState("");
   const abortRef = useRef(null);
   const bottomRef = useRef(null);
+  const sentInitialRef = useRef(false);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // Auto-send a prompt handed off from another screen (e.g. "Ask Insina" on a symptom).
+  useEffect(() => {
+    if (initialPrompt && !sentInitialRef.current) {
+      sentInitialRef.current = true;
+      send(initialPrompt);
+      onPromptConsumed?.();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt]);
 
   async function send(q) {
     const text = (q ?? input).trim();

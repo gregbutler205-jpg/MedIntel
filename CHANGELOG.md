@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.11.0 — 2026-06-27
+
+### Fixed — companion symptom logging
+- **Saving a symptom now confirms it.** The companion Symptoms tab saved silently
+  (no feedback), so it felt like nothing happened. It now shows a "✓ <symptom>
+  saved — will sync to Drive" confirmation, matching the Vitals tab.
+
+### Added
+- **Ask Insina about a symptom.** Every logged symptom (and the just-saved
+  confirmation) now has a **✦ Ask Insina about this** button that opens the AI tab
+  and auto-sends a prompt cross-referencing that symptom against the patient's
+  labs, vitals, and medications — bringing the companion in line with the web
+  app's symptom → AI hand-off.
+
+---
+
 ## v1.10.0 — 2026-06-26
 
 ### Added — companion improvements

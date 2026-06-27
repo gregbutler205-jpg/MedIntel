@@ -13,7 +13,7 @@ const SUBTABS = [
   { key: "quick",    label: "Quick Log" },
 ];
 
-export default function Log({ queueSync, initialTab = "vitals" }) {
+export default function Log({ queueSync, initialTab = "vitals", askAI }) {
   const [sub, setSub] = useState(SUBTABS.some(s => s.key === initialTab) ? initialTab : "vitals");
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
@@ -27,12 +27,19 @@ export default function Log({ queueSync, initialTab = "vitals" }) {
       </div>
       <div style={{ padding: 16 }}>
         {sub === "vitals"   && <Vitals queueSync={queueSync} />}
-        {sub === "symptoms" && <Symptoms queueSync={queueSync} />}
+        {sub === "symptoms" && <Symptoms queueSync={queueSync} askAI={askAI} />}
         {sub === "quick"    && <QuickLog queueSync={queueSync} onDone={setSub} />}
       </div>
     </div>
   );
 }
+
+// Build the prompt sent to AI when asking about a logged symptom.
+function symptomPrompt(e) {
+  const sev = e.severity ? `, ${String(e.severity).toLowerCase()} severity` : "";
+  return `I've been experiencing ${e.name}${sev}.${e.notes ? ` Notes: ${e.notes}.` : ""} Please cross-reference this symptom with my current labs, vitals, and medications to identify possible causes and what I should discuss with my care team.`;
+}
+const askBtn = { background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, padding: "6px 11px", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", whiteSpace: "nowrap" };
 
 // ── Vitals ────────────────────────────────────────────────────────────────────
 const VITAL_FIELDS = [
@@ -115,12 +122,13 @@ const COMMON = ["Fatigue", "Headache", "Nausea", "Fever", "Swelling", "Rash", "D
 const SEV = ["Mild", "Moderate", "Severe"];
 const sevColor = s => s === "Severe" ? C.red : s === "Moderate" ? C.amber : C.green;
 
-function Symptoms({ queueSync }) {
+function Symptoms({ queueSync, askAI }) {
   const [entries, setEntries] = useState(() => rls("mi_symptoms", []));
   const [name, setName] = useState("");
   const [severity, setSeverity] = useState("Moderate");
   const [trigger, setTrigger] = useState("");
   const [note, setNote] = useState("");
+  const [savedEntry, setSavedEntry] = useState(null);
 
   function save() {
     if (!name.trim()) return;
@@ -129,12 +137,22 @@ function Symptoms({ queueSync }) {
     const updated = [entry, ...entries];
     setEntries(updated); wls("mi_symptoms", updated);
     setName(""); setTrigger(""); setNote(""); setSeverity("Moderate");
+    setSavedEntry(entry);
+    setTimeout(() => setSavedEntry(c => (c?.id === entry.id ? null : c)), 8000);
     queueSync?.();
   }
   function remove(id) { const u = entries.filter(e => e.id !== id); setEntries(u); wls("mi_symptoms", u); queueSync?.(); }
 
   return (
     <div>
+      {savedEntry && (
+        <Card style={{ marginBottom: 12, border: `1px solid ${C.green}40` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: C.green, fontFamily: mono, flex: 1, minWidth: 130 }}>✓ {savedEntry.name} saved — will sync to Drive</span>
+            {askAI && <button onClick={() => askAI(symptomPrompt(savedEntry))} style={askBtn}>✦ Ask Insina about this</button>}
+          </div>
+        </Card>
+      )}
       <Card style={{ marginBottom: 16 }}>
         <SL>What are you feeling?</SL>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
@@ -172,6 +190,7 @@ function Symptoms({ queueSync }) {
             </div>
             <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{e.date}</div>
             {e.notes && <div style={{ fontSize: 11, color: C.dim, marginTop: 3 }}>{e.notes}</div>}
+            {askAI && <button onClick={() => askAI(symptomPrompt(e))} style={{ ...askBtn, marginTop: 8 }}>✦ Ask Insina about this</button>}
           </div>
           <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: C.ghost, cursor: "pointer", fontSize: 14, alignSelf: "flex-start" }}>✕</button>
         </div>

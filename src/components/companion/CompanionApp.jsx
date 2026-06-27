@@ -100,6 +100,7 @@ function BottomNav({ tab, onTab }) {
 function CompanionInner() {
   const [tab, setTab] = useState("today");
   const [logTab, setLogTab] = useState("vitals");    // which Log sub-screen to open
+  const [aiPrompt, setAiPrompt] = useState(null);    // prompt to auto-send when the AI tab opens
   const [overlay, setOverlay] = useState(null);      // { name: "emergency" } | { name: "visit", appt, visitId }
   const [online, setOnline] = useState(navigator.onLine);
   const [syncState, setSyncState] = useState("idle");
@@ -161,6 +162,7 @@ function CompanionInner() {
 
   const goTab        = (k) => { setOverlay(null); setTab(k); };
   const openLog      = (sub = "vitals") => { setOverlay(null); setLogTab(sub); setTab("log"); };
+  const askAI        = (prompt) => { setAiPrompt(prompt); setOverlay(null); setTab("ai"); };
   const openEmergency = () => setOverlay({ name: "emergency" });
   const openSettings  = () => setOverlay({ name: "settings" });
   const startVisit    = (appt) => setOverlay({ name: "visit", appt, visitId: null });
@@ -211,9 +213,9 @@ function CompanionInner() {
         {overlay?.name === "visit" && <VisitFlow appt={overlay.appt} visitId={overlay.visitId} onClose={back} queueSync={queueSync} />}
         {!overlay && tab === "today" && <Today goTab={goTab} openLog={openLog} openEmergency={openEmergency} openSettings={openSettings} openSurgeries={openSurgeries} startVisit={startVisit} lastSynced={lastSynced} />}
         {!overlay && tab === "meds"  && <Meds queueSync={queueSync} openMedList={openMedList} />}
-        {!overlay && tab === "log"   && <Log queueSync={queueSync} initialTab={logTab} />}
+        {!overlay && tab === "log"   && <Log queueSync={queueSync} initialTab={logTab} askAI={askAI} />}
         {!overlay && tab === "care"  && <Care startVisit={startVisit} openVisit={openVisit} />}
-        {!overlay && tab === "ai"    && <AILite />}
+        {!overlay && tab === "ai"    && <AILite initialPrompt={aiPrompt} onPromptConsumed={() => setAiPrompt(null)} />}
       </div>
 
       {!overlay && <BottomNav tab={tab} onTab={goTab} />}
