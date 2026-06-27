@@ -3,6 +3,7 @@
 // step analysis sessions stay on the web.
 import { useState, useRef, useEffect } from "react";
 import { C, mono, sans } from "../companionUI.jsx";
+import MicButton from "../MicButton.jsx";
 import { askInsinaStream, buildRecordSystem } from "../../../lib/companionAI.js";
 
 const PROMPTS = [
@@ -66,11 +67,12 @@ export default function AILite() {
         <div ref={bottomRef} />
       </div>
       <div style={{ padding: "10px 16px 16px", borderTop: `1px solid ${C.b2}`, background: C.card, flexShrink: 0 }}>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <MicButton onText={t => setInput(prev => (prev ? prev + " " : "") + t)} />
           <input value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
-            placeholder="Ask a health question…"
-            style={{ flex: 1, background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 20, padding: "9px 14px", color: C.p, fontSize: 12, fontFamily: sans, outline: "none" }} />
+            placeholder="Ask or dictate a question…"
+            style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 20, padding: "9px 14px", color: C.p, fontSize: 12, fontFamily: sans, outline: "none" }} />
           {streaming
             ? <button onClick={() => abortRef.current?.abort()} style={{ background: "rgba(239,68,68,.15)", border: `1px solid rgba(239,68,68,.3)`, borderRadius: 20, padding: "9px 14px", color: C.red, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>Stop</button>
             : <button onClick={() => send()} disabled={!input.trim()} style={{ background: "rgba(79,142,247,.15)", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 20, padding: "9px 16px", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", opacity: input.trim() ? 1 : 0.4 }}>Send</button>}

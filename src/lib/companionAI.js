@@ -81,10 +81,51 @@ export async function askInsina({ system, messages, model = MODEL_LITE, max_toke
   return json.content?.map(b => b.text).filter(Boolean).join("") || "";
 }
 
-/** Ask for JSON and parse it tolerantly (strips code fences / prose around it). */
+/**
+ * Pick which safety flags are relevant to a specific visit. Returns the subset of
+ * the passed flags (preserving objects). Falls back to all flags on any failure —
+ * callers should pre-filter deterministically for the offline case.
+ */
+export async function selectRelevantFlags({ title, provider, specialty }, flags) {
+  if (!flags.length) return flags;
+  const list = flags.map((f, i) => `${i}: [${f.level}] ${f.text}`).join("\n");
+  const data = await askInsinaJSON({
+    system: `You are prepping a patient for ONE specific doctor visit. From the numbered safety flags, choose only those genuinely relevant for THIS provider/specialty to know — drop ones that belong to a different specialty. ALWAYS keep life-critical flags (transplant status, immunosuppression, severe allergies). Return JSON: {"keep":[<indices>]}.`,
+    messages: [{ role: "user", content: `Visit: ${title || "visit"} with ${provider || "provider"}${specialty ? ` (${specialty})` : ""}.\nFlags:\n${list}` }],
+    max_tokens: 200,
+  });
+  const keep = Array.isArray(data.keep) ? data.keep : [];
+  const picked = keep.map(i => flags[i]).filter(Boolean);
+  return picked.length ? picked : flags;
+}
+
+const firstJSON = (text) => {
+  const m = (text || "").match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch { return null; }
+};
+
+/**
+ * Ask for JSON and parse it. Forces well-formed output by prefilling the
+ * assistant turn with "{" (Anthropic continues from there), then retries once
+ * with a stricter instruction if parsing fails.
+ */
 export async function askInsinaJSON({ system, messages, model = MODEL_LITE, max_tokens = 1024 }) {
-  const text = await askInsina({ system, messages, model, max_tokens });
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("AI did not return JSON.");
-  return JSON.parse(match[0]);
+  // Attempt 1: assistant prefill "{" so the model must emit a JSON object.
+  const primed = await askInsina({
+    system, model, max_tokens,
+    messages: [...messages, { role: "assistant", content: "{" }],
+  });
+  const parsed = firstJSON("{" + primed);
+  if (parsed) return parsed;
+
+  // Attempt 2: explicit "JSON only" nudge.
+  const retry = await askInsina({
+    system: `${system}\n\nRespond with ONLY valid minified JSON — no prose, no markdown, no code fences.`,
+    model, max_tokens, messages,
+  });
+  const parsedRetry = firstJSON(retry);
+  if (parsedRetry) return parsedRetry;
+
+  throw new Error("Couldn’t read that as a structured entry — try the Vitals or Symptoms tab.");
 }

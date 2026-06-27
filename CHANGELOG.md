@@ -12,6 +12,43 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.10.0 — 2026-06-26
+
+### Added — companion improvements
+- **Voice input.** A 🎤 mic on the AI box and Quick Log uses on-device speech
+  recognition where available (Chrome/Android). On iPhone, every text field
+  already accepts the keyboard's built-in dictation, so vitals, symptoms, and
+  questions can all be spoken.
+- **My Medications list.** A button on the Meds screen opens the full list with
+  name, dose/frequency, and prescribing doctor (e.g. "Tacrolimus · 3 mg · twice
+  daily · Dr. Zapata").
+- **Surgeries & Procedures list**, reachable from Today (procedure, date, surgeon,
+  facility, outcome).
+- **Sign-in screen** now leads with a 2× larger logo.
+
+### Changed
+- **Meds tracking mode is now pick-once.** Instead of always showing all four
+  options, you choose a mode once; afterward the screen shows just "Tracking:
+  <mode> · Change". Added **per-dose-group reminder toggles** (morning / midday /
+  evening), each independently on/off with its own time. Medication reminders moved
+  off the Settings screen to the Meds screen; Settings keeps appointment and
+  attention-alert toggles.
+- **Appointment Prep shows only relevant safety flags.** The AI now selects the
+  flags that matter for that visit's provider/specialty (always keeping
+  life-critical ones), with a "Show all flags" toggle. Offline, it falls back to a
+  deterministic specialty filter.
+
+### Fixed
+- **"Talk to Insina" no longer errors with "AI did not return JSON."** The
+  structured-entry parse now forces valid JSON (assistant prefill) and retries
+  before failing, with a friendly fallback message.
+- **App fits the screen.** Fixed horizontal overflow and applied left/right
+  safe-area insets so nothing sits off to the right on iPhone.
+- **Back button everywhere.** A back control returns to the previous screen; from a
+  main tab it returns to Today (useful since an installed PWA has no browser back).
+
+---
+
 ## v1.9.0 — 2026-06-25
 
 ### Added

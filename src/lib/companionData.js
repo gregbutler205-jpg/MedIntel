@@ -143,7 +143,8 @@ export const MED_MODES = [
   { key: "off",       label: "Off",            blurb: "List stays viewable; no daily interaction." },
 ];
 export function getMedMode() { return rls("mi_med_mode", "quick"); }       // default per spec
-export function setMedMode(m) { wls("mi_med_mode", m); }
+export function isMedModeChosen() { return rls("mi_med_mode_set", false); } // has the patient picked yet?
+export function setMedMode(m) { wls("mi_med_mode", m); wls("mi_med_mode_set", true); }
 
 // ── Whole-group confirmations (coarse, self-reported, by design) ──────────────
 export function todayConfirms() {
@@ -184,6 +185,9 @@ export function removeException(id) {
 
 // ── Conditions / allergies / labs / care team ─────────────────────────────────
 export function conditions() { return rls("mi_conditions", []); }
+export function surgeries() {
+  return rls("mi_surgeries", []).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+}
 export function activeConditions() { return conditions().filter(c => c.status === "active"); }
 export function allergies() { return rls("mi_allergies", []); }
 export function careTeam() { return rls("mi_care_team", []); }
@@ -214,6 +218,24 @@ export function safetyFlags() {
   // critical first, then caution, then info
   const order = { critical: 0, caution: 1, info: 2 };
   return out.sort((a, b) => order[a.level] - order[b.level]);
+}
+
+// Deterministic relevance filter (offline fallback for the Pre-Visit Brief):
+// keep all critical flags, plus those whose text matches the visit's specialty.
+const SPECIALTY_KEYWORDS = [
+  { match: /hepatolog|liver|transplant|gastro/i, keys: ["liver", "transplant", "immunosupp", "tacrolimus", "mycophenolate", "prednisone", "alt", "ast", "alp", "ggt", "bilirubin", "albumin", "platelet", "rejection", "valgan", "cmv", "wbc"] },
+  { match: /nephro|kidney|renal/i,                keys: ["kidney", "creatinine", "egfr", "bun", "potassium", "ckd", "magnesium", "sodium", "tacrolimus"] },
+  { match: /cardio|heart|hypertens/i,             keys: ["bp", "blood pressure", "hypertension", "heart", "cholesterol", "ldl", "hdl", "triglyceride", "metoprolol", "amlodipine"] },
+  { match: /endocrin|diabet/i,                    keys: ["glucose", "hba1c", "diabet", "ptdm", "insulin"] },
+  { match: /primary|internal|family|pcp/i,        keys: ["bp", "blood pressure", "glucose", "hba1c", "cholesterol", "diabet", "weight", "vaccin", "allerg"] },
+];
+export function flagsForSpecialty(specialtyOrTitle, flags) {
+  const ctx = (specialtyOrTitle || "").toLowerCase();
+  const entry = SPECIALTY_KEYWORDS.find(e => e.match.test(ctx));
+  if (!entry) return flags; // unknown specialty → show all
+  return flags.filter(f =>
+    f.level === "critical" || entry.keys.some(k => f.text.toLowerCase().includes(k))
+  );
 }
 
 // ── Emergency Info bundle (works offline — derived entirely from local record) ─

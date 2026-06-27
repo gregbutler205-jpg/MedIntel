@@ -11,7 +11,7 @@ import { initGoogleAuth, signInWithRedirect, extractTokenFromHash, getAccessToke
 import { fullSync } from "../../lib/driveSync.js";
 import { enqueue, flush } from "../../lib/outbox.js";
 import { cleanupOldAudio } from "../../lib/visitCapture.js";
-import { scheduleMedReminder, runOpenNotifications } from "../../lib/notify.js";
+import { scheduleMedReminders, runOpenNotifications } from "../../lib/notify.js";
 import { computePatternFlags } from "../../lib/patternFlags.js";
 import { C, mono, sans } from "./companionUI.jsx";
 
@@ -23,6 +23,8 @@ import Care       from "./screens/Care.jsx";
 import AILite     from "./screens/AILite.jsx";
 import Emergency  from "./screens/Emergency.jsx";
 import Settings   from "./screens/Settings.jsx";
+import MedList    from "./screens/MedList.jsx";
+import Surgeries  from "./screens/Surgeries.jsx";
 import VisitFlow  from "./screens/visit/VisitFlow.jsx";
 
 const TABS = [
@@ -129,7 +131,7 @@ function CompanionInner() {
     }
     // Housekeeping + best-effort local notifications on open
     cleanupOldAudio().catch(() => {});
-    scheduleMedReminder();
+    scheduleMedReminders();
     try { runOpenNotifications(computePatternFlags()); } catch { /* ignore */ }
   }, [runSync]);
 
@@ -163,7 +165,12 @@ function CompanionInner() {
   const openSettings  = () => setOverlay({ name: "settings" });
   const startVisit    = (appt) => setOverlay({ name: "visit", appt, visitId: null });
   const openVisit     = (visitId) => setOverlay({ name: "visit", appt: null, visitId });
-  const closeOverlay  = () => setOverlay(null);
+  const openMedList   = () => setOverlay({ name: "medlist" });
+  const openSurgeries = () => setOverlay({ name: "surgeries" });
+
+  // Back: close an overlay (returns to the tab it was opened from), else a
+  // non-Today tab returns to Today (an installed PWA has no browser back button).
+  const back = () => { if (overlay) setOverlay(null); else if (tab !== "today") setTab("today"); };
 
   // Sign-in gate: a full screen before the app handles Google connection. Optional —
   // "Continue without signing in" lets offline capture proceed.
@@ -176,7 +183,12 @@ function CompanionInner() {
   }
 
   return (
-    <div style={{ background: C.bg, height: "100dvh", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", fontFamily: sans, overflow: "hidden", paddingTop: "env(safe-area-inset-top)" }}>
+    <div style={{
+      background: C.bg, height: "100dvh", width: "100%", maxWidth: 480, margin: "0 auto",
+      display: "flex", flexDirection: "column", fontFamily: sans, overflow: "hidden", boxSizing: "border-box",
+      paddingTop: "env(safe-area-inset-top)",
+      paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)",
+    }}>
       {!online && (
         <div style={{ background: "#141f00", borderBottom: "1px solid #3a5a00", padding: "5px 16px", fontSize: 10, color: "#a3e635", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
           📶 Offline — you can still capture; it’ll sync when you’re back online
@@ -184,12 +196,21 @@ function CompanionInner() {
       )}
       <SyncBar syncState={syncState} lastSynced={lastSynced} onSync={handleSync} />
 
-      <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", display: "flex", flexDirection: "column" }}>
-        {overlay?.name === "emergency" && <Emergency onBack={closeOverlay} />}
-        {overlay?.name === "settings" && <Settings onBack={closeOverlay} />}
-        {overlay?.name === "visit" && <VisitFlow appt={overlay.appt} visitId={overlay.visitId} onClose={closeOverlay} queueSync={queueSync} />}
-        {!overlay && tab === "today" && <Today goTab={goTab} openLog={openLog} openEmergency={openEmergency} openSettings={openSettings} startVisit={startVisit} lastSynced={lastSynced} />}
-        {!overlay && tab === "meds"  && <Meds queueSync={queueSync} />}
+      {/* Slim back bar on non-Today tabs (overlays render their own header back). */}
+      {!overlay && tab !== "today" && (
+        <button onClick={back} style={{ display: "flex", alignItems: "center", gap: 6, background: C.card, border: "none", borderBottom: `1px solid ${C.b2}`, color: C.blue, fontSize: 12, fontFamily: mono, padding: "8px 16px", cursor: "pointer", flexShrink: 0, textAlign: "left" }}>
+          ← Back
+        </button>
+      )}
+
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {overlay?.name === "emergency"  && <Emergency onBack={back} />}
+        {overlay?.name === "settings"   && <Settings onBack={back} />}
+        {overlay?.name === "medlist"    && <MedList onBack={back} />}
+        {overlay?.name === "surgeries"  && <Surgeries onBack={back} />}
+        {overlay?.name === "visit" && <VisitFlow appt={overlay.appt} visitId={overlay.visitId} onClose={back} queueSync={queueSync} />}
+        {!overlay && tab === "today" && <Today goTab={goTab} openLog={openLog} openEmergency={openEmergency} openSettings={openSettings} openSurgeries={openSurgeries} startVisit={startVisit} lastSynced={lastSynced} />}
+        {!overlay && tab === "meds"  && <Meds queueSync={queueSync} openMedList={openMedList} />}
         {!overlay && tab === "log"   && <Log queueSync={queueSync} initialTab={logTab} />}
         {!overlay && tab === "care"  && <Care startVisit={startVisit} openVisit={openVisit} />}
         {!overlay && tab === "ai"    && <AILite />}

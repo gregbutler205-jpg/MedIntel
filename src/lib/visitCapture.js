@@ -32,6 +32,7 @@ export function newVisit(appt) {
     apptId: appt?.id || null,
     apptTitle: appt?.title || "Doctor visit",
     provider: appt?.provider || appt?.doctor || "",
+    specialty: appt?.specialty || "",
     date: appt?.date ? String(appt.date).slice(0, 10) : toISO(),
     createdAt: new Date().toISOString(),
     consent: null,          // "agreed" | "declined" | "skipped"

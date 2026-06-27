@@ -1,9 +1,10 @@
 // ── Doctor Visit Capture — five-stage flow orchestrator. ───────────────────────
 // Pre-Visit Brief → Consent (cannot be skipped) → During → (processing) → Summary
 // + Action Items. Capture works offline; transcription/summary defer to network.
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { C, mono, serif, Card, SL, Btn, LEVEL_COLOR } from "../../companionUI.jsx";
-import { safetyFlags, flaggedLabs, relDate, fmtShort, conditions } from "../../../../lib/companionData.js";
+import { safetyFlags, flagsForSpecialty, flaggedLabs, relDate, fmtShort, conditions } from "../../../../lib/companionData.js";
+import { selectRelevantFlags } from "../../../../lib/companionAI.js";
 import { newVisit, getVisit, saveVisit } from "../../../../lib/visitCapture.js";
 import { enqueue } from "../../../../lib/outbox.js";
 import DuringVisit from "./DuringVisit.jsx";
@@ -46,8 +47,28 @@ export default function VisitFlow({ appt, visitId, onClose, queueSync }) {
 
 // ── Stage 1: Pre-Visit Brief (read-only, from the record) ─────────────────────
 function PreVisitBrief({ visit, onStart }) {
-  const flags = safetyFlags();
+  const allFlags = safetyFlags();
   const labs = flaggedLabs();
+
+  // Show only flags relevant to THIS visit. Start with the deterministic
+  // specialty filter (instant, offline-safe); refine with AI when online.
+  const ctx = `${visit.specialty || ""} ${visit.apptTitle || ""}`;
+  const [shown, setShown] = useState(() => flagsForSpecialty(ctx, allFlags));
+  const [showAll, setShowAll] = useState(false);
+  const [refining, setRefining] = useState(navigator.onLine);
+
+  useEffect(() => {
+    if (!navigator.onLine) { setRefining(false); return; }
+    let cancelled = false;
+    selectRelevantFlags({ title: visit.apptTitle, provider: visit.provider, specialty: visit.specialty }, allFlags)
+      .then(picked => { if (!cancelled) setShown(picked); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setRefining(false); });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const flags = showAll ? allFlags : shown;
+  const hiddenCount = allFlags.length - shown.length;
   // "What's changed" — recent active conditions + flagged labs as review items
   const recentConditions = conditions().filter(c => c.status === "active" && c.since && new Date(c.since) > new Date(Date.now() - 365 * 86400000));
   // Suggested questions, grounded in the record (web app refines these further)
@@ -67,13 +88,21 @@ function PreVisitBrief({ visit, onStart }) {
       </Card>
 
       <Card style={{ marginBottom: 12 }}>
-        <SL>Safety Flags This Doctor Should Know</SL>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+          <SL mb={0}>Safety Flags For This Visit</SL>
+          {refining && <span style={{ marginLeft: "auto", fontSize: 9, color: C.ghost, fontFamily: mono }}>✦ tailoring…</span>}
+        </div>
         {flags.length === 0 ? <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>None on file.</div> : flags.map((f, i) => (
           <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "5px 0" }}>
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: LEVEL_COLOR[f.level], marginTop: 5, flexShrink: 0 }} />
             <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.45 }}>{f.text}</div>
           </div>
         ))}
+        {hiddenCount > 0 && (
+          <button onClick={() => setShowAll(s => !s)} style={{ background: "none", border: "none", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", padding: "8px 0 0" }}>
+            {showAll ? "Show only relevant" : `Show all flags (+${hiddenCount})`}
+          </button>
+        )}
       </Card>
 
       {recentConditions.length > 0 && (

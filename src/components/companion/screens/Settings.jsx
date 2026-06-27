@@ -2,10 +2,9 @@
 // The app is fully usable with all of these off.
 import { useState } from "react";
 import { C, mono, serif, Card } from "../companionUI.jsx";
-import { getNotifPrefs, setNotifPrefs, requestNotifPermission, scheduleMedReminder } from "../../../lib/notify.js";
+import { getNotifPrefs, setNotifPrefs, requestNotifPermission } from "../../../lib/notify.js";
 
 const TYPES = [
-  { key: "meds",   label: "Medication reminders", blurb: "A nudge at your dose time, plus low-refill heads-up." },
   { key: "appts",  label: "Appointment reminders", blurb: "Ahead of upcoming visits, with a prompt to review the brief." },
   { key: "alerts", label: "Attention alerts",      blurb: "When a pattern flag or out-of-range result is worth a glance." },
 ];
@@ -19,9 +18,7 @@ export default function Settings({ onBack }) {
     if (!prefs[key] && !granted) { granted = await requestNotifPermission(); setPerm(granted ? "granted" : (Notification?.permission || "denied")); }
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next); setNotifPrefs(next);
-    if (key === "meds") scheduleMedReminder();
   }
-  function setTime(t) { const next = { ...prefs, medTime: t }; setPrefs(next); setNotifPrefs(next); scheduleMedReminder(); }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, background: C.bg }}>
@@ -51,18 +48,11 @@ export default function Settings({ onBack }) {
               </div>
               <Toggle on={prefs[t.key]} onClick={() => toggle(t.key)} />
             </div>
-            {t.key === "meds" && prefs.meds && (
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.b2}`, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 10, color: C.dim, fontFamily: mono }}>Daily reminder time</span>
-                <input type="time" value={prefs.medTime} onChange={e => setTime(e.target.value)}
-                  style={{ background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, color: C.p, padding: "5px 8px", fontSize: 12, fontFamily: mono }} />
-              </div>
-            )}
           </Card>
         ))}
 
         <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, lineHeight: 1.5, marginTop: 8, paddingBottom: 24 }}>
-          Reminders run while the app is open. Background push will arrive in a later update.
+          Medication reminders are set per dose-time on the Meds screen. Reminders run while the app is open; background push will arrive in a later update.
         </div>
       </div>
     </div>

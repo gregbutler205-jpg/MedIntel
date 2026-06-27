@@ -3,8 +3,9 @@
 // daily logger). Quick Log is the convenience shortcut, not the front door.
 import { useState } from "react";
 import { C, mono, sans, Card, SL, Btn, Empty, Pill } from "../companionUI.jsx";
-import { rls, wls, uid, toISO, readings, latestWith, recentAverage } from "../../../lib/companionData.js";
-import { askInsinaJSON, buildRecordSystem } from "../../../lib/companionAI.js";
+import { rls, wls, uid, toISO, readings, latestWith, recentAverage, activeMeds } from "../../../lib/companionData.js";
+import { askInsinaJSON } from "../../../lib/companionAI.js";
+import MicButton from "../MicButton.jsx";
 
 const SUBTABS = [
   { key: "vitals",   label: "Vitals" },
@@ -193,13 +194,11 @@ function QuickLog({ queueSync, onDone }) {
     if (!t) return;
     setBusy(true); setError(""); setDraft(null);
     try {
+      const meds = activeMeds().map(m => m.name).join(", ") || "none on file";
       const data = await askInsinaJSON({
-        system: `You convert a patient's plain-language health note into ONE structured entry. Decide the kind and return ONLY JSON:
-{"kind":"vital|symptom|medication","summary":"one short human sentence of what will be filed",
- "vital":{"bp_s":num,"bp_d":num,"hr":num,"o2":num,"weight":num,"temp":num},
- "symptom":{"name":"","severity":"Mild|Moderate|Severe","notes":""},
- "medication":{"name":"","type":"skipped|late|reaction|prn","note":""}}
-Include only the sub-object matching kind; omit unknown numeric fields. ${buildRecordSystem()}`,
+        system: `You convert a patient's plain-language health note into ONE structured entry. Decide the kind and return a JSON object of this shape:
+{"kind":"vital"|"symptom"|"medication","summary":"one short human sentence of what will be filed","vital":{"bp_s":number,"bp_d":number,"hr":number,"o2":number,"weight":number,"temp":number},"symptom":{"name":string,"severity":"Mild"|"Moderate"|"Severe","notes":string},"medication":{"name":string,"type":"skipped"|"late"|"reaction"|"prn","note":string}}
+Include only the sub-object matching "kind"; omit any numeric field you don't know. For medication entries, match the name to the patient's current medications when possible: ${meds}.`,
         messages: [{ role: "user", content: t }],
       });
       setDraft(data);
@@ -230,8 +229,11 @@ Include only the sub-object matching kind; omit unknown numeric fields. ${buildR
       <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.6, marginBottom: 12 }}>
         Say what happened in plain language — e.g. <span style={{ color: C.s }}>“skipped my evening dose, felt nauseous”</span> or <span style={{ color: C.s }}>“BP was 138 over 84 this morning.”</span> Insina drafts an entry; you confirm before it’s filed.
       </div>
-      <textarea value={text} onChange={e => setText(e.target.value)} rows={3} placeholder="Tell Insina what happened…"
-        style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 10, padding: "10px 12px", color: C.p, fontSize: 13, fontFamily: sans, outline: "none", boxSizing: "border-box", resize: "vertical", marginBottom: 10 }} />
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
+        <textarea value={text} onChange={e => setText(e.target.value)} rows={3} placeholder="Tell or dictate to Insina what happened…"
+          style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 10, padding: "10px 12px", color: C.p, fontSize: 13, fontFamily: sans, outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+        <MicButton onText={t => setText(prev => (prev ? prev + " " : "") + t)} />
+      </div>
       <Btn onClick={interpret} disabled={busy || !text.trim()}>{busy ? "Interpreting…" : "Interpret"}</Btn>
       {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10 }}>{error}</div>}
 

@@ -13,7 +13,7 @@ export default function SignIn({ onSignIn, onSkip }) {
       textAlign: "center", background: C.bg, fontFamily: sans,
       padding: "calc(env(safe-area-inset-top) + 48px) 28px calc(env(safe-area-inset-bottom) + 40px)",
     }}>
-      <img src={LOGO} alt="Insina Health" style={{ width: 88, height: 88, objectFit: "contain", marginBottom: 20, opacity: 0.95 }} />
+      <img src={LOGO} alt="Insina Health" style={{ width: 176, height: 176, objectFit: "contain", marginBottom: 24, opacity: 0.95 }} />
       <div style={{ fontFamily: serif, fontSize: 30, color: C.p, lineHeight: 1.1 }}>Insina Health</div>
       <div style={{ fontSize: 11, color: C.s, fontFamily: mono, letterSpacing: "3px", textTransform: "uppercase", marginTop: 6 }}>Companion</div>
 
