@@ -12,6 +12,17 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.11.1 — 2026-06-27
+
+### Changed — web app Symptoms
+- **Each symptom row now has a clear "✦ Ask AI" button.** Previously you had to
+  click the row to open the side panel to reach the AI hand-off, which was easy to
+  miss (the severity number looked like the only target). The button sends the
+  symptom straight to AI Analysis, cross-referencing it against your labs, vitals,
+  and medications. The severity number and full side panel are unchanged.
+
+---
+
 ## v1.11.0 — 2026-06-27
 
 ### Fixed — companion symptom logging

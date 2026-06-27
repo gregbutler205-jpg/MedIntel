@@ -345,6 +345,14 @@ export default function App({ onNavChange }) {
     setSelectedEntry(prev => prev?.id === id ? { ...prev, status: "resolved" } : prev);
   };
 
+  // Hand a symptom straight to the AI Analysis tab with a pre-filled prompt.
+  const askAIAbout = (entry) => {
+    const loc = entry.location && entry.location !== "None / General" ? ` in my ${entry.location.toLowerCase()}` : "";
+    const prompt = `I've been experiencing ${entry.symptom}${loc}, severity ${entry.severity}/10.${entry.note ? ` Notes: ${entry.note}.` : ""} Please cross-reference this symptom with my current labs, vitals, and medications to identify possible causes and what I should discuss with my care team.`;
+    localStorage.setItem("mi_ai_pending", prompt);
+    onNavChange?.("ai");
+  };
+
   const displayed = entries.filter(e => filter === "all" ? true : e.status === filter);
   const active = entries.filter(e => e.status === "active");
   const avgSeverity = entries.length ? (entries.reduce((s, e) => s + e.severity, 0) / entries.length).toFixed(1) : "—";
@@ -512,8 +520,8 @@ export default function App({ onNavChange }) {
                       style={{ animationDelay:`${i * 40}ms`, marginLeft:18, borderLeft:`3px solid ${severityColor(entry.severity)}` }}
                       onClick={() => { setSelectedEntry(isSelected ? null : entry); setShowLog(false); }}
                     >
-                      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:10 }}>
-                        <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:10, marginBottom:10 }}>
+                        <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
                             <span style={{ fontSize:14, fontWeight:600, color:"#c4d8ee" }}>{entry.symptom}</span>
                             <span style={{ fontSize:9, background: entry.status==="active" ? "rgba(239,68,68,.12)" : "rgba(16,185,129,.1)", color: entry.status==="active" ? "#ef4444" : "#10b981", padding:"2px 7px", borderRadius:20, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
@@ -524,6 +532,13 @@ export default function App({ onNavChange }) {
                             {entry.location}
                           </div>
                         </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); askAIAbout(entry); }}
+                          title="Cross-reference this symptom with your labs, vitals, and medications"
+                          style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 12px", background:"rgba(79,142,247,.14)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer", flexShrink:0, whiteSpace:"nowrap" }}
+                        >
+                          ✦ Ask AI
+                        </button>
                       </div>
                       <SeverityBar value={entry.severity} />
                       {entry.note && (
