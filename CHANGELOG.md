@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.12.0 — 2026-06-27
+
+### Added — web app Vitals
+- **"✦ Ask AI" on the Vitals tab.** The Vitals tab had no AI hand-off; each vital's
+  detail header now has an Ask AI button that sends the currently-viewed vital and
+  its trend (over the selected time range) to AI Analysis, cross-referenced against
+  medications, conditions, other vitals, and labs.
+
+### Note
+- Labs and Medications already have their own in-tab AI (Labs has "Full Analysis"
+  plus a free-text question box; Medications has its own hand-off), so no
+  redundant button was added there.
+
+---
+
 ## v1.11.1 — 2026-06-27
 
 ### Changed — web app Symptoms

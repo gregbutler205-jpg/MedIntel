@@ -702,10 +702,26 @@ export default function App({ onNavChange }) {
                     {isWatch && " · Daily sync via HealthKit"}
                   </div>
                 </div>
-                <div style={{ display:"flex", gap:4 }}>
-                  {[1,3,6].map(m => (
-                    <button key={m} className={`time-btn ${timeRange===m?"on":""}`} onClick={()=>setTimeRange(m)}>{m}mo</button>
-                  ))}
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  <button
+                    onClick={() => {
+                      const latestR = isWatch ? latestWatch : latest;
+                      const latestStr = latestR ? config.latestFn(latestR) : null;
+                      const showLatest = latestStr && latestStr !== "—";
+                      const prompt = `Please analyze my ${config.label} readings${showLatest ? ` (most recent: ${latestStr}${config.unit ? " " + config.unit : ""})` : ""} over the last ${timeRange} month${timeRange > 1 ? "s" : ""}. Cross-reference the trend with my medications, conditions, other vitals, and labs; flag anything concerning; and tell me what to discuss with my care team.`;
+                      localStorage.setItem("mi_ai_pending", prompt);
+                      onNavChange?.("ai");
+                    }}
+                    title={`Ask AI to analyze your ${config.label} trend`}
+                    style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 12px", background:"rgba(79,142,247,.14)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }}
+                  >
+                    ✦ Ask AI
+                  </button>
+                  <div style={{ display:"flex", gap:4 }}>
+                    {[1,3,6].map(m => (
+                      <button key={m} className={`time-btn ${timeRange===m?"on":""}`} onClick={()=>setTimeRange(m)}>{m}mo</button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
