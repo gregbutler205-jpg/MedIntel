@@ -7,7 +7,7 @@ import {
 } from "../../../lib/companionData.js";
 import { computePatternFlags, dismissFlag } from "../../../lib/patternFlags.js";
 
-export default function Today({ goTab, openLog, openEmergency, openSettings, openSurgeries, startVisit, lastSynced }) {
+export default function Today({ goTab, openLog, openEmergency, openSettings, openSurgeries, openCards, startVisit, lastSynced }) {
   const [flags, setFlags] = useState(() => computePatternFlags());
 
   const greetingHour = new Date().getHours();
@@ -123,6 +123,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <QuickBtn icon="🩺" label="Surgeries" onClick={openSurgeries} />
         <QuickBtn icon="💊" label="My med list" onClick={() => goTab("meds")} />
+        <QuickBtn icon="🪪" label="Insurance cards" onClick={openCards} />
       </div>
     </div>
   );

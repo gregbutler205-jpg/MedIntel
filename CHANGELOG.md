@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.14.0 — 2026-06-28
+
+### Added — Insurance & ID cards
+- **Photograph and store insurance/ID cards on both apps.** Capture the **front
+  and back** of a card; add as many cards as you like (primary + secondary
+  insurance, pharmacy, dental, etc.) with the **+ Add** button.
+- Cards are stored in your record (`mi_cards`) and ride the existing Drive sync,
+  so a card added on the phone appears on the web app and vice-versa.
+- **View full-screen** to show at a check-in desk, flip between front/back, and a
+  **Share / Send** button that uses the phone's share sheet (or downloads on
+  desktop) to send a card to a provider or family member.
+- Full app: Profile → "Insurance & ID Cards". Companion: Today → "Insurance
+  cards". Photos are auto-compressed so they stay small.
+
+---
+
 ## v1.13.2 — 2026-06-28
 
 ### Changed

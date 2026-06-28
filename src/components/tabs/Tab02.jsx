@@ -9,6 +9,7 @@ import {
   getImaging, setImaging,
   getConditions, getSurgeries, getMedsFull, getLatestReading,
 } from "../../store.js";
+import { getCards, setCards, blankCard, compressImage, shareImageDataUrl } from "../../lib/cards.js";
 
 // ── Featured labs helper (11 key labs) ────────────────────────────────────────
 const FEATURED_LAB_DEFS = [
@@ -272,6 +273,104 @@ function ImagingModal({ entry, onSave, onClose }) {
   );
 }
 
+// ── ID / Insurance Card Modal ───────────────────────────────────────────────────
+function CardModal({ card, onSave, onClose }) {
+  const [form, setForm] = useState({ ...blankCard(), ...card });
+  const [busy, setBusy] = useState("");
+  const [err, setErr]   = useState("");
+
+  async function pick(side, file) {
+    if (!file) return;
+    setBusy(side); setErr("");
+    try { const dataUrl = await compressImage(file); setForm(f => ({ ...f, [side]: dataUrl })); }
+    catch { setErr("Couldn't read that image. Try a different photo."); }
+    finally { setBusy(""); }
+  }
+
+  const SideUploader = ({ side, label }) => {
+    const inputId = `card-${side}-input`;
+    return (
+      <div>
+        <label style={lbl}>{label}</label>
+        <input id={inputId} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
+          onChange={e => { pick(side, e.target.files?.[0]); e.target.value = ""; }} />
+        {form[side] ? (
+          <div style={{ position: "relative" }}>
+            <img src={form[side]} alt={label} style={{ width: "100%", borderRadius: 8, border: `1px solid ${T.borderActive}`, display: "block" }} />
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <button onClick={() => document.getElementById(inputId).click()} style={{ flex: 1, padding: "6px 0", background: "transparent", border: `1px solid ${T.borderHover}`, borderRadius: 7, color: T.dim, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Replace</button>
+              <button onClick={() => setForm(f => ({ ...f, [side]: "" }))} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: T.red, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Remove</button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => document.getElementById(inputId).click()} disabled={busy === side}
+            style={{ width: "100%", padding: "22px 0", background: "#07090f", border: `1px dashed ${T.borderActive}`, borderRadius: 8, color: busy === side ? T.ghost : T.m, fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>
+            {busy === side ? "Processing…" : "📷 Upload / Take photo"}
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }}>
+      <div style={{ background:T.card, border:`1px solid ${T.borderActive}`, borderRadius:16, padding:28, width:520, maxHeight:"90vh", overflowY:"auto" }}>
+        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:T.p, marginBottom:20 }}>{card?.id ? "Edit Card" : "Add Card"}</div>
+        <div style={{ marginBottom:16 }}>
+          <label style={lbl}>Card Name *</label>
+          <input style={inp} value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} placeholder="e.g. Primary Insurance, Dental, Pharmacy" />
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:16 }}>
+          <SideUploader side="front" label="Front" />
+          <SideUploader side="back"  label="Back" />
+        </div>
+        {err && <div style={{ fontSize:11, color:T.red, fontFamily:"'DM Mono',monospace", marginBottom:12 }}>{err}</div>}
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+          <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
+          <button onClick={() => { if (!form.label.trim()) { setErr("Give the card a name."); return; } if (!form.front && !form.back) { setErr("Add at least one photo."); return; }
+              try { onSave({ ...form, label: form.label.trim() }); } catch { setErr("Storage is full — remove an old card or photo and try again."); } }}
+            style={{ padding:"8px 18px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>
+            Save Card
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Full-screen card viewer (with share) ────────────────────────────────────────
+function CardViewer({ card, side, onClose }) {
+  const [view, setView] = useState(side || (card.front ? "front" : "back"));
+  const img = view === "front" ? card.front : card.back;
+  const [note, setNote] = useState("");
+  async function share() {
+    const how = await shareImageDataUrl(img, `${card.label || "card"}-${view}.jpg`, `${card.label} (${view})`);
+    if (how === "downloaded") setNote("No share option here — image downloaded instead.");
+  }
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.92)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={onClose}>
+      <div style={{ maxWidth:760, width:"100%" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+          <div style={{ color:T.p, fontSize:15, fontFamily:"'Sora',sans-serif" }}>{card.label}</div>
+          <button onClick={onClose} style={{ background:"transparent", border:"none", color:"#fff", fontSize:22, cursor:"pointer" }}>✕</button>
+        </div>
+        {img
+          ? <img src={img} alt={`${card.label} ${view}`} style={{ width:"100%", borderRadius:10, display:"block" }} />
+          : <div style={{ padding:40, textAlign:"center", color:T.ghost, fontFamily:"'DM Mono',monospace" }}>No {view} image</div>}
+        <div style={{ display:"flex", gap:8, marginTop:14, justifyContent:"center", flexWrap:"wrap" }}>
+          {card.front && card.back && (
+            <button onClick={() => setView(v => v === "front" ? "back" : "front")} style={{ padding:"9px 16px", background:"transparent", border:`1px solid ${T.borderActive}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>
+              Show {view === "front" ? "Back" : "Front"}
+            </button>
+          )}
+          {img && <button onClick={share} style={{ padding:"9px 18px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>⤴ Share / Send</button>}
+        </div>
+        {note && <div style={{ textAlign:"center", color:T.ghost, fontSize:11, fontFamily:"'DM Mono',monospace", marginTop:10 }}>{note}</div>}
+      </div>
+    </div>
+  );
+}
+
 // ── Delete confirm ─────────────────────────────────────────────────────────────
 function DeleteConfirm({ label, onConfirm, onCancel }) {
   return (
@@ -313,6 +412,9 @@ export default function ProfileTab() {
   // Imaging history
   const [imaging, setImagingState] = useState(() => getImaging());
 
+  // Insurance / ID cards (photos)
+  const [cards, setCardsState] = useState(() => getCards());
+
   // Edit mode flags
   const [edPersonal, setEdPersonal]   = useState(false);
   const [edInsurance, setEdInsurance] = useState(false);
@@ -324,6 +426,8 @@ export default function ProfileTab() {
   const [allergyModal, setAllergyModal]     = useState(null);
   const [ecModal, setEcModal]               = useState(null);
   const [imagingModal, setImagingModal]     = useState(null);
+  const [cardModal, setCardModal]           = useState(null); // null | blank | existing card
+  const [cardViewer, setCardViewer]         = useState(null); // { card, side }
   const [deleteTarget, setDeleteTarget]     = useState(null); // { type, id, label }
 
   useEffect(() => {
@@ -413,12 +517,29 @@ export default function ProfileTab() {
     setDeleteTarget(null);
   }
 
+  // Insurance / ID cards
+  function saveCardEntry(entry) {
+    const updated = entry.id && cards.find(x => x.id === entry.id)
+      ? cards.map(x => x.id === entry.id ? entry : x)
+      : [...cards, entry];
+    setCards(updated);        // may throw on quota — CardModal catches and warns
+    setCardsState(updated);
+    setCardModal(null);
+  }
+  function deleteCardEntry(id) {
+    const updated = cards.filter(x => x.id !== id);
+    setCardsState(updated);
+    setCards(updated);
+    setDeleteTarget(null);
+  }
+
   function handleDelete() {
     if (!deleteTarget) return;
     if (deleteTarget.type === "provider") deleteProvider(deleteTarget.id);
     else if (deleteTarget.type === "allergy") deleteAllergy(deleteTarget.id);
     else if (deleteTarget.type === "contact") deleteContact(deleteTarget.id);
     else if (deleteTarget.type === "imaging") deleteImagingEntry(deleteTarget.id);
+    else if (deleteTarget.type === "card") deleteCardEntry(deleteTarget.id);
   }
 
   // All surgeries sorted newest first
@@ -563,6 +684,40 @@ export default function ProfileTab() {
             {INSURANCE_FIELDS.map(([label, field]) => (
               <FieldRow key={field} label={label} value={I[field]} editing={edInsurance} field={field} vals={tempInsurance} setVals={setTempInsurance} />
             ))}
+          </div>
+
+          {/* ── Insurance & ID Cards — full width ── */}
+          <div style={{ ...card, gridColumn:"1/-1" }}>
+            <CardHeader title="Insurance & ID Cards" onAdd={() => setCardModal({ ...blankCard() })} />
+            {cards.length === 0
+              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No cards yet. Click + Add to photograph an insurance or ID card (front &amp; back). It syncs to your phone companion too.</div>
+              : <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(240px,1fr))", gap:14 }}>
+                  {cards.map(c => (
+                    <div key={c.id} style={{ background:"#080c14", border:`1px solid ${T.border}`, borderRadius:12, padding:14 }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                        <span style={{ fontSize:13, fontWeight:600, color:T.s }}>{c.label}</span>
+                        <div style={{ display:"flex", gap:4 }}>
+                          <button className="icon-btn" onClick={() => setCardModal(c)}>✎</button>
+                          <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"card", id:c.id, label:c.label })}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                        {["front","back"].map(side => (
+                          <div key={side}>
+                            <div style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4 }}>{side}</div>
+                            {c[side]
+                              ? <img src={c[side]} alt={`${c.label} ${side}`} onClick={() => setCardViewer({ card:c, side })} style={{ width:"100%", borderRadius:7, border:`1px solid ${T.border}`, cursor:"pointer", display:"block" }} />
+                              : <div style={{ padding:"18px 0", textAlign:"center", border:`1px dashed ${T.border}`, borderRadius:7, color:T.ghost, fontSize:10, fontFamily:"'DM Mono',monospace" }}>none</div>}
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={() => setCardViewer({ card:c, side: c.front ? "front" : "back" })}
+                        style={{ width:"100%", marginTop:10, padding:"7px 0", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:7, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>
+                        View &amp; Share
+                      </button>
+                    </div>
+                  ))}
+                </div>}
           </div>
 
           {/* ── Care Team — full width ── */}
@@ -837,6 +992,8 @@ export default function ProfileTab() {
       {allergyModal  && <AllergyModal  allergy={allergyModal}  onSave={saveAllergy}        onClose={() => setAllergyModal(null)}  />}
       {ecModal       && <ECModal       contact={ecModal}       onSave={saveContact}        onClose={() => setEcModal(null)}       />}
       {imagingModal  && <ImagingModal  entry={imagingModal}    onSave={saveImagingEntry}   onClose={() => setImagingModal(null)}  />}
+      {cardModal     && <CardModal     card={cardModal}        onSave={saveCardEntry}      onClose={() => setCardModal(null)}     />}
+      {cardViewer    && <CardViewer    card={cardViewer.card}  side={cardViewer.side}      onClose={() => setCardViewer(null)}    />}
       {deleteTarget  && <DeleteConfirm label={deleteTarget.label} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />}
 
       {/* ── Print layout (screen:hidden, print:visible) ── */}

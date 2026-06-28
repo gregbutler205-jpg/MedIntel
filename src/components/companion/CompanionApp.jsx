@@ -25,6 +25,7 @@ import Emergency  from "./screens/Emergency.jsx";
 import Settings   from "./screens/Settings.jsx";
 import MedList    from "./screens/MedList.jsx";
 import Surgeries  from "./screens/Surgeries.jsx";
+import Cards      from "./screens/Cards.jsx";
 import VisitFlow  from "./screens/visit/VisitFlow.jsx";
 
 const TABS = [
@@ -169,6 +170,7 @@ function CompanionInner() {
   const openVisit     = (visitId) => setOverlay({ name: "visit", appt: null, visitId });
   const openMedList   = () => setOverlay({ name: "medlist" });
   const openSurgeries = () => setOverlay({ name: "surgeries" });
+  const openCards     = () => setOverlay({ name: "cards" });
 
   // Back: close an overlay (returns to the tab it was opened from), else a
   // non-Today tab returns to Today (an installed PWA has no browser back button).
@@ -210,8 +212,9 @@ function CompanionInner() {
         {overlay?.name === "settings"   && <Settings onBack={back} />}
         {overlay?.name === "medlist"    && <MedList onBack={back} />}
         {overlay?.name === "surgeries"  && <Surgeries onBack={back} />}
+        {overlay?.name === "cards"      && <Cards onBack={back} queueSync={queueSync} />}
         {overlay?.name === "visit" && <VisitFlow appt={overlay.appt} visitId={overlay.visitId} onClose={back} queueSync={queueSync} />}
-        {!overlay && tab === "today" && <Today goTab={goTab} openLog={openLog} openEmergency={openEmergency} openSettings={openSettings} openSurgeries={openSurgeries} startVisit={startVisit} lastSynced={lastSynced} />}
+        {!overlay && tab === "today" && <Today goTab={goTab} openLog={openLog} openEmergency={openEmergency} openSettings={openSettings} openSurgeries={openSurgeries} openCards={openCards} startVisit={startVisit} lastSynced={lastSynced} />}
         {!overlay && tab === "meds"  && <Meds queueSync={queueSync} openMedList={openMedList} />}
         {!overlay && tab === "log"   && <Log queueSync={queueSync} initialTab={logTab} askAI={askAI} />}
         {!overlay && tab === "care"  && <Care startVisit={startVisit} openVisit={openVisit} />}
