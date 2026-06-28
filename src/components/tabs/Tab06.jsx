@@ -439,6 +439,16 @@ export default function App({ onNavChange }) {
   const [vitalSearch, setVitalSearch] = useState("");
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
+
+  // Re-read readings when a Drive sync merges new data (e.g. logged on the phone).
+  useEffect(() => {
+    const onSynced = () => {
+      setManualReadings(getStore('readings') ?? []);
+      setWatchReadings(getStore('watch_daily') ?? []);
+    };
+    window.addEventListener("mi-data-synced", onSynced);
+    return () => window.removeEventListener("mi-data-synced", onSynced);
+  }, []);
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 

@@ -12,6 +12,16 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.13.2 — 2026-06-28
+
+### Changed
+- **The Vitals tab now refreshes live when a sync arrives.** Previously, if you
+  were already on the Vitals tab when a phone-logged reading synced in, it
+  wouldn't show until you navigated away and back. A Drive pull now broadcasts a
+  "data synced" event and the Vitals tab re-reads immediately.
+
+---
+
 ## v1.13.1 — 2026-06-28
 
 ### Fixed

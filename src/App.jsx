@@ -499,6 +499,8 @@ function AppShell() {
       setSyncStatus("done");
       setReadings(getStore('readings'));
       setMeds(getStore('meds_full'));
+      // Let open tabs (e.g. Vitals) re-read the freshly-merged data.
+      window.dispatchEvent(new Event("mi-data-synced"));
     } catch (e) {
       console.error("[DriveSync]", e);
       setSyncStatus("error");
