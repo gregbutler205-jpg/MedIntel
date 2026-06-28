@@ -442,6 +442,135 @@ function buildDocContext(searchText) {
   return `\n\nRELEVANT RECORDS (referenced in this appointment):\n${sections.map((s,i) => `\n[${i+1}] ${s}`).join("\n")}`;
 }
 
+// ── Appointment attachments (documents, imaging, notes, prep) ────────────────
+const ATT_META = {
+  document: { icon: "▣", label: "Document",  color: "#4f8ef7", nav: "documents" },
+  imaging:  { icon: "◍", label: "Imaging",   color: "#a78bfa", nav: "profile"   },
+  note:     { icon: "◻", label: "Note",      color: "#10b981", nav: "notes"     },
+  prep:     { icon: "✦", label: "Consultation Prep", color: "#f59e0b", nav: null },
+};
+
+/** Pull all attachable records (documents, imaging studies, notes) from storage. */
+function loadAttachables() {
+  const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+  const docs    = safe("mi_documents").map(d => ({ type: "document", refId: d.id, title: d.title || "Untitled document", date: d.date || d.studyDate || "" }));
+  const imaging = safe("mi_imaging").map(i => ({ type: "imaging", refId: i.id, title: [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: i.date || "" }));
+  const notes   = safe("mi_notes").map(n => ({ type: "note", refId: n.id, title: n.title || "Note", date: n.date || "" }));
+  return [...docs, ...imaging, ...notes];
+}
+
+/** Does an item look related to this appointment? (keyword/date match or within 14 days) */
+function attSuggested(item, appt) {
+  const { keywords, dates } = extractSearchTerms([appt.title, appt.provider, appt.specialty, appt.facility].filter(Boolean).join(" "));
+  if (scoreMatch(`${item.title} ${item.date}`, keywords, dates) > 0) return true;
+  if (item.date && appt.date) {
+    const diff = Math.abs(new Date(item.date) - new Date(appt.date)) / 86400000;
+    if (!isNaN(diff) && diff <= 14) return true;
+  }
+  return false;
+}
+
+const attKey = a => `${a.type}:${a.refId}`;
+
+function AttachModal({ appt, onSave, onClose }) {
+  const items = loadAttachables();
+  const [sel, setSel] = useState(() => new Set((appt.attachments || []).map(attKey)));
+  const toggle = item => setSel(s => { const n = new Set(s); const k = attKey(item); n.has(k) ? n.delete(k) : n.add(k); return n; });
+
+  const suggested = items.filter(i => attSuggested(i, appt));
+  const others    = items.filter(i => !attSuggested(i, appt));
+
+  const Row = ({ item }) => {
+    const m = ATT_META[item.type];
+    const checked = sel.has(attKey(item));
+    return (
+      <div onClick={() => toggle(item)} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px", borderRadius:8, background: checked ? "rgba(79,142,247,.10)" : "#080c14", border:`1px solid ${checked ? "rgba(79,142,247,.35)" : "#0d1a28"}`, marginBottom:6, cursor:"pointer" }}>
+        <input type="checkbox" readOnly checked={checked} style={{ width:14, height:14 }} />
+        <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.title}</div>
+          <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{item.date ? ` · ${item.date}` : ""}</div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1100, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+      <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:520, maxHeight:"88vh", overflowY:"auto", padding:24 }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+          <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400 }}>Attach Records</h2>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
+        </div>
+        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Tie documents, imaging, or notes to “{appt.title}”.</div>
+
+        {items.length === 0 && <div style={{ fontSize:12, color:"#98afc4", textAlign:"center", padding:"24px 0" }}>No documents, imaging, or notes saved yet.</div>}
+
+        {suggested.length > 0 && <>
+          <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"4px 0 8px" }}>✦ Suggested (matches date / provider)</div>
+          {suggested.map(i => <Row key={attKey(i)} item={i} />)}
+        </>}
+        {others.length > 0 && <>
+          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"14px 0 8px" }}>All records</div>
+          {others.map(i => <Row key={attKey(i)} item={i} />)}
+        </>}
+
+        <div style={{ display:"flex", gap:10, marginTop:18 }}>
+          <button onClick={() => { const byKey = new Map(items.map(i => [attKey(i), i])); onSave([...sel].map(k => byKey.get(k)).filter(Boolean).map(i => ({ type:i.type, refId:i.refId, title:i.title, date:i.date }))); }}
+            style={{ flex:1, padding:"10px 0", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.45)", borderRadius:9, color:"#7eb8d8", fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+            Save Attachments
+          </button>
+          <button onClick={onClose} style={{ padding:"10px 20px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:9, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:13, cursor:"pointer" }}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The "Records & Documents" block shown inside an appointment's expanded detail. */
+function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
+  const prep = loadVisitPrep(appt.id);
+  const atts = appt.attachments || [];
+  return (
+    <div style={{ marginTop:14, background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"14px 16px" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+        <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase" }}>Records &amp; Documents</span>
+        <button className="apt-btn" style={{ background:"rgba(79,142,247,.10)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8", padding:"5px 11px" }} onClick={onAttach}>+ Attach</button>
+      </div>
+
+      {prep && (
+        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, background:"rgba(245,158,11,.06)", border:"1px solid rgba(245,158,11,.2)", marginBottom:6 }}>
+          <span style={{ color:ATT_META.prep.color, fontSize:13 }}>✦</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:12, color:"#c4d8ee" }}>Consultation Prep</div>
+            <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>AI-generated prep for this visit</div>
+          </div>
+          <button onClick={onViewPrep} style={{ background:"none", border:"none", color:"#f59e0b", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ View</button>
+        </div>
+      )}
+
+      {atts.length === 0 && !prep && (
+        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"6px 0" }}>No records attached yet. Use “+ Attach” to link documents, imaging, or notes.</div>
+      )}
+
+      {atts.map(att => {
+        const m = ATT_META[att.type] || ATT_META.document;
+        return (
+          <div key={attKey(att)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, background:"#0b1220", border:"1px solid #0d1a28", marginBottom:6 }}>
+            <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{att.title}</div>
+              <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{att.date ? ` · ${att.date}` : ""}</div>
+            </div>
+            {m.nav && <button onClick={() => onOpen(att)} title={`Open in ${m.label}`} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>↗ Open</button>}
+            <button onClick={() => onDetach(att)} title="Detach" style={{ background:"none", border:"none", color:"#6b7a8d", fontSize:13, cursor:"pointer" }}>✕</button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── AI Analysis Panel for an Appointment ────────────────────────────────────
 function ApptAIPanel({ appt }) {
   const [additionalQ, setAdditionalQ] = useState("");
@@ -583,13 +712,14 @@ function CalendarPickerModal({ calendars, onPick, onClose }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function AppointmentsTab() {
+export default function AppointmentsTab({ onNavChange }) {
   const [appts, setAppts]     = useState(() => loadAppts());
   const [modal, setModal]     = useState(null);   // null | BLANK | appt object
   const [filter, setFilter]   = useState("upcoming");
   const [expanded, setExpanded] = useState(null);
   const [showAI, setShowAI]   = useState(null);  // appt.id for which AI panel is open
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [attachTarget, setAttachTarget] = useState(null); // appt for which the Attach modal is open
 
   // Google Calendar sync
   const [syncing, setSyncing]       = useState(false);
@@ -684,6 +814,28 @@ export default function AppointmentsTab() {
     setAppts(prev => prev.filter(a => a.id !== id));
     setDeleteConfirm(null);
     if (expanded === id) setExpanded(null);
+  };
+
+  // ── Attachments ───────────────────────────────────────────────────────────
+  const setAttachments = (apptId, attachments) =>
+    setAppts(prev => prev.map(a => a.id === apptId ? { ...a, attachments } : a));
+
+  const handleSaveAttachments = (attachments) => {
+    if (attachTarget) setAttachments(attachTarget.id, attachments);
+    setAttachTarget(null);
+  };
+
+  const handleDetach = (apptId, att) =>
+    setAttachments(apptId, (appts.find(a => a.id === apptId)?.attachments || []).filter(x => attKey(x) !== attKey(att)));
+
+  const openAttachment = (att) => {
+    const nav = ATT_META[att.type]?.nav;
+    if (nav) onNavChange?.(nav);
+  };
+
+  const viewPrep = (appt) => {
+    const p = loadVisitPrep(appt.id);
+    if (p?.text) printConsultationPrep(appt, p.text);
   };
 
   const filtered = appts
@@ -951,6 +1103,13 @@ export default function AppointmentsTab() {
                         </>
                       )}
                     </div>
+                    <ApptDocuments
+                      appt={appt}
+                      onAttach={() => setAttachTarget(appt)}
+                      onDetach={(att) => handleDetach(appt.id, att)}
+                      onOpen={openAttachment}
+                      onViewPrep={() => viewPrep(appt)}
+                    />
                     {showAI === appt.id && <ApptAIPanel appt={appt} />}
                   </div>
                 )}
@@ -962,6 +1121,9 @@ export default function AppointmentsTab() {
 
       {/* Add/Edit modal */}
       {modal && <ApptModal appt={modal} onSave={handleSave} onClose={() => setModal(null)} />}
+
+      {/* Attach records modal */}
+      {attachTarget && <AttachModal appt={attachTarget} onSave={handleSaveAttachments} onClose={() => setAttachTarget(null)} />}
 
       {/* Google Calendar picker */}
       {calPicker && <CalendarPickerModal calendars={calPicker} onPick={handlePickCalendar} onClose={() => setCalPicker(null)} />}

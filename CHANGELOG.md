@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.15.0 — 2026-06-28
+
+### Added — records tied to appointments
+- **Each appointment now has a "Records & Documents" section** in its expanded
+  detail. Link uploaded documents, imaging studies, and notes to a visit, and the
+  AI **Consultation Prep** generated for that visit shows there automatically
+  (with a ⎙ View to reprint it).
+- **+ Attach** opens a picker that lists your documents, imaging, and notes —
+  with a **Suggested** group at the top for items that match the visit by date or
+  provider (manual selection + auto-suggest in one). Detach with the ✕.
+- **↗ Open** jumps to where a linked record lives (Documents, Profile imaging, or
+  Notes). Attachments are stored on the appointment and sync via Drive.
+
+---
+
 ## v1.14.0 — 2026-06-28
 
 ### Added — Insurance & ID cards
