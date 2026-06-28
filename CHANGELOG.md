@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.13.1 — 2026-06-28
+
+### Fixed
+- **Vitals (and other data) logged on the phone companion now appear on the web
+  app automatically.** The desktop only pulled from Drive when you clicked Sync;
+  its background task uploaded but never downloaded. It now auto-pulls from Drive
+  on open and whenever you return to the tab — matching the companion — so a
+  reading logged on the phone shows up without a manual sync.
+- **Profile → Latest Vitals now shows Blood Pressure and Heart Rate.** The card
+  read `systolic/diastolic/pulse`, but readings are stored as `bp_s/bp_d/hr`, so
+  BP and HR were always blank. Now reads the correct fields (with fallback for any
+  legacy data).
+
+---
+
 ## v1.13.0 — 2026-06-27
 
 ### Added — shared consultation prep (web ⇄ companion)

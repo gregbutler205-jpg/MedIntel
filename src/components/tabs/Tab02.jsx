@@ -813,12 +813,12 @@ export default function ProfileTab() {
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(140px,1fr))", gap:12 }}>
                 {[
-                  ["Blood Pressure", latestVitals.systolic && latestVitals.diastolic ? `${latestVitals.systolic}/${latestVitals.diastolic} mmHg` : null, T.red],
-                  ["O₂ Saturation", latestVitals.o2 ? `${latestVitals.o2}%` : null, T.blue],
+                  (() => { const s = latestVitals.bp_s ?? latestVitals.systolic, d = latestVitals.bp_d ?? latestVitals.diastolic; return ["Blood Pressure", (s != null && d != null) ? `${s}/${d} mmHg` : null, T.red]; })(),
+                  ["O₂ Saturation", (latestVitals.o2 ?? latestVitals.spo2) != null ? `${latestVitals.o2 ?? latestVitals.spo2}%` : null, T.blue],
                   ["Weight", latestVitals.weight ? `${latestVitals.weight} lbs` : null, T.green],
                   ["Temperature", latestVitals.temp ? `${latestVitals.temp}°F` : null, T.yellow],
                   ["Blood Glucose", latestVitals.glucose ? `${latestVitals.glucose} mg/dL` : null, T.purple],
-                  ["Heart Rate", latestVitals.pulse ? `${latestVitals.pulse} bpm` : null, T.red],
+                  ["Heart Rate", (latestVitals.hr ?? latestVitals.pulse) != null ? `${latestVitals.hr ?? latestVitals.pulse} bpm` : null, T.red],
                 ].filter(([,v]) => v).map(([label, value, color]) => (
                   <div key={label} style={{ background:"#080c14", border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px" }}>
                     <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>

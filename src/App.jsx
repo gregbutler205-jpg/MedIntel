@@ -490,23 +490,27 @@ function AppShell() {
     } catch {}
   }, [activeNav]);
 
-  // ── Google auth init ────────────────────────────────────────────────────────
+  // Download + merge from Drive, then refresh dashboard data from localStorage.
+  const refreshFromDrive = useCallback(async (token) => {
+    setSyncStatus("syncing");
+    try {
+      const ts = await fullSync(token);
+      setLastSyncTs(ts);
+      setSyncStatus("done");
+      setReadings(getStore('readings'));
+      setMeds(getStore('meds_full'));
+    } catch (e) {
+      console.error("[DriveSync]", e);
+      setSyncStatus("error");
+    }
+  }, []);
+
+  // ── Google auth init + auto-pull on open ────────────────────────────────────
   useEffect(() => {
     initGoogleAuth({
-      onSignIn: async ({ accessToken, user }) => {
+      onSignIn: ({ accessToken, user }) => {
         if (user) setGoogleUser(user);
-        setSyncStatus("syncing");
-        try {
-          const ts = await fullSync(accessToken);
-          setLastSyncTs(ts);
-          setSyncStatus("done");
-          // Refresh dashboard data from the freshly-merged localStorage
-          setReadings(getStore('readings'));
-          setMeds(getStore('meds_full'));
-        } catch (e) {
-          console.error("[DriveSync]", e);
-          setSyncStatus("error");
-        }
+        refreshFromDrive(accessToken);
       },
       onSignOut: () => {
         setGoogleUser(null);
@@ -514,7 +518,28 @@ function AppShell() {
         setLastSyncTs(null);
       },
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // If Drive was connected before, silently re-acquire a token on load so we
+    // pull anything logged elsewhere (e.g. the phone companion) without waiting
+    // for a manual Sync click.
+    if (getStoredUser()) signIn();
+  }, [refreshFromDrive]);
+
+  // Pull again whenever the user returns to the app (e.g. after logging on the
+  // phone, then switching back to the desktop tab).
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const token = getAccessToken();
+      if (token) refreshFromDrive(token);
+      else if (getStoredUser()) signIn(); // expired — silently re-auth, onSignIn re-syncs
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [refreshFromDrive]);
 
   // ── Global search keyboard shortcut (Cmd+K / Ctrl+K) ──────────────────────
   useEffect(() => {
