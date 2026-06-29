@@ -12,6 +12,19 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.17.0 — 2026-06-28
+
+### Added — reorder lab groups on the tab
+- **Reorder lab groups right on the Labs & Trends tab.** A "⠿ Reorder Groups"
+  button reveals a panel where you **drag** groups (or use up/down arrows) into
+  the order you want. The on-screen list reorders live and the **printout follows
+  the same order**.
+- The order is remembered until you change it again — freely re-arrangeable per
+  appointment. It writes the same `mi_lab_category_order` used by the printout and
+  the Settings → Lab Category Order panel, so all three stay in sync.
+
+---
+
 ## v1.16.0 — 2026-06-28
 
 ### Fixed

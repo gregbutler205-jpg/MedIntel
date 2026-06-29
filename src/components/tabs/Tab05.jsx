@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -488,6 +488,54 @@ function getLabCatOrder() {
   catch { return ALL_LAB_CATEGORIES; }
 }
 
+// Persist a new order of the currently-present categories, keeping any other
+// known categories after them. Writes the shared key the tab, Settings, and the
+// printout all read, and notifies listeners.
+function persistLabOrder(orderedPresent) {
+  const known = Array.from(new Set([...getLabCatOrder(), ...ALL_LAB_CATEGORIES]));
+  const rest  = known.filter(c => !orderedPresent.includes(c));
+  localStorage.setItem("mi_lab_category_order", JSON.stringify([...orderedPresent, ...rest]));
+  window.dispatchEvent(new Event("mi_lab_cat_order_changed"));
+}
+
+// Drag-and-drop (with up/down arrows) reorder panel for the lab groups present.
+function LabGroupReorder({ presentCats }) {
+  const [items, setItems] = useState(presentCats);
+  const dragIndex = useRef(null);
+  const key = presentCats.join("|");
+  useEffect(() => { setItems(presentCats); /* eslint-disable-next-line */ }, [key]);
+
+  const commit = (list) => persistLabOrder(list);
+  const move = (i, dir) => {
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const a = [...items]; [a[i], a[j]] = [a[j], a[i]];
+    setItems(a); commit(a);
+  };
+  const endDrag = () => { if (dragIndex.current !== null) commit(items); dragIndex.current = null; };
+  const arrow = (disabled) => ({ background: "transparent", border: "1px solid #1a2f4a", borderRadius: 5, color: disabled ? "#2a3c5a" : "#7eb8d8", fontSize: 11, width: 22, height: 20, cursor: disabled ? "default" : "pointer", lineHeight: 1 });
+
+  return (
+    <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 10, padding: 12, marginBottom: 12 }}>
+      <div style={{ fontSize: 9, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
+        Drag to reorder · applies to the tab and the printout
+      </div>
+      {items.map((cat, i) => (
+        <div key={cat} draggable
+          onDragStart={() => { dragIndex.current = i; }}
+          onDragOver={e => { e.preventDefault(); const from = dragIndex.current; if (from === null || from === i) return; setItems(prev => { const a = [...prev]; const [m] = a.splice(from, 1); a.splice(i, 0, m); return a; }); dragIndex.current = i; }}
+          onDrop={endDrag} onDragEnd={endDrag}
+          style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", marginBottom: 5, background: "#07090f", border: "1px solid #111e30", borderRadius: 7, cursor: "grab" }}>
+          <span style={{ color: "#4a6070", fontSize: 13 }}>⠿</span>
+          <span style={{ flex: 1, fontSize: 11, color: "#c4d8ee" }}>{cat}</span>
+          <button onClick={() => move(i, -1)} disabled={i === 0} style={arrow(i === 0)}>↑</button>
+          <button onClick={() => move(i, 1)} disabled={i === items.length - 1} style={arrow(i === items.length - 1)}>↓</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function detectDuplicates(labs) {
   const groups = {};
   labs.forEach(l => {
@@ -542,6 +590,7 @@ export default function App({ onNavChange }) {
   const [dupDecisions, setDupDecisions] = useState({});
 
   const [labCatOrder, setLabCatOrder] = useState(getLabCatOrder);
+  const [reorderOpen, setReorderOpen] = useState(false);
   useEffect(() => {
     const refresh = () => setLabCatOrder(getLabCatOrder());
     window.addEventListener("mi_lab_cat_order_changed", refresh);
@@ -1061,9 +1110,11 @@ ${labsStr}`;
                     [...visible].sort((a, b) => (a.name || "").localeCompare(b.name || "")).forEach(lab => listItems.push({ type: "lab", lab }));
                   }
 
+                  const presentOrdered = cats.filter(c => c !== "All");
+
                   return (
                     <>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
                         {cats.map(c => (
                           <button key={c} onClick={() => setImportedCatFilter(c)}
                             style={{ padding: "2px 8px", borderRadius: 5, border: "none", cursor: "pointer", fontSize: 9, fontFamily: "'DM Mono',monospace",
@@ -1072,7 +1123,14 @@ ${labsStr}`;
                             {c}
                           </button>
                         ))}
+                        {presentOrdered.length > 1 && (
+                          <button onClick={() => setReorderOpen(o => !o)} title="Reorder lab groups"
+                            style={{ marginLeft: "auto", padding: "2px 9px", borderRadius: 5, border: `1px solid ${reorderOpen ? "#4f8ef7" : "#1a2f4a"}`, cursor: "pointer", fontSize: 9, fontFamily: "'DM Mono',monospace", background: reorderOpen ? "rgba(79,142,247,.15)" : "transparent", color: "#7eb8d8" }}>
+                            ⠿ Reorder Groups
+                          </button>
+                        )}
                       </div>
+                      {reorderOpen && presentOrdered.length > 1 && <LabGroupReorder presentCats={presentOrdered} />}
                       {listItems.map((item, i) => {
                         if (item.type === "header") {
                           return (
