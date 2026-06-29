@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 const LOGO_WHITE = import.meta.env.BASE_URL + "logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
@@ -274,6 +274,34 @@ function ImagingModal({ entry, onSave, onClose }) {
 }
 
 // ── ID / Insurance Card Modal ───────────────────────────────────────────────────
+// SideUploader is defined at module level (stable identity) so React never
+// unmounts/remounts the hidden file input between picks — otherwise a second
+// image (or second card) gets eaten by the remount churn.
+function SideUploader({ side, label, value, busy, onPick, onClear }) {
+  const ref = useRef(null);
+  return (
+    <div>
+      <label style={lbl}>{label}</label>
+      <input ref={ref} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
+        onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; if (f) onPick(side, f); }} />
+      {value ? (
+        <div style={{ position: "relative" }}>
+          <img src={value} alt={label} style={{ width: "100%", borderRadius: 8, border: `1px solid ${T.borderActive}`, display: "block" }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <button onClick={() => ref.current?.click()} style={{ flex: 1, padding: "6px 0", background: "transparent", border: `1px solid ${T.borderHover}`, borderRadius: 7, color: T.dim, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Replace</button>
+            <button onClick={() => onClear(side)} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: T.red, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Remove</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => ref.current?.click()} disabled={busy}
+          style={{ width: "100%", padding: "22px 0", background: "#07090f", border: `1px dashed ${T.borderActive}`, borderRadius: 8, color: busy ? T.ghost : T.m, fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>
+          {busy ? "Processing…" : "📷 Upload / Take photo"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function CardModal({ card, onSave, onClose }) {
   const [form, setForm] = useState({ ...blankCard(), ...card });
   const [busy, setBusy] = useState("");
@@ -286,31 +314,7 @@ function CardModal({ card, onSave, onClose }) {
     catch { setErr("Couldn't read that image. Try a different photo."); }
     finally { setBusy(""); }
   }
-
-  const SideUploader = ({ side, label }) => {
-    const inputId = `card-${side}-input`;
-    return (
-      <div>
-        <label style={lbl}>{label}</label>
-        <input id={inputId} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
-          onChange={e => { pick(side, e.target.files?.[0]); e.target.value = ""; }} />
-        {form[side] ? (
-          <div style={{ position: "relative" }}>
-            <img src={form[side]} alt={label} style={{ width: "100%", borderRadius: 8, border: `1px solid ${T.borderActive}`, display: "block" }} />
-            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-              <button onClick={() => document.getElementById(inputId).click()} style={{ flex: 1, padding: "6px 0", background: "transparent", border: `1px solid ${T.borderHover}`, borderRadius: 7, color: T.dim, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Replace</button>
-              <button onClick={() => setForm(f => ({ ...f, [side]: "" }))} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: T.red, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Remove</button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={() => document.getElementById(inputId).click()} disabled={busy === side}
-            style={{ width: "100%", padding: "22px 0", background: "#07090f", border: `1px dashed ${T.borderActive}`, borderRadius: 8, color: busy === side ? T.ghost : T.m, fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>
-            {busy === side ? "Processing…" : "📷 Upload / Take photo"}
-          </button>
-        )}
-      </div>
-    );
-  };
+  const clear = side => setForm(f => ({ ...f, [side]: "" }));
 
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }}>
@@ -321,8 +325,8 @@ function CardModal({ card, onSave, onClose }) {
           <input style={inp} value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} placeholder="e.g. Primary Insurance, Dental, Pharmacy" />
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:16 }}>
-          <SideUploader side="front" label="Front" />
-          <SideUploader side="back"  label="Back" />
+          <SideUploader side="front" label="Front" value={form.front} busy={busy === "front"} onPick={pick} onClear={clear} />
+          <SideUploader side="back"  label="Back"  value={form.back}  busy={busy === "back"}  onPick={pick} onClear={clear} />
         </div>
         {err && <div style={{ fontSize:11, color:T.red, fontFamily:"'DM Mono',monospace", marginBottom:12 }}>{err}</div>}
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
@@ -366,6 +370,34 @@ function CardViewer({ card, side, onClose }) {
           {img && <button onClick={share} style={{ padding:"9px 18px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>⤴ Share / Send</button>}
         </div>
         {note && <div style={{ textAlign:"center", color:T.ghost, fontSize:11, fontFamily:"'DM Mono',monospace", marginTop:10 }}>{note}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Choose which cards to include in the printed report ─────────────────────────
+function CardSelectModal({ cards, onConfirm, onClose }) {
+  const [sel, setSel] = useState(() => new Set(cards.map(c => c.id)));
+  const toggle = id => setSel(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }}>
+      <div style={{ background:T.card, border:`1px solid ${T.borderActive}`, borderRadius:16, padding:26, width:420, maxHeight:"85vh", overflowY:"auto" }}>
+        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:19, color:T.p, marginBottom:6 }}>Include which cards?</div>
+        <div style={{ fontSize:11, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Selected cards are added at the end of the printed profile.</div>
+        {cards.map(c => (
+          <label key={c.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px", borderRadius:8, background: sel.has(c.id) ? "rgba(79,142,247,.10)" : "#07090f", border:`1px solid ${sel.has(c.id) ? "rgba(79,142,247,.35)" : T.border}`, marginBottom:7, cursor:"pointer" }}>
+            <input type="checkbox" checked={sel.has(c.id)} onChange={() => toggle(c.id)} style={{ width:15, height:15 }} />
+            {c.front && <img src={c.front} alt="" style={{ width:42, height:27, objectFit:"cover", borderRadius:4, border:`1px solid ${T.border}` }} />}
+            <span style={{ fontSize:13, color:T.s }}>{c.label}</span>
+          </label>
+        ))}
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:14 }}>
+          <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
+          <button onClick={() => onConfirm([...sel])} disabled={sel.size === 0}
+            style={{ padding:"8px 18px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color: sel.size ? T.blue : T.ghost, fontFamily:"'Sora',sans-serif", fontSize:12, cursor: sel.size ? "pointer" : "not-allowed" }}>
+            Print Profile
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -428,6 +460,7 @@ export default function ProfileTab() {
   const [imagingModal, setImagingModal]     = useState(null);
   const [cardModal, setCardModal]           = useState(null); // null | blank | existing card
   const [cardViewer, setCardViewer]         = useState(null); // { card, side }
+  const [cardSelectOpen, setCardSelectOpen] = useState(false); // print-card picker
   const [deleteTarget, setDeleteTarget]     = useState(null); // { type, id, label }
 
   useEffect(() => {
@@ -563,10 +596,16 @@ export default function ProfileTab() {
     return careTeam;
   })();
 
-  function handlePrint() {
+  function handlePrint(selectedCardIds) {
     const el = document.getElementById("print-profile");
     if (!el) return;
-    const html = el.innerHTML;
+    const clone = el.cloneNode(true);
+    // Keep only the selected cards in the printed report.
+    const keep = new Set((selectedCardIds || cards.map(c => c.id)).map(String));
+    clone.querySelectorAll(".print-card").forEach(n => { if (!keep.has(n.dataset.cardId)) n.remove(); });
+    const cardsSection = clone.querySelector("#print-cards-section");
+    if (cardsSection && cardsSection.querySelectorAll(".print-card").length === 0) cardsSection.remove();
+    const html = clone.innerHTML;
     const win = window.open("", "_blank", "width=900,height=700");
     win.document.write(`<!DOCTYPE html>
 <html>
@@ -593,6 +632,10 @@ export default function ProfileTab() {
     .allergy-row strong { color: #000; }
     .pr-meta { font-size: 8.5pt; color: #555; }
     .footer { margin-top: 24pt; font-size: 8pt; color: #777; font-family: Arial, sans-serif; text-align: center; border-top: 0.5pt solid #ccc; padding-top: 6pt; }
+    .print-card { margin-bottom: 14pt; page-break-inside: avoid; }
+    .print-card-label { font-family: Arial, sans-serif; font-size: 9.5pt; font-weight: 700; color: #000; margin-bottom: 4pt; }
+    .print-card-imgs { display: flex; gap: 14pt; flex-wrap: wrap; }
+    .print-card-img { width: 46%; max-width: 300pt; border: 0.5pt solid #999; border-radius: 4pt; }
     @media print {
       body { padding: 0; }
       @page { margin: 18mm 20mm; }
@@ -637,7 +680,7 @@ export default function ProfileTab() {
       <div className="no-print" style={{ height:54, background:T.sidebar, borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
         <div style={{ flex:1 }} />
         <button
-          onClick={handlePrint}
+          onClick={() => { if (cards.length > 1) setCardSelectOpen(true); else handlePrint(cards.map(c => c.id)); }}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
         >
           🖨 Print Profile
@@ -994,6 +1037,7 @@ export default function ProfileTab() {
       {imagingModal  && <ImagingModal  entry={imagingModal}    onSave={saveImagingEntry}   onClose={() => setImagingModal(null)}  />}
       {cardModal     && <CardModal     card={cardModal}        onSave={saveCardEntry}      onClose={() => setCardModal(null)}     />}
       {cardViewer    && <CardViewer    card={cardViewer.card}  side={cardViewer.side}      onClose={() => setCardViewer(null)}    />}
+      {cardSelectOpen && <CardSelectModal cards={cards} onClose={() => setCardSelectOpen(false)} onConfirm={(ids) => { setCardSelectOpen(false); setTimeout(() => handlePrint(ids), 30); }} />}
       {deleteTarget  && <DeleteConfirm label={deleteTarget.label} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />}
 
       {/* ── Print layout (screen:hidden, print:visible) ── */}
@@ -1160,6 +1204,22 @@ export default function ProfileTab() {
             ))}
           </div>
         </>}
+
+        {/* Insurance & ID Cards (filtered by selection in handlePrint) */}
+        {cards.length > 0 && (
+          <div id="print-cards-section">
+            <h2>Insurance &amp; ID Cards</h2>
+            {cards.map(c => (
+              <div key={c.id} className="print-card" data-card-id={c.id}>
+                <div className="print-card-label">{c.label}</div>
+                <div className="print-card-imgs">
+                  {c.front && <img className="print-card-img" src={c.front} alt={`${c.label} front`} />}
+                  {c.back  && <img className="print-card-img" src={c.back}  alt={`${c.label} back`} />}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="footer">

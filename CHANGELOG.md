@@ -12,6 +12,27 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.16.0 — 2026-06-28
+
+### Fixed
+- **Adding a second insurance card (or the back of a card) now works.** The card
+  uploader was defined inside the modal, so React remounted the hidden file input
+  on every keystroke/pick and the second image got dropped. The uploader is now a
+  stable top-level component using a ref — both sides and multiple cards load
+  reliably.
+
+### Added
+- **Insurance/ID cards print on the Profile report.** Selected cards are added at
+  the end of the printed profile (front & back images). When you have more than
+  one card, **Print Profile** first asks which card(s) to include; with a single
+  card it just prints it.
+- **"Refilled" button on each medication row.** The main Medications list now has
+  a quick **Refilled** action per row that advances the refill date by the days
+  supply (same as Complete Refill in the detail) — no need to open the med first.
+  It briefly confirms with "✓ Refilled".
+
+---
+
 ## v1.15.0 — 2026-06-28
 
 ### Added — records tied to appointments

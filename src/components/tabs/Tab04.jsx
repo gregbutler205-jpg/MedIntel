@@ -614,6 +614,7 @@ export default function App({ onNavChange }) {
   };
 
   const [completeFlash, setCompleteFlash] = useState(null); // "refill" | "renewal" | null
+  const [refilledFlash, setRefilledFlash] = useState(null); // med.id just refilled from the list
 
   function flashComplete(type) {
     setCompleteFlash(type);
@@ -629,6 +630,21 @@ export default function App({ onNavChange }) {
     setMedsFull(newMeds);
     setSelectedMed(updated);
     flashComplete("refill");
+  }
+
+  // Quick "Refilled" action from a list row — advances the refill date by the
+  // days supply without opening the detail panel.
+  function markRefilled(med, e) {
+    e?.stopPropagation();
+    if (!med.refillDate) return;
+    const supply = parseInt(med.daysSupply) || 30;
+    const updated = { ...med, refillDate: addDays(med.refillDate, supply) };
+    const newMeds = meds.map(m => m.id === med.id ? updated : m);
+    setMeds(newMeds);
+    setMedsFull(newMeds);
+    setSelectedMed(prev => (prev && prev.id === med.id ? updated : prev));
+    setRefilledFlash(med.id);
+    setTimeout(() => setRefilledFlash(f => (f === med.id ? null : f)), 2000);
   }
 
   function handleCompleteRenewal(med) {
@@ -919,6 +935,17 @@ export default function App({ onNavChange }) {
                       ); })()}
                       <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{fmtRefillDate(med.refillDate)}</div>
                     </div>
+
+                    {/* Quick Refilled button */}
+                    {med.refillDate && (
+                      <button
+                        onClick={(e) => markRefilled(med, e)}
+                        title="Mark refilled — advances the refill date by the days supply"
+                        style={{ flexShrink: 0, padding: "5px 11px", borderRadius: 7, border: `1px solid rgba(16,185,129,${refilledFlash === med.id ? ".55" : ".3"})`, background: `rgba(16,185,129,${refilledFlash === med.id ? ".20" : ".08"})`, color: "#10b981", fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                      >
+                        {refilledFlash === med.id ? "✓ Refilled" : "Refilled"}
+                      </button>
+                    )}
 
                     {/* Status dot + reminder badge */}
                     <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
