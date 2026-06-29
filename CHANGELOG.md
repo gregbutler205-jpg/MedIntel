@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.17.1 — 2026-06-28
+
+### Fixed
+- **Out-of-range now uses your doctor's range first.** When a lab has a custom
+  doctor's range set, the in/out-of-range status (the colored value, the "OUT OF
+  RANGE" badge, the list dots, the flagged count and filter, the printed report,
+  and the AI summaries) is now based on **your doctor's range**, falling back to
+  the lab report's printed range only when no doctor's range is set. Previously
+  the range *bar* honored the doctor's range but the status flags did not — so a
+  value like Tacrolimus that's within your doctor's target but outside the lab's
+  generic range was wrongly shown as out of range. Both ranges are still displayed
+  for reference.
+
+---
+
 ## v1.17.0 — 2026-06-28
 
 ### Added — reorder lab groups on the tab

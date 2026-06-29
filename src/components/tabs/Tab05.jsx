@@ -267,6 +267,25 @@ function parseRefRange(str) {
   return { low: null, high: null };
 }
 
+// The range that determines in/out-of-range: the doctor's custom range when set,
+// otherwise the lab report's printed reference range.
+function effectiveRange(lab, customRanges) {
+  const key = (lab.name || "").toLowerCase().trim();
+  const c = customRanges?.[key];
+  if (c && c.low != null && c.high != null) return { low: +c.low, high: +c.high, source: "doctor" };
+  const r = parseRefRange(lab.refRange);
+  return { low: r.low, high: r.high, source: "lab" };
+}
+
+// true = out of range, false = in range, null = no usable range/value.
+// Falls back to the import-time flag only when no range is available at all.
+function labOutOfRange(lab, customRanges) {
+  const { low, high } = effectiveRange(lab, customRanges);
+  const val = parseFloat(lab.value);
+  if (low === null || high === null || isNaN(val)) return lab.flag ?? null;
+  return val < low || val > high;
+}
+
 function answerToHTML(rawText) {
   if (!rawText) return "";
   const text = rawText
@@ -346,6 +365,7 @@ function printLabReport(labs, logoUrl) {
     if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) latest[key] = l;
   });
   const tests = Object.values(latest);
+  const customRanges = (() => { try { return JSON.parse(localStorage.getItem("mi_lab_custom_ranges") || "{}"); } catch { return {}; } })();
 
   const LAB_CAT_ORDER = getLabCatOrder();
   const grouped = {};
@@ -361,12 +381,16 @@ function printLabReport(labs, logoUrl) {
 
   const tableRows = orderedCats.filter(c => grouped[c]?.length).map(cat => {
     const rows = grouped[cat].map(t => {
-      const status = t.flag ? '<span style="color:#d97706;font-weight:700">⚠ Flagged</span>' : '<span style="color:#059669">✓ Normal</span>';
+      const oor = labOutOfRange(t, customRanges);
+      const status = oor === true ? '<span style="color:#d97706;font-weight:700">⚠ Flagged</span>' : '<span style="color:#059669">✓ Normal</span>';
+      const ck = (t.name || "").toLowerCase().trim();
+      const cr = customRanges[ck];
+      const rangeCell = (cr && cr.low != null && cr.high != null) ? `${cr.low}–${cr.high} <span style="color:#888">(your range)</span>` : (t.refRange || "—");
       return `<tr>
         <td>${(t.name||"").replace(/</g,"&lt;")}</td>
         <td style="text-align:center;font-weight:600">${t.value||"—"}</td>
         <td style="text-align:center">${t.unit||"—"}</td>
-        <td style="text-align:center">${t.refRange||"—"}</td>
+        <td style="text-align:center">${rangeCell}</td>
         <td style="text-align:center">${t.date||"—"}</td>
         <td style="text-align:center">${status}</td>
       </tr>`;
@@ -718,7 +742,7 @@ export default function App({ onNavChange }) {
     });
     return Object.values(latest);
   })();
-  const flaggedCount = dedupedLabs.filter(l => l.flag).length;
+  const flaggedCount = dedupedLabs.filter(l => labOutOfRange(l, customRanges) === true).length;
   const normalCount  = dedupedLabs.length - flaggedCount;
 
   const selectImportedLab = (lab) => { setSelectedImportedLab(lab); setShowDescription(false); };
@@ -763,9 +787,14 @@ export default function App({ onNavChange }) {
         const key = (l.name || "").toLowerCase().trim();
         if (key && !dedupForAI[key]) dedupForAI[key] = l;
       });
-      const labSummary = Object.values(dedupForAI).slice(0, 60).map(l =>
-        `${l.name}: ${l.value} ${l.unit}${l.refRange ? ` (ref ${l.refRange})` : ""}${l.flag ? " — OUT OF RANGE" : ""}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`
-      ).join("\n");
+      const labSummary = Object.values(dedupForAI).slice(0, 60).map(l => {
+        const c = customRanges[(l.name || "").toLowerCase().trim()];
+        const rangeStr = c && c.low != null && c.high != null
+          ? ` (doctor's range ${c.low}–${c.high}${l.refRange ? `; lab ref ${l.refRange}` : ""})`
+          : (l.refRange ? ` (ref ${l.refRange})` : "");
+        const oor = labOutOfRange(l, customRanges) === true ? " — OUT OF RANGE" : "";
+        return `${l.name}: ${l.value} ${l.unit}${rangeStr}${oor}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`;
+      }).join("\n");
 
       const systemPrompt = `You are an intelligent health assistant analyzing lab results for ${patientName}. Cross-reference their profile when explaining findings. Never ask about conditions already listed — treat them as known facts.
 
@@ -844,9 +873,14 @@ Be direct and clinically specific.`,
       importedLabs.forEach(l => { const d = l.date || "Unknown"; if (!byDate[d]) byDate[d] = []; byDate[d].push(l); });
       const sortedDates = Object.keys(byDate).sort((a, b) => new Date(b) - new Date(a));
       const labsStr = sortedDates.map(date =>
-        `[${date}]\n` + byDate[date].map(l =>
-          `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` (ref: ${l.refRange})` : ""}${l.flag ? " ⚠ FLAGGED" : ""}`
-        ).join("\n")
+        `[${date}]\n` + byDate[date].map(l => {
+          const c = customRanges[(l.name || "").toLowerCase().trim()];
+          const rangeStr = c && c.low != null && c.high != null
+            ? ` (doctor's range: ${c.low}–${c.high}${l.refRange ? `; lab ref: ${l.refRange}` : ""})`
+            : (l.refRange ? ` (ref: ${l.refRange})` : "");
+          const oor = labOutOfRange(l, customRanges) === true ? " ⚠ FLAGGED" : "";
+          return `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${rangeStr}${oor}`;
+        }).join("\n")
       ).join("\n\n");
       const qaSystem = `You are a personal health assistant for ${qaPatientName}. Answer questions about their lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best answer possible with available information.
 
@@ -1089,7 +1123,7 @@ ${labsStr}`;
                   const cats = ["All", ...labCatOrder.filter(c => rawCats.includes(c)), ...rawCats.filter(c => !labCatOrder.includes(c)).sort()];
                   const visible = dedupedLabs
                     .filter(l => importedCatFilter === "All" || (l.category || "Other") === importedCatFilter)
-                    .filter(l => !showFlagged || l.flag);
+                    .filter(l => !showFlagged || labOutOfRange(l, customRanges) === true);
 
                   // Build flat items list: section headers when "All", flat when filtered
                   const listItems = [];
@@ -1148,14 +1182,14 @@ ${labsStr}`;
                             onClick={() => selectImportedLab(lab)}
                             style={{ animationDelay: `${i * 18}ms`, flexDirection: "column", gap: 3, cursor: "pointer" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
+                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: labOutOfRange(lab, customRanges) ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
                               <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                                 <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", textAlign: "left" }}>{lab.name}</div>
                                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>
                                   {lab.date || "—"}{histCount > 1 ? ` · ${histCount} readings` : ""}
                                 </div>
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: lab.flag ? "#f59e0b" : "#10b981", flexShrink: 0, textAlign: "right" }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: labOutOfRange(lab, customRanges) ? "#f59e0b" : "#10b981", flexShrink: 0, textAlign: "right" }}>
                                 {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
                               </div>
                             </div>
@@ -1183,7 +1217,11 @@ ${labsStr}`;
               const customRange = customRanges[labKey] || null;
               const customLow  = customRange?.low  ?? null;
               const customHigh = customRange?.high ?? null;
-              const inRange = low !== null && high !== null && !isNaN(val) ? (val >= low && val <= high) : null;
+              // Doctor's custom range wins for the in/out-of-range status; fall
+              // back to the lab report's printed range when none is set.
+              const effLow  = customLow  != null ? +customLow  : low;
+              const effHigh = customHigh != null ? +customHigh : high;
+              const inRange = effLow !== null && effHigh !== null && !isNaN(val) ? (val >= effLow && val <= effHigh) : null;
               // All historical readings for this test, sorted oldest → newest
               const allHistory = [...importedLabs]
                 .filter(l => (l.name || "").toLowerCase() === (selectedImportedLab.name || "").toLowerCase())
@@ -1207,7 +1245,7 @@ ${labsStr}`;
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
                         <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400 }}>{selectedImportedLab.name}</h2>
-                        {selectedImportedLab.flag && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE</span>}
+                        {inRange === false && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE{customRange ? " (your range)" : ""}</span>}
                       </div>
                       <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
                         {selectedImportedLab.category}{selectedImportedLab.refRange ? ` · Normal range: ${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : ""}
