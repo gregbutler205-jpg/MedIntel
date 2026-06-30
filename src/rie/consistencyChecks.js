@@ -1,0 +1,168 @@
+// ── RIE · Data Consistency Checks ────────────────────────────────────────────
+// Cross-field, cross-module rules. Each check is a named function returning a
+// findings array. Run on full scan (manual / pre-report), not per keystroke.
+//
+// Severity note: a few severities are tuned down from the spec (e.g. missing lab
+// unit → Warning rather than Critical) because imported labs commonly lack those
+// fields and Phase 1 surfaces everything in one queue. Easy to retune later.
+
+import { mkFinding } from "./findings.js";
+import { genericOf, labKeyOf, similarity, ALLERGY_CONFLICTS } from "./medDictionary.js";
+
+const safe = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+const obj  = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
+const normPhone = (p) => String(p || "").replace(/\D/g, "");
+const parseDate = (d) => { if (!d) return null; const t = new Date(/^\d{4}-\d{2}-\d{2}$/.test(d) ? d + "T12:00:00" : d); return isNaN(t) ? null : t; };
+
+// ── Medications ───────────────────────────────────────────────────────────────
+export function checkMedications() {
+  const meds = safe("mi_meds_full").filter(m => m.status !== "inactive");
+  const out = [];
+  meds.forEach((m, i) => {
+    const name = m.name || `Medication ${i + 1}`;
+    if (!m.dose)      out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "medications", fieldPath: `medications[${m.id ?? i}].dose`, original: name, message: `${name} — no dose recorded`, fix: null }));
+    if (!m.frequency) out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "medications", fieldPath: `medications[${m.id ?? i}].frequency`, original: name, message: `${name} — frequency not set` }));
+    if (!m.prescriber) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "medications", fieldPath: `medications[${m.id ?? i}].prescriber`, original: name, message: `${name} — no prescribing provider recorded` }));
+    if (!m.refillDate) out.push(mkFinding({ severity: "info", checkType: "consistency", module: "medications", fieldPath: `medications[${m.id ?? i}].refillDate`, original: name, message: `${name} — no refill date on file` }));
+  });
+  // duplicate active medication by generic
+  const groups = {};
+  meds.forEach(m => { const g = genericOf(m.name); (groups[g] = groups[g] || []).push(m); });
+  Object.entries(groups).forEach(([g, list]) => {
+    if (list.length < 2) return;
+    const names = new Set(list.map(m => (m.name || "").toLowerCase().trim()));
+    const doses = new Set(list.map(m => (m.dose || "").toLowerCase().trim()));
+    const label = list.map(m => m.name).join('" and "');
+    if (names.size > 1) {
+      out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "medications", fieldPath: `medications.duplicate.${g}`, original: label, message: `"${label}" appear to be the same medication (${g}) both listed as active` }));
+    } else if (doses.size > 1) {
+      out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "medications", fieldPath: `medications.dupdose.${g}`, original: label, message: `"${list[0].name}" is listed multiple times at different doses` }));
+    } else {
+      out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "medications", fieldPath: `medications.exactdup.${g}`, original: label, message: `"${list[0].name}" is listed more than once as active` }));
+    }
+  });
+  return out;
+}
+
+// ── Labs ──────────────────────────────────────────────────────────────────────
+export function checkLabs() {
+  const labs = safe("mi_labs");
+  const dob = parseDate(obj("mi_profile_personal").dob);
+  const today = new Date();
+  const out = [];
+  const seen = {};         // name|date|value → count
+  const nameByKey = {};    // labKey → set of display names
+  labs.forEach((l, i) => {
+    const nm = l.name || `Lab ${i + 1}`;
+    if (!l.unit && l.value != null && l.value !== "") out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].unit`, original: nm, message: `${nm}: ${l.value} — no unit recorded` }));
+    if (!l.refRange) out.push(mkFinding({ severity: "info", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].refRange`, original: nm, message: `${nm} — no reference range on file` }));
+    const d = parseDate(l.date);
+    if (d && d > today) out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].date`, original: `${nm} ${l.date}`, message: `${nm} has a draw date in the future (${l.date})` }));
+    if (d && dob && d < dob) out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].date`, original: `${nm} ${l.date}`, message: `${nm} has a draw date before your date of birth (${l.date})` }));
+    const dk = `${(nm || "").toLowerCase()}|${l.date}|${l.value}`;
+    seen[dk] = (seen[dk] || 0) + 1;
+    const lk = labKeyOf(nm);
+    (nameByKey[lk] = nameByKey[lk] || new Set()).add(nm);
+  });
+  Object.entries(seen).forEach(([dk, n]) => {
+    if (n > 1) { const [nm, date] = dk.split("|"); out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs.dup.${dk}`, original: nm, message: `${nm} on ${date} appears entered more than once with the same value` })); }
+  });
+  Object.entries(nameByKey).forEach(([lk, names]) => {
+    if (names.size > 1) { const arr = [...names]; out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs.synonym.${lk}`, original: arr.join(" / "), message: `"${arr.join('" and "')}" may be the same test under different names` })); }
+  });
+  return out;
+}
+
+// ── Providers & contacts ──────────────────────────────────────────────────────
+export function checkProviders() {
+  const team = safe("mi_care_team");
+  const teamNames = team.map(p => p.name).filter(Boolean);
+  const appts = safe("mi_appointments");
+  const out = [];
+
+  const matchTeam = (name) => {
+    let best = null, bestSim = 0;
+    teamNames.forEach(tn => { const s = similarity(name, tn); if (s > bestSim) { bestSim = s; best = tn; } });
+    return { best, bestSim };
+  };
+
+  appts.forEach((a, i) => {
+    if (!a.provider) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "appointments", fieldPath: `appointments[${a.id ?? i}].provider`, original: a.title || a.date || `Appointment ${i + 1}`, message: `Appointment "${a.title || a.date}" has no provider recorded` }));
+    else if (teamNames.length) {
+      const { best, bestSim } = matchTeam(a.provider);
+      if (best && bestSim >= 0.85 && best.toLowerCase().trim() !== a.provider.toLowerCase().trim()) {
+        out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "appointments", fieldPath: `appointments[${a.id ?? i}].provider`, original: a.provider, suggestion: best, message: `"${a.provider}" in Appointments may be "${best}" from your Care Team — same provider?` }));
+      }
+    }
+    if (!a.facility) out.push(mkFinding({ severity: "info", checkType: "consistency", module: "appointments", fieldPath: `appointments[${a.id ?? i}].facility`, original: a.title || a.date, message: `Appointment "${a.title || a.date}" has no location/facility` }));
+  });
+
+  team.forEach((p, i) => { if (!normPhone(p.phone)) out.push(mkFinding({ severity: "info", checkType: "consistency", module: "careplan", fieldPath: `careTeam[${p.id ?? i}].phone`, original: p.name, message: `${p.name} has no phone number on file` })); });
+
+  // duplicate emergency contacts (same phone or same name)
+  const ecs = safe("mi_emergency_contacts");
+  const byPhone = {}, byName = {};
+  ecs.forEach(c => { const ph = normPhone(c.phone); if (ph) (byPhone[ph] = byPhone[ph] || []).push(c); const nm = (c.name || "").toLowerCase().trim(); if (nm) (byName[nm] = byName[nm] || []).push(c); });
+  Object.entries(byPhone).forEach(([ph, list]) => { if (list.length > 1) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "profile", fieldPath: `emergencyContacts.dupphone.${ph}`, original: list[0].name, message: `${list.map(c => c.name).join(" and ")} share the same phone number — duplicate contact?` })); });
+  Object.entries(byName).forEach(([nm, list]) => { if (list.length > 1) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "profile", fieldPath: `emergencyContacts.dupname.${nm}`, original: list[0].name, message: `"${list[0].name}" is listed as an emergency contact more than once` })); });
+  return out;
+}
+
+// ── Conditions & allergies ────────────────────────────────────────────────────
+export function checkConditionsAllergies() {
+  const conditions = safe("mi_conditions");
+  const allergies = safe("mi_allergies");
+  const meds = safe("mi_meds_full").filter(m => m.status !== "inactive");
+  const out = [];
+
+  conditions.forEach((c, i) => {
+    if (!c.status) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "conditions", fieldPath: `conditions[${c.id ?? i}].status`, original: c.name, message: `"${c.name}" has no status (active / resolved / historical)` }));
+    if (!c.diagnosedDate) out.push(mkFinding({ severity: "info", checkType: "consistency", module: "conditions", fieldPath: `conditions[${c.id ?? i}].diagnosedDate`, original: c.name, message: `"${c.name}" has no onset/diagnosis date` }));
+  });
+
+  // duplicate allergies
+  const byName = {};
+  allergies.forEach(a => { const nm = (a.name || "").toLowerCase().trim(); if (nm) (byName[nm] = byName[nm] || []).push(a); });
+  Object.entries(byName).forEach(([nm, list]) => { if (list.length > 1) out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "profile", fieldPath: `allergies.dup.${nm}`, original: list[0].name, message: `"${list[0].name}" is listed as two separate allergy entries` })); });
+
+  // allergy ↔ active medication conflict
+  allergies.forEach((a, i) => {
+    const key = (a.name || "").toLowerCase().trim();
+    const conflicts = ALLERGY_CONFLICTS[key];
+    if (!conflicts) return;
+    meds.forEach(m => {
+      const mn = (m.name || "").toLowerCase(), bn = (m.brand || "").toLowerCase(), g = genericOf(m.name);
+      if (conflicts.some(c => mn.includes(c) || bn.includes(c) || g.includes(c))) {
+        out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "profile", fieldPath: `allergyConflict.${key}.${m.id}`, original: `${a.name} / ${m.name}`, message: `Allergy to ${a.name} but active medication ${m.name} may contain it — confirm with your care team` }));
+      }
+    });
+  });
+  return out;
+}
+
+// ── Documents & records ───────────────────────────────────────────────────────
+const GARBLE_RE = /[ÃÂ]{2,}|�|[�]|â€[œ™“”]/;
+export function checkDocumentsRecords() {
+  const surgeries = safe("mi_surgeries");
+  const docs = safe("mi_documents");
+  const out = [];
+  surgeries.forEach((s, i) => {
+    const nm = s.procedure || `Procedure ${i + 1}`;
+    if (!s.date || !s.facility) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "surgeries", fieldPath: `surgeries[${s.id ?? i}]`, original: nm, message: `"${nm}" is missing ${!s.date ? "a date" : ""}${!s.date && !s.facility ? " and " : ""}${!s.facility ? "a facility" : ""}` }));
+  });
+  docs.forEach((d, i) => {
+    const text = `${d.title || ""} ${d.text || d.extractedText || ""}`;
+    if (GARBLE_RE.test(text)) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "documents", fieldPath: `documents[${d.id ?? i}].text`, original: d.title || `Document ${i + 1}`, message: `"${d.title || "Document"}" contains garbled/encoding artifacts in its text` }));
+  });
+  return out;
+}
+
+export function runConsistency() {
+  return [
+    ...checkMedications(),
+    ...checkLabs(),
+    ...checkProviders(),
+    ...checkConditionsAllergies(),
+    ...checkDocumentsRecords(),
+  ];
+}

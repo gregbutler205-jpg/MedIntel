@@ -12,6 +12,40 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.18.0 — 2026-06-29
+
+### Added — Record Integrity Engine (Phase 1)
+- **A client-side data-quality engine** (`src/rie/`) that scans your record for
+  problems and surfaces them in a **Review Queue** before they reach reports or
+  AI analysis. Nothing leaves your device; nothing is changed without your
+  confirmation.
+- **Five consistency-check categories** across your `mi_*` data: medications
+  (missing dose/frequency/prescriber/refill, duplicate active meds by generic),
+  labs (missing unit/range, impossible/future dates, duplicates, same test under
+  two names), providers/contacts (appointment missing provider/location, care-team
+  spelling mismatches, duplicate emergency contacts), conditions/allergies
+  (missing status/onset, duplicate allergy, allergy-vs-active-med conflict), and
+  documents (procedure missing date/facility, garbled imported text).
+- **Medical dictionary** seeded from your own record plus a curated base list of
+  common misspellings (e.g. "Trazedone" → Trazodone). Surfaced in the queue with
+  a Confirm-style **Fix Now** — medication names are never auto-corrected or
+  batch-fixed.
+- **Review Queue** — a floating button with a Critical+Warning count badge, on
+  every tab. Each finding shows a severity badge, the issue, a before→after diff
+  where applicable, and **Fix Now / Ignore This Time / Dismiss Permanently**, plus
+  an **Apply Safe Fixes** batch (never medication names or Critical items) and a
+  manual **Re-scan**.
+- **Audit log** of every action, and **permanent dismissals**, stored under `mi_`
+  keys so they ride Google Drive sync; "ignore this time" stays session-local.
+
+### Deferred (next phases)
+- Live as-you-type spell squiggles, the English (nspell) dictionary, report/print
+  **preflight** blocking, and the AI-context completeness panel. The engine is
+  structured so a "spell-check shared documents at print/share time" preflight
+  drops in next.
+
+---
+
 ## v1.17.1 — 2026-06-28
 
 ### Fixed
