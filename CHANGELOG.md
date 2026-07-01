@@ -12,6 +12,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.18.1 — 2026-06-29
+
+### Fixed
+- **"Server error 413" on AI analysis with a rich record.** The AI proxy's
+  `/api/chat` body limit was 256 KB, but a full record (all labs/vitals/meds plus
+  uploaded reference documents) exceeds it, so the proxy rejected the request
+  before it reached Claude — whose context window is far larger. Raised the proxy
+  limit to 1 MB, added a total-text cap (~120 KB) across all reference documents
+  so a large document library can't blow the payload, and replaced the cryptic
+  "Server error 413" with a clear message pointing at reference-doc context.
+  **Requires the Render proxy to redeploy** (auto-deploys on push).
+
+---
+
 ## v1.18.0 — 2026-06-29
 
 ### Added — Record Integrity Engine (Phase 1)

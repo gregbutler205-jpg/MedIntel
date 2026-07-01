@@ -64,8 +64,12 @@ const limiter = rateLimit({
   skip: () => true, // ← disabled; set to false to enforce on public release
 });
 
-// ── /api/chat — SSE streaming or JSON passthrough (256 KB body limit) ─────────
-app.post("/api/chat", express.json({ limit: "256kb" }), limiter, async (req, res) => {
+// ── /api/chat — SSE streaming or JSON passthrough (1 MB body limit) ───────────
+// 256 KB was too tight: a rich record (all labs/vitals/meds + reference
+// documents) exceeds it and the proxy returns 413 before reaching Claude, whose
+// context window is far larger. 1 MB comfortably fits a full record; the client
+// also caps reference-document text so payloads stay well within model limits.
+app.post("/api/chat", express.json({ limit: "1mb" }), limiter, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {

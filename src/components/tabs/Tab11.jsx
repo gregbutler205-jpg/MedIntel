@@ -219,6 +219,9 @@ Other:
         return da - db;
       });
     }
+    // Total budget across ALL reference docs so a large document library can't
+    // push the request past the proxy body limit / model context window.
+    let refBudget = 120000; // chars
     const docText = Object.entries(groups).map(([type, docs]) => {
       const isSequential = docs.length > 1;
       const groupHeader = isSequential
@@ -227,7 +230,11 @@ Other:
       const docEntries = docs.map(d => {
         const dateLine = d.studyDate ? ` | Study date: ${d.studyDate}` : "";
         const facilityLine = d.facility ? ` | Facility: ${d.facility}` : "";
-        return `[Document: "${d.name}"${dateLine}${facilityLine}]\n${d.text.slice(0, 8000)}${d.text.length > 8000 ? "\n…(truncated)" : ""}`;
+        const full = d.text || "";
+        if (refBudget <= 0) return `[Document: "${d.name}"${dateLine}${facilityLine}]\n…(omitted — reference-document context limit reached)`;
+        const body = full.slice(0, Math.min(8000, refBudget));
+        refBudget -= body.length;
+        return `[Document: "${d.name}"${dateLine}${facilityLine}]\n${body}${full.length > body.length ? "\n…(truncated)" : ""}`;
       }).join("\n\n---\n\n");
       return groupHeader ? `${groupHeader}\n\n${docEntries}` : docEntries;
     }).join("\n\n═══════════════════════════\n\n");
@@ -913,6 +920,7 @@ export default function AIAnalysis({ onNavChange }) {
       });
 
       if (!res.ok) {
+        if (res.status === 413) throw new Error("Your record context is too large to send in one request — this usually means several large uploaded reference documents. Remove some from AI context (Reference Docs panel) and try again.");
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || `Server error ${res.status}`);
       }
