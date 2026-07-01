@@ -12,6 +12,25 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.20.0 — 2026-06-29
+
+### Added / Changed — Appointments
+- **Directions link.** An appointment's expanded detail now shows a 🧭 Directions
+  link (built from its facility + address) that opens Google Maps.
+- **Calendar events come in for review, not auto-added.** Google Calendar sync
+  (manual and the daily auto-sync) now brings events in as **Suggested** rather
+  than dropping them straight onto your schedule. The tab switches to the
+  Suggested filter with a count so you can **edit to fill gaps, then Confirm or
+  Dismiss** each one. Nothing hits your real schedule until you accept it — fixes
+  incomplete calendar entries silently becoming appointments.
+- **Post-visit capture on Mark Complete.** Marking an appointment complete now
+  opens one prompt (not a prompt per item) to capture anything from the visit —
+  clinical notes/documents, labs, new conditions, new/changed meds, imaging —
+  each with a jump button to the right place. Add what applies, then attach it to
+  the appointment from its Records & Documents section.
+
+---
+
 ## v1.19.0 — 2026-06-29
 
 ### Added — RIE Report Preflight

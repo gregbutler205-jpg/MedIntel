@@ -115,6 +115,12 @@ const BLANK = {
 
 function genId() { return Math.random().toString(36).slice(2); }
 
+// Google Maps directions link from an appointment's facility + address.
+function mapsUrl(appt) {
+  const q = [appt.facility, appt.address].filter(Boolean).join(", ");
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+
 const GCAL_LAST_SYNC_KEY = "mi_gcal_last_sync";
 function todayISO() {
   const d = new Date();
@@ -572,6 +578,43 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
   );
 }
 
+// ── Post-visit capture prompt (shown once on Mark Complete) ──────────────────
+function PostVisitModal({ appt, onJump, onClose }) {
+  const rows = [
+    { icon: "▣", label: "Clinical notes / documents", desc: "Visit summary, after-visit notes, letters.", tab: "documents", action: "Upload" },
+    { icon: "◈", label: "Lab results", desc: "Import lab PDFs — the AI extracts the values.", tab: "import", action: "Import" },
+    { icon: "◎", label: "New condition / diagnosis", desc: "Anything newly diagnosed at the visit.", tab: "conditions", action: "Add" },
+    { icon: "⬡", label: "New or changed medication", desc: "A new prescription or a dose change.", tab: "medications", action: "Add" },
+    { icon: "◍", label: "Imaging study", desc: "An MRI, CT, X-ray, or other scan.", tab: "profile", action: "Add" },
+  ];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, width: "100%", maxWidth: 540, maxHeight: "90vh", overflowY: "auto", padding: 26 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 21, color: "#dde8f5", fontWeight: 400 }}>Visit complete ✓</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#7eb8d8", fontSize: 18, cursor: "pointer" }}>✕</button>
+        </div>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16, lineHeight: 1.6 }}>
+          Capture anything from “{appt.title}”? Add what applies — then attach it to this appointment from its Records &amp; Documents section.
+        </div>
+        {rows.map(r => (
+          <div key={r.tab + r.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", background: "#080c14", border: "1px solid #0d1a28", borderRadius: 10, marginBottom: 8 }}>
+            <span style={{ color: "#7eb8d8", fontSize: 15 }}>{r.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, color: "#c4d8ee", fontWeight: 600 }}>{r.label}</div>
+              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{r.desc}</div>
+            </div>
+            <button onClick={() => onJump(r.tab)} style={{ padding: "6px 14px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{r.action}</button>
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
+          <button onClick={onClose} style={{ padding: "9px 22px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 9, color: "#10b981", fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── AI Analysis Panel for an Appointment ────────────────────────────────────
 function ApptAIPanel({ appt }) {
   const [additionalQ, setAdditionalQ] = useState("");
@@ -721,6 +764,7 @@ export default function AppointmentsTab({ onNavChange }) {
   const [showAI, setShowAI]   = useState(null);  // appt.id for which AI panel is open
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [attachTarget, setAttachTarget] = useState(null); // appt for which the Attach modal is open
+  const [postVisit, setPostVisit] = useState(null);       // appt just marked complete → capture prompt
 
   // Google Calendar sync
   const [syncing, setSyncing]       = useState(false);
@@ -748,13 +792,16 @@ export default function AppointmentsTab({ onNavChange }) {
       })();
       let added = 0;
       setAppts(prev => {
-        const fresh = diffNewAppointments(events, prev, careTeam).map(a => ({ ...BLANK, ...a, id: genId() }));
+        // Synced events come in as "suggested" so nothing hits the real schedule
+        // until you review, edit, and Confirm (or Dismiss) each one.
+        const fresh = diffNewAppointments(events, prev, careTeam).map(a => ({ ...BLANK, ...a, id: genId(), status: "suggested", suggestedFrom: "Google Calendar" }));
         added = fresh.length;
         return [...fresh, ...prev];
       });
       localStorage.setItem(GCAL_LAST_SYNC_KEY, todayISO());
       if (added > 0) {
-        setSyncMsg({ kind:"ok", text: `${auto ? "Auto-synced — added" : "Added"} ${added} new appointment${added !== 1 ? "s" : ""} from "${cal.summary}".` });
+        setFilter("suggested");
+        setSyncMsg({ kind:"ok", text: `${auto ? "Auto-synced — " : ""}${added} new appointment${added !== 1 ? "s" : ""} from "${cal.summary}" to review below — edit to fill gaps, then Confirm or Dismiss.` });
       } else if (!auto) {
         setSyncMsg({ kind:"ok", text: `No new appointments in "${cal.summary}" — you're up to date.` });
       }
@@ -815,6 +862,12 @@ export default function AppointmentsTab({ onNavChange }) {
     setAppts(prev => prev.filter(a => a.id !== id));
     setDeleteConfirm(null);
     if (expanded === id) setExpanded(null);
+  };
+
+  // Mark an appointment complete, then prompt to capture anything from the visit.
+  const handleMarkComplete = (appt) => {
+    handleSave({ ...appt, status: "completed" });
+    setPostVisit({ ...appt, status: "completed" });
   };
 
   // ── Attachments ───────────────────────────────────────────────────────────
@@ -1067,6 +1120,12 @@ export default function AppointmentsTab({ onNavChange }) {
                       {appt.prepInstructions && <Detail label="Prep Instructions" value={appt.prepInstructions} />}
                       {appt.notes   && <Detail label="Notes"    value={appt.notes}   full />}
                     </div>
+                    {(appt.address || appt.facility) && (
+                      <a href={mapsUrl(appt)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                        style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", textDecoration:"none", padding:"6px 12px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, marginBottom:14 }}>
+                        🧭 Directions
+                      </a>
+                    )}
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                       {appt.status === "suggested" ? (
                         <>
@@ -1089,7 +1148,7 @@ export default function AppointmentsTab({ onNavChange }) {
                             ✎ Edit
                           </button>
                           <button className="apt-btn" style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.25)", color:"#10b981" }}
-                            onClick={e => { e.stopPropagation(); handleSave({ ...appt, status:"completed" }); }}>
+                            onClick={e => { e.stopPropagation(); handleMarkComplete(appt); }}>
                             ✓ Mark Complete
                           </button>
                           <button className="apt-btn"
@@ -1125,6 +1184,9 @@ export default function AppointmentsTab({ onNavChange }) {
 
       {/* Attach records modal */}
       {attachTarget && <AttachModal appt={attachTarget} onSave={handleSaveAttachments} onClose={() => setAttachTarget(null)} />}
+
+      {/* Post-visit capture prompt */}
+      {postVisit && <PostVisitModal appt={postVisit} onClose={() => setPostVisit(null)} onJump={(tab) => { setPostVisit(null); onNavChange?.(tab); }} />}
 
       {/* Google Calendar picker */}
       {calPicker && <CalendarPickerModal calendars={calPicker} onPick={handlePickCalendar} onClose={() => setCalPicker(null)} />}
