@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 import { requestReport } from "../../rie/preflightChecks.js";
+import { compressImage } from "../../lib/cards.js";
+import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -451,19 +453,23 @@ function buildDocContext(searchText) {
 
 // ── Appointment attachments (documents, imaging, notes, prep) ────────────────
 const ATT_META = {
-  document: { icon: "▣", label: "Document",  color: "#4f8ef7", nav: "documents" },
-  imaging:  { icon: "◍", label: "Imaging",   color: "#a78bfa", nav: "profile"   },
-  note:     { icon: "◻", label: "Note",      color: "#10b981", nav: "notes"     },
-  prep:     { icon: "✦", label: "Consultation Prep", color: "#f59e0b", nav: null },
+  document:   { icon: "▣", label: "Document",   color: "#4f8ef7", nav: "documents"   },
+  imaging:    { icon: "◍", label: "Imaging",    color: "#a78bfa", nav: "profile"     },
+  note:       { icon: "◻", label: "Note",       color: "#10b981", nav: "notes"       },
+  condition:  { icon: "◎", label: "Condition",  color: "#ef4444", nav: "conditions"  },
+  medication: { icon: "⬡", label: "Medication", color: "#a78bfa", nav: "medications" },
+  prep:       { icon: "✦", label: "Consultation Prep", color: "#f59e0b", nav: null   },
 };
 
-/** Pull all attachable records (documents, imaging studies, notes) from storage. */
+/** Pull all attachable records (documents, imaging, notes, conditions, meds) from storage. */
 function loadAttachables() {
   const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
-  const docs    = safe("mi_documents").map(d => ({ type: "document", refId: d.id, title: d.title || "Untitled document", date: d.date || d.studyDate || "" }));
-  const imaging = safe("mi_imaging").map(i => ({ type: "imaging", refId: i.id, title: [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: i.date || "" }));
-  const notes   = safe("mi_notes").map(n => ({ type: "note", refId: n.id, title: n.title || "Note", date: n.date || "" }));
-  return [...docs, ...imaging, ...notes];
+  const docs       = safe("mi_documents").map(d => ({ type: "document", refId: d.id, title: d.title || "Untitled document", date: d.date || d.studyDate || "" }));
+  const imaging    = safe("mi_imaging").map(i => ({ type: "imaging", refId: i.id, title: [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: i.date || "" }));
+  const notes      = safe("mi_notes").map(n => ({ type: "note", refId: n.id, title: n.title || "Note", date: n.date || "" }));
+  const conditions = safe("mi_conditions").map(c => ({ type: "condition", refId: c.id, title: c.name || "Condition", date: c.diagnosedDate || "" }));
+  const meds       = safe("mi_meds_full").map(m => ({ type: "medication", refId: m.id, title: [m.name, m.dose].filter(Boolean).join(" ") || "Medication", date: "" }));
+  return [...docs, ...imaging, ...notes, ...conditions, ...meds];
 }
 
 /** Does an item look related to this appointment? (keyword/date match or within 14 days) */
@@ -578,15 +584,248 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
   );
 }
 
+// ── Post-visit capture: write helpers ────────────────────────────────────────
+// Each returns an attachment entry ({ type, refId, title, date }) so the caller
+// can tie the freshly-captured record to the appointment. Writes go straight to
+// the same mi_* stores the dedicated tabs use, so nothing has to be re-entered.
+
+function fmtDocDate(iso) {
+  const d = iso ? new Date(iso + "T12:00:00") : new Date();
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// Lightweight text extraction for PDFs (mirrors Tab09/Tab12; no AI round-trip).
+async function extractPdfText(file) {
+  try {
+    const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    let text = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pt = content.items.map(x => x.str).join(" ").trim();
+      if (pt) text += `\n--- Page ${i} ---\n${pt}`;
+    }
+    return text.trim();
+  } catch { return ""; }
+}
+
+// Upload → mi_documents. Images are compressed to a data URL; text-PDFs get their
+// text pulled inline so the document is searchable without a trip to the AI.
+async function captureDocument({ file, title, category, apptDate }) {
+  const isImg = file?.type?.startsWith("image/");
+  const isPdf = file?.type === "application/pdf";
+  let image = "", extractedText = "";
+  if (isImg)      image = await compressImage(file);
+  else if (isPdf) extractedText = await extractPdfText(file);
+
+  const doc = {
+    id:                `doc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    title:             (title || "").trim() || "Visit document",
+    category,
+    date:              fmtDocDate(apptDate),
+    source:            "Appointment",
+    sourceColor:       "#4f8ef7",
+    provider:          "Appointment",
+    type:              file?.type || "Document",
+    pages:             "—",
+    tags:              [],
+    flagged:           false,
+    isRef:             false,
+    isScanned:         false,
+    image,
+    extractedText,
+    extracted:         !!extractedText,
+    findingsExtracted: false,
+    preview:           image ? "[Image captured at visit]"
+                     : extractedText ? extractedText.slice(0, 3000)
+                     : `File: ${file?.name || "—"}`,
+    fileSize:          file ? `${(file.size / 1024).toFixed(1)} KB` : "—",
+    uploadedAt:        new Date().toISOString(),
+  };
+  const docs = (() => { try { return JSON.parse(localStorage.getItem("mi_documents") || "[]"); } catch { return []; } })();
+  localStorage.setItem("mi_documents", JSON.stringify([doc, ...docs]));   // may throw QuotaExceededError
+  return { type: "document", refId: doc.id, title: doc.title, date: doc.date };
+}
+
+// Imaging → mi_imaging (matches Tab02's BLANK_IMAGING shape). An uploaded image is
+// compressed onto the record; the metadata is what Profile lists.
+async function captureImaging({ imgType, bodyPart, facility, apptDate, file }) {
+  let image = "";
+  if (file?.type?.startsWith("image/")) image = await compressImage(file);
+  const rec = {
+    id: Date.now(), type: imgType, bodyPart: (bodyPart || "").trim(),
+    facility: facility || "", date: apptDate || "", ...(image ? { image } : {}),
+  };
+  setImaging([rec, ...getImaging()]);   // may throw QuotaExceededError
+  return { type: "imaging", refId: rec.id, title: [rec.type, rec.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: rec.date };
+}
+
+// Condition → mi_conditions (matches Tab15's BLANK). Also refreshes the
+// mi_conditions_summary that the Dashboard + AI read.
+function captureCondition({ name, status, diagnosedDate, provider }) {
+  const rec = {
+    id: genId(), name: (name || "").trim(), icd10: "", diagnosedDate: diagnosedDate || "",
+    provider: provider || "", status: status || "active", severity: "moderate", notes: "",
+  };
+  const list = (() => { try { return JSON.parse(localStorage.getItem("mi_conditions") || "[]"); } catch { return []; } })();
+  const next = [rec, ...list];
+  localStorage.setItem("mi_conditions", JSON.stringify(next));
+  localStorage.setItem("mi_conditions_summary", JSON.stringify(next.filter(c => c.status === "active").map(c => c.name)));
+  return { type: "condition", refId: rec.id, title: rec.name, date: rec.diagnosedDate };
+}
+
+// Medication → mi_meds_full (matches the rich Tab04 med shape, minimal fields).
+function captureMedication({ name, dose, frequency, prescriber, refillDate }) {
+  const rec = {
+    id: Date.now(), name: (name || "").trim(), brand: "", dose: dose || "", frequency: frequency || "",
+    prescriber: prescriber || "", refillDate: refillDate || "", status: "active", category: "", color: "#a78bfa",
+  };
+  setMedsFull([rec, ...getMedsFull()]);
+  return { type: "medication", refId: rec.id, title: [rec.name, rec.dose].filter(Boolean).join(" "), date: "" };
+}
+
+// ── Post-visit capture: inline forms ─────────────────────────────────────────
+const pvField = { ...inp, marginBottom: 8 };
+const pvSaveBtn = (enabled) => ({
+  width: "100%", padding: "9px 0", borderRadius: 8, fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 600,
+  cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.5,
+  background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", color: "#10b981",
+});
+const fileInp = {
+  width: "100%", fontSize: 11, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", marginBottom: 8,
+  background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 8, padding: "8px 10px",
+};
+
+function FileCaptureForm({ appt, category, accept, hint, onCapture, busy }) {
+  const [file, setFile]   = useState(null);
+  const [title, setTitle] = useState("");
+  const canSave = !!file && title.trim() && !busy;
+  return (
+    <div>
+      <input type="file" accept={accept} disabled={busy} style={fileInp}
+        onChange={e => { const f = e.target.files?.[0]; if (!f) return; setFile(f); if (!title) setTitle(f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ")); }} />
+      <input style={pvField} placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} disabled={busy} />
+      {hint && <div style={{ fontSize: 9.5, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>{hint}</div>}
+      <button disabled={!canSave} style={pvSaveBtn(canSave)}
+        onClick={() => onCapture(() => captureDocument({ file, title, category, apptDate: appt.date }))}>
+        {busy ? "Saving…" : "✓ Save & Attach"}
+      </button>
+    </div>
+  );
+}
+
+function ImagingCaptureForm({ appt, onCapture, busy }) {
+  const [imgType, setImgType]   = useState("MRI");
+  const [bodyPart, setBodyPart] = useState("");
+  const [file, setFile]         = useState(null);
+  const canSave = bodyPart.trim() && !busy;
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <select style={inp} value={imgType} onChange={e => setImgType(e.target.value)} disabled={busy}>
+          {["MRI", "CT", "X-ray", "Ultrasound", "PET", "Mammogram", "Other"].map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <input style={inp} placeholder="Body part (e.g. Right Knee)" value={bodyPart} onChange={e => setBodyPart(e.target.value)} disabled={busy} />
+      </div>
+      <input type="file" accept="image/*" disabled={busy} style={fileInp}
+        onChange={e => setFile(e.target.files?.[0] || null)} />
+      <div style={{ fontSize: 9.5, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Optional image is compressed. Facility &amp; date auto-fill from this visit.</div>
+      <button disabled={!canSave} style={pvSaveBtn(canSave)}
+        onClick={() => onCapture(() => captureImaging({ imgType, bodyPart, facility: appt.facility, apptDate: appt.date, file }))}>
+        {busy ? "Saving…" : "✓ Save & Attach"}
+      </button>
+    </div>
+  );
+}
+
+function ConditionCaptureForm({ appt, onCapture, busy }) {
+  const [name, setName]     = useState("");
+  const [status, setStatus] = useState("active");
+  const [date, setDate]     = useState(appt.date || "");
+  const canSave = name.trim() && !busy;
+  return (
+    <div>
+      <input style={pvField} placeholder="Condition / diagnosis" value={name} onChange={e => setName(e.target.value)} disabled={busy} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <select style={inp} value={status} onChange={e => setStatus(e.target.value)} disabled={busy}>
+          <option value="active">Active</option>
+          <option value="managed">Managed</option>
+          <option value="resolved">Resolved</option>
+        </select>
+        <input style={inp} type="date" value={date} onChange={e => setDate(e.target.value)} disabled={busy} />
+      </div>
+      <button disabled={!canSave} style={pvSaveBtn(canSave)}
+        onClick={() => onCapture(() => captureCondition({ name, status, diagnosedDate: date, provider: appt.provider }))}>
+        {busy ? "Saving…" : "✓ Save & Attach"}
+      </button>
+    </div>
+  );
+}
+
+function MedCaptureForm({ appt, onCapture, busy }) {
+  const [name, setName]           = useState("");
+  const [dose, setDose]           = useState("");
+  const [frequency, setFrequency] = useState("");
+  const canSave = name.trim() && !busy;
+  return (
+    <div>
+      <input style={pvField} placeholder="Medication name" value={name} onChange={e => setName(e.target.value)} disabled={busy} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <input style={inp} placeholder="Dose (e.g. 3 mg)" value={dose} onChange={e => setDose(e.target.value)} disabled={busy} />
+        <input style={inp} placeholder="Frequency (e.g. Twice daily)" value={frequency} onChange={e => setFrequency(e.target.value)} disabled={busy} />
+      </div>
+      <button disabled={!canSave} style={pvSaveBtn(canSave)}
+        onClick={() => onCapture(() => captureMedication({ name, dose, frequency, prescriber: appt.provider }))}>
+        {busy ? "Saving…" : "✓ Save & Attach"}
+      </button>
+    </div>
+  );
+}
+
 // ── Post-visit capture prompt (shown once on Mark Complete) ──────────────────
-function PostVisitModal({ appt, onJump, onClose }) {
+// One prompt for the whole visit: expand a row, fill it in, and it writes to the
+// right mi_* store and auto-attaches to this appointment — no tab-hopping.
+function PostVisitModal({ appt, onCaptured, onClose }) {
+  const [openRow, setOpenRow] = useState(null);
+  const [captured, setCaptured] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr]   = useState("");
+
+  const runCapture = async (captureFn) => {
+    setErr(""); setBusy(true);
+    try {
+      const attachment = await captureFn();
+      onCaptured(attachment);                 // append to appt + dispatch mi-data-synced
+      setCaptured(c => [...c, attachment]);
+      setOpenRow(null);
+      return true;
+    } catch (e) {
+      const quota = e?.name === "QuotaExceededError" || /quota|exceeded/i.test(String(e?.message || e));
+      setErr(quota
+        ? "Storage is full — try a smaller image, or remove old documents first."
+        : (e?.message || "Could not save. Please try again."));
+      return false;
+    } finally { setBusy(false); }
+  };
+
+  const capProps = { appt, onCapture: runCapture, busy };
   const rows = [
-    { icon: "▣", label: "Clinical notes / documents", desc: "Visit summary, after-visit notes, letters.", tab: "documents", action: "Upload" },
-    { icon: "◈", label: "Lab results", desc: "Import lab PDFs — the AI extracts the values.", tab: "import", action: "Import" },
-    { icon: "◎", label: "New condition / diagnosis", desc: "Anything newly diagnosed at the visit.", tab: "conditions", action: "Add" },
-    { icon: "⬡", label: "New or changed medication", desc: "A new prescription or a dose change.", tab: "medications", action: "Add" },
-    { icon: "◍", label: "Imaging study", desc: "An MRI, CT, X-ray, or other scan.", tab: "profile", action: "Add" },
+    { key: "documents", icon: "▣", label: "Clinical notes / documents", desc: "Visit summary, after-visit notes, letters.",
+      form: <FileCaptureForm {...capProps} category="other" accept="image/*,application/pdf,.txt,.doc,.docx"
+              hint="Photo or PDF — images are compressed, PDF text is pulled in automatically." /> },
+    { key: "labs", icon: "◈", label: "Lab results", desc: "A lab report to keep with this visit.",
+      form: <FileCaptureForm {...capProps} category="lab" accept="image/*,application/pdf"
+              hint="Attach the lab PDF or a photo. Full value extraction stays in Import Records." /> },
+    { key: "condition", icon: "◎", label: "New condition / diagnosis", desc: "Anything newly diagnosed at the visit.",
+      form: <ConditionCaptureForm {...capProps} /> },
+    { key: "medication", icon: "⬡", label: "New or changed medication", desc: "A new prescription or a dose change.",
+      form: <MedCaptureForm {...capProps} /> },
+    { key: "imaging", icon: "◍", label: "Imaging study", desc: "An MRI, CT, X-ray, or other scan.",
+      form: <ImagingCaptureForm {...capProps} /> },
   ];
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, width: "100%", maxWidth: 540, maxHeight: "90vh", overflowY: "auto", padding: 26 }}>
@@ -595,18 +834,47 @@ function PostVisitModal({ appt, onJump, onClose }) {
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#7eb8d8", fontSize: 18, cursor: "pointer" }}>✕</button>
         </div>
         <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16, lineHeight: 1.6 }}>
-          Capture anything from “{appt.title}”? Add what applies — then attach it to this appointment from its Records &amp; Documents section.
+          Capture anything from “{appt.title}”? Add what applies below — each item is saved and attached to this appointment automatically.
         </div>
-        {rows.map(r => (
-          <div key={r.tab + r.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", background: "#080c14", border: "1px solid #0d1a28", borderRadius: 10, marginBottom: 8 }}>
-            <span style={{ color: "#7eb8d8", fontSize: 15 }}>{r.icon}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, color: "#c4d8ee", fontWeight: 600 }}>{r.label}</div>
-              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{r.desc}</div>
+
+        {err && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>⚠ {err}</div>}
+
+        {rows.map(r => {
+          const isOpen = openRow === r.key;
+          return (
+            <div key={r.key} style={{ background: "#080c14", border: `1px solid ${isOpen ? "rgba(79,142,247,.35)" : "#0d1a28"}`, borderRadius: 10, marginBottom: 8, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", cursor: "pointer" }}
+                   onClick={() => { setErr(""); setOpenRow(isOpen ? null : r.key); }}>
+                <span style={{ color: "#7eb8d8", fontSize: 15 }}>{r.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: "#c4d8ee", fontWeight: 600 }}>{r.label}</div>
+                  <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{r.desc}</div>
+                </div>
+                <button style={{ padding: "6px 14px", background: isOpen ? "transparent" : "rgba(79,142,247,.14)", border: `1px solid ${isOpen ? "#1a2f4a" : "rgba(79,142,247,.4)"}`, borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  {isOpen ? "Close" : "+ Add"}
+                </button>
+              </div>
+              {isOpen && <div style={{ padding: "4px 12px 14px" }}>{r.form}</div>}
             </div>
-            <button onClick={() => onJump(r.tab)} style={{ padding: "6px 14px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{r.action}</button>
+          );
+        })}
+
+        {captured.length > 0 && (
+          <div style={{ marginTop: 14, padding: "10px 12px", background: "rgba(16,185,129,.06)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 10 }}>
+            <div style={{ fontSize: 10, color: "#10b981", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Attached to this visit</div>
+            {captured.map((c, i) => {
+              const m = ATT_META[c.type] || ATT_META.document;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "#c4d8ee", marginBottom: 4 }}>
+                  <span style={{ color: m.color }}>{m.icon}</span>
+                  <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.title || m.label}</span>
+                  <span style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{m.label}</span>
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )}
+
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
           <button onClick={onClose} style={{ padding: "9px 22px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 9, color: "#10b981", fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Done</button>
         </div>
@@ -873,6 +1141,16 @@ export default function AppointmentsTab({ onNavChange }) {
   // ── Attachments ───────────────────────────────────────────────────────────
   const setAttachments = (apptId, attachments) =>
     setAppts(prev => prev.map(a => a.id === apptId ? { ...a, attachments } : a));
+
+  // A post-visit capture wrote a new record: tie it to the appointment and let
+  // open tabs + the Record Integrity Engine re-read from storage.
+  const handlePostVisitCapture = (attachment) => {
+    if (!postVisit) return;
+    const nextAtts = [...(postVisit.attachments || []), attachment];
+    setAttachments(postVisit.id, nextAtts);
+    setPostVisit(pv => (pv ? { ...pv, attachments: nextAtts } : pv));
+    window.dispatchEvent(new Event("mi-data-synced"));
+  };
 
   const handleSaveAttachments = (attachments) => {
     if (attachTarget) setAttachments(attachTarget.id, attachments);
@@ -1186,7 +1464,7 @@ export default function AppointmentsTab({ onNavChange }) {
       {attachTarget && <AttachModal appt={attachTarget} onSave={handleSaveAttachments} onClose={() => setAttachTarget(null)} />}
 
       {/* Post-visit capture prompt */}
-      {postVisit && <PostVisitModal appt={postVisit} onClose={() => setPostVisit(null)} onJump={(tab) => { setPostVisit(null); onNavChange?.(tab); }} />}
+      {postVisit && <PostVisitModal appt={postVisit} onClose={() => setPostVisit(null)} onCaptured={handlePostVisitCapture} />}
 
       {/* Google Calendar picker */}
       {calPicker && <CalendarPickerModal calendars={calPicker} onPick={handlePickCalendar} onClose={() => setCalPicker(null)} />}

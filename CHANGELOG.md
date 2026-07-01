@@ -12,6 +12,33 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.21.0 — 2026-07-01
+
+### Changed — Appointments post-visit capture
+- **Capture happens inline — no more tab-hopping.** The "Visit complete" prompt
+  shown on **Mark Complete** no longer bounces you to other tabs. Each row now
+  expands into a small capture form right in the prompt:
+  - **Clinical notes / documents** and **Lab results** — a file picker. Images are
+    compressed to a data URL via `compressImage`; text-PDFs have their text pulled
+    in automatically. Both save to your Documents (labs filed under the *lab*
+    category).
+  - **New condition / diagnosis** — name, status, and diagnosed date (pre-filled
+    from the visit); saves to Conditions and refreshes the active-conditions
+    summary.
+  - **New or changed medication** — name, dose, and frequency; saves to
+    Medications with the prescriber pre-filled from the appointment.
+  - **Imaging study** — type and body part (plus an optional compressed image);
+    facility and date pre-fill from the visit.
+- **Everything auto-attaches to the appointment.** Whatever you capture is written
+  to the right record store **and** immediately linked to the appointment's
+  **Records & Documents** section — one prompt for the whole visit, still no
+  per-item juggling.
+- **Open tabs and the Record Integrity Engine re-read** after each capture
+  (`mi-data-synced`), and oversized images surface a friendly "storage is full"
+  message instead of failing silently.
+
+---
+
 ## v1.20.0 — 2026-06-29
 
 ### Added / Changed — Appointments
