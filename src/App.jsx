@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import LockScreen from './components/LockScreen.jsx';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
+import PreflightHost from './rie/PreflightHost.jsx';
 import SearchPopup from './components/SearchPopup.jsx';
 import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from './lib/googleAuth.js';
 import { getAutoLockMinutes } from './lib/autoLock.js';
@@ -698,6 +699,7 @@ function AppShell() {
 
       {/* Record Integrity Engine — floating Review Queue, present on every tab */}
       <RIEWidget onNavChange={setActiveNav} />
+      <PreflightHost onNavChange={setActiveNav} />
 
       {/* ── Group A: standalone apps (medications, labs, vitals, symptoms) ── */}
       {/* These components have their own sidebar + topbar + height:100vh.     */}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { requestReport } from "../../rie/preflightChecks.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -1015,7 +1016,7 @@ ${labsStr}`;
             <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:4 }}>
               <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Labs & Trends</h1>
               {dedupedLabs.length > 0 && (
-                <button onClick={() => printLabReport(importedLabs, PRINT_LOGO)}
+                <button onClick={() => requestReport("labs", () => printLabReport(importedLabs, PRINT_LOGO))}
                   style={{ marginTop:4, padding:"4px 10px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:6, color:"#7eb8d8", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
                   ⎙ Print Report
                 </button>

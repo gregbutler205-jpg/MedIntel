@@ -10,6 +10,7 @@ import {
   getConditions, getSurgeries, getMedsFull, getLatestReading,
 } from "../../store.js";
 import { getCards, setCards, blankCard, compressImage, shareImageDataUrl } from "../../lib/cards.js";
+import { requestReport } from "../../rie/preflightChecks.js";
 
 // ── Featured labs helper (11 key labs) ────────────────────────────────────────
 const FEATURED_LAB_DEFS = [
@@ -680,7 +681,7 @@ export default function ProfileTab() {
       <div className="no-print" style={{ height:54, background:T.sidebar, borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
         <div style={{ flex:1 }} />
         <button
-          onClick={() => { if (cards.length > 1) setCardSelectOpen(true); else handlePrint(cards.map(c => c.id)); }}
+          onClick={() => { if (cards.length > 1) setCardSelectOpen(true); else requestReport("profile", () => handlePrint(cards.map(c => c.id))); }}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
         >
           🖨 Print Profile
@@ -1037,7 +1038,7 @@ export default function ProfileTab() {
       {imagingModal  && <ImagingModal  entry={imagingModal}    onSave={saveImagingEntry}   onClose={() => setImagingModal(null)}  />}
       {cardModal     && <CardModal     card={cardModal}        onSave={saveCardEntry}      onClose={() => setCardModal(null)}     />}
       {cardViewer    && <CardViewer    card={cardViewer.card}  side={cardViewer.side}      onClose={() => setCardViewer(null)}    />}
-      {cardSelectOpen && <CardSelectModal cards={cards} onClose={() => setCardSelectOpen(false)} onConfirm={(ids) => { setCardSelectOpen(false); setTimeout(() => handlePrint(ids), 30); }} />}
+      {cardSelectOpen && <CardSelectModal cards={cards} onClose={() => setCardSelectOpen(false)} onConfirm={(ids) => { setCardSelectOpen(false); setTimeout(() => requestReport("profile", () => handlePrint(ids)), 30); }} />}
       {deleteTarget  && <DeleteConfirm label={deleteTarget.label} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />}
 
       {/* ── Print layout (screen:hidden, print:visible) ── */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
+import { requestReport } from "../../rie/preflightChecks.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -653,7 +654,7 @@ Please provide:
       <div style={{ fontSize:11, fontWeight:600, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
         <span>✦</span> AI Appointment Prep
         {stale && <span style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:0 }}>· details changed — regenerate</span>}
-        {analysis && <button onClick={() => printConsultationPrep(appt, analysis)} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ Print</button>}
+        {analysis && <button onClick={() => requestReport("consultationPrep", () => printConsultationPrep(appt, analysis))} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ Print</button>}
       </div>
       <div style={{ marginBottom:10 }}>
         <label style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", display:"block", marginBottom:5 }}>Additional Questions / Context</label>
@@ -835,7 +836,7 @@ export default function AppointmentsTab({ onNavChange }) {
 
   const viewPrep = (appt) => {
     const p = loadVisitPrep(appt.id);
-    if (p?.text) printConsultationPrep(appt, p.text);
+    if (p?.text) requestReport("consultationPrep", () => printConsultationPrep(appt, p.text));
   };
 
   const filtered = appts

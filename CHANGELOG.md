@@ -12,6 +12,29 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.19.0 — 2026-06-29
+
+### Added — RIE Report Preflight
+- **Reports are now integrity-checked before they generate.** Printing the
+  Patient Profile, a Consultation Prep, the Medication reports, or the Lab report
+  first runs a preflight scan (full-record consistency + spelling **plus**
+  report-specific critical checks). If anything is found, a modal shows three
+  sections — **Critical / Warnings / Suggested cleanup** — each with Fix Now,
+  Ignore This Time, and Dismiss, plus an Apply-safe-fixes batch.
+- **Critical issues block generation** until fixed or explicitly overridden;
+  **Override & Generate** is recorded in the audit log. If the record is clean,
+  the report generates immediately with no interruption.
+- Report-specific criticals per the spec, e.g. Consultation Prep flags missing
+  transplant/immunosuppression status, an empty allergy list, or a missing
+  platelet count; the Profile flags missing insurance.
+
+### Notes
+- This is the "spell-check shared documents at generate time" path — the preflight
+  scan includes the medical-dictionary/spelling findings, so misspellings surface
+  before a document is printed or shared.
+
+---
+
 ## v1.18.1 — 2026-06-29
 
 ### Fixed
