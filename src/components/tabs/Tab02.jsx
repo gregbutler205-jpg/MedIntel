@@ -579,8 +579,15 @@ export default function ProfileTab() {
   // All surgeries sorted newest first
   const allSurgeries = [...surgeries].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // All imaging sorted newest first
-  const allImaging = [...imaging].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  // All imaging sorted newest first; supplement with Procedure/Imaging records from mi_records
+  const recordProcedures = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("mi_records") || "[]")
+        .filter(r => r.type === "Imaging" || r.type === "Procedure")
+        .map(r => ({ id: `rec-${r.id}`, type: r.type, bodyPart: r.title, facility: r.facility || "", date: r.date || "", fromRecords: true }));
+    } catch { return []; }
+  })();
+  const allImaging = [...imaging, ...recordProcedures].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
   // Active meds
   const activeMeds = meds.filter(m => m.status !== "inactive");
@@ -951,8 +958,11 @@ export default function ProfileTab() {
                         {/* Date + actions */}
                         <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
                           <span style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace" }}>{dateStr}</span>
-                          <button className="icon-btn" onClick={() => setImagingModal(img)}>✎</button>
-                          <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"imaging", id:img.id, label:`${img.type} — ${img.bodyPart}` })}>✕</button>
+                          {!img.fromRecords && <>
+                            <button className="icon-btn" onClick={() => setImagingModal(img)}>✎</button>
+                            <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"imaging", id:img.id, label:`${img.type} — ${img.bodyPart}` })}>✕</button>
+                          </>}
+                          {img.fromRecords && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>Records ↗</span>}
                         </div>
                       </div>
                     );

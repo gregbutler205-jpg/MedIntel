@@ -814,7 +814,32 @@ CARE TEAM:
 ${careStr}
 Note: For liver/hepatic findings, reference ${liverDoc}.
 
+CLINICAL COMMUNICATION RULES:
+- For non-emergency findings, do not instruct that a test, medication change, or treatment "should" occur. Phrase these as care-team discussion points unless the action is limited to contacting the appropriate clinician.
+- Do not instruct the patient to order tests, adjust medication, stop medication, start medication, schedule procedures, or make treatment decisions independently.
+- Only patient-safe actions: Discuss with care team · Ask whether… · Message/call the appropriate clinician · Contact the clinician's office today · Seek emergency care if symptoms or danger signs are present.
+
 RESPONSE FORMAT: No emojis. No pipe tables. Bold section headers on their own line. Use ----- as section dividers. Bullet points for lists.
+
+For each abnormal or clinically relevant finding, use this structure:
+
+**Finding:**
+State the value, date, reference range, and whether it is high/low/trending.
+
+**Why it matters:**
+Explain the clinical context using the patient's history, but do not diagnose.
+
+**Urgency:**
+Classify as one of: Routine (discuss at next appropriate appointment) · Soon (message or raise with the appropriate clinician in the near future) · Today (contact the appropriate clinician's office today) · Emergency (seek emergency care or contact emergency services, especially if symptoms are present).
+
+**Best clinician to discuss with:**
+Name the most relevant care-team member if available.
+
+**Patient action:**
+One of the patient-safe actions listed above.
+
+**Suggested question:**
+One plain-language question the patient can ask — phrased as "Should we…?", "Do you want me to…?", "Is this something you want to monitor?", or "Does this change anything about my current plan?"
 
 CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.`;
 
@@ -827,17 +852,12 @@ CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely can
           system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
           messages: [{
             role: "user",
-            content: `Analyze the following lab results in the context of ${patientName}'s profile. Cross-reference medications and surgical history with any abnormal findings. For each concern, name the specific doctor from the care team best suited to address it.
+            content: `Analyze the following lab results in the context of ${patientName}'s profile. Cross-reference medications and surgical history with any abnormal or borderline findings. Use the Finding/Why it matters/Urgency/Best clinician/Patient action/Suggested question structure for each relevant finding.
 
 LAB RESULTS (most recent per test):
 ${labSummary || "No imported labs available yet."}
 
-Format your response with:
-1) Key Concerns (out-of-range values with clinical context)
-2) Values to Watch (borderline or notable)
-3) Questions for Care Team (directed to the right doctor by name)
-
-Be direct and clinically specific.`,
+Identify all abnormal or clinically relevant values. For borderline values that may matter given this patient's conditions, include them as separate findings. Be direct and clinically specific.`,
           }],
         }),
       });
@@ -846,7 +866,15 @@ Be direct and clinically specific.`,
         throw new Error(errData?.error || `Server error ${res.status}`);
       }
       const data = await res.json();
-      setAiAnalysis(data.content[0].text.trim());
+      const analysisText = data.content[0].text.trim();
+      setAiAnalysis(analysisText);
+      // Auto-save to Notes so it's retrievable later and appears in Attach Records
+      try {
+        const noteTitle = `AI Analysis — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+        const note = { id: Date.now().toString(), title: noteTitle, date: new Date().toISOString(), content: analysisText, pinned: false };
+        const existing = JSON.parse(localStorage.getItem("mi_notes") || "[]");
+        localStorage.setItem("mi_notes", JSON.stringify([note, ...existing]));
+      } catch { /* non-critical */ }
     } catch (e) {
       const isNetworkErr = e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("waking");
       setAiError(isNetworkErr
@@ -1489,7 +1517,8 @@ ${labsStr}`;
               {aiAnalysis && (
                 <div style={{ fontSize: 12, color: "#a8c4dc", borderTop: aiQA.length > 0 ? "1px solid #111e30" : "none", paddingTop: aiQA.length > 0 ? 14 : 0 }}>
                   {renderMarkdown(aiAnalysis)}
-                  <div style={{ display:"flex", justifyContent:"flex-end", marginTop:10, paddingTop:8, borderTop:"1px solid #111e30" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:10, paddingTop:8, borderTop:"1px solid #111e30" }}>
+                    <span style={{ fontSize:9, color:"#10b981", fontFamily:"'DM Mono',monospace", opacity:0.75 }}>✓ Saved to Notes</span>
                     <button onClick={() => printAIResponse("Full Lab Analysis", aiAnalysis, PRINT_LOGO)}
                       style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
                       ⎙ Print

@@ -453,23 +453,21 @@ function buildDocContext(searchText) {
 
 // ── Appointment attachments (documents, imaging, notes, prep) ────────────────
 const ATT_META = {
-  document:   { icon: "▣", label: "Document",   color: "#4f8ef7", nav: "documents"   },
-  imaging:    { icon: "◍", label: "Imaging",    color: "#a78bfa", nav: "profile"     },
-  note:       { icon: "◻", label: "Note",       color: "#10b981", nav: "notes"       },
-  condition:  { icon: "◎", label: "Condition",  color: "#ef4444", nav: "conditions"  },
-  medication: { icon: "⬡", label: "Medication", color: "#a78bfa", nav: "medications" },
-  prep:       { icon: "✦", label: "Consultation Prep", color: "#f59e0b", nav: null   },
+  document: { icon: "▣", label: "Document",  color: "#4f8ef7", nav: "documents" },
+  imaging:  { icon: "◍", label: "Imaging",   color: "#a78bfa", nav: "profile"   },
+  note:     { icon: "◻", label: "Note",      color: "#10b981", nav: "notes"     },
+  record:   { icon: "▤", label: "Record",    color: "#b0c4d8", nav: "records"   },
+  prep:     { icon: "✦", label: "Consultation Prep", color: "#f59e0b", nav: null },
 };
 
-/** Pull all attachable records (documents, imaging, notes, conditions, meds) from storage. */
+/** Pull all attachable records (documents, imaging studies, notes, clinical records) from storage. */
 function loadAttachables() {
   const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
-  const docs       = safe("mi_documents").map(d => ({ type: "document", refId: d.id, title: d.title || "Untitled document", date: d.date || d.studyDate || "" }));
-  const imaging    = safe("mi_imaging").map(i => ({ type: "imaging", refId: i.id, title: [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: i.date || "" }));
-  const notes      = safe("mi_notes").map(n => ({ type: "note", refId: n.id, title: n.title || "Note", date: n.date || "" }));
-  const conditions = safe("mi_conditions").map(c => ({ type: "condition", refId: c.id, title: c.name || "Condition", date: c.diagnosedDate || "" }));
-  const meds       = safe("mi_meds_full").map(m => ({ type: "medication", refId: m.id, title: [m.name, m.dose].filter(Boolean).join(" ") || "Medication", date: "" }));
-  return [...docs, ...imaging, ...notes, ...conditions, ...meds];
+  const docs    = safe("mi_documents").map(d => ({ type: "document", refId: d.id, title: d.title || "Untitled document", date: d.date || d.studyDate || "" }));
+  const imaging = safe("mi_imaging").map(i => ({ type: "imaging", refId: i.id, title: [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: i.date || "" }));
+  const notes   = safe("mi_notes").map(n => ({ type: "note", refId: n.id, title: n.title || "Note", date: n.date || "" }));
+  const records = safe("mi_records").map(r => ({ type: "record", refId: r.id, title: r.title || "Untitled record", date: r.date || "" }));
+  return [...docs, ...imaging, ...notes, ...records];
 }
 
 /** Does an item look related to this appointment? (keyword/date match or within 14 days) */
@@ -515,7 +513,7 @@ function AttachModal({ appt, onSave, onClose }) {
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400 }}>Attach Records</h2>
           <button onClick={onClose} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
         </div>
-        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Tie documents, imaging, or notes to “{appt.title}”.</div>
+        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Tie documents, imaging, notes, or clinical records to &ldquo;{appt.title}&rdquo;.</div>
 
         {items.length === 0 && <div style={{ fontSize:12, color:"#98afc4", textAlign:"center", padding:"24px 0" }}>No documents, imaging, or notes saved yet.</div>}
 
@@ -563,7 +561,7 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
       )}
 
       {atts.length === 0 && !prep && (
-        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"6px 0" }}>No records attached yet. Use “+ Attach” to link documents, imaging, or notes.</div>
+        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"6px 0" }}>No records attached yet. Use "+ Attach" to link documents, imaging, or notes.</div>
       )}
 
       {atts.map(att => {
@@ -834,7 +832,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#7eb8d8", fontSize: 18, cursor: "pointer" }}>✕</button>
         </div>
         <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16, lineHeight: 1.6 }}>
-          Capture anything from “{appt.title}”? Add what applies below — each item is saved and attached to this appointment automatically.
+          Capture anything from &ldquo;{appt.title}&rdquo;? Add what applies below — each item is saved and attached to this appointment automatically.
         </div>
 
         {err && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>⚠ {err}</div>}

@@ -201,6 +201,197 @@ function DataFreshnessCard() {
     </div>
   );
 }
+// ── Emergency Info print ─────────────────────────────────────────────────────
+function printEmergency() {
+  const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+  const safeObj = k => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
+  const profile   = safeObj("mi_profile_personal");
+  const conditions = safe("mi_conditions").filter(c => c.status !== "inactive");
+  const meds      = safe("mi_meds_full").filter(m => m.status !== "inactive");
+  const allergies = safe("mi_allergies");
+  const contacts  = safe("mi_emergency_contacts");
+  const labs      = safe("mi_labs");
+  const logoUrl   = (import.meta.env.BASE_URL || "/") + "logo.png";
+
+  // Key labs: most recent per test, flagged first
+  const latestLabs = {};
+  labs.forEach(l => {
+    const k = (l.name || "").toLowerCase().trim();
+    if (!k) return;
+    if (!latestLabs[k] || new Date(l.date || 0) > new Date(latestLabs[k].date || 0)) latestLabs[k] = l;
+  });
+  const keyLabs = Object.values(latestLabs).sort((a, b) => (b.flag ? 1 : 0) - (a.flag ? 1 : 0)).slice(0, 16);
+
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const dob  = profile.dob  ? `  ·  DOB: ${profile.dob}` : "";
+  const blood = profile.bloodType ? `  ·  Blood Type: ${profile.bloodType}` : "";
+
+  const section = (title, rows) => rows.length === 0 ? "" : `
+    <div class="section">
+      <div class="section-title">${title}</div>
+      ${rows.map(r => `<div class="row">${r}</div>`).join("")}
+    </div>`;
+
+  const condRows = conditions.map(c => `<span class="badge cond">${c.name}</span>${c.severity ? ` <span class="dim">${c.severity}</span>` : ""}`);
+  const medRows  = meds.map(m => `<strong>${m.name}</strong>${m.dose ? ` ${m.dose}` : ""}${m.frequency ? ` — ${m.frequency}` : ""}${m.prescriber ? ` <span class="dim">(${m.prescriber})</span>` : ""}`);
+  const algRows  = allergies.map(a => `<span class="badge allergy">${a.allergen || a.name}</span>${a.reaction ? ` <span class="dim">→ ${a.reaction}</span>` : ""}`);
+  const ctRows   = contacts.map(c => `<strong>${c.name}</strong>${c.relationship ? ` (${c.relationship})` : ""} — <a href="tel:${c.phone}">${c.phone}</a>`);
+  const labRows  = keyLabs.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${l.name}</strong>: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` <span class="dim">(ref ${l.refRange})</span>` : ""}${l.date ? ` <span class="dim">${l.date}</span>` : ""}`);
+
+  const win = window.open("", "_blank", "width=860,height=760");
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Emergency Info — ${profile.name || "Patient"}</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Arial,sans-serif; max-width:780px; margin:36px auto; color:#1a1a1a; font-size:13px; line-height:1.6; padding:0 20px; }
+      .logo { height:44px; margin-bottom:14px; }
+      h1 { font-size:26px; font-weight:700; text-align:center; margin-bottom:4px; }
+      .subtitle { font-size:12px; color:#555; text-align:center; margin-bottom:6px; font-family:monospace; }
+      .rule { border:none; border-top:3px solid #dc2626; margin:14px 0; }
+      .section { margin-bottom:18px; }
+      .section-title { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#dc2626; margin-bottom:6px; border-bottom:1px solid #f5c6c6; padding-bottom:4px; }
+      .row { padding:4px 0; border-bottom:1px solid #f0f0f0; font-size:12.5px; }
+      .row:last-child { border-bottom:none; }
+      .badge { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+      .badge.cond { background:#dbeafe; color:#1d4ed8; }
+      .badge.allergy { background:#fef3c7; color:#92400e; }
+      .badge.flag { background:#fee2e2; color:#dc2626; border-radius:4px; padding:0 5px; }
+      .dim { color:#777; font-size:11px; }
+      a { color:#1d4ed8; text-decoration:none; }
+      .footer { margin-top:32px; border-top:1px solid #ddd; padding-top:10px; font-size:10px; color:#999; display:flex; justify-content:space-between; }
+      @media print { body { margin:20px; } }
+    </style>
+  </head><body>
+    <img src="${logoUrl}" class="logo" />
+    <h1>${profile.name || "Patient Emergency Information"}</h1>
+    <div class="subtitle">${profile.dob ? `DOB: ${profile.dob}` : ""}${blood}${profile.bloodType ? "" : ""}</div>
+    <hr class="rule" />
+    ${section("Emergency Contacts", ctRows)}
+    ${section("Allergies", algRows)}
+    ${section("Active Conditions", condRows)}
+    ${section("Active Medications", medRows)}
+    ${section("Recent Lab Results (Key Values)", labRows)}
+    <div class="footer">
+      <span>Insina Health &mdash; Emergency Information</span>
+      <span>Printed ${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+// ── Refills print ─────────────────────────────────────────────────────────────
+function printRefills(meds, logoUrl) {
+  const refills = meds.filter(m => m.status !== "inactive" && m.refillDate);
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const win = window.open("", "_blank", "width=760,height=620");
+  win.document.write(`<!DOCTYPE html><html><head>
+    <title>Refills Due — Insina Health</title>
+    <style>
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:Arial,sans-serif; max-width:700px; margin:40px auto; color:#1a1a1a; font-size:13px; line-height:1.65; padding:0 24px; }
+      .logo { height:44px; margin-bottom:16px; }
+      h1 { font-size:24px; font-weight:700; margin-bottom:4px; }
+      .subtitle { font-size:11px; font-family:monospace; color:#555; margin-bottom:16px; }
+      table { width:100%; border-collapse:collapse; margin-top:8px; }
+      th { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#555; border-bottom:2px solid #ddd; padding:6px 10px; text-align:left; }
+      td { font-size:13px; padding:8px 10px; border-bottom:1px solid #eee; }
+      .footer { margin-top:32px; border-top:1px solid #ddd; padding-top:10px; font-size:10px; color:#999; display:flex; justify-content:space-between; }
+      @media print { body { margin:20px; } }
+    </style>
+  </head><body>
+    <img src="${logoUrl}" class="logo" />
+    <h1>Upcoming Refills</h1>
+    <div class="subtitle">Printed ${date} &mdash; ${refills.length} medication${refills.length !== 1 ? "s" : ""} with refill dates on file</div>
+    <table>
+      <thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Refill Date</th><th>Prescriber</th></tr></thead>
+      <tbody>
+        ${refills.sort((a, b) => new Date(a.refillDate) - new Date(b.refillDate)).map(m => `
+          <tr>
+            <td><strong>${m.name}</strong>${m.brandName ? ` <span style="color:#888;font-size:11px">(${m.brandName})</span>` : ""}</td>
+            <td>${m.dose || "—"}</td>
+            <td>${m.frequency || "—"}</td>
+            <td>${m.refillDate || "—"}</td>
+            <td>${m.prescriber || "—"}</td>
+          </tr>`).join("")}
+      </tbody>
+    </table>
+    <div class="footer">
+      <span>Insina Health &mdash; Medication Refill List</span>
+      <span>${date}</span>
+    </div>
+    <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+// ── Dashboard hot-button row ──────────────────────────────────────────────────
+function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyBackup, onSync, meds, onLogVitals }) {
+  const PRINT_LOGO = (import.meta.env.BASE_URL || "/") + "logo.png";
+
+  const fmtSync   = ts => ts ? new Date(ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }) : null;
+  const fmtBackup = ts => ts ? new Date(ts).toLocaleDateString("en-US", { month:"short", day:"numeric" }) : null;
+
+  const syncLabel  = syncStatus === "syncing" ? "Syncing…" : fmtSync(lastSyncTs) ? `Synced ${fmtSync(lastSyncTs)}` : "Not synced";
+  const backupLabel = fmtBackup(lastWeeklyBackup) ? `Backed up ${fmtBackup(lastWeeklyBackup)}` : "No backup yet";
+  const syncColor  = syncStatus === "syncing" ? "#f59e0b" : syncStatus === "error" ? "#ef4444" : lastSyncTs ? "#10b981" : "#6a8090";
+
+  const btn = (icon, label, onClick, extra = {}) => (
+    <button key={label} onClick={onClick} style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      gap: 7, padding: "14px 10px", minWidth: 86, flexShrink: 0,
+      background: "#0b1220", border: "1px solid #111e30", borderRadius: 12,
+      cursor: "pointer", transition: "all .15s", ...extra,
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = extra.background ? extra.background.replace(",.12)", ",.22)").replace(",.08)", ",.16)") : "#0f1828"; e.currentTarget.style.borderColor = "#1a2f4a"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = extra.background || "#0b1220"; e.currentTarget.style.borderColor = extra.borderColor || "#111e30"; }}
+    >
+      <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>
+      <span style={{ fontSize: 10, color: extra.labelColor || "#7eb8d8", fontFamily: "'DM Mono',monospace", textAlign: "center", lineHeight: 1.3, whiteSpace: "pre-line" }}>{label}</span>
+    </button>
+  );
+
+  return (
+    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 22,
+      scrollbarWidth: "none", msOverflowStyle: "none" }}>
+      <style>{`.hbrow::-webkit-scrollbar{display:none}`}</style>
+
+      {btn("🧪", "Test Results",    () => setActiveNav("labs"))}
+      {btn("💊", "Medications",     () => setActiveNav("medications"))}
+      {btn("📅", "Appointments",    () => setActiveNav("appointments"))}
+      {btn("🤒", "Symptoms",        () => setActiveNav("symptoms"))}
+      {btn("❤️", "Log Vitals",      onLogVitals)}
+      {btn("⬇", "Import\nRecords", () => setActiveNav("import"))}
+      {btn("🔄", "Refills",         () => printRefills(meds, PRINT_LOGO))}
+
+      {/* Emergency Info — light red */}
+      {btn("🚨", "Emergency\nInfo", printEmergency, {
+        background: "rgba(239,68,68,.12)", borderColor: "rgba(239,68,68,.3)",
+        labelColor: "#f87171",
+      })}
+
+      {/* Last Updated / Backup — rightmost, wider */}
+      <button onClick={onSync} style={{
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 5, padding: "12px 14px", minWidth: 132, flexShrink: 0,
+        background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.22)", borderRadius: 12,
+        cursor: "pointer", marginLeft: "auto",
+      }}
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.16)"}
+        onMouseLeave={e => e.currentTarget.style.background = "rgba(79,142,247,.08)"}
+      >
+        <span style={{ fontSize: 16, lineHeight: 1 }}>🕐</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, flexShrink: 0, boxShadow: `0 0 5px ${syncColor}80` }} />
+          <span style={{ fontSize: 9, color: syncColor, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>{syncStatus === "syncing" ? "Syncing…" : "Last Sync"}</span>
+        </div>
+        <span style={{ fontSize: 9, color: "#c4d8ee", fontFamily: "'DM Mono',monospace" }}>{fmtSync(lastSyncTs) || "—"}</span>
+        <span style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>{backupLabel}</span>
+      </button>
+    </div>
+  );
+}
+
 function RefillsCard({ meds }) {
   const [open, setOpen] = useState(false);
   const refills = get7DayRefills(meds);
@@ -431,10 +622,12 @@ function AppShell() {
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .slice(0, 5)
           .map(a => ({
-            label:   a.title,
-            date:    new Date(a.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" }),
-            urgency: a.urgency,
-            doctor:  a.provider,
+            label:    a.title,
+            date:     new Date(a.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" }),
+            urgency:  a.urgency,
+            doctor:   a.provider,
+            facility: a.facility || "",
+            address:  a.address  || "",
           }));
       }
     } catch {}
@@ -482,10 +675,12 @@ function AppShell() {
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .slice(0, 5)
           .map(a => ({
-            label:   a.title,
-            date:    new Date(a.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" }),
-            urgency: a.urgency,
-            doctor:  a.provider,
+            label:    a.title,
+            date:     new Date(a.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" }),
+            urgency:  a.urgency,
+            doctor:   a.provider,
+            facility: a.facility || "",
+            address:  a.address  || "",
           }));
         if (next.length > 0) setUpcoming(next);
       }
@@ -843,12 +1038,15 @@ function AppShell() {
                       <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>{upcoming.length} upcoming event{upcoming.length !== 1 ? "s" : ""} · {alerts.length} alert{alerts.length !== 1 ? "s" : ""} need{alerts.length === 1 ? "s" : ""} attention</p>
                     </div>
 
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-                      <div /> {/* spacer */}
-                      <button onClick={() => setShowQuickEntry(o => !o)} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-                        + Log Vitals
-                      </button>
-                    </div>
+                    <DashboardHotButtons
+                      setActiveNav={setActiveNav}
+                      syncStatus={syncStatus}
+                      lastSyncTs={lastSyncTs}
+                      lastWeeklyBackup={lastWeeklyBackup}
+                      onSync={signIn}
+                      meds={meds}
+                      onLogVitals={() => setShowQuickEntry(o => !o)}
+                    />
 
                     {showQuickEntry && (
                       <div style={{ marginBottom:16, padding:"16px", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:12, display:"grid", gridTemplateColumns:"repeat(4,1fr) auto auto", gap:10, alignItems:"flex-end" }}>
@@ -884,12 +1082,17 @@ function AppShell() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 300px", gap: 14, marginBottom: 24 }}>
                       <div>
                         <div className="section-label">Upcoming Care</div>
-                        {upcoming.map(({ label, date, urgency, doctor }, i) => (
+                        {upcoming.map(({ label, date, urgency, doctor, facility, address }, i) => (
                           <div className="upcoming-row" key={label} style={{ animationDelay: `${200 + i * 60}ms` }} onClick={() => setActiveNav("appointments")}>
                             <div style={{ width: 8, height: 8, borderRadius: "50%", background: urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981", flexShrink: 0, boxShadow: `0 0 8px ${urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981"}80` }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 13, fontWeight: 500, color: "#c4d8ee", marginBottom: 2 }}>{label}</div>
                               <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doctor}</div>
+                              {(facility || address) && (
+                                <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 1 }}>
+                                  {[facility, address].filter(Boolean).join(" · ")}
+                                </div>
+                              )}
                             </div>
                             <div style={{ fontSize: 11, color: urgency === "high" ? "#ef4444" : "#7eb8d8", fontWeight: 600, fontFamily: "'DM Mono',monospace" }}>{date}</div>
                           </div>

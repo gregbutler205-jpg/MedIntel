@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { uploadToDrive } from "../../lib/driveSync.js";
+import { getAccessToken } from "../../lib/googleAuth.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -201,7 +203,11 @@ const STATUS_META = {
 
 function Timeline() {
   const [appts, setAppts] = useState(() => { try { const r = localStorage.getItem("mi_appointments"); return r ? JSON.parse(r) : []; } catch { return []; } });
-  const saveAppts = (updated) => { try { localStorage.setItem("mi_appointments", JSON.stringify(updated)); } catch {} };
+  const saveAppts = (updated) => {
+    try { localStorage.setItem("mi_appointments", JSON.stringify(updated)); } catch {}
+    const token = getAccessToken();
+    if (token) uploadToDrive(token).catch(() => {});
+  };
   const [done, setDone] = useState({});
   const [editingPrep, setEditingPrep] = useState(null);
   const [editVal, setEditVal] = useState("");
