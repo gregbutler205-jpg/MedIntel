@@ -328,13 +328,33 @@ function printRefills(meds, logoUrl) {
 // ── Dashboard hot-button row ──────────────────────────────────────────────────
 function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyBackup, onSync, meds, onLogVitals }) {
   const PRINT_LOGO = (import.meta.env.BASE_URL || "/") + "logo.png";
+  const [showFreshnessPopup, setShowFreshnessPopup] = useState(false);
 
-  const fmtSync   = ts => ts ? new Date(ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }) : null;
-  const fmtBackup = ts => ts ? new Date(ts).toLocaleDateString("en-US", { month:"short", day:"numeric" }) : null;
+  const fmtSync = ts => ts ? new Date(ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" }) : null;
+  const syncColor = syncStatus === "syncing" ? "#f59e0b" : syncStatus === "error" ? "#ef4444" : lastSyncTs ? "#10b981" : "#6a8090";
 
-  const syncLabel  = syncStatus === "syncing" ? "Syncing…" : fmtSync(lastSyncTs) ? `Synced ${fmtSync(lastSyncTs)}` : "Not synced";
-  const backupLabel = fmtBackup(lastWeeklyBackup) ? `Backed up ${fmtBackup(lastWeeklyBackup)}` : "No backup yet";
-  const syncColor  = syncStatus === "syncing" ? "#f59e0b" : syncStatus === "error" ? "#ef4444" : lastSyncTs ? "#10b981" : "#6a8090";
+  function luDate(key, dateFn) {
+    try {
+      const items = JSON.parse(localStorage.getItem(key) || "[]");
+      if (!items.length) return null;
+      const dates = items.map(dateFn).filter(Boolean).map(raw => {
+        if (typeof raw === "number") return new Date(raw);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return new Date(raw + "T12:00:00");
+        return new Date(raw);
+      }).filter(d => !isNaN(d));
+      if (!dates.length) return null;
+      return new Date(Math.max(...dates)).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+    } catch { return null; }
+  }
+
+  const freshnessRows = [
+    { label: "Labs",         date: luDate("mi_labs",         l => l.date) },
+    { label: "Meds",         date: luDate("mi_meds_full",    m => m.id ? Number(m.id) : null) },
+    { label: "Vitals",       date: luDate("mi_readings",     r => r.date || (r.ts ? Number(r.ts) : null)) },
+    { label: "Appointments", date: luDate("mi_appointments", a => a.date) },
+    { label: "Conditions",   date: luDate("mi_conditions",   c => c.since || c.diagnosedDate) },
+    { label: "Documents",    date: luDate("mi_ref_docs",     d => d.studyDate || d.addedDate || d.addedAt) },
+  ];
 
   const btn = (icon, label, onClick, extra = {}) => (
     <button key={label} onClick={onClick} style={{
@@ -370,24 +390,63 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
         labelColor: "#f87171",
       })}
 
-      {/* Last Updated / Backup — rightmost, wider */}
-      <button onClick={onSync} style={{
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        gap: 5, padding: "12px 14px", minWidth: 132, flexShrink: 0,
-        background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.22)", borderRadius: 12,
-        cursor: "pointer", marginLeft: "auto",
-      }}
-        onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.16)"}
-        onMouseLeave={e => e.currentTarget.style.background = "rgba(79,142,247,.08)"}
-      >
-        <span style={{ fontSize: 16, lineHeight: 1 }}>🕐</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, flexShrink: 0, boxShadow: `0 0 5px ${syncColor}80` }} />
-          <span style={{ fontSize: 9, color: syncColor, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>{syncStatus === "syncing" ? "Syncing…" : "Last Sync"}</span>
-        </div>
-        <span style={{ fontSize: 9, color: "#c4d8ee", fontFamily: "'DM Mono',monospace" }}>{fmtSync(lastSyncTs) || "—"}</span>
-        <span style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>{backupLabel}</span>
-      </button>
+      {/* Last Updated / Sync — rightmost, shows freshness popup */}
+      <div style={{ position: "relative", marginLeft: "auto", flexShrink: 0 }}>
+        {showFreshnessPopup && (
+          <div onClick={() => setShowFreshnessPopup(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 199 }} />
+        )}
+        <button onClick={() => setShowFreshnessPopup(o => !o)} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: 5, padding: "12px 14px", minWidth: 132,
+          background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.22)", borderRadius: 12,
+          cursor: "pointer",
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.16)"}
+          onMouseLeave={e => e.currentTarget.style.background = "rgba(79,142,247,.08)"}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>🕐</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, flexShrink: 0, boxShadow: `0 0 5px ${syncColor}80` }} />
+            <span style={{ fontSize: 9, color: syncColor, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>
+              {syncStatus === "syncing" ? "Syncing…" : "Last Updated"}
+            </span>
+          </div>
+          <span style={{ fontSize: 9, color: "#c4d8ee", fontFamily: "'DM Mono',monospace" }}>
+            {fmtSync(lastSyncTs) || "—"}
+          </span>
+        </button>
+        {showFreshnessPopup && (
+          <div style={{
+            position: "absolute", top: "calc(100% + 8px)", right: 0,
+            background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 12,
+            padding: "16px", minWidth: 230, zIndex: 200,
+            boxShadow: "0 8px 32px rgba(0,0,0,.5)",
+          }}>
+            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Data Freshness</div>
+            {freshnessRows.map(({ label, date }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
+                <span style={{ fontSize: 11, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{label}</span>
+                <span style={{ fontSize: 11, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{date ?? "—"}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: "1px solid #0d1a28", marginTop: 10, paddingTop: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
+                <span style={{ fontSize: 11, color: lastSyncTs ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+                  {lastSyncTs ? new Date(lastSyncTs).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "—"}
+                </span>
+              </div>
+              <button
+                onClick={() => { onSync(); setShowFreshnessPopup(false); }}
+                style={{ width: "100%", padding: "7px 0", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#7eb8d8", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+              >
+                Sync Now
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -641,8 +700,8 @@ function AppShell() {
     } catch {}
     return [];
   });
-  const [showQuickEntry, setShowQuickEntry] = useState(false);
-  const [quickReading, setQuickReading] = useState({ bp_s:"", bp_d:"", weight:"", date:"" });
+  const [showVitalsModal, setShowVitalsModal] = useState(false);
+  const [quickReading, setQuickReading] = useState({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
   const [showSearch, setShowSearch] = useState(false);
 
   // ── Google Drive auth & sync state ──────────────────────────────────────────
@@ -819,25 +878,30 @@ function AppShell() {
     const today = new Date();
     const ts = today.toISOString().split('T')[0];
     const dateLabel = today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-    // Carry forward the most recent non-null value for each field from any prior reading
-    const priorBpS   = readings.find(r => r.bp_s   != null)?.bp_s;
-    const priorBpD   = readings.find(r => r.bp_d   != null)?.bp_d;
-    const priorWeight = readings.find(r => r.weight != null)?.weight;
-    const bp_s   = quickReading.bp_s   ? parseInt(quickReading.bp_s)     : priorBpS;
-    const bp_d   = quickReading.bp_d   ? parseInt(quickReading.bp_d)     : priorBpD;
-    const weight = quickReading.weight ? parseFloat(quickReading.weight) : priorWeight;
+    const cf = (key, parse) => {
+      const v = quickReading[key];
+      if (v !== "" && v != null) return parse(v);
+      return readings.find(r => r[key] != null)?.[key] ?? null;
+    };
+    const bp_s       = cf("bp_s",       v => parseInt(v));
+    const bp_d       = cf("bp_d",       v => parseInt(v));
+    const hr         = cf("hr",         v => parseInt(v));
+    const resting_hr = cf("resting_hr", v => parseInt(v));
+    const o2         = cf("o2",         v => parseInt(v));
+    const weight     = cf("weight",     v => parseFloat(v));
+    const temp       = cf("temp",       v => parseFloat(v));
+    const glucose    = cf("glucose",    v => parseInt(v));
+    const sleep      = cf("sleep",      v => parseFloat(v));
     const reading = {
       date: quickReading.date || dateLabel,
       ts,
-      bp_s,
-      bp_d,
-      weight,
-      flag: bp_s >= 160,
+      bp_s, bp_d, hr, resting_hr, o2, weight, temp, glucose, sleep,
+      flag: bp_s != null && bp_s >= 160,
     };
     const merged = mergeReadings([reading]);
     setReadings(merged);
-    setShowQuickEntry(false);
-    setQuickReading({ bp_s:"", bp_d:"", weight:"", date:"" });
+    setShowVitalsModal(false);
+    setQuickReading({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
   };
 
   const handleDismissAlert = useCallback((fp, source) => {
@@ -930,13 +994,16 @@ function AppShell() {
                   {activeNav !== "dashboard" && (
                     <button
                       onClick={() => setActiveNav("dashboard")}
-                      title="Back to Dashboard"
-                      style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:11, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:2 }}
-                      onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.color = "#4a5c6a"; e.currentTarget.style.background = "none"; }}
+                      title="Home"
+                      style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:2, background:"rgba(79,142,247,.10)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, cursor:"pointer", padding:"5px 10px", color:"#7eb8d8", transition:"all .15s", marginRight:4 }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(79,142,247,.20)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.5)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(79,142,247,.10)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.3)"; }}
                     >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                      Dashboard
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                      </svg>
+                      <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
                     </button>
                   )}
                   <div className="live-dot" />
@@ -1045,39 +1112,51 @@ function AppShell() {
                       lastWeeklyBackup={lastWeeklyBackup}
                       onSync={signIn}
                       meds={meds}
-                      onLogVitals={() => setShowQuickEntry(o => !o)}
+                      onLogVitals={() => setShowVitalsModal(true)}
                     />
 
-                    {showQuickEntry && (
-                      <div style={{ marginBottom:16, padding:"16px", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:12, display:"grid", gridTemplateColumns:"repeat(4,1fr) auto auto", gap:10, alignItems:"flex-end" }}>
-                        {[
-                          { label:"DATE", key:"date", placeholder:"Mar 21" },
-                          { label:"BP SYSTOLIC", key:"bp_s", placeholder:"131" },
-                          { label:"BP DIASTOLIC", key:"bp_d", placeholder:"71" },
-                          { label:"WEIGHT (lbs)", key:"weight", placeholder:"184.2" },
-                        ].map(f => (
-                          <div key={f.key}>
-                            <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
-                            <input
-                              style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
-                              placeholder={f.placeholder}
-                              value={quickReading[f.key]}
-                              onChange={e => setQuickReading(prev => ({ ...prev, [f.key]: e.target.value }))}
-                            />
+                    {/* ── Current Vitals panel ── */}
+                    {(() => {
+                      const latestBP      = readings.find(r => r.bp_s != null && r.bp_d != null);
+                      const latestHR      = readings.find(r => r.hr != null);
+                      const latestRHR     = readings.find(r => r.resting_hr != null);
+                      const latestO2      = readings.find(r => r.o2 != null);
+                      const latestWeight  = readings.find(r => r.weight != null);
+                      const latestTemp    = readings.find(r => r.temp != null);
+                      const latestGlucose = readings.find(r => r.glucose != null);
+                      const latestSleep   = readings.find(r => r.sleep != null);
+                      const bmi           = calcBMIApp(latestWeight?.weight);
+                      const vitals = [
+                        { label:"Blood Pressure", val: latestBP ? `${latestBP.bp_s}/${latestBP.bp_d}` : null, unit:"mmHg", date:latestBP?.date, color:"#ef4444", flag:!!latestBP?.flag },
+                        { label:"Heart Rate",      val: latestHR?.hr,             unit:"bpm",   date:latestHR?.date,      color:"#f59e0b" },
+                        { label:"Resting HR",      val: latestRHR?.resting_hr,    unit:"bpm",   date:latestRHR?.date,     color:"#f87171" },
+                        { label:"O2 Sat",          val: latestO2?.o2,             unit:"%",     date:latestO2?.date,      color:"#4f8ef7" },
+                        { label:"Weight",          val: latestWeight?.weight,     unit:"lbs",   date:latestWeight?.date,  color:"#a78bfa" },
+                        { label:"Temperature",     val: latestTemp?.temp,         unit:"°F", date:latestTemp?.date,  color:"#f59e0b" },
+                        { label:"Glucose",         val: latestGlucose?.glucose,   unit:"mg/dL", date:latestGlucose?.date, color:"#10b981" },
+                        { label:"Sleep",           val: latestSleep?.sleep,       unit:"hrs",   date:latestSleep?.date,   color:"#60a5fa" },
+                        { label:"BMI",             val: bmi,                      unit:"",      date:latestWeight?.date,  color:"#10b981" },
+                      ];
+                      return (
+                        <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"18px 20px", marginBottom:14 }}>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                            <div className="section-label" style={{ marginBottom:0 }}>Current Vitals</div>
+                            <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("vitals")}>Log / View all →</div>
                           </div>
-                        ))}
-                        <button onClick={handleQuickSave} style={{ padding:"7px 14px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, cursor:"pointer", whiteSpace:"nowrap" }}>Save</button>
-                        <button onClick={() => setShowQuickEntry(false)} style={{ padding:"7px 10px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontSize:12, cursor:"pointer" }}>✕</button>
-                      </div>
-                    )}
-
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14, marginBottom: 24 }}>
-                      <DataFreshnessCard />
-                      <RefillsCard meds={meds} />
-                      <BPCard readings={readings} />
-                      <WeightCard readings={readings} />
-                      <BMICard readings={readings} />
-                    </div>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:8 }}>
+                            {vitals.map(({ label, val, unit, date, color, flag }) => (
+                              <div key={label} style={{ background:"#080c14", border:`1px solid ${flag ? "rgba(239,68,68,.25)" : "#0d1a28"}`, borderRadius:8, padding:"10px 12px" }}>
+                                <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                                <div style={{ fontSize:14, fontWeight:700, color: val != null ? (flag ? "#ef4444" : color) : "#4a5c6a", lineHeight:1, marginBottom:2 }}>
+                                  {val != null ? `${val}${unit ? " " + unit : ""}` : "—"}
+                                </div>
+                                {date && val != null && <div style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>{date}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 300px", gap: 14, marginBottom: 24 }}>
                       <div>
@@ -1241,33 +1320,58 @@ function AppShell() {
                       );
                     })()}
 
-                    <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                        <div className="section-label" style={{ marginBottom: 0 }}>Recent Vitals</div>
-                        <div style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("vitals")}>View all →</div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "80px 100px 50px 60px", gap: 0, padding: "0 0 8px", borderBottom: "1px solid #0d1a28", marginBottom: 4 }}>
-                        {["DATE", "BP", "HR", "O2"].map(h => (
-                          <div key={h} style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px" }}>{h}</div>
-                        ))}
-                      </div>
-                      {readings.slice(0, 4).map(r => ({ date:r.date, bp: (r.bp_s != null && r.bp_d != null) ? `${r.bp_s}/${r.bp_d}` : "--", hr:r.hr??"--", o2:r.o2??"--", flag:!!r.flag })).map(({ date, bp, hr, o2, flag }) => (
-                        <div className="vital-row" key={date}>
-                          <div style={{ color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{date}</div>
-                          <div style={{ fontWeight: 600, color: flag ? "#ef4444" : "#c4d8ee", display: "flex", alignItems: "center", gap: 5 }}>
-                            {bp} {flag && <span style={{ fontSize: 9, color: "#ef4444" }}>▲</span>}
-                          </div>
-                          <div style={{ color: "#7eb8d8" }}>{hr}</div>
-                          <div style={{ color: "#10b981" }}>{o2}</div>
-                        </div>
-                      ))}
-                    </div>
                   </>
                 )}
               </div>
             </div>
           )}
         </>
+      )}
+
+      {/* ── Log Vitals modal (full 10-field entry) ── */}
+      {showVitalsModal && (
+        <div
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9000 }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowVitalsModal(false); setQuickReading({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); } }}
+        >
+          <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:"24px", width:"min(94vw, 580px)", maxHeight:"90vh", overflowY:"auto" }}>
+            <div style={{ fontSize:11, fontWeight:700, color:"#dde8f5", fontFamily:"'DM Mono',monospace", letterSpacing:"2px", textTransform:"uppercase", marginBottom:20 }}>New Vital Reading</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:12, marginBottom:20 }}>
+              {[
+                { label:"DATE",          key:"date",       placeholder:"Jan 1" },
+                { label:"BP SYSTOLIC",   key:"bp_s",       placeholder:"131" },
+                { label:"BP DIASTOLIC",  key:"bp_d",       placeholder:"71" },
+                { label:"HEART RATE",    key:"hr",         placeholder:"72" },
+                { label:"RESTING HR",    key:"resting_hr", placeholder:"62" },
+                { label:"O2 SAT %",      key:"o2",         placeholder:"98" },
+                { label:"WEIGHT (lbs)",  key:"weight",     placeholder:"184.2" },
+                { label:"TEMP (°F)",key:"temp",       placeholder:"98.6" },
+                { label:"GLUCOSE",       key:"glucose",    placeholder:"110" },
+                { label:"SLEEP (hrs)",   key:"sleep",      placeholder:"7.5" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>{f.label}</label>
+                  <input
+                    style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
+                    placeholder={f.placeholder}
+                    value={quickReading[f.key]}
+                    onChange={e => setQuickReading(prev => ({ ...prev, [f.key]: e.target.value }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+              <button
+                onClick={() => { setShowVitalsModal(false); setQuickReading({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); }}
+                style={{ padding:"9px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
+              >Cancel</button>
+              <button
+                onClick={handleQuickSave}
+                style={{ padding:"9px 22px", background:"rgba(79,142,247,.2)", border:"1px solid rgba(79,142,247,.5)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", fontWeight:600 }}
+              >Save Reading</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Global Search Popup (fixed overlay — works over standalone tabs too) ── */}
