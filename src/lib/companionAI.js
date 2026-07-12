@@ -4,8 +4,9 @@
 // model by default; escalate to a stronger one only for long/complex work.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { profile, activeConditions, activeMeds, readings } from "./companionData.js";
+import { activeConditions, activeMeds, readings } from "./companionData.js";
 import { callAI, MODEL_MAP } from "./aiClient.js";
+import { getUserId } from "../prompts/identity.js";
 
 // Re-exported from the single MODEL_MAP (aiClient.js) so there is exactly one
 // place that resolves a model string — these names stay stable for the
@@ -15,14 +16,15 @@ export const MODEL_LITE   = MODEL_MAP.lite;      // quick on-the-go answers, sho
 export const MODEL_STRONG = MODEL_MAP.standard;  // long visit transcripts / complex analysis
 
 /** Record-grounded system prompt shared by AI Lite, Quick Log, pattern flags. */
+// P-01: uses the pseudonymous {userId} — never the patient's name.
 export function buildRecordSystem(extra = "") {
-  const p = profile();
+  const userId = getUserId();
   const conds = activeConditions().map(c => c.name).join(", ") || "None on file";
   const ms = activeMeds().map(m => `${m.name}${m.dose ? " " + m.dose : ""}`).join(", ") || "None on file";
   const vitals = readings().slice(0, 3)
     .map(r => [r.date, r.bp_s && r.bp_d ? `BP ${r.bp_s}/${r.bp_d}` : null, r.weight ? `${r.weight} lb` : null, r.spo2 ? `SpO₂ ${r.spo2}%` : null].filter(Boolean).join(" · "))
     .join("; ") || "None recorded";
-  return `You are Insina, a personal health assistant for ${p.name || "the patient"} on their mobile companion app. Be concise — short paragraphs and bullets, mobile-sized answers. Informational only, never medical advice.
+  return `You are Insina, a personal health assistant for patient ${userId} on their mobile companion app. Be concise — short paragraphs and bullets, mobile-sized answers. Informational only, never medical advice.
 
 Active Conditions: ${conds}
 Current Medications: ${ms}

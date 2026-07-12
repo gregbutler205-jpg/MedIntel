@@ -15,6 +15,42 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **P-01:** Identity minimization in AI payloads. `src/prompts/identity.js`
+  (built ahead of schedule during A-09, since the prompt builders needed
+  `{userId}`/`{age}`/`{sex}` to construct the CSC at all) is the module the
+  spec names as new `src/lib/identity.js` — same requirements, different
+  path; A-09's builders already only ever accept `{userId, age, sex,
+  dataSections, sessionContext}`-shaped payloads, so the "explicit field
+  allowlist, structurally excluded rather than filtered" requirement was
+  already true by construction for every Surface A–H module (confirmed by
+  grep: the only `.dob` reference anywhere under `src/prompts/` is inside
+  `getAge()`, which reads it only to compute age and never returns or sends
+  it). Tab05 and Tab10 were also already fixed to `{userId}` during A-09.
+  This item's real remaining work was auditing every other AI call site.
+  - **Found and fixed a genuine identity leak the audit exists to catch:**
+    `companionAI.js`'s `buildRecordSystem()` — the shared system-prompt
+    builder for the companion app's AI Lite chat, Quick Log symptom prompts,
+    and visit summarization — spliced the patient's real name
+    (`mi_profile_personal.name`) directly into the system prompt sent to
+    Claude: `"You are Insina, a personal health assistant for ${p.name}..."`.
+    Because three call sites shared this one function
+    (`companionAI.js` itself, `AILite.jsx`'s `system: buildRecordSystem()`,
+    and `visitCapture.js`'s `summarizeVisit()` — which inlined the *entire*
+    returned string, name included, into the AI *message content*, not just
+    the system field, an even more easily-missed leak), one fix at the
+    source closes all three. `buildRecordSystem()` now uses `getUserId()`
+    the same way Tab05/10/11 do.
+  - Audited every other AI-calling file (Tab09, Tab12, Tab14,
+    `Log.jsx`, `VisitFlow.jsx`) for the same pattern: none read
+    `mi_profile_personal`/`mi_profile_insurance` or any prohibited field
+    into a prompt. The many other `mi_profile_personal` reads found
+    throughout the app (App.jsx, Dashboard.jsx, Tab04/05/06/07/11/13) are
+    all UI display of the patient's own data on their own device — sidebar
+    labels, greetings, avatar initials, the local backup/export JSON — none
+    reach an AI call.
+  - Verified: `npm run build` passes. Manual trace of both fixed call sites
+    confirms `buildRecordSystem()`'s output no longer contains any
+    `mi_profile_personal` field.
 - **A-01 / PG-09:** Deterministic tripwire engine. New `src/lib/tripwire.js`
   evaluates labs against effective thresholds and produces the evaluation
   envelope (`status`, `evaluatedAt`, `newestLabDate`, `flags[]`) that
