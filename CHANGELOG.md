@@ -15,6 +15,30 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **S-05 item 3 / PG-04:** Pilot bearer tokens. The client now always attaches
+  `Authorization: Bearer <token>` (via `aiClient.js`'s `getAuthHeaders()`, wired
+  up now that A-02 gives it one place to do so) whenever a pilot token is
+  stored. New `src/lib/pilotAuth.js` (`getPilotToken`/`setPilotToken`) —
+  stored the same way `mi_ak` is today, moving inside the encrypted store once
+  P-02 lands, per spec. New **Settings & Backup → Pilot access token** field +
+  modal (mirrors the existing API-key entry pattern) so an invited pilot user
+  can paste in the token they were given.
+  - Proxy: `proxy/server.js` gains a `pilotAuth` middleware on both
+    `/api/chat` and `/api/extract-pdf`, checking the header against
+    `PILOT_TOKENS` (comma-separated, one per invited user) — but **only when
+    `PILOT_AUTH_ENFORCED=true`**, which is unset by default. With no tokens
+    issued and enforcement off, today's founder-only usage is completely
+    unaffected — verified via an isolated middleware test across 7 cases:
+    enforcement off always passes regardless of header; enforcement on
+    correctly 401s a missing, wrong, or malformed-header token; a valid token
+    (including one with stray whitespace from a copy-paste) passes; removing
+    a token from `PILOT_TOKENS` correctly revokes it on the next request.
+  - Deploy order documented in `proxy/DEPLOY.md`: client support ships first
+    (this release), tokens get issued and pilot users enter theirs, **only
+    then** is `PILOT_AUTH_ENFORCED` flipped on — otherwise an already-deployed
+    client without a token would get locked out the moment enforcement turns
+    on. **HUMAN, when ready for pilot users:** generate tokens, set
+    `PILOT_TOKENS` and `PILOT_AUTH_ENFORCED=true` on Render.
 - **A-02 / PG-08:** Unified AI client and model map. New `src/lib/aiClient.js`:
   every AI surface now calls one `callAI({ surface, mode, system, messages,
   stream, signal })`, which resolves the model from a single `MODEL_MAP`

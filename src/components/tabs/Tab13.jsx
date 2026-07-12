@@ -6,6 +6,7 @@ import { uploadWeeklyBackup } from "../../lib/driveSync.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { APP_VERSION } from "../../version.js";
 import { getAutoLockMinutes, setAutoLockMinutes, AUTOLOCK_OPTIONS } from "../../lib/autoLock.js";
+import { getPilotToken, setPilotToken } from "../../lib/pilotAuth.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -52,6 +53,31 @@ function ApiKeyModal({ current, onSave, onClose }) {
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Key</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PilotTokenModal({ current, onSave, onClose }) {
+  const [val, setVal] = useState(current || "");
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 440 }}>
+        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 6 }}>Pilot Access Token</div>
+        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 16, lineHeight: 1.6 }}>
+          Only needed if you were given one when invited to the pilot. Stored locally in your browser.
+        </div>
+        <input
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          placeholder="Paste your access token"
+          type="password"
+          style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
+        />
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Token</button>
         </div>
       </div>
     </div>
@@ -107,11 +133,12 @@ function loadAIMode() {
 
 export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle", lastSyncTs, onSync = () => {}, onSignOut = () => {} }) {
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem("mi_ak") || "");
+  const [pilotToken, setPilotTokenState] = useState(() => getPilotToken());
   const [backupFreq, setBackupFreq] = useState(() => localStorage.getItem("mi_backup_freq") || "Weekly");
   const [autoLockMin, setAutoLockMin] = useState(() => getAutoLockMinutes());
   const [backups, setBackups]     = useState(() => { try { return JSON.parse(localStorage.getItem("mi_backup_history") || "[]"); } catch { return []; } });
   const [toast, setToast]         = useState("");
-  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "advanced_consent" | "changepin"
+  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "pilot_token" | "advanced_consent" | "changepin"
   const [pinForm, setPinForm]     = useState({ current: "", next: "", confirm: "" });
   const [pinError, setPinError]   = useState("");
   const [pinSuccess, setPinSuccess] = useState(false);
@@ -301,6 +328,12 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
     localStorage.setItem("mi_ak", key);
     setApiKey(key);
     showToast("API key saved");
+  }
+
+  function handleSavePilotToken(token) {
+    setPilotToken(token);
+    setPilotTokenState(token);
+    showToast(token ? "Pilot access token saved" : "Pilot access token cleared");
   }
 
   async function hashPin(pin) {
@@ -660,10 +693,20 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 </div>
               </div>
 
-              <div>
+              <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>App version</div>
                 <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
                   Insina Health v{APP_VERSION}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Pilot access token</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
+                    {pilotToken ? "•".repeat(20) : "Not set — not needed for founder use"}
+                  </div>
+                  <button onClick={() => setModal("pilot_token")} style={btnGhost}>{pilotToken ? "Change" : "Set"}</button>
                 </div>
               </div>
             </div>
@@ -849,6 +892,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
       {/* Modals */}
       {modal === "apikey" && <ApiKeyModal current={apiKey} onSave={handleSaveApiKey} onClose={() => setModal(null)} />}
+      {modal === "pilot_token" && <PilotTokenModal current={pilotToken} onSave={handleSavePilotToken} onClose={() => setModal(null)} />}
       {modal === "clear" && (
         <ConfirmModal
           title="Clear All Data?"

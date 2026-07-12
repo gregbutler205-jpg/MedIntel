@@ -9,7 +9,9 @@
 //  • Pipes SSE streams or JSON back to the browser unchanged
 //  • Zero-logging: no request body, no health data, no API key fragments stored
 //  • Rate limiting (S-05/PG-04): 60 req/IP/hour on /api/chat, 20 req/IP/hour on
-//    /api/extract-pdf — enforced. Per-pilot-user bearer tokens land in Phase 1.
+//    /api/extract-pdf — enforced.
+//  • Pilot auth (S-05 item 3): Authorization: Bearer <token> checked against
+//    PILOT_TOKENS, gated behind PILOT_AUTH_ENFORCED (default off — see below).
 //  • CORS: restricted to approved origins
 //
 // Body limits are route-specific (not global) so large image batches can reach
@@ -76,12 +78,39 @@ const extractLimiter = rateLimit({
   message: { error: "Rate limit exceeded for document extraction. Please try again later." },
 });
 
+// ── Pilot bearer-token auth (S-05 item 3 / PG-04) ─────────────────────────────
+// PILOT_TOKENS: comma-separated random tokens, one issued out-of-band per
+// invited pilot user (see proxy/DEPLOY.md for the issuance/rotation
+// procedure). Enforcement is gated behind PILOT_AUTH_ENFORCED so the client
+// (which now always sends the header, once it has one) can deploy first
+// without locking anyone out — enforcement is switched on separately, after
+// tokens exist. Unset or any value other than "true" = enforcement OFF
+// (today's open-during-founder-testing behavior; matches "default off").
+function pilotAuth(req, res, next) {
+  const enforced = process.env.PILOT_AUTH_ENFORCED === "true";
+  if (!enforced) return next();
+
+  const validTokens = (process.env.PILOT_TOKENS || "")
+    .split(",")
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+
+  // Zero-logging: never log the header or token value, valid or not.
+  if (!token || !validTokens.includes(token)) {
+    return res.status(401).json({ error: "Missing or invalid access token." });
+  }
+  next();
+}
+
 // ── /api/chat — SSE streaming or JSON passthrough (1 MB body limit) ───────────
 // 256 KB was too tight: a rich record (all labs/vitals/meds + reference
 // documents) exceeds it and the proxy returns 413 before reaching Claude, whose
 // context window is far larger. 1 MB comfortably fits a full record; the client
 // also caps reference-document text so payloads stay well within model limits.
-app.post("/api/chat", express.json({ limit: "1mb" }), limiter, async (req, res) => {
+app.post("/api/chat", express.json({ limit: "1mb" }), limiter, pilotAuth, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {
@@ -163,7 +192,7 @@ app.post("/api/chat", express.json({ limit: "1mb" }), limiter, async (req, res) 
 // The caller is responsible for splitting large PDFs into ≤15 page batches
 // and assembling the full text from multiple responses.
 // ─────────────────────────────────────────────────────────────────────────────
-app.post("/api/extract-pdf", express.json({ limit: "30mb" }), extractLimiter, async (req, res) => {
+app.post("/api/extract-pdf", express.json({ limit: "30mb" }), extractLimiter, pilotAuth, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {

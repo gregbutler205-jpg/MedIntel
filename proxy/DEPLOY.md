@@ -100,6 +100,54 @@ The proxy will run at `http://localhost:3001`.
 
 ---
 
+## Pilot Access Tokens (S-05 item 3 / PG-04)
+
+A second layer, independent of rate limiting: once enabled, every request to
+`/api/chat` and `/api/extract-pdf` must carry a valid `Authorization: Bearer
+<token>` header. The client already sends this header whenever a pilot token
+is set in **Settings & Backup → Pilot access token** (stored locally, same
+handling as the BYO API key today). **Enforcement defaults off** — the app
+works exactly as it does now until you deliberately turn it on, so shipping
+the client-side support does not require any Render change or lock anyone
+out.
+
+### Issuing tokens to invited pilot users
+
+1. Generate one random token per person — anything unguessable works, e.g.:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
+   ```
+2. In the Render dashboard → **Environment** tab, set:
+
+   | Key                    | Value                                    |
+   |-------------------------|-------------------------------------------|
+   | `PILOT_TOKENS`          | comma-separated tokens, one per person, e.g. `a1b2c3...,d4e5f6...` |
+   | `PILOT_AUTH_ENFORCED`   | `true` to turn enforcement on (unset or anything else = off) |
+
+3. Give each person their own token out-of-band (text, email — not in the repo).
+4. They paste it into **Settings & Backup → Pilot access token** on first use.
+
+### Deploy order matters
+
+The client must be deployed **before** you flip `PILOT_AUTH_ENFORCED` to
+`true` — otherwise a pilot user's older, cached build won't yet know to send
+the header and will get locked out. Sequence:
+
+1. Ship the app build that includes pilot-token client support (this is
+   already the case as of A-02/S-05 item 3 — no separate action needed going
+   forward).
+2. Issue tokens and set `PILOT_TOKENS` on Render.
+3. Have each pilot user enter their token in Settings.
+4. Only then set `PILOT_AUTH_ENFORCED=true` on Render and redeploy the proxy.
+
+### Rotation / revoking a user
+
+Remove their token from the `PILOT_TOKENS` value and redeploy the proxy —
+their next request fails with 401 immediately. No other action needed; there
+is no separate revocation list.
+
+---
+
 ## Security Notes
 
 - CORS is restricted to the GitHub Pages origin (`https://gregbutler205-jpg.github.io`)

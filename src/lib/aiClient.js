@@ -13,8 +13,10 @@
 // handling (503 cold-start copy, 413 payload-too-large copy, etc.) — those
 // messages are deliberately tailored per surface. This function centralizes
 // what actually drifted: the model string, the token ceiling, the target
-// URL, and (once S-05 item 3 lands) the bearer token — not the per-surface
-// error copy, which is not what broke.
+// URL, and the bearer token (S-05 item 3) — not the per-surface error copy,
+// which is not what broke.
+
+import { getPilotToken } from "./pilotAuth.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 
@@ -58,14 +60,14 @@ export const SURFACE_MAX_TOKENS = {
 const PROXY_HARD_CEILING = 4096;
 
 /**
- * Bearer token attachment point for S-05 item 3 (pilot tokens). Deliberately
- * a stub returning {} until that item lands its token store — this is "one
- * place" S-05 item 3 fills in without touching every call site again. A-02's
- * dependency note: "A-02 before S-05 item 3 (the client needs one place to
- * attach the token)."
+ * Bearer token attachment point (S-05 item 3). Returns {} when no pilot
+ * token is stored — the normal state for founder-only use, and harmless
+ * against the proxy either way since enforcement defaults off there until
+ * real tokens exist.
  */
 function getAuthHeaders() {
-  return {};
+  const token = getPilotToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 /**
