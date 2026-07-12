@@ -12,6 +12,31 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
+
+### Added
+- **A-08:** Schema versioning and migration rails. New `src/lib/migrations.js`:
+  an ordered, idempotent migration list gated by `mi_schema_version`, run once
+  synchronously at boot (`main.jsx`, before either the full app or companion
+  renders — both share the same `mi_*` record). Each migration logs to the RIE
+  audit log (`mi_rie_audit`, Drive-synced). A migration may be flagged `major`
+  (CHANGELOG's own MAJOR definition — breaking changes to how data is stored):
+  before it runs, an automatic JSON export of the full record downloads as a
+  safety-net backup, and an `mi_migration_interrupted` flag is set for the
+  duration so a crash mid-migration is detected and retried on the next boot
+  rather than silently skipped. A failed migration halts the chain — no later
+  migration is applied out of order over a failure. Twenty-plus prior releases
+  evolved the stores with no recorded version; migration v1 here is a no-op
+  version stamp establishing the baseline, not a retroactive migration of that
+  undocumented history. **P-02 (vault encryption)** and **A-07 (binary blob
+  move, Phase 2)** are the first real migrations to land on these rails.
+- Verified: fresh-install stamping, no-op on an already-migrated boot, and the
+  full major-migration lifecycle (backup trigger, interrupted-flag set/clear,
+  failure-halts-the-chain, and correct retry-in-order on the next boot) all
+  confirmed against the actual runner logic.
+
+---
+
 ## v1.24.0 — 2026-07-11 (Phase 0: pilot security hardening — in progress)
 
 ### Security
