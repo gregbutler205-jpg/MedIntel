@@ -91,10 +91,12 @@ The proxy will run at `http://localhost:3001`.
 
 ---
 
-## Rate Limits
+## Rate Limits (S-05 / PG-04 — enforced)
 
-- **20 requests per IP per hour**
-- Returns HTTP 429 with JSON error message when exceeded
+- `/api/chat`: **60 requests per IP per hour**
+- `/api/extract-pdf`: **20 requests per IP per hour** (Vision OCR — the expensive route)
+- Returns HTTP 429 with a JSON error message when exceeded
+- Backstop: a hard monthly spend cap set in the Anthropic console (HUMAN-managed)
 
 ---
 

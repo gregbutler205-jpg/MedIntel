@@ -21,6 +21,13 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   `.claude/`, and `.env*` to `.gitignore` and untracked local Claude settings.
   Public history is force-pushed as part of this item; existing clones must be
   re-cloned.
+- **S-05 items 1-2 / PG-04 (DEC-015):** Proxy rate limiting is now enforced —
+  the limiter's disable switch is removed. `/api/chat` is capped at 60 requests
+  per IP per hour; `/api/extract-pdf` (Vision OCR, the expensive route) gets its
+  own 20/hour cap. Backstop is a hard monthly spend cap in the Anthropic console
+  (HUMAN). Per-pilot-user bearer tokens are Phase 1 (S-05 item 3).
+
+---
 
 
 ## v1.21.0 — 2026-07-01

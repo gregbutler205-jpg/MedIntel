@@ -8,7 +8,8 @@
 //  • Forwards requests to Anthropic's messages API
 //  • Pipes SSE streams or JSON back to the browser unchanged
 //  • Zero-logging: no request body, no health data, no API key fragments stored
-//  • Rate limiting: 60 requests per IP per hour (disabled; enable before public release)
+//  • Rate limiting (S-05/PG-04): 60 req/IP/hour on /api/chat, 20 req/IP/hour on
+//    /api/extract-pdf — enforced. Per-pilot-user bearer tokens land in Phase 1.
 //  • CORS: restricted to approved origins
 //
 // Body limits are route-specific (not global) so large image batches can reach
@@ -52,16 +53,27 @@ app.use(cors({
 // /api/extract-pdf can accept large image batches (up to 30 MB) while
 // /api/chat stays capped at 256 KB.
 
-// ── Rate limiting ─────────────────────────────────────────────────────────────
-// Disabled for internal use — re-enable before public release by setting
-// skip: () => false  and choosing an appropriate max.
+// ── Rate limiting (S-05 / PG-04 — enforced) ───────────────────────────────────
+// CORS is not authentication; these caps bound what any single IP can spend.
+// The Anthropic-console monthly spend cap is the backstop (HUMAN-managed).
+// Per-pilot-user bearer tokens (S-05 item 3) land in Phase 1.
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 60,
+  max: 60, // /api/chat: 60 requests per IP per hour
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Rate limit exceeded. Please try again later." },
-  skip: () => true, // ← disabled; set to false to enforce on public release
+});
+
+// /api/extract-pdf is the expensive route (Vision OCR, up to 15 page images per
+// call) — a full import session is a handful of batches, so 20/hour is ample
+// for real use while capping abuse at a fraction of the chat budget.
+const extractLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20, // /api/extract-pdf: 20 requests per IP per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Rate limit exceeded for document extraction. Please try again later." },
 });
 
 // ── /api/chat — SSE streaming or JSON passthrough (1 MB body limit) ───────────
@@ -151,7 +163,7 @@ app.post("/api/chat", express.json({ limit: "1mb" }), limiter, async (req, res) 
 // The caller is responsible for splitting large PDFs into ≤15 page batches
 // and assembling the full text from multiple responses.
 // ─────────────────────────────────────────────────────────────────────────────
-app.post("/api/extract-pdf", express.json({ limit: "30mb" }), limiter, async (req, res) => {
+app.post("/api/extract-pdf", express.json({ limit: "30mb" }), extractLimiter, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
   if (!ANTHROPIC_API_KEY) {
