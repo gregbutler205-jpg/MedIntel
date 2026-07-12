@@ -157,6 +157,68 @@ export function checkDocumentsRecords() {
   return out;
 }
 
+// ── Transplant-organ terminology (A-05 / PG-07) ──────────────────────────────
+// The prompt-build path used to silently rewrite "kidney transplant" to
+// "liver transplant" (and LDKT to LDLT) wherever it appeared, invisible to
+// the patient and liable to corrupt any record whose history genuinely
+// differs — the RIE flag-don't-fix principle it violated. This replaces it:
+// a surgical entry mentioning a transplant of one organ, inconsistent with a
+// transplant condition on file for a different organ, is flagged with a
+// suggested correction; nothing changes until the patient confirms via
+// Review Queue "Fix Now."
+const ORGAN_TERMS = [
+  { organ: "liver",    abbr: "LDLT", re: /\bliver\b|\bLDLT\b/i },
+  { organ: "kidney",   abbr: "LDKT", re: /\bkidney\b|\brenal\b|\bLDKT\b/i },
+  { organ: "heart",    abbr: null,   re: /\bheart\b|\bcardiac\b/i },
+  { organ: "lung",     abbr: null,   re: /\blung\b|\bpulmonary\b/i },
+  { organ: "pancreas", abbr: null,   re: /\bpancrea(?:s|tic)\b/i },
+];
+function matchOrgan(text) {
+  return ORGAN_TERMS.find(o => o.re.test(text || "")) || null;
+}
+function correctedProcedureText(text, fromTerm, toTerm) {
+  const g = new RegExp(fromTerm.re.source, "gi");
+  return text.replace(g, (match) => {
+    if (toTerm.abbr && match === match.toUpperCase() && match.length <= 5) return toTerm.abbr;
+    const capitalized = match[0] === match[0].toUpperCase();
+    return capitalized ? toTerm.organ[0].toUpperCase() + toTerm.organ.slice(1) : toTerm.organ;
+  });
+}
+export function checkTransplantTerminology() {
+  const surgeries = safe("mi_surgeries");
+  const conditions = safe("mi_conditions");
+  const out = [];
+
+  const conditionTerm = (() => {
+    for (const c of conditions) {
+      if (!/transplant/i.test(c.name || "")) continue;
+      const m = matchOrgan(c.name);
+      if (m) return m;
+    }
+    return null;
+  })();
+  if (!conditionTerm) return out;
+
+  surgeries.forEach((s, i) => {
+    const text = s.procedure || "";
+    if (!/transplant/i.test(text)) return;
+    const surgTerm = matchOrgan(text);
+    if (!surgTerm || surgTerm.organ === conditionTerm.organ) return;
+    const suggestion = correctedProcedureText(text, surgTerm, conditionTerm);
+    out.push(mkFinding({
+      severity: "warning",
+      checkType: "consistency",
+      module: "surgeries",
+      fieldPath: `surgeries[${s.id ?? i}].procedure`,
+      original: text,
+      suggestion,
+      message: `"${text}" mentions a ${surgTerm.organ} transplant, but your condition list shows a ${conditionTerm.organ} transplant — same procedure, different terminology?`,
+      fix: { store: "mi_surgeries", id: s.id, field: "procedure", value: suggestion, safeBatch: false },
+    }));
+  });
+  return out;
+}
+
 export function runConsistency() {
   return [
     ...checkMedications(),
@@ -164,5 +226,6 @@ export function runConsistency() {
     ...checkProviders(),
     ...checkConditionsAllergies(),
     ...checkDocumentsRecords(),
+    ...checkTransplantTerminology(),
   ];
 }

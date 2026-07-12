@@ -15,6 +15,32 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-05 / PG-07:** Killed the silent kidney→liver terminology rewrite.
+  Tab11's prompt-build path used to `.replace()` "kidney transplant," "renal
+  transplant," and "LDKT" with "liver transplant"/"LDLT" wherever they
+  appeared in surgical history, unconditionally and invisibly — a real RIE
+  flag-don't-fix violation that would have corrupted the record of any
+  pilot user whose transplant history genuinely differs. Deleted outright;
+  patient-entered text now reaches the AI prompt verbatim.
+  - Replacement: `src/rie/consistencyChecks.js` gains
+    `checkTransplantTerminology()` — flags a surgical entry mentioning a
+    transplant of one organ (liver, kidney, heart, lung, pancreas, matching
+    both full names and the LDLT/LDKT abbreviations) when the condition
+    list shows a transplant of a different organ, with a suggested
+    correction. Nothing changes automatically: the existing Review Queue
+    "Fix Now" flow (`engine.js`'s `applyFix()`, already built and used by
+    the medical-dictionary checks) writes the confirmed value back to
+    `mi_surgeries` only once the patient confirms, and that confirmed value
+    is what both the UI and every prompt see from then on — exactly the
+    flag → confirm-once → store pattern the spec calls for.
+  - Verified: `npm run build` passes. A standalone Node harness confirmed
+    the check reproduces the exact prior-behavior case (kidney/LDKT →
+    liver/LDLT, capitalization preserved) as a suggested fix rather than an
+    automatic rewrite; matches on "renal transplant" wording; produces no
+    finding when the surgical and condition organs already agree, when no
+    transplant condition is on file to compare against, or for a
+    non-transplant procedure that happens to mention an organ (e.g. "kidney
+    biopsy"); and flags only the mismatched entry among several surgeries.
 - **A-06 / PG-06:** Condition-module loader. New
   `src/prompts/modules/MOD-IMMUNOSUPPRESSION.js`: the worked example from
   `INSINA_AI_PROMPTS.md` §5.5, copied verbatim into `content` fields

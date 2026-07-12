@@ -72,17 +72,15 @@ function buildDataSections() {
     : "- No conditions on file.";
 
   // ── Surgical history ────────────────────────────────────────────────────────
-  // TODO(A-05): this regex silently rewrites patient-entered terminology,
-  // which CSC rule 9 / spec section 9 requires be flagged, not fixed. Left
-  // unchanged here — A-05/PG-07 is the tracked item to remove it.
-  const rawSurgStr = surgeries.length > 0
+  // A-05/PG-07: the silent kidney→liver terminology rewrite is deleted, not
+  // fixed-in-place — patient-entered text is injected verbatim. A genuine
+  // organ-transplant terminology discrepancy against the condition list is
+  // now flagged by RIE's checkTransplantTerminology() instead: the patient
+  // confirms once via Review Queue "Fix Now," and only then does the stored
+  // (and injected) value change.
+  const surgStr = surgeries.length > 0
     ? surgeries.map(s => `- ${s.procedure}${s.date ? ` (${s.date})` : ""}${s.surgeon ? ` — ${s.surgeon}` : ""}${s.facility ? `, ${s.facility}` : ""}${s.notes ? `: ${s.notes}` : ""}`).join("\n")
     : "- No surgical or procedure history on file.";
-
-  const surgStr = rawSurgStr
-    .replace(/kidney\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected")
-    .replace(/\bLDKT\b/g, "LDLT ⚠corrected")
-    .replace(/renal\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected");
 
   // ── Medications ─────────────────────────────────────────────────────────────
   const medsStr = meds.filter(m => m.status !== "inactive").length > 0
