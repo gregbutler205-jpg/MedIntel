@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { requestReport } from "../../rie/preflightChecks.js";
+import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -287,42 +288,6 @@ function labOutOfRange(lab, customRanges) {
   return val < low || val > high;
 }
 
-function answerToHTML(rawText) {
-  if (!rawText) return "";
-  const text = rawText
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
-    .replace(/[\u{2600}-\u{27BF}]/gu, "")
-    .replace(/\u{FE0F}/gu, "")
-    .replace(/✦/g, "");
-  const bold = (s) => s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  return text.split("\n").map(line => {
-    const t = line.trim();
-    if (/^-{3,}$/.test(t)) return `<hr style="border:none;border-top:1px solid #ddd;margin:14px 0">`;
-    if (t.includes("|")) {
-      if (/^\|?[\s\-|]+\|?$/.test(t)) return "";
-      const cells = t.split("|").map(c => c.trim()).filter(Boolean);
-      if (cells.length >= 2)
-        return `<div style="display:flex;gap:16px;margin-bottom:6px;padding-left:8px">
-          <span style="font-weight:700;min-width:160px;flex-shrink:0">${bold(cells[0])}</span>
-          <span>${bold(cells.slice(1).join(" — "))}</span></div>`;
-    }
-    const hm = t.match(/^\*\*([^*]+?)\*\*:?\s*$/);
-    if (hm) return `<div style="font-weight:700;font-size:15px;margin-top:16px;margin-bottom:6px">${hm[1].replace(/:$/, "")}</div>`;
-    if (t.startsWith("- ") || t.startsWith("• ")) {
-      const c = t.replace(/^[-•]\s+/, "");
-      return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px">
-        <span style="color:#2563eb;flex-shrink:0;font-weight:700">&#9658;</span>
-        <span>${bold(c)}</span></div>`;
-    }
-    const nm = t.match(/^(\d+)\.\s+(.+)/);
-    if (nm) return `<div style="display:flex;gap:8px;margin-bottom:6px;padding-left:8px">
-      <span style="font-weight:700;flex-shrink:0;min-width:22px;color:#2563eb">${nm[1]}.</span>
-      <span>${bold(nm[2])}</span></div>`;
-    if (t === "") return `<div style="height:8px"></div>`;
-    return `<div style="margin-bottom:4px;line-height:1.75">${bold(line)}</div>`;
-  }).join("");
-}
-
 function printAIResponse(question, answer, logoUrl) {
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const win = window.open("", "_blank", "width=900,height=700");
@@ -347,7 +312,7 @@ function printAIResponse(question, answer, logoUrl) {
     <div class="q-label">Question:</div>
     <div class="q-text">${question.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
     <div class="a-label">Analysis</div>
-    ${answerToHTML(answer)}
+    ${renderAiMarkdownToHtml(answer)}
     <div class="footer">
       <span>Insina Health &mdash; Personal Health Intelligence</span>
       <span>Generated ${date}</span>
@@ -439,17 +404,11 @@ function printLabReport(labs, logoUrl) {
 }
 
 // Shared AI response renderer — strips emojis, renders bold/bullets/dividers cleanly
+const AI_BOLD_STYLE = "color:#c4d8ee;font-weight:700";
+
 function renderMarkdown(rawText) {
   if (!rawText) return null;
-  const text = rawText
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
-    .replace(/[\u{2600}-\u{27BF}]/gu, "")
-    .replace(/\u{FE0F}/gu, "")
-    .replace(/✦/g, "");
-  const applyBold = (str) =>
-    str.replace(/\*\*(.*?)\*\*/g, (_, m) =>
-      `<strong style="color:#c4d8ee;font-weight:700">${m}</strong>`
-    );
+  const text = stripAiEmojis(rawText);
   return text.split("\n").map((line, i) => {
     const trimmed = line.trim();
     if (/^-{3,}$/.test(trimmed))
@@ -459,9 +418,9 @@ function renderMarkdown(rawText) {
       const cells = trimmed.split("|").map(c => c.trim()).filter(Boolean);
       if (cells.length >= 2) return (
         <div key={i} style={{ display:"flex", gap:10, marginBottom:5, paddingLeft:4 }}>
-          <span dangerouslySetInnerHTML={{ __html: applyBold(cells[0]) }}
+          <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(cells[0], AI_BOLD_STYLE) }}
             style={{ fontWeight:700, color:"#c4d8ee", minWidth:140, flexShrink:0 }} />
-          <span dangerouslySetInnerHTML={{ __html: applyBold(cells.slice(1).join(" — ")) }}
+          <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(cells.slice(1).join(" — "), AI_BOLD_STYLE) }}
             style={{ color:"#a8c4dc" }} />
         </div>
       );
@@ -477,7 +436,7 @@ function renderMarkdown(rawText) {
       return (
         <div key={i} style={{ display:"flex", gap:8, marginBottom:4, paddingLeft:4 }}>
           <span style={{ color:"#4f8ef7", flexShrink:0, marginTop:4, fontSize:9 }}>▸</span>
-          <span dangerouslySetInnerHTML={{ __html: applyBold(content) }} style={{ lineHeight:1.7 }} />
+          <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(content, AI_BOLD_STYLE) }} style={{ lineHeight:1.7 }} />
         </div>
       );
     }
@@ -486,11 +445,11 @@ function renderMarkdown(rawText) {
       <div key={i} style={{ display:"flex", gap:8, marginBottom:5, paddingLeft:4 }}>
         <span style={{ color:"#4f8ef7", fontWeight:700, flexShrink:0, minWidth:22,
           fontFamily:"'DM Mono',monospace", fontSize:11 }}>{numMatch[1]}.</span>
-        <span dangerouslySetInnerHTML={{ __html: applyBold(numMatch[2]) }} style={{ lineHeight:1.7 }} />
+        <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(numMatch[2], AI_BOLD_STYLE) }} style={{ lineHeight:1.7 }} />
       </div>
     );
     if (trimmed === "") return <div key={i} style={{ height:6 }} />;
-    return <div key={i} dangerouslySetInnerHTML={{ __html: applyBold(line) }}
+    return <div key={i} dangerouslySetInnerHTML={{ __html: applyBoldSafe(line, AI_BOLD_STYLE) }}
       style={{ marginBottom:3, lineHeight:1.75 }} />;
   });
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 import { requestReport } from "../../rie/preflightChecks.js";
+import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { compressImage } from "../../lib/cards.js";
 import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
 
@@ -31,21 +32,19 @@ function printConsultationPrep(appt, analysis) {
   const apptDate = appt.date ? new Date(appt.date + "T12:00:00").toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric", year:"numeric" }) : "—";
   const win = window.open("", "_blank", "width=900,height=700");
   if (!win) return;
-  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const bold = s => s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   const renderText = rawText => {
     if (!rawText) return "";
-    const text = rawText.replace(/[\u{1F300}-\u{1F9FF}]/gu,"").replace(/[\u{2600}-\u{27BF}]/gu,"").replace(/\u{FE0F}/gu,"").replace(/✦/g,"");
+    const text = stripAiEmojis(rawText);
     return text.split("\n").map(line => {
       const t = line.trim();
       if (/^-{3,}$/.test(t)) return `<hr style="border:none;border-top:1px solid #ddd;margin:12px 0">`;
-      if (t.startsWith("- ") || t.startsWith("• ")) return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px"><span style="color:#2563eb;font-weight:700">&#9658;</span><span>${bold(t.replace(/^[-•]\s+/,""))}</span></div>`;
+      if (t.startsWith("- ") || t.startsWith("• ")) return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px"><span style="color:#2563eb;font-weight:700">&#9658;</span><span>${applyBoldSafe(t.replace(/^[-•]\s+/,""))}</span></div>`;
       const nm = t.match(/^(\d+)\.\s+(.+)/);
-      if (nm) return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px"><span style="font-weight:700;color:#2563eb;min-width:22px">${nm[1]}.</span><span>${bold(nm[2])}</span></div>`;
+      if (nm) return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px"><span style="font-weight:700;color:#2563eb;min-width:22px">${nm[1]}.</span><span>${applyBoldSafe(nm[2])}</span></div>`;
       const hm = t.match(/^\*\*([^*]+?)\*\*:?\s*$/);
-      if (hm) return `<div style="font-weight:700;font-size:14px;margin-top:14px;margin-bottom:5px">${hm[1].replace(/:$/,"")}</div>`;
+      if (hm) return `<div style="font-weight:700;font-size:14px;margin-top:14px;margin-bottom:5px">${escapeHtml(hm[1].replace(/:$/,""))}</div>`;
       if (t === "") return `<div style="height:7px"></div>`;
-      return `<div style="margin-bottom:3px;line-height:1.7">${bold(esc(line))}</div>`;
+      return `<div style="margin-bottom:3px;line-height:1.7">${applyBoldSafe(line)}</div>`;
     }).join("");
   };
   win.document.write(`<!DOCTYPE html><html><head>
@@ -70,13 +69,13 @@ function printConsultationPrep(appt, analysis) {
     <div class="subtitle">Insina Health &mdash; AI Appointment Analysis</div>
     <hr class="rule" />
     <div class="appt-grid">
-      <div class="appt-field"><label>Appointment</label><span>${esc(appt.title)}</span></div>
+      <div class="appt-field"><label>Appointment</label><span>${escapeHtml(appt.title)}</span></div>
       <div class="appt-field"><label>Date</label><span>${apptDate}</span></div>
-      <div class="appt-field"><label>Provider</label><span>${esc(appt.provider||"—")}</span></div>
-      <div class="appt-field"><label>Specialty</label><span>${esc(appt.specialty||"—")}</span></div>
-      ${appt.facility ? `<div class="appt-field" style="grid-column:1/-1"><label>Facility</label><span>${esc(appt.facility)}</span></div>` : ""}
-      ${appt.prepInstructions ? `<div class="appt-field" style="grid-column:1/-1"><label>Prep Instructions</label><span>${esc(appt.prepInstructions)}</span></div>` : ""}
-      ${appt.notes ? `<div class="appt-field" style="grid-column:1/-1"><label>Notes</label><span style="font-weight:400;white-space:pre-wrap">${esc(appt.notes)}</span></div>` : ""}
+      <div class="appt-field"><label>Provider</label><span>${escapeHtml(appt.provider||"—")}</span></div>
+      <div class="appt-field"><label>Specialty</label><span>${escapeHtml(appt.specialty||"—")}</span></div>
+      ${appt.facility ? `<div class="appt-field" style="grid-column:1/-1"><label>Facility</label><span>${escapeHtml(appt.facility)}</span></div>` : ""}
+      ${appt.prepInstructions ? `<div class="appt-field" style="grid-column:1/-1"><label>Prep Instructions</label><span>${escapeHtml(appt.prepInstructions)}</span></div>` : ""}
+      ${appt.notes ? `<div class="appt-field" style="grid-column:1/-1"><label>Notes</label><span style="font-weight:400;white-space:pre-wrap">${escapeHtml(appt.notes)}</span></div>` : ""}
     </div>
     <div class="section-title">AI Preparation Analysis</div>
     ${renderText(analysis)}
