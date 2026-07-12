@@ -15,6 +15,44 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-03 v1:** Lab digest builder. New `src/lib/labDigest.js`:
+  `buildLabDigestData()` groups labs by normalized raw name (trim, lowercase
+  — A-04 upgrades this to canonical IDs with alias merging in Phase 2) into a
+  12-month-window digest per analyte (last 6 values with dates, window min
+  and max, a computed trend — first value, last value, direction, draw
+  count — latest delta, unit, reference range, provider custom range, and a
+  `tripwireStatus` field that reads "unavailable" until A-01 lands);
+  `formatLabDigest()` renders it as the compact text block for `{labDigest}`;
+  `formatLabsWindow()` renders full-detail rows for the last 60 days for
+  `{labsWindow}`. `windowDays` is a parameter (default 365), so the same
+  function serves the 24-month Advanced-mode `{labsExtended}` digest once a
+  caller wires that trigger — not done in this item, since the master
+  prompt's A-03 v1 instruction names only `{labDigest}` and `{labsWindow}`.
+  - **Wired into Tab11 and Tab05**, replacing the two defects A-03 exists to
+    fix: Tab11 no longer ships the complete lab history (thousands of
+    entries) into the AI Analysis chat prompt; Tab05's Full Analysis and Lab
+    Q&A no longer send only the most recent value per test (trend-blind,
+    which defeated the product's own trend-detection framing). Tab11's
+    condition-linked personalized-range reminder (flag a lab whose
+    condition may warrant an individual target range when none is on file)
+    is preserved, now driven by the digest's per-analyte flag data instead
+    of the old full-history dump.
+  - **Deviation:** the spec calls for the provider custom range to carry
+    "its set date"; `mi_lab_custom_ranges` doesn't currently record when a
+    range was set (Tab05's `saveCustomRange` only ever stored `{low, high}`).
+    Added the field to the digest output as `null` rather than fabricating a
+    date — the schema change to actually capture it is outside this item's
+    named scope (new `labDigest.js` + payload builders, not the custom-range
+    save UI).
+  - Verified: `npm run build` passes. A standalone Node harness against
+    synthetic labs confirmed: name-normalization merges case/whitespace
+    variants into one analyte; the 12-month window correctly excludes an
+    older draw from window min/max and trend while still counting it out of
+    the digest; trend direction and latest delta compute correctly across 3
+    draws; a provider custom range overrides the lab reference range; a
+    non-numeric result (e.g. blood type) is handled without crashing and
+    reports "insufficient data" for trend rather than a bogus number; empty
+    input produces the documented placeholder text for both formatters.
 - **A-09 / PG-06:** Prompts as code. New `src/prompts/` module: `core.js`
   holds the Clinical Safety Core (CSC v1.1, `CSC_VERSION` exported, the 14
   HARD RULES copied verbatim from `INSINA_AI_PROMPTS.md` §3), the shared

@@ -5,6 +5,7 @@ import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
 import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
+import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -736,20 +737,9 @@ export default function App({ onNavChange }) {
         ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.facility ? ` — ${d.facility}` : ""}`).join("\n")
         : "None recorded";
 
-      // Build lab summary from most recent imported results (deduplicated by name — latest per test)
-      const dedupForAI = {};
-      [...importedLabs].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).forEach(l => {
-        const key = (l.name || "").toLowerCase().trim();
-        if (key && !dedupForAI[key]) dedupForAI[key] = l;
-      });
-      const labSummary = Object.values(dedupForAI).slice(0, 60).map(l => {
-        const c = customRanges[(l.name || "").toLowerCase().trim()];
-        const rangeStr = c && c.low != null && c.high != null
-          ? ` (doctor's range ${c.low}–${c.high}${l.refRange ? `; lab ref ${l.refRange}` : ""})`
-          : (l.refRange ? ` (ref ${l.refRange})` : "");
-        const oor = labOutOfRange(l, customRanges) === true ? " — OUT OF RANGE" : "";
-        return `${l.name}: ${l.value} ${l.unit}${rangeStr}${oor}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`;
-      }).join("\n");
+      // A-03 v1: 12-month per-analyte digest (was latest-value-only — trend-blind).
+      const labDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges));
+      const labsWindowStr = formatLabsWindow(importedLabs, customRanges);
 
       const dataSections = `ACTIVE CONDITIONS
 ${condStr}
@@ -763,8 +753,11 @@ ${medsStr}
 CARE TEAM
 ${careStr}
 
-LAB RESULTS (most recent per test — replaced by the 12-month digest under A-03)
-${labSummary || "No imported labs available yet."}
+LAB RESULTS — 12-MONTH DIGEST
+${labDigestStr}
+
+RECENT LAB RESULTS (last 60 days, full detail)
+${labsWindowStr}
 
 ${TRIPWIRE_UNAVAILABLE}`;
 
@@ -816,19 +809,8 @@ ${TRIPWIRE_UNAVAILABLE}`;
       const meds = safeRead("mi_meds_full");
       const condStr = conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}`).join("\n") || "None recorded";
       const medsStr = meds.filter(m => m.status !== "inactive").map(m => `- ${m.name} ${m.dose || ""} ${m.frequency || ""}`.trim()).join("\n") || "None recorded";
-      const byDate = {};
-      importedLabs.forEach(l => { const d = l.date || "Unknown"; if (!byDate[d]) byDate[d] = []; byDate[d].push(l); });
-      const sortedDates = Object.keys(byDate).sort((a, b) => new Date(b) - new Date(a));
-      const labsStr = sortedDates.map(date =>
-        `[${date}]\n` + byDate[date].map(l => {
-          const c = customRanges[(l.name || "").toLowerCase().trim()];
-          const rangeStr = c && c.low != null && c.high != null
-            ? ` (doctor's range: ${c.low}–${c.high}${l.refRange ? `; lab ref: ${l.refRange}` : ""})`
-            : (l.refRange ? ` (ref: ${l.refRange})` : "");
-          const oor = labOutOfRange(l, customRanges) === true ? " ⚠ FLAGGED" : "";
-          return `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${rangeStr}${oor}`;
-        }).join("\n")
-      ).join("\n\n");
+      const qaLabDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges));
+      const qaLabsWindowStr = formatLabsWindow(importedLabs, customRanges);
 
       const qaDataSections = `CONDITIONS
 ${condStr}
@@ -836,8 +818,11 @@ ${condStr}
 MEDICATIONS
 ${medsStr}
 
-SELECTED LAB RESULTS
-${labsStr}
+LAB RESULTS — 12-MONTH DIGEST
+${qaLabDigestStr}
+
+RECENT LAB RESULTS (last 60 days, full detail)
+${qaLabsWindowStr}
 
 ${TRIPWIRE_UNAVAILABLE}`;
 

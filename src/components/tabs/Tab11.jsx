@@ -8,6 +8,7 @@ import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
 import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
+import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -94,11 +95,16 @@ function buildDataSections() {
     ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.specialty ? ` (${d.specialty})` : ""}${d.facility ? ` — ${d.facility}` : ""}${d.phone ? ` · ${d.phone}` : ""}`).join("\n")
     : "- No care team members on file.";
 
-  // ── Labs ────────────────────────────────────────────────────────────────────
+  // ── Labs (A-03 v1: 12-month digest + 60-day window, replaces full history) ──
   const labs = safeRead("mi_labs", []);
   const customRanges = safeRead("mi_lab_custom_ranges", {});
+  const digestAnalytes = buildLabDigestData(labs, customRanges);
+  const labDigestStr = formatLabDigest(digestAnalytes);
+  const labsWindowStr = formatLabsWindow(labs, customRanges);
 
-  // Auto-detect which labs are condition-linked (for "ask your team" note)
+  // Personalized-range reminder: flagged, condition-linked analytes with no
+  // custom range set. Kept in Tab11 (not labDigest.js) since it depends on
+  // this patient's condition list, not just lab data.
   const CONDITION_LAB_MAP = [
     { condPat: /liver|hepat|cirr|fibrosis|psc|pbc|nash|transplant|biliary/i,
       labPat:  /alt|ast|alp|alk.*phos|bilirubin|ggt|albumin|inr|prothrombin|\bpt\b/i },
@@ -117,40 +123,12 @@ function buildDataSections() {
       condPat.test(conditionNames) && labPat.test(labName)
     );
   }
-
-  let labStr;
-  if (labs.length > 0) {
-    const byDate = {};
-    labs.forEach(l => {
-      const d = l.date || "Unknown date";
-      if (!byDate[d]) byDate[d] = [];
-      byDate[d].push(l);
-    });
-    const sortedDates = Object.keys(byDate).sort((a, b) => {
-      if (a === "Unknown date") return 1;
-      if (b === "Unknown date") return -1;
-      return new Date(b) - new Date(a);
-    });
-    labStr = sortedDates.map(date => {
-      const items = byDate[date];
-      return `[${date}]\n` + items.map(l => {
-        const key = (l.name || "").toLowerCase().trim();
-        const cr  = customRanges[key];
-        let line  = `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}`;
-        if (cr)        line += ` (lab ref: ${l.refRange || "n/a"} | patient's doctor range: ${cr.low}–${cr.high})`;
-        else if (l.refRange) line += ` (ref: ${l.refRange})`;
-        if (l.flag)    line += " ⚠ FLAGGED";
-        if (l.notes)   line += ` — ${l.notes}`;
-        // Add condition-link note for flagged labs without a custom range set
-        if (l.flag && !cr && isConditionLinked(l.name)) {
-          line += " [condition-linked: patient may have an individual target range — include a note to confirm their personal range with their care team]";
-        }
-        return line;
-      }).join("\n");
-    }).join("\n\n");
-  } else {
-    labStr = "No lab results loaded yet.";
-  }
+  const rangeReminders = digestAnalytes
+    .filter(a => !a.customRange && a.last6.some(v => v.flagged === true) && isConditionLinked(a.name))
+    .map(a => `- ${a.name}: patient may have an individual target range for this condition — confirm with their care team.`);
+  const rangeRemindersStr = rangeReminders.length
+    ? `\n\nPERSONALIZED RANGE REMINDERS\n${rangeReminders.join("\n")}`
+    : "";
 
   // ── Vitals ─────────────────────────────────────────────────────────────────
   const readings = safeRead("mi_readings", []);
@@ -239,8 +217,11 @@ ${allergies.length > 0
 CARE TEAM
 ${careStr}
 
-LAB RESULTS (full history — replaced by the 12-month digest under A-03)
-${labStr}
+LAB RESULTS — 12-MONTH DIGEST
+${labDigestStr}
+
+RECENT LAB RESULTS (last 60 days, full detail)
+${labsWindowStr}${rangeRemindersStr}
 
 VITALS HISTORY
 ${vitalsStr}
