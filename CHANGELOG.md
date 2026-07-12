@@ -15,6 +15,41 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-06 / PG-06:** Condition-module loader. New
+  `src/prompts/modules/MOD-IMMUNOSUPPRESSION.js`: the worked example from
+  `INSINA_AI_PROMPTS.md` §5.5, copied verbatim into `content` fields
+  (medication cautions, food and supplements, monitoring norms, procedure
+  flags), `reviewed_by: null` (pending clinical review per PG-11). New
+  `src/lib/conditionModules.js`: `selectConditionModules()` deterministically
+  matches every module's `applies_when` (condition-name and medication-class
+  regex matchers) against `{conditionsActive}` and active `{medicationsActive}`,
+  excludes any module with `reviewed_by === null` unless the local
+  `mi_allow_unreviewed_modules` flag is set (unset by default — no pilot user
+  ever sees unreviewed content; Greg can preview it on his own device via
+  devtools), caps at 4 matches ordered condition-hit before medication-only
+  hit. `formatConditionModules()` renders matches under the CONDITION
+  REFERENCE header from §5.3 with source citation (module id + version).
+  - **This is the replacement A-09 named but didn't build yet:** A-09's
+    CHANGELOG entry noted the old hardcoded NSAID/Tacrolimus/diet/infection
+    block was deleted because "condition-specific reference content is
+    A-06's conditionModules mechanism, not a block injected for every
+    patient regardless of diagnosis" — this item is that mechanism. Wired
+    into Tab11 (Surface A) and Tab05's Full Analysis (Surface B1), both of
+    which list `{conditionModules}` in their spec'd payload; not wired into
+    Tab05's Lab Q&A (B2) or Tab10 (Surface C), since neither surface's own
+    payload list in §7 includes `{conditionModules}`.
+  - Because the only authored module today is unreviewed, this ships inert
+    for every pilot user by default — correct per spec, not a bug. It
+    becomes live the moment `reviewed_by` is set on a clinically reviewed
+    module.
+  - Verified: `npm run build` passes. A standalone Node harness confirmed:
+    the unreviewed module is excluded by default; setting
+    `mi_allow_unreviewed_modules` makes it selectable; a medication-only
+    match fires (condition list incomplete, drug reveals context, per §5.3
+    point 1's own stated rationale); an unrelated condition/medication pair
+    matches nothing; formatted output carries the correct source citation
+    and header; an empty selection formats to an empty string rather than a
+    dangling header; removing the flag reverts to exclusion.
 - **A-03 v1:** Lab digest builder. New `src/lib/labDigest.js`:
   `buildLabDigestData()` groups labs by normalized raw name (trim, lowercase
   — A-04 upgrades this to canonical IDs with alias merging in Phase 2) into a

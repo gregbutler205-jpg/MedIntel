@@ -9,6 +9,7 @@ import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
 import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
+import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -130,6 +131,13 @@ function buildDataSections() {
     ? `\n\nPERSONALIZED RANGE REMINDERS\n${rangeReminders.join("\n")}`
     : "";
 
+  // ── Condition reference modules (A-06) ──────────────────────────────────────
+  // Matched against active medications only, per spec's {medicationsActive}.
+  const conditionModulesText = formatConditionModules(
+    selectConditionModules(conditions, meds.filter(m => m.status !== "inactive"))
+  );
+  const conditionModulesSection = conditionModulesText ? `\n\n${conditionModulesText}` : "";
+
   // ── Vitals ─────────────────────────────────────────────────────────────────
   const readings = safeRead("mi_readings", []);
   let vitalsStr;
@@ -226,7 +234,7 @@ ${labsWindowStr}${rangeRemindersStr}
 VITALS HISTORY
 ${vitalsStr}
 
-${TRIPWIRE_UNAVAILABLE}${refDocsSection}${findingsSection}`;
+${TRIPWIRE_UNAVAILABLE}${conditionModulesSection}${refDocsSection}${findingsSection}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

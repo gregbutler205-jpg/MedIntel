@@ -6,6 +6,7 @@ import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
 import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
+import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -741,6 +742,13 @@ export default function App({ onNavChange }) {
       const labDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges));
       const labsWindowStr = formatLabsWindow(importedLabs, customRanges);
 
+      // A-06: condition reference modules — matched deterministically against
+      // active medications only (per spec, {medicationsActive}), empty string
+      // when nothing matches or the only authored module is unreviewed.
+      const conditionModulesText = formatConditionModules(
+        selectConditionModules(conditions, meds.filter(m => m.status !== "inactive"))
+      );
+
       const dataSections = `ACTIVE CONDITIONS
 ${condStr}
 
@@ -759,7 +767,7 @@ ${labDigestStr}
 RECENT LAB RESULTS (last 60 days, full detail)
 ${labsWindowStr}
 
-${TRIPWIRE_UNAVAILABLE}`;
+${TRIPWIRE_UNAVAILABLE}${conditionModulesText ? `\n\n${conditionModulesText}` : ""}`;
 
       const { userId, age, sex } = getIdentity();
       const { system: systemPrompt } = buildSurfaceB1({ userId, age, sex, dataSections });
