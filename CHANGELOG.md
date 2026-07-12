@@ -56,6 +56,25 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   cdnjs references in the built output, and the v5 API surface used by all
   call sites (`getDocument`, `getTextContent`, `getViewport`,
   `render({canvasContext})`) confirmed present in the installed package.
+- **S-03 / PG-05:** Added a Content-Security-Policy meta tag to both entry
+  points (`index.html` and `companion/index.html`) — GitHub Pages cannot set
+  response headers, so the meta tag is the enforcement point. Policy:
+  `script-src 'self'` + accounts.google.com (Google Identity), style/font
+  allowances for Google Fonts, `img-src` adds `data:`/`blob:` (card photos)
+  and `*.googleusercontent.com` (profile photo), `connect-src` limited to the
+  proxy, www.googleapis.com (Drive/Calendar), accounts.google.com,
+  api.anthropic.com (BYO-key fallback — comes out when A-02 lands), and
+  clinicaltables.nlm.nih.gov (ICD-10 lookup); `object-src 'none'`,
+  `base-uri 'self'`, `worker-src 'self' blob:`. The two inline scripts in the
+  HTML (companion-manifest swap, service-worker registration) moved to
+  self-hosted files so `script-src` needs no `'unsafe-inline'`;
+  `style-src 'unsafe-inline'` stays as accepted debt (inline styles are
+  pervasive). The tag is stripped during `npm run dev` only (vite.config.js
+  hook) because the React dev plugin injects an inline refresh preamble;
+  production builds ship it untouched. Verified: both built HTMLs carry
+  exactly one enforcing tag and zero inline scripts; live checks of fonts,
+  Google sign-in, Drive sync, and AI streaming ride the Phase 0 manual test
+  list.
 
 ---
 

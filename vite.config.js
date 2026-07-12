@@ -5,8 +5,21 @@ import { fileURLToPath } from 'url'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
+// S-03 / PG-05: the CSP meta tag in index.html / companion/index.html is the
+// production policy (GitHub Pages cannot set response headers). It is stripped
+// during `npm run dev` ONLY, because @vitejs/plugin-react injects an inline
+// react-refresh preamble in dev that `script-src 'self'` would block.
+// Production builds ship the tag untouched.
+const stripCspInDev = {
+  name: 'strip-csp-in-dev',
+  apply: 'serve',
+  transformIndexHtml(html) {
+    return html.replace(/[ \t]*<meta http-equiv="Content-Security-Policy"[^>]*>\r?\n/, '')
+  },
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), stripCspInDev],
   base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

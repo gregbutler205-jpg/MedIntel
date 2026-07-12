@@ -2,6 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Content-Security-Policy (S-03 / PG-05) — keep in sync with the root
+         index.html, which documents each allowlisted origin. Stripped during
+         `npm run dev` only (see vite.config.js). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://insina-health.onrender.com https://www.googleapis.com https://accounts.google.com https://api.anthropic.com https://clinicaltables.nlm.nih.gov; frame-src https://accounts.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- PWA / iOS -->
@@ -24,15 +28,9 @@
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    <!-- Service Worker registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .catch(function (err) { console.warn('SW registration failed:', err); });
-        });
-      }
-    </script>
+    <!-- Service Worker registration. External file (not inline) so script-src
+         can stay 'self' with no 'unsafe-inline' (S-03 / PG-05). -->
+    <script src="/register-sw.js"></script>
   </head>
   <body style="background:#07090f; margin:0;">
     <div id="root"></div>
