@@ -84,6 +84,16 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   HUMAN actions: install gitleaks locally and enable GitHub push protection on
   the repo.
 
+### Changed
+- **A-14:** Home-button parity. Medications, Labs & Trends, Vitals, and
+  Symptoms — the four tabs that render their own topbar — now carry the same
+  Home button (house icon + label, top-left) the shared topbar gained in
+  v1.23.0, byte-for-byte the same implementation and placement. It replaces
+  those tabs' older "‹ Dashboard" chevron, exactly as the shared topbar's
+  Home button replaced it there, so the navigation affordance is uniform
+  across every tab. No restyling; no new shared component (the source pattern
+  is inline, per spec).
+
 ---
 
 

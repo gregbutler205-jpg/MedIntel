@@ -978,13 +978,16 @@ ${labsStr}`;
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={() => onNavChange("dashboard")}
-              title="Back to Dashboard"
-              style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:11, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:2 }}
-              onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "#4a5c6a"; e.currentTarget.style.background = "none"; }}
+              title="Home"
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:2, background:"rgba(79,142,247,.10)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, cursor:"pointer", padding:"5px 10px", color:"#7eb8d8", transition:"all .15s", marginRight:4 }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(79,142,247,.20)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.5)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(79,142,247,.10)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.3)"; }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-              Dashboard
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
             </button>
             <div className="live-dot" />
             <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
