@@ -12,6 +12,17 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.24.0 — 2026-07-11 (Phase 0: pilot security hardening — in progress)
+
+### Security
+- **S-01 / PG-01 (DEC-014):** Removed the committed credential file
+  (`GitHub Token.docx`) from the working tree and purged it from all git history
+  with `git filter-repo`; the exposed token was revoked first. Added `*.docx`,
+  `.claude/`, and `.env*` to `.gitignore` and untracked local Claude settings.
+  Public history is force-pushed as part of this item; existing clones must be
+  re-cloned.
+
+
 ## v1.21.0 — 2026-07-01
 
 ### Changed — Appointments post-visit capture
