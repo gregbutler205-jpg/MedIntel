@@ -15,6 +15,35 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **S-07:** Prompt-injection defense at prompt-build time. New
+  `src/prompts/documents.js`: `stripControlChars()` removes C0/C1 control
+  characters (keeping `\n`/`\t`); `formatDocumentBlock({id, source, date,
+  text, maxLength})` wraps one document excerpt as
+  `[DOCUMENT id=... source=... date=...] ... [END DOCUMENT]`, appending a
+  visible `[TRUNCATED]` marker *inside* the block when capped — CSC rule 9
+  handles the model side (documents are content, never instructions);
+  this is the app-side half spec §S-07 asks for.
+  - **Wired into every document-injection point still using raw
+    concatenation:** Tab11's reference-document section (already had
+    informal `[Document: "name" | ...]` brackets — replaced with the real
+    delimiter format; the per-document/total-budget truncation logic is
+    preserved exactly, now tracking actual post-strip byte counts rather
+    than the cap itself, so budget-sharing across multiple documents in one
+    request behaves the same as before). Tab09's `apiSummarizeDoc`/
+    `apiExtractFindings` and Tab12's `parseDocWithClaude`/
+    `parseLabsWithClaude` had **no delimiting at all** — raw document text
+    concatenated straight into message content with a silent `.slice()`
+    truncation the model was never told about. Tab14's `buildDocContext()`
+    (Consultation Prep's document-search injection) had the same gap. All
+    four now go through `formatDocumentBlock()`.
+  - Verified: `npm run build` passes. A standalone test confirmed control
+    characters are stripped without touching printable text, truncation
+    produces a `[TRUNCATED]` marker inside the block, an under-cap document
+    gets no marker, and Tab11's multi-document budget-tracking loop
+    consumes exactly the post-strip byte count per document (not the
+    cap) — the first two documents fit fully, a third that exceeds the
+    remaining budget truncates correctly, and a fourth is correctly omitted
+    once the budget is exhausted.
 - **P-01:** Identity minimization in AI payloads. `src/prompts/identity.js`
   (built ahead of schedule during A-09, since the prompt builders needed
   `{userId}`/`{age}`/`{sex}` to construct the CSC at all) is the module the

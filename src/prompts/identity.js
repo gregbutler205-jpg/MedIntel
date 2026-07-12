@@ -1,11 +1,11 @@
-// ── Minimal identity helper for prompt builders ──────────────────────────────
-// A-09's builders need {userId}/{age}/{sex} to construct the CSC at all, so
-// this exists now rather than waiting on P-01. This is intentionally the
-// smallest slice: generate-or-read a stable pseudonymous ID and compute age
-// from DOB (never send DOB itself). The FULL identity-minimization pass —
-// auditing every payload field against INSINA_AI_PROMPTS.md §2's complete
-// allowlist, structurally excluding every prohibited field across every
-// surface, and confirming "anonymous" appears nowhere — is P-01, next.
+// ── Identity helper for prompt builders (P-01) ───────────────────────────────
+// Generate-or-read a stable pseudonymous ID and compute age from DOB (never
+// send DOB itself). Every Surface A-H builder accepts only {userId, age,
+// sex, ...}-shaped payloads, so prohibited fields (name, DOB, address,
+// phone, email, insurance IDs, MRN, SSN) are structurally excluded — the
+// builders never read them, rather than reading and filtering. "Anonymous"
+// does not appear in prompt code or user-facing copy; the correct terms are
+// "pseudonymous" / "identity-minimized" (confirmed by grep, P-01).
 
 const USER_ID_KEY = "mi_user_id";
 

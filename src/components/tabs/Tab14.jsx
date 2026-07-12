@@ -7,6 +7,7 @@ import { loadPdfjs } from "../../lib/pdfjs.js";
 import { compressImage } from "../../lib/cards.js";
 import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
 import { callAI } from "../../lib/aiClient.js";
+import { formatDocumentBlock } from "../../prompts/documents.js";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
@@ -394,11 +395,9 @@ function buildDocContext(searchText) {
 
       // Try to get extractedText from fullDocs first
       const full = fullById.get(rd.id);
-      const body = full?.extractedText
-        ? full.extractedText.slice(0, 3000)
-        : rd.text || "";  // fall back to AI summary
+      const body = full?.extractedText || rd.text || "";  // fall back to AI summary
 
-      if (body) matched.push({ name: rd.name, date: rd.addedDate, body });
+      if (body) matched.push({ id: rd.id, name: rd.name, date: rd.addedDate, body });
     }
 
     // Also check fullDocs not in refDocs
@@ -408,12 +407,12 @@ function buildDocContext(searchText) {
       const dateScore  = scoreMatch(fd.studyDate || "", keywords, dates);
       if (titleScore + dateScore === 0) continue;
       if (fd.extractedText) {
-        matched.push({ name: fd.title, date: fd.studyDate, body: fd.extractedText.slice(0, 3000) });
+        matched.push({ id: fd.id, name: fd.title, date: fd.studyDate, body: fd.extractedText });
       }
     }
 
     for (const doc of matched) {
-      sections.push(`Document: ${doc.name}${doc.date ? ` (${doc.date})` : ""}\n${doc.body}`);
+      sections.push(formatDocumentBlock({ id: doc.id, source: doc.name, date: doc.date, text: doc.body, maxLength: 3000 }));
     }
   } catch {}
 
