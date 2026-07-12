@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run test:thresholds",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:thresholds": "node scripts/testThresholds.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "^5.5.207",

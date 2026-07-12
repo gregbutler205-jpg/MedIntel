@@ -15,6 +15,75 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-01 / PG-09:** Deterministic tripwire engine. New `src/lib/tripwire.js`
+  evaluates labs against effective thresholds and produces the evaluation
+  envelope (`status`, `evaluatedAt`, `newestLabDate`, `flags[]`) that
+  `INSINA_AI_PROMPTS.md` §6 defines for `{tripwireFlags}` — this is the only
+  thing that classifies urgency (CSC rule 4); the AI echoes, never
+  originates. New `src/config/tripwireDefaults.js`: the generalized default
+  threshold library, replacing `urgencyThresholds.js`'s old
+  `URGENCY_THRESHOLDS`/`getUrgencyLevel` (deleted — hardcoded to one
+  patient's transplant context and, per that file's own prior "Why," already
+  consumed by nothing; `CONSENT_VERSION` is all that remains in that file,
+  an unrelated AI-consent-versioning export). Precedence: provider custom
+  range (abnormal tier) then reviewed default library (urgent tier); a
+  "user-confirmed" tier is structurally present per spec but a no-op until a
+  future item adds a store for it.
+  - **Threshold numbers (DEC-026):** rather than pick clinically significant
+    panic values unilaterally, Greg was asked directly. v1 seeds six
+    genuinely diagnosis-agnostic analytes only — Potassium, Sodium, Glucose,
+    Hemoglobin, Platelets, WBC — sourced from widely published clinical
+    critical-value conventions, urgent tier only. Ships `reviewedBy: null`,
+    gated by the same `mi_allow_unreviewed_modules` flag as A-06's condition
+    modules: zero urgent flags for any user, including Greg, until reviewed
+    and approved. Transplant/tacrolimus-specific content from the old file
+    is deliberately left out of v1 (OPEN-10).
+  - **Envelope status (DEC-026):** `getTripwireEnvelope()` reports
+    `"unavailable"` — not spec's literal "current, no flags" — whenever the
+    default library is unreviewed and no provider-custom ranges exist to
+    evaluate instead, since "current, no flags" would otherwise read to CSC
+    rule 4 (and therefore the patient) as a clean bill when almost nothing
+    was actually checked. Status is always recomputed fresh against live
+    `mi_labs` on read, never trusted from the stored envelope, so a lab that
+    arrives without a re-run correctly shows `"stale"`.
+  - **Hooks at import, sync, and manual entry** per spec's own instruction
+    to reuse "the existing mi-data-synced event": `tripwire.js` registers a
+    listener on that event once at module load (imported from `main.jsx` so
+    it's always active app-wide), so any current or future `mi_labs` writer
+    that already dispatches the event gets evaluation for free. Tab05's
+    manual-entry and duplicate-merge write sites, which didn't dispatch it
+    before, now do.
+  - **Fixtures wired into prebuild:** new `scripts/testThresholds.mjs`
+    (plain Node, no new test-framework dependency) — input values in,
+    expected flag level/bound out, per §6's acceptance-test requirement.
+    `package.json` gains `test:thresholds` and a `prebuild` script that
+    runs it, so `npm run build` now fails on a fixture regression before
+    Vite even starts. 19 fixture assertions across all six analytes,
+    boundary values (exactly-at-threshold does not flag), and the review
+    gate itself.
+  - **`labDigest.js` (A-03) wired to real per-analyte status:** each digest
+    line's `tripwireStatus` field, hardcoded `"unavailable"` since A-03
+    shipped ahead of this engine, now reports the real per-analyte flag
+    status when a `tripwireEnvelope` is passed in (optional parameter,
+    backward compatible).
+  - **UI surfacing (Tab05):** a dismissible urgent-flag banner (mirrors the
+    existing duplicate-detection badge's visual pattern) and an always-
+    visible evaluation-status line — "current," "stale — new results have
+    arrived since the last check ran," or "not yet active (pending clinical
+    review)" — so a stale or unavailable state is surfaced, never hidden,
+    per spec. Dismissal is per-flag, keyed by analyte+date+value+bound, so a
+    new qualifying result re-surfaces despite a prior dismissal (mirrors
+    `patternFlags.js`'s existing dismissal convention).
+  - Verified: `npm run build` passes (prebuild fixtures included). A
+    standalone Node harness covering the full engine — envelope states
+    (unavailable/stale/current), the review gate on and off, dismissal with
+    re-surfacing on a new value, provider-custom-range flagging for an
+    analyte with no library entry, and formatted output shape — 13/13
+    checks passed. Live-verified in the browser: an urgent Potassium value
+    correctly produces the banner and "current" status with the review
+    flag on; removing the flag correctly clears the banner and switches the
+    status line to "not yet active" without a false "all clear"; Dismiss
+    correctly removes the banner.
 - **A-05 / PG-07:** Killed the silent kidney→liver terminology rewrite.
   Tab11's prompt-build path used to `.replace()` "kidney transplant," "renal
   transplant," and "LDKT" with "liver transplant"/"LDLT" wherever they

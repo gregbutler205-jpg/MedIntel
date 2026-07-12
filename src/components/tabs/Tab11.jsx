@@ -7,7 +7,7 @@ import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
-import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
+import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName } from "../../lib/tripwire.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -97,7 +97,8 @@ function buildDataSections() {
   // ── Labs (A-03 v1: 12-month digest + 60-day window, replaces full history) ──
   const labs = safeRead("mi_labs", []);
   const customRanges = safeRead("mi_lab_custom_ranges", {});
-  const digestAnalytes = buildLabDigestData(labs, customRanges);
+  const tripwireEnvelope = getTripwireEnvelope();
+  const digestAnalytes = buildLabDigestData(labs, customRanges, { tripwireEnvelope, canonicalizeLabName });
   const labDigestStr = formatLabDigest(digestAnalytes);
   const labsWindowStr = formatLabsWindow(labs, customRanges);
 
@@ -232,7 +233,7 @@ ${labsWindowStr}${rangeRemindersStr}
 VITALS HISTORY
 ${vitalsStr}
 
-${TRIPWIRE_UNAVAILABLE}${conditionModulesSection}${refDocsSection}${findingsSection}`;
+${formatTripwireEnvelope(tripwireEnvelope)}${conditionModulesSection}${refDocsSection}${findingsSection}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

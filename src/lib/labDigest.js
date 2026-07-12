@@ -51,13 +51,26 @@ function isOutOfRange(lab, customRanges) {
 
 const DAY_MS = 86400000;
 
+// A-01: per-analyte tripwire status for the digest line. "unavailable" and
+// "stale" envelope statuses both collapse to "unavailable" here — CSC rule 4
+// only treats absence-of-flag as meaningful when the envelope is current, so
+// there is no useful distinction to surface per analyte for the other two.
+function tripwireStatusFor(lab, envelope, canonicalizeLabName) {
+  if (!envelope || envelope.status !== "current") return "unavailable";
+  const canonicalId = canonicalizeLabName ? canonicalizeLabName(lab.name) : normalizeLabName(lab.name);
+  const flag = (envelope.flags || []).find(f => f.canonicalId === canonicalId);
+  return flag ? `${flag.level} (${flag.bound})` : "current, no flag";
+}
+
 /**
  * Build the per-analyte digest for labs drawn within `windowDays` (default
  * 365 — the 12-month default; pass 730 for the 24-month Advanced-mode
  * {labsExtended} digest). Returns an array of analyte digest objects, newest
- * draw first.
+ * draw first. `tripwireEnvelope` (from tripwire.js's getTripwireEnvelope())
+ * is optional — when omitted, every analyte reports "unavailable", same as
+ * before A-01 existed.
  */
-export function buildLabDigestData(labs, customRanges = {}, { windowDays = 365 } = {}) {
+export function buildLabDigestData(labs, customRanges = {}, { windowDays = 365, tripwireEnvelope = null, canonicalizeLabName = null } = {}) {
   const cutoff = Date.now() - windowDays * DAY_MS;
   const groups = new Map();
   for (const lab of labs || []) {
@@ -105,9 +118,7 @@ export function buildLabDigestData(labs, customRanges = {}, { windowDays = 365 }
       // Carried as-is — adding a set-date field is a schema change outside
       // this item's scope (new labDigest.js + payload builders).
       customRange: custom && custom.low != null && custom.high != null ? { low: custom.low, high: custom.high } : null,
-      // A-01 (deterministic tripwire engine) isn't wired yet; every analyte
-      // reports "unavailable" until it is. See core.js TRIPWIRE_UNAVAILABLE.
-      tripwireStatus: "unavailable",
+      tripwireStatus: tripwireStatusFor(newest, tripwireEnvelope, canonicalizeLabName),
     });
   }
 

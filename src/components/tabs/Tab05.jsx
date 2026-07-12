@@ -4,7 +4,7 @@ import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/
 import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
-import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
+import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName, dismissTripwireFlag } from "../../lib/tripwire.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -636,6 +636,7 @@ export default function App({ onNavChange }) {
     const updated = [entry, ...importedLabs];
     setImportedLabs(updated);
     try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
+    window.dispatchEvent(new Event("mi-data-synced")); // A-01: manual-entry hook for the tripwire engine
     setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
     setShowAddLab(false);
     setSelectedImportedLab(entry);
@@ -675,6 +676,7 @@ export default function App({ onNavChange }) {
     });
     setImportedLabs(updated);
     try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
+    window.dispatchEvent(new Event("mi-data-synced")); // A-01: re-evaluate after a name merge changes canonical matching
     setSelectedImportedLab(null);
     setShowDupModal(false);
   }
@@ -691,6 +693,20 @@ export default function App({ onNavChange }) {
       if (stored) setImportedLabs(JSON.parse(stored));
     } catch {}
   }, []);
+
+  // A-01: evaluation status + flags, kept live across evaluation runs and dismissals
+  const [tripwireEnv, setTripwireEnv] = useState(() => getTripwireEnvelope());
+  useEffect(() => {
+    const refresh = () => setTripwireEnv(getTripwireEnvelope());
+    refresh();
+    window.addEventListener("mi_tripwire_changed", refresh);
+    window.addEventListener("mi-data-synced", refresh);
+    return () => {
+      window.removeEventListener("mi_tripwire_changed", refresh);
+      window.removeEventListener("mi-data-synced", refresh);
+    };
+  }, []);
+  const urgentTripwireFlags = tripwireEnv.flags.filter(f => f.level === "urgent");
 
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -739,7 +755,8 @@ export default function App({ onNavChange }) {
         : "None recorded";
 
       // A-03 v1: 12-month per-analyte digest (was latest-value-only — trend-blind).
-      const labDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges));
+      const tripwireEnvelope = getTripwireEnvelope();
+      const labDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges, { tripwireEnvelope, canonicalizeLabName }));
       const labsWindowStr = formatLabsWindow(importedLabs, customRanges);
 
       // A-06: condition reference modules — matched deterministically against
@@ -767,7 +784,7 @@ ${labDigestStr}
 RECENT LAB RESULTS (last 60 days, full detail)
 ${labsWindowStr}
 
-${TRIPWIRE_UNAVAILABLE}${conditionModulesText ? `\n\n${conditionModulesText}` : ""}`;
+${formatTripwireEnvelope(tripwireEnvelope)}${conditionModulesText ? `\n\n${conditionModulesText}` : ""}`;
 
       const { userId, age, sex } = getIdentity();
       const { system: systemPrompt } = buildSurfaceB1({ userId, age, sex, dataSections });
@@ -817,7 +834,8 @@ ${TRIPWIRE_UNAVAILABLE}${conditionModulesText ? `\n\n${conditionModulesText}` : 
       const meds = safeRead("mi_meds_full");
       const condStr = conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}`).join("\n") || "None recorded";
       const medsStr = meds.filter(m => m.status !== "inactive").map(m => `- ${m.name} ${m.dose || ""} ${m.frequency || ""}`.trim()).join("\n") || "None recorded";
-      const qaLabDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges));
+      const qaTripwireEnvelope = getTripwireEnvelope();
+      const qaLabDigestStr = formatLabDigest(buildLabDigestData(importedLabs, customRanges, { tripwireEnvelope: qaTripwireEnvelope, canonicalizeLabName }));
       const qaLabsWindowStr = formatLabsWindow(importedLabs, customRanges);
 
       const qaDataSections = `CONDITIONS
@@ -832,7 +850,7 @@ ${qaLabDigestStr}
 RECENT LAB RESULTS (last 60 days, full detail)
 ${qaLabsWindowStr}
 
-${TRIPWIRE_UNAVAILABLE}`;
+${formatTripwireEnvelope(qaTripwireEnvelope)}`;
 
       const { userId: qaUserId, age: qaAge, sex: qaSex } = getIdentity();
       const { system: qaSystem } = buildSurfaceB2({ userId: qaUserId, age: qaAge, sex: qaSex, dataSections: qaDataSections });
@@ -980,6 +998,29 @@ ${TRIPWIRE_UNAVAILABLE}`;
                 <div style={{ fontSize: 10, color: "#7eb8d8", fontWeight: 600 }}>Normal</div>
                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>within range</div>
               </div>
+            </div>
+
+            {/* A-01: urgent tripwire flags — deterministic, not AI-generated */}
+            {urgentTripwireFlags.length > 0 && (
+              <div style={{ marginBottom: 10, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.35)", borderRadius: 8, padding: "10px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#ef4444" }}>
+                  <span style={{ fontSize: 13 }}>⚠</span>
+                  <span>{urgentTripwireFlags.length} urgent threshold flag{urgentTripwireFlags.length > 1 ? "s" : ""}</span>
+                </div>
+                {urgentTripwireFlags.map(f => (
+                  <div key={`${f.canonicalId}|${f.date}|${f.value}`} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, fontSize: 10.5, color: "#f0c4c4", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
+                    <span style={{ flex: 1 }}>{f.analyte}: {f.value}{f.unit ? ` ${f.unit}` : ""} ({f.date || "unknown date"}) — {f.guidance}</span>
+                    <button onClick={() => dismissTripwireFlag(f)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(239,68,68,.4)", borderRadius: 5, color: "#ef4444", fontSize: 9, fontFamily: "'Sora',sans-serif", padding: "2px 6px", cursor: "pointer" }}>Dismiss</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* A-01: evaluation status — surfaced, not hidden, per spec (stale/unavailable is an app-state fact, not an alarm) */}
+            <div style={{ marginBottom: 14, fontSize: 9.5, fontFamily: "'DM Mono',monospace", color: tripwireEnv.status === "stale" ? "#f59e0b" : "#6a8090" }}>
+              {tripwireEnv.status === "current" && `Threshold check: current (as of ${new Date(tripwireEnv.evaluatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })})`}
+              {tripwireEnv.status === "stale" && "Threshold check: stale — new results have arrived since the last check ran"}
+              {tripwireEnv.status === "unavailable" && "Threshold check: not yet active (pending clinical review of the default threshold library)"}
             </div>
 
             {/* Duplicate detection badge */}

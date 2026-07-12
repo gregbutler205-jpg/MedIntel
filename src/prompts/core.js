@@ -104,14 +104,6 @@ that specialist first. If no listed member fits, or the care team list
 is empty, say "your care team." Include the phone number when one is
 listed.`;
 
-// Default {tripwireFlags} envelope until A-01 (deterministic tripwire engine)
-// is wired in. CSC rule 4 requires the model to know explicitly when
-// envelope status is unavailable, rather than inferring "no flags" from
-// silence — callers should prepend this to dataSections wherever a value
-// discussion is possible, and drop it once real per-value flags are injected.
-export const TRIPWIRE_UNAVAILABLE = `TRIPWIRE FLAGS
-Envelope status: unavailable — the deterministic threshold engine (APP_CHANGES_SPEC A-01) is not yet wired into this build. Treat flag status as unknown for every value per CSC rule 4: do not state or imply that a value is unflagged, and direct any concern about a specific value to the patient's care team.`;
-
 /**
  * Assemble the CSC + optional shared blocks + a surface-specific delta into
  * one system-prompt string. Builders call this rather than concatenating by

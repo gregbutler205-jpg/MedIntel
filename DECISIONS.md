@@ -651,6 +651,51 @@ med-confirmation pipelines outside what A-09 itself specifies.
 
 ---
 
+## DEC-026: Tripwire engine v1 default library — universal panic values only, gated unreviewed; "unavailable" extended to cover an unreviewed library
+
+**Date:** 2026-07-12
+**Status:** Settled (Greg's decision via AskUserQuestion during A-01; shipped in code).
+
+**Decision.** A-01's spec limits the default threshold library to "analytes with defensible
+universal critical bounds" without enumerating them, and separately states the library "sit[s]
+behind the same clinical review gate as modules" (INSINA_AI_PROMPTS §6). Rather than have Claude
+Code pick the actual numbers unilaterally, Greg was asked directly. Decision: seed v1 with six
+genuinely diagnosis-agnostic panic-value analytes only — Potassium, Sodium, Glucose, Hemoglobin,
+Platelets, WBC, urgent tier only (no "abnormal" tier, since normal ranges are far less universal
+than panic values) — sourced from widely published clinical critical-value conventions, not
+authored clinical judgment of this app's own. `src/config/tripwireDefaults.js` ships with
+`reviewedBy: null`, gated by the same `mi_allow_unreviewed_modules` flag as
+MOD-IMMUNOSUPPRESSION (one "founder preview" toggle, not two) — meaning the urgent tier produces
+zero flags for any pilot user, including Greg by default, until he reviews and approves it.
+Everything transplant/tacrolimus-specific from the old `urgencyThresholds.js` (Tacrolimus, CMV
+PCR, liver/kidney panel "rejection"/"nephrotoxicity" framing, LDL/HbA1c targets) is left out of
+v1 entirely — that content is A-01's condition-aware tier (b), deferred (OPEN-10).
+
+A second, related interpretive decision made in the same item: `getTripwireEnvelope()` returns
+`status: "unavailable"` — not the spec's literal "current, flags: []" — whenever the default
+library is unreviewed (and no provider-custom ranges exist to evaluate instead). The spec's
+literal three-state definition ties "unavailable" only to a missing/malformed flag store. Applied
+literally, an unreviewed library would still compute as "current" once the engine runs (since it
+genuinely did run — it just has nothing eligible to check), and CSC rule 4 treats "current, no
+flags" as license to reassure the patient that an unflagged value is fine. That reassurance would
+be false: almost nothing was actually checked. Extending "unavailable" to also cover "engine ran,
+nothing eligible to evaluate" closes that gap.
+
+**Reasoning.** Ambiguity resolves upward, not into improvisation (CLAUDE.md ground rule 1) —
+the specific panic-value numbers are medical-judgment content with real patient-safety stakes
+(they gate "call your doctor now" / "seek emergency care" messaging), not an engineering choice
+Claude Code should make unilaterally. The unreviewed-library gate mirrors A-06's own precedent
+(DEC entries for MOD-IMMUNOSUPPRESSION) rather than inventing a new mechanism. The "unavailable"
+extension is the conservative, safety-first reading available within the spec's three-state
+model: CSC rule 4 already instructs the model to withhold reassurance and route concerns to the
+care team whenever status is anything but current — exactly the behavior wanted while the
+library sits unreviewed, and exactly what would NOT happen if "current, flags: []" were reported
+instead.
+
+**Related:** A-01, A-06, DEC-025, PILOT_GATE PG-09, INSINA_AI_PROMPTS §6.
+
+---
+
 ---
 
 ## Open items (spawned by the decisions above)
@@ -691,3 +736,8 @@ med-confirmation pipelines outside what A-09 itself specifies.
   H needs Tab14's Consultation Prep rebuilt around a deterministic template with annotation-only
   AI fields, per its own spec section. Surface G (symptom prep) needs a consumer screen built
   before it has anything to wire into. (Spawned by DEC-025.)
+- **OPEN-10:** Clinical review of `src/config/tripwireDefaults.js`'s v1 default library (six
+  universal panic-value analytes), and condition-aware tier (b) thresholds for transplant/
+  tacrolimus-specific analytes (Tacrolimus itself, CMV PCR, liver/kidney panel, LDL/HbA1c) per
+  A-01's "optional condition-aware defaults activated by condition modules." Until reviewed, the
+  urgent tier produces zero flags for any user. (Spawned by DEC-026.)
