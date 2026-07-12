@@ -4,6 +4,7 @@ import { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
+import { callAI } from "../../lib/aiClient.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -11,7 +12,6 @@ const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 const STORAGE_KEY    = "insina_ai_messages";
 const AI_MODE_KEY    = "insina_ai_mode";
 const AI_LOG_KEY     = "insina_ai_log";
-const PROXY_URL      = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mode helpers
@@ -826,7 +826,6 @@ export default function AIAnalysis({ onNavChange }) {
     setColdStartRetry(null);
     setError("");
     const mode = loadModeData()?.mode || "standard";
-    const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
 
     const conv = currentConv;
     const userMsg  = { role: "user", text: trimmed, conv };
@@ -861,17 +860,13 @@ export default function AIAnalysis({ onNavChange }) {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const res = await fetch(`${PROXY_URL}/api/chat`, {
-        method: "POST",
+      const res = await callAI({
+        surface: mode === "advanced" ? "chat.advanced" : "chat.standard",
+        mode,
         signal: controller.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          max_tokens: mode === "advanced" ? 2048 : 1024,
-          stream: true,
-          system: systemBlocks,
-          messages: apiMessages,
-        }),
+        stream: true,
+        system: systemBlocks,
+        messages: apiMessages,
       });
 
       if (!res.ok) {
@@ -1011,7 +1006,6 @@ export default function AIAnalysis({ onNavChange }) {
     setSummaryBusyConv(convId);
     setSummaryNote("");
     const mode = loadModeData()?.mode || "standard";
-    const model = mode === "advanced" ? "claude-opus-4-6" : "claude-sonnet-4-6";
     const summaryPrompt = `Based on the conversation above, write a structured summary the patient can bring to their next medical appointment. Use this exact format:
 
 **Conversation Summary**
@@ -1043,16 +1037,12 @@ Keep the summary concise — it should fit on one to two printed pages.`;
       { role: "user", content: summaryPrompt },
     ];
     try {
-      const res = await fetch(`${PROXY_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          max_tokens: 1400,
-          stream: false,
-          system: [{ type: "text", text: buildSystemPrompt(mode), cache_control: { type: "ephemeral" } }],
-          messages: apiMessages,
-        }),
+      const res = await callAI({
+        surface: "chat.summary",
+        mode,
+        stream: false,
+        system: [{ type: "text", text: buildSystemPrompt(mode), cache_control: { type: "ephemeral" } }],
+        messages: apiMessages,
       });
       if (!res.ok) throw new Error("server");
       const data = await res.json();

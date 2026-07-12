@@ -6,8 +6,8 @@ import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { compressImage } from "../../lib/cards.js";
 import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
+import { callAI } from "../../lib/aiClient.js";
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
 // Shared consultation prep, keyed by appointment id and synced via Drive so the
@@ -929,15 +929,11 @@ Please provide:
   const runAnalysis = async () => {
     setLoading(true); setError(""); setAnalysis("");
     try {
-      const res = await fetch(`${PROXY_URL}/api/chat`, {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-          model:"claude-sonnet-4-6",
-          max_tokens:1024,
-          system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best guidance possible with available information.", cache_control:{ type:"ephemeral" } }],
-          messages:[{ role:"user", content:buildPrompt() }],
-        }),
+      const res = await callAI({
+        surface: "appointments.prep",
+        mode: "standard",
+        system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best guidance possible with available information.", cache_control:{ type:"ephemeral" } }],
+        messages:[{ role:"user", content:buildPrompt() }],
       });
       if (!res.ok) {
         const e = await res.json().catch(()=>({}));

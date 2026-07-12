@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
+import { callAI } from "../../lib/aiClient.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 const CANONICAL_MAP_KEY = "mi_lab_canonical";
 
 const NAV = [
@@ -802,14 +802,11 @@ One plain-language question the patient can ask — phrased as "Should we…?", 
 
 CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.`;
 
-      const res = await fetch(`${PROXY_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1800,
-          system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-          messages: [{
+      const res = await callAI({
+        surface: "labs.fullAnalysis",
+        mode: "standard",
+        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+        messages: [{
             role: "user",
             content: `Analyze the following lab results in the context of ${patientName}'s profile. Cross-reference medications and surgical history with any abnormal or borderline findings. Use the Finding/Why it matters/Urgency/Best clinician/Patient action/Suggested question structure for each relevant finding.
 
@@ -817,8 +814,7 @@ LAB RESULTS (most recent per test):
 ${labSummary || "No imported labs available yet."}
 
 Identify all abnormal or clinically relevant values. For borderline values that may matter given this patient's conditions, include them as separate findings. Be direct and clinically specific.`,
-          }],
-        }),
+        }],
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -881,15 +877,11 @@ ${medsStr}
 ALL LAB RESULTS:
 ${labsStr}`;
 
-      const res = await fetch(`${PROXY_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1024,
-          system: [{ type: "text", text: qaSystem, cache_control: { type: "ephemeral" } }],
-          messages: [{ role: "user", content: q }],
-        }),
+      const res = await callAI({
+        surface: "labs.qa",
+        mode: "standard",
+        system: [{ type: "text", text: qaSystem, cache_control: { type: "ephemeral" } }],
+        messages: [{ role: "user", content: q }],
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));

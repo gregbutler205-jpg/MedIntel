@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { loadPdfjs } from "../../lib/pdfjs.js";
-
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
+import { callAI, extractPdfVision } from "../../lib/aiClient.js";
 
 // ── Categories (base — counts computed dynamically from docs) ─────────────────
 const CATEGORIES_BASE = [
@@ -67,29 +66,14 @@ async function extractTextFromPdf(file) {
   return { text: text.trim(), numPages: pdf.numPages };
 }
 
-// ── Proxy API: extract a batch of page images via Claude Vision ───────────────
-async function apiExtractBatch(pages) {
-  const r = await fetch(`${PROXY_URL}/api/extract-pdf`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pages }),
-  });
-  if (!r.ok) throw new Error(`Extract PDF ${r.status}`);
-  return r.json(); // { text, pageCount }
-}
-
 // ── Proxy API: non-streaming chat call ────────────────────────────────────────
-async function apiChatJSON(system, user, maxTokens = 2048) {
-  const r = await fetch(`${PROXY_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: maxTokens,
-      stream: false,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
+async function apiChatJSON(system, user, surface) {
+  const r = await callAI({
+    surface,
+    mode: "extraction",
+    stream: false,
+    system,
+    messages: [{ role: "user", content: user }],
   });
   if (!r.ok) throw new Error(`Chat API ${r.status}`);
   const data = await r.json();
@@ -100,7 +84,7 @@ async function apiSummarizeDoc(rawText, docName) {
   return apiChatJSON(
     "You are a medical document summarizer. Create a concise structured summary for use as AI context when answering future health queries. Include (where present): key diagnoses, medications and their purposes, critical restrictions and precautions (dietary, activity, infection risks), surgical and procedure history, follow-up schedule, and warning signs. Use clear sections with headers. Target 400–600 words. Focus on information useful for answering future medical questions about this patient.",
     `Document: ${docName}\n\n${rawText.slice(0, 40000)}`,
-    1500
+    "documents.summarize"
   );
 }
 
@@ -113,7 +97,7 @@ Return ONLY a valid JSON array (no markdown fences, no explanation):
 
 Only include findings worth long-term tracking. Set permanent=true for diagnoses, organ damage, surgical history, and chronic conditions. Set permanent=false for current or temporary findings like active infections. If no clinically significant findings are present, return [].`,
     `Document: ${docName}\n\n${rawText.slice(0, 40000)}`,
-    2048
+    "documents.findings"
   );
   try {
     const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
@@ -405,7 +389,7 @@ export default function DocumentsTab() {
         }
 
         setExtraction({ docId, phase: "extracting", progress: `Sending pages ${start}–${end} of ${totalPages} to AI…` });
-        const { text } = await apiExtractBatch(pages);
+        const { text } = await extractPdfVision(pages);
         fullText += (fullText ? "\n\n" : "") + text;
       }
 

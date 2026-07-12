@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { callAI } from "../../lib/aiClient.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -223,7 +224,6 @@ function AIPanel({ note, onClose }) {
 
   async function generate() {
     setLoading(true); setError(""); setResult("");
-    const apiKey = localStorage.getItem("mi_ak") || "";
     const noteText = note.sections.map(s =>
       s.type === "text"
         ? `${s.header}:\n${s.body}`
@@ -231,20 +231,33 @@ function AIPanel({ note, onClose }) {
     ).join("\n\n");
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 700,
-          system: `You are a medical note assistant for ${(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "the patient"; } catch { return "the patient"; } })()} — ${(() => { try { const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]"); const a = c.filter(x => x.status === "active"); return a.length > 0 ? a.map(x => x.name).join(", ") : "a patient"; } catch { return "a patient"; } })()}. Summarize the note concisely, highlight any urgent items, and suggest 2–3 follow-up questions or actions. Use plain language. Keep your response under 250 words.`,
-          messages: [{ role: "user", content: `Note title: ${note.title}\n\n${noteText}\n\nProvide a brief pre-visit summary and action suggestions.` }]
-        })
+      // PG-08: was a direct api.anthropic.com call with a stale model string,
+      // a missing required browser-access header, and the patient's real name
+      // in the prompt. Now routes through the proxy like every other surface,
+      // with a generic condition-context line instead of the patient's name
+      // (full identity-minimization pass is P-01; this is the minimal fix
+      // A-02 itself calls for while porting this surface).
+      const conditionContext = (() => {
+        try {
+          const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]");
+          const active = c.filter(x => x.status === "active");
+          return active.length > 0 ? active.map(x => x.name).join(", ") : "no active conditions on file";
+        } catch { return "no active conditions on file"; }
+      })();
+      const res = await callAI({
+        surface: "notes.summary",
+        mode: "standard",
+        system: `You are a medical note assistant for a patient with: ${conditionContext}. Summarize the note concisely, highlight any urgent items, and suggest 2–3 follow-up questions or actions. Use plain language. Keep your response under 250 words.`,
+        messages: [{ role: "user", content: `Note title: ${note.title}\n\n${noteText}\n\nProvide a brief pre-visit summary and action suggestions.` }],
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || err?.error || `Server error ${res.status}`);
+      }
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
       setResult(data.content[0].text);
     } catch (e) {
-      setError(e.message || "Request failed. Check your API key in Settings & Backup.");
+      setError(e.message || "Request failed.");
     }
     setLoading(false);
   }

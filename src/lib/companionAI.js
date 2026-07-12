@@ -1,15 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// companionAI.js — All companion AI runs through the SAME proxy the web app uses
-// (VITE_PROXY_URL /api/chat). No client API key on the phone. Cheap model by
-// default; escalate to a stronger one only for long/complex work.
+// companionAI.js — All companion AI runs through the SAME proxy the web app uses,
+// via the shared aiClient (A-02 / PG-08). No client API key on the phone. Cheap
+// model by default; escalate to a stronger one only for long/complex work.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { profile, activeConditions, activeMeds, readings } from "./companionData.js";
+import { callAI, MODEL_MAP } from "./aiClient.js";
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
-
-export const MODEL_LITE   = "claude-haiku-4-5";   // quick on-the-go answers, short work
-export const MODEL_STRONG = "claude-sonnet-4-6";  // long visit transcripts / complex analysis
+// Re-exported from the single MODEL_MAP (aiClient.js) so there is exactly one
+// place that resolves a model string — these names stay stable for the
+// existing callers (visitCapture.js and companionAI's own functions below)
+// that pick a tier by name rather than by standard/advanced mode.
+export const MODEL_LITE   = MODEL_MAP.lite;      // quick on-the-go answers, short work
+export const MODEL_STRONG = MODEL_MAP.standard;  // long visit transcripts / complex analysis
 
 /** Record-grounded system prompt shared by AI Lite, Quick Log, pattern flags. */
 export function buildRecordSystem(extra = "") {
@@ -66,10 +69,10 @@ const toApiMsgs = (messages) => messages.map(m => ({
  * tokens arrive. Returns the full accumulated text. Reuses Tab11's proxy pattern.
  */
 export async function askInsinaStream({ system, messages, model = MODEL_LITE, max_tokens = 512, onDelta, signal }) {
-  const res = await fetch(`${PROXY_URL}/api/chat`, {
-    method: "POST", signal,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, max_tokens, stream: true, system, messages: toApiMsgs(messages) }),
+  const res = await callAI({
+    surface: "companion.chat",
+    model, maxTokens: max_tokens, stream: true, system,
+    messages: toApiMsgs(messages), signal,
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || e?.error || `Error ${res.status}`); }
   const reader = res.body.getReader();
@@ -99,10 +102,10 @@ export async function askInsinaStream({ system, messages, model = MODEL_LITE, ma
 
 /** Non-streaming single-shot. Returns the assistant text. */
 export async function askInsina({ system, messages, model = MODEL_LITE, max_tokens = 1024 }) {
-  const res = await fetch(`${PROXY_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, max_tokens, stream: false, system, messages: toApiMsgs(messages) }),
+  const res = await callAI({
+    surface: "companion.oneShot",
+    model, maxTokens: max_tokens, stream: false, system,
+    messages: toApiMsgs(messages),
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || e?.error || `Error ${res.status}`); }
   const json = await res.json();

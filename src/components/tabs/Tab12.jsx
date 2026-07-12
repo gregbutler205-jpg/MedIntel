@@ -1,37 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { getStore, setStore, mergeRecords } from "../../store.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
+import { callAI } from "../../lib/aiClient.js";
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
-
-// ── Unified API caller: proxy first, fall back to direct Anthropic on 429 ─────
-// This lets batch imports continue even when the proxy rate limit is hit.
-async function callAI(payload) {
-  let res = await fetch(`${PROXY_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (res.status === 429) {
-    // Proxy rate-limited — fall back to direct Anthropic with personal key
-    const apiKey = localStorage.getItem("mi_ak");
-    if (!apiKey) {
-      throw new Error("Rate limit exceeded. Add your personal Anthropic API key in Settings & Backup to continue, or wait an hour and retry.");
-    }
-    res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({ ...payload, stream: false }),
-    });
-  }
-  return res;
-}
+// PG-08 / A-10: the local callAI() that used to live here fell back to a
+// direct api.anthropic.com call on a 429, using the BYO key from mi_ak. That
+// path is deleted — every surface targets the proxy only now. The BYO-key
+// tier is dormant through the pilot (A-10, settled) until S-08 hardens it to
+// go through the proxy per-request rather than being called from the page.
 
 // ── PDF Lab Extractor ──────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
@@ -63,8 +39,8 @@ function repairTruncatedJsonArray(raw) {
 async function parseDocWithClaude(pdfText, docType) {
   const text = pdfText.slice(0, 14000); // single chunk — metadata extraction only
   const response = await callAI({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
+    surface: "extraction.docMeta",
+    mode: "extraction",
     stream: false,
     messages: [{
       role: "user",
@@ -131,8 +107,8 @@ async function parseLabsWithClaude(pdfText) {
   const allLabs = [];
   for (const chunk of chunks) {
     const response = await callAI({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4096,
+        surface: "extraction.labs",
+        mode: "extraction",
         stream: false,
         messages: [{
           role: "user",

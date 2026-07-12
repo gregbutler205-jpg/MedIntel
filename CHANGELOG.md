@@ -15,6 +15,49 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-02 / PG-08:** Unified AI client and model map. New `src/lib/aiClient.js`:
+  every AI surface now calls one `callAI({ surface, mode, system, messages,
+  stream, signal })`, which resolves the model from a single `MODEL_MAP`
+  (`standard` → claude-sonnet-4-6, `advanced` → claude-opus-4-6, `extraction` →
+  sonnet, `lite` → claude-haiku-4-5 — the companion's pre-existing cheap tier,
+  now centralized rather than independently declared) and a per-surface
+  `SURFACE_MAX_TOKENS` table (values promoted from what each site already
+  used — not new numbers), clamped to the proxy's 4096 ceiling. Ported all 7
+  files that made AI calls: Tab05 (Full Analysis, Lab Q&A), Tab09 (document
+  summarize/findings, Vision extraction — via a new `extractPdfVision()` on the
+  same module so both proxy routes share one place to attach auth), Tab10,
+  Tab11 (main streaming chat, conversation summary), Tab12, Tab14, and
+  `companionAI.js`. Two files weren't in the master prompt's shorthand list of
+  four but had their own AI call sites and needed the same port: **Tab14**
+  (Consultation Prep) and **companionAI.js** (the companion's own chat
+  functions) — noted as the delta between the spec's example list and what
+  "port every surface" actually required.
+  - **Fixes PG-08's headline defect:** Tab10 (Notes AI summary) called
+    `api.anthropic.com` directly with a stale model string
+    (`claude-sonnet-4-20250514`, not on the proxy's allowlist) and the
+    patient's real name in the prompt. Now routes through the proxy like every
+    other surface. The full identity-minimization pass is P-01 (next); this
+    port includes the minimal fix — a generic condition-context line instead
+    of the patient's name — since PG-08's own rationale names the identity
+    leak as one of Tab10's three defects, not a P-01-only concern.
+  - **Deletes Tab12's fallback to a direct Anthropic call on a proxy 429**
+    (using the BYO key from `mi_ak`). Per A-10 (settled): A-02 is what makes
+    the BYO-key half-implementation dormant through the pilot. Every surface
+    now targets the proxy only; nothing in the app calls `api.anthropic.com`
+    directly anymore (verified — see below).
+  - Bearer-token attachment point (`getAuthHeaders()`) is a documented stub
+    returning `{}` for now — the "one place" S-05 item 3 fills in without
+    touching every call site again, per that item's own dependency note.
+  - Each surface keeps its own response-status handling (503 cold-start copy,
+    413 payload-too-large copy, etc.) — `callAI()` returns the raw `Response`,
+    same as the `fetch()` calls it replaces, so no surface's tailored error
+    copy needed rewriting; only the model string, token ceiling, and target
+    URL were centralized, which is what had actually drifted.
+  - Verified: `npm run build` passes; a full-repo sweep confirms zero
+    remaining `api.anthropic.com` calls (only explanatory comments mention the
+    string), exactly one `PROXY_URL` declaration left in the whole `src/`
+    tree (inside `aiClient.js` itself), and all 7 ported files import the
+    shared client.
 - **A-08:** Schema versioning and migration rails. New `src/lib/migrations.js`:
   an ordered, idempotent migration list gated by `mi_schema_version`, run once
   synchronously at boot (`main.jsx`, before either the full app or companion
