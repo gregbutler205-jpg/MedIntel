@@ -26,6 +26,23 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   per IP per hour; `/api/extract-pdf` (Vision OCR, the expensive route) gets its
   own 20/hour cap. Backstop is a hard monthly spend cap in the Anthropic console
   (HUMAN). Per-pilot-user bearer tokens are Phase 1 (S-05 item 3).
+- **S-02 / PG-02:** AI-generated text is now escaped before it becomes HTML,
+  everywhere in the app. Uploaded documents can be OCR'd and quoted back by the
+  AI; without escaping, an embedded tag in that echoed content would execute in
+  the app's origin (full record, PIN hash). Added a single shared module,
+  `src/lib/renderAiText.js` (escape `&<>"'` first, then apply `**bold**` /
+  `-----` transforms), and ported every AI-text-to-HTML renderer to it — the
+  duplicated `answerToHTML`/`applyBold` in Tab05.jsx and Tab11.jsx (both the
+  print-window builders and the on-screen chat renderers), plus a third,
+  independently-drifted copy in Tab14.jsx's Consultation Prep printout that had
+  a real gap (escaping was applied only on its fallback text branch, not on
+  bullets/numbered items/headers). No other function in the codebase builds
+  HTML from AI output. Verified with a Node script: a malicious payload
+  (`<img onerror>`, `<script>`) is neutralized by the new renderer while the
+  reconstructed old renderer is shown passing it through unescaped; benign AI
+  responses render visually identical (HTML-entity-encoded apostrophes/quotes
+  display the same as the raw characters — required by the fix, not a
+  regression).
 
 ---
 
