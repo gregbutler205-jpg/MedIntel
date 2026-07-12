@@ -43,6 +43,19 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   responses render visually identical (HTML-entity-encoded apostrophes/quotes
   display the same as the raw characters — required by the fix, not a
   regression).
+- **S-04 / PG-03:** pdf.js is now bundled, not fetched from a CDN at runtime.
+  The spec named one call site (Tab12); the current code had **five**, across
+  four files — Tab09 (text extraction + the Vision-OCR page renderer), Tab11
+  (reference-doc upload), Tab12 (Import Records), and Tab14 (post-visit
+  capture) — all dynamically importing pdf.js 4.4.168 from cdnjs while
+  `pdfjs-dist@5.5` sat unused in package.json. Added `src/lib/pdfjs.js`, a
+  shared lazy loader (Vite code-splits it, so the main bundle is unchanged and
+  pdf.js still loads only when a PDF is parsed) with the worker bundled via
+  Vite's `?url` asset import. All five sites ported; every CDN URL deleted.
+  Verified: build emits `pdf-*.js` chunk + `pdf.worker.min-*.mjs` asset, zero
+  cdnjs references in the built output, and the v5 API surface used by all
+  call sites (`getDocument`, `getTextContent`, `getViewport`,
+  `render({canvasContext})`) confirmed present in the installed package.
 
 ---
 

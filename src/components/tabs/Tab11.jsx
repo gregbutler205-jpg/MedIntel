@@ -3,6 +3,7 @@ import AIModeOnboardingModal from "../AIModeOnboardingModal";
 import { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
+import { loadPdfjs } from "../../lib/pdfjs.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -428,8 +429,7 @@ End with a concise plain-language summary of the most likely explanation and whi
 // PDF text extraction
 // ─────────────────────────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
-  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+  const pdfjsLib = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let text = "";

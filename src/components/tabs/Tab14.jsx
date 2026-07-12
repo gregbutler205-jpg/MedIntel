@@ -3,6 +3,7 @@ import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, se
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
+import { loadPdfjs } from "../../lib/pdfjs.js";
 import { compressImage } from "../../lib/cards.js";
 import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
 
@@ -594,8 +595,7 @@ function fmtDocDate(iso) {
 // Lightweight text extraction for PDFs (mirrors Tab09/Tab12; no AI round-trip).
 async function extractPdfText(file) {
   try {
-    const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+    const pdfjsLib = await loadPdfjs();
     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
     let text = "";
     for (let i = 1; i <= pdf.numPages; i++) {

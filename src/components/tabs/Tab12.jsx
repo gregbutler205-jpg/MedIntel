@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getStore, setStore, mergeRecords } from "../../store.js";
+import { loadPdfjs } from "../../lib/pdfjs.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 
@@ -34,8 +35,7 @@ async function callAI(payload) {
 
 // ── PDF Lab Extractor ──────────────────────────────────────────────────────────
 async function extractTextFromPdf(file) {
-  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+  const pdfjsLib = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf  = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let text = "";

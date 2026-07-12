@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { loadPdfjs } from "../../lib/pdfjs.js";
 
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
 
@@ -54,9 +55,7 @@ function saveRefDocs(r) { localStorage.setItem("mi_ref_docs", JSON.stringify(r))
 
 // ── PDF text extraction (text-based PDFs) ─────────────────────────────────────
 async function extractTextFromPdf(file) {
-  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+  const pdfjsLib = await loadPdfjs();
   const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   let text = "";
   for (let i = 1; i <= pdf.numPages; i++) {
@@ -381,9 +380,7 @@ export default function DocumentsTab() {
     try {
       setExtraction({ docId, phase: "rendering", progress: "Loading PDF…" });
 
-      const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.mjs");
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.mjs";
+      const pdfjsLib = await loadPdfjs();
       const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
       const totalPages = pdf.numPages;
 
