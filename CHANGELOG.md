@@ -75,6 +75,14 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   exactly one enforcing tag and zero inline scripts; live checks of fonts,
   Google sign-in, Drive sync, and AI streaming ride the Phase 0 manual test
   list.
+- **S-06:** Secrets hygiene going forward. Pre-commit secret scanning
+  (gitleaks) is documented as a standing rule in CLAUDE.md; the repo-visibility
+  question (public vs private) is logged in DECISIONS.md as **OPEN-8** for
+  Greg to answer — recorded choice, not a default. Re-verified no PHI in
+  tracked files (only the public GitHub username in deploy URLs and one
+  cosmetic form placeholder, flagged for the Phase 1 de-personalization pass).
+  HUMAN actions: install gitleaks locally and enable GitHub push protection on
+  the repo.
 
 ---
 

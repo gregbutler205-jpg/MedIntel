@@ -639,3 +639,11 @@ reassurance.)
   transplant status, allergies, meds, emergency contacts). A deliberate, documented weakening of the
   P-02 encryption boundary; requires its own DEC before any build. Pending founder decision.
   (Spawned by DEC-023.)
+- **OPEN-8** (DECISION for Greg, from S-06): Repository visibility — public vs private. Context:
+  no PHI is in the repository (re-verified 2026-07-11: the only personal-data matches in tracked
+  files are the public GitHub username in deploy URLs and one cosmetic form placeholder,
+  "e.g. Sarah Butler", noted for the Phase 1 de-personalization pass), but the AI prompts and
+  clinical configuration are world-readable in a public repo, and GitHub Pages also deploys from
+  private repos on paid plans. Either outcome is fine; it must be a recorded choice, not a
+  default. Neither Claude Code nor anyone else picks this — Greg answers, then this becomes a
+  DEC entry.
