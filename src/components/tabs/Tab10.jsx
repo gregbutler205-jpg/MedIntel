@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { callAI } from "../../lib/aiClient.js";
+import { getIdentity } from "../../prompts/identity.js";
+import { buildSurfaceC } from "../../prompts/surfaceC.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -233,21 +235,21 @@ function AIPanel({ note, onClose }) {
     try {
       // PG-08: was a direct api.anthropic.com call with a stale model string,
       // a missing required browser-access header, and the patient's real name
-      // in the prompt. Now routes through the proxy like every other surface,
-      // with a generic condition-context line instead of the patient's name
-      // (full identity-minimization pass is P-01; this is the minimal fix
-      // A-02 itself calls for while porting this surface).
-      const conditionContext = (() => {
+      // in the prompt. A-02 routed it through the proxy; A-09 replaces the
+      // inline system string with the shared CSC + Surface C builder.
+      const conditionsActive = (() => {
         try {
           const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]");
           const active = c.filter(x => x.status === "active");
-          return active.length > 0 ? active.map(x => x.name).join(", ") : "no active conditions on file";
-        } catch { return "no active conditions on file"; }
+          return active.length > 0 ? active.map(x => `- ${x.name}`).join("\n") : "- No active conditions on file.";
+        } catch { return "- No active conditions on file."; }
       })();
+      const { userId, age, sex } = getIdentity();
+      const { system } = buildSurfaceC({ userId, age, sex, dataSections: `ACTIVE CONDITIONS\n${conditionsActive}` });
       const res = await callAI({
         surface: "notes.summary",
         mode: "standard",
-        system: `You are a medical note assistant for a patient with: ${conditionContext}. Summarize the note concisely, highlight any urgent items, and suggest 2–3 follow-up questions or actions. Use plain language. Keep your response under 250 words.`,
+        system,
         messages: [{ role: "user", content: `Note title: ${note.title}\n\n${noteText}\n\nProvide a brief pre-visit summary and action suggestions.` }],
       });
       if (!res.ok) {

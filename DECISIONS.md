@@ -615,6 +615,42 @@ reassurance.)
 
 ---
 
+## DEC-025: Prompts-as-code rollout (A-09) — hardcoded clinical facts removed; four surfaces built but not wired
+
+**Date:** 2026-07-12
+**Status:** Settled (shipped in code; logged per the master prompt's ground rule 2).
+
+**Decision.** Tab11, Tab05, and Tab10's inline system-prompt strings are replaced by the shared
+`src/prompts/` builders (CSC v1.1 + per-surface delta). In the process, every hardcoded
+patient-specific clinical fact standing in as a "no data yet" fallback — real diagnoses,
+medications, doctors' names, and an entire unconditional NSAID/Tacrolimus/diet/infection-risk
+reference block injected for every patient regardless of recorded diagnosis — is deleted, not
+carried forward. Tab05's two AI calls also stop sending the patient's real legal name.
+Surfaces D (document extraction), E (Vision OCR), F (companion visit summary), and H (report
+generation) are built to spec but deliberately not wired into their real candidate call sites,
+because each of those call sites has an output contract (a JSON extraction schema feeding
+record creation, or a JSON schema feeding `confirmMedChange()`'s med-change pipeline, or a
+free-text-only report with no template layer) that the spec's version doesn't match — wiring
+them is a data-model or feature redesign, not a prompt swap. Surface G (symptom preparation) has
+no consumer at all; no symptom-prep screen exists yet.
+
+**Reasoning.** CSC rule 7 (data fidelity) prohibits presenting fabricated defaults as record
+data — a fallback string reading "Tacrolimus (Prograf) 3mg BID" when no medication is actually
+on file is exactly the kind of thing rule 7 exists to prevent, regardless of whether it
+originated as founder placeholder content. CSC rule 12 (identity) prohibits sending the
+patient's legal name; the AI-facing side of Tab05 predated that rule. The condition-specific
+safety block (NSAID/Tacrolimus interactions, diet restrictions, infection risks) unconditionally
+injected on every request is what A-06's conditionModules mechanism exists to replace with
+per-patient, per-condition selection — leaving it hardcoded in the interim would mean every pilot
+user, not just a liver-transplant patient, receives founder-specific dietary and drug-interaction
+guidance. Ground rule 5 (scope discipline) governs the deferred surfaces: forcing D/E/F/H's real
+consumers onto the spec's output contract this item would silently break working extraction and
+med-confirmation pipelines outside what A-09 itself specifies.
+
+**Related:** A-09, A-02, A-03, A-06, A-01, P-01, A-05, INSINA_AI_PROMPTS §2, §3, §7, §9.
+
+---
+
 ---
 
 ## Open items (spawned by the decisions above)
@@ -647,3 +683,11 @@ reassurance.)
   private repos on paid plans. Either outcome is fine; it must be a recorded choice, not a
   default. Neither Claude Code nor anyone else picks this — Greg answers, then this becomes a
   DEC entry.
+- **OPEN-9:** Wire Surfaces D (extraction), E (Vision OCR), F (companion visit summary), and H
+  (report generation) into their real consumers once the larger changes DEC-025 named for each are
+  done: D/E need Tab09/Tab12/proxy-OCR's extraction schemas reconciled with the spec's schema
+  (data-model change across multiple tabs); F needs `visitCapture.js`'s `summarizeVisit()` JSON
+  contract reconciled with F's markdown-narrative spec, or the module split into a JSON variant;
+  H needs Tab14's Consultation Prep rebuilt around a deterministic template with annotation-only
+  AI fields, per its own spec section. Surface G (symptom prep) needs a consumer screen built
+  before it has anything to wire into. (Spawned by DEC-025.)

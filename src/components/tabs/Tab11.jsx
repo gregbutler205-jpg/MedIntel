@@ -5,6 +5,9 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI } from "../../lib/aiClient.js";
+import { getIdentity } from "../../prompts/identity.js";
+import { buildSurfaceA } from "../../prompts/surfaceA.js";
+import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -34,20 +37,26 @@ function appendAuditLog(entry) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// System prompt builder
+// Data section builder (A-09: feeds Surface A's buildSurfaceA as dataSections)
 // ─────────────────────────────────────────────────────────────────────────────
-function buildSystemPrompt(mode = "standard") {
+// SCOPE NOTE: the CSC, display rules, routing rule, and Surface A delta (role,
+// reasoning protocol, context gathering, response structure) now live in
+// src/prompts/{core.js,surfaceA.js} (A-09). This function keeps only the
+// record-data assembly: reading mi_* localStorage, formatting it into the
+// dataSections string the builder injects. A-03 (lab digest), A-06 (condition
+// modules), and A-01 (tripwire flags) will replace pieces of this data
+// assembly with their own outputs; until then this uses the same source data
+// the prior inline prompt used. The prior version's hardcoded fallback text
+// (real clinical facts standing in for empty records) and the static,
+// unconditional condition-specific safety blocks (NSAID/Tacrolimus
+// interactions, diet restrictions, infection risks) are removed here — CSC
+// rule 7 (data fidelity) prohibits presenting fabricated defaults as record
+// data, and condition-specific reference content is A-06's conditionModules
+// mechanism, not a block injected for every patient regardless of diagnosis.
+function buildDataSections() {
   const safeRead = (key, fallback) => {
     try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
   };
-
-  // Anonymous User ID — generated once, persisted locally, never the patient's real name
-  let userId = localStorage.getItem("mi_user_id");
-  if (!userId) {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars (0/O, 1/I)
-    userId = "USR-" + Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-    localStorage.setItem("mi_user_id", userId);
-  }
 
   const conditions = safeRead("mi_conditions", []);
   const surgeries  = safeRead("mi_surgeries",  []);
@@ -58,20 +67,15 @@ function buildSystemPrompt(mode = "standard") {
   // ── Conditions ─────────────────────────────────────────────────────────────
   const condStr = conditions.length > 0
     ? conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}${c.severity ? ` — ${c.severity}` : ""}${c.notes ? `: ${c.notes}` : ""}`).join("\n")
-    : `- Status post Living Donor Liver Transplant (LDLT), Oct 1, 2024 — primary ongoing diagnosis
-- Hypertension — on Amlodipine + Metoprolol
-- Diabetes Mellitus (Type 2 / PTDM — pre-existing, worsened by tacrolimus/prednisone)
-- Hyperlipidemia — on Atorvastatin
-- Immunosuppression-dependent state (lifelong, due to LDLT)
-- CMV IgG positive; EBV IgG positive
-- Tacrolimus-related nephrotoxicity risk — monitor creatinine/eGFR as secondary markers`;
+    : "- No conditions on file.";
 
   // ── Surgical history ────────────────────────────────────────────────────────
+  // TODO(A-05): this regex silently rewrites patient-entered terminology,
+  // which CSC rule 9 / spec section 9 requires be flagged, not fixed. Left
+  // unchanged here — A-05/PG-07 is the tracked item to remove it.
   const rawSurgStr = surgeries.length > 0
     ? surgeries.map(s => `- ${s.procedure}${s.date ? ` (${s.date})` : ""}${s.surgeon ? ` — ${s.surgeon}` : ""}${s.facility ? `, ${s.facility}` : ""}${s.notes ? `: ${s.notes}` : ""}`).join("\n")
-    : `- Oct 1, 2024: Living Donor Liver Transplant (LDLT), UMC Transplant Center. Surgeon: Dr. Ari Cohen. Immediate graft function. Induction: Basiliximab + methylprednisolone.
-- Oct 14, 2025: Protocol liver biopsy at 12-month mark — no acute rejection findings.
-- Right hip replacement (on file in surgical history — relevant to bone-source ALP elevations)`;
+    : "- No surgical or procedure history on file.";
 
   const surgStr = rawSurgStr
     .replace(/kidney\s+transplant/gi, "Liver Transplant (LDLT) ⚠corrected")
@@ -83,46 +87,12 @@ function buildSystemPrompt(mode = "standard") {
     ? meds.filter(m => m.status !== "inactive").map(m =>
         `- ${m.name}${m.brand ? ` (${m.brand})` : ""} ${m.dose || ""} ${m.frequency || ""}${m.category ? ` [${m.category}]` : ""}`.trim()
       ).join("\n")
-    : `Immunosuppression (must never be stopped without physician guidance):
-- Tacrolimus (Prograf) 3mg BID — target trough 5–8 ng/mL; Apr 8 level: 5.1 ng/mL (low-therapeutic)
-- Mycophenolate (CellCept) 500mg BID
-- Prednisone 5mg QD
-
-Cardiovascular / BP:
-- Amlodipine 10mg QD
-- Metoprolol 25mg BID
-- Furosemide 40mg QD
-
-Lipid / Metabolic:
-- Atorvastatin 40mg QD
-
-GI / Protective:
-- Pantoprazole 40mg QD
-
-Infection Prophylaxis:
-- Trimethoprim-sulfamethoxazole (Bactrim) DS — 3x weekly
-- Valganciclovir (Valcyte) 450mg QD
-
-Supplements:
-- Vitamin D3 2000 IU QD, Calcium Carbonate 500mg BID, Magnesium Oxide 400mg QD
-
-Other:
-- Aspirin 81mg QD`;
+    : "- No active medications on file.";
 
   // ── Care team ───────────────────────────────────────────────────────────────
-  const hepato  = careTeam.find(d => /hepat/i.test(d.role || ""));
-  const nephro  = careTeam.find(d => /nephr|transplant/i.test(d.role || ""));
-  const pcp     = careTeam.find(d => /pcp|primary|family/i.test(d.role || ""));
-
   const careStr = careTeam.length > 0
     ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.specialty ? ` (${d.specialty})` : ""}${d.facility ? ` — ${d.facility}` : ""}${d.phone ? ` · ${d.phone}` : ""}`).join("\n")
-    : `- Dr. Mariana Zapata — Hepatology Lead (liver, bile duct, hepatic function)
-- Dr. Jonathan Hand, MD — PCP, Hand Family Medicine
-- Dr. Ari Cohen, MD — Transplant Surgeon, UMC Transplant Center (historical)
-- Quest Diagnostics — Lab draws`;
-
-  const liverDoc = hepato?.name || nephro?.name || "Dr. Mariana Zapata";
-  const pcpDoc   = pcp?.name    || "Dr. Jonathan Hand";
+    : "- No care team members on file.";
 
   // ── Labs ────────────────────────────────────────────────────────────────────
   const labs = safeRead("mi_labs", []);
@@ -252,177 +222,30 @@ Other:
       ).join("\n")
     : "";
 
-  // ── Mode-specific additions ─────────────────────────────────────────────────
-  const modeInstructions = mode === "advanced"
-    ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nADVANCED MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide deeper analysis with thorough cross-referencing across all data categories\n- Identify subtle patterns and trends not immediately obvious from individual values\n- Include differential considerations and nuanced clinical context where appropriate\n- Flag any value that approaches critical thresholds, even if technically within range\n- For each concern surfaced, identify which specialist is best suited to address it and frame it as a topic for the patient to raise with that doctor — never as a clinical recommendation from you`
-    : `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSTANDARD MODE INSTRUCTIONS\n━━━━━━━━━━━━━━━━━━━━━━━━━\n- Provide clear, well-organized responses focused on the most important insights\n- Flag any lab values or findings that are critically abnormal and warrant prompt attention\n- Keep responses focused and easy to understand — prioritize what matters most\n- For each concern, name the right doctor and frame it as a topic for the patient to raise, not a recommendation from you`;
-
-  return `You are an intelligent personal health assistant for patient ${userId}. You have comprehensive knowledge of their entire medical history. Your job is to help this patient understand their health holistically — cross-referencing all of their data to surface insights, flag concerns, and prepare them for medical conversations. You are an informational tool only. You do not diagnose, you do not recommend tests or treatments, you do not add or change medications, and nothing you say should be construed as clinical advice. Your role is to explain, analyze, and help the patient have more informed conversations with their doctors.
-
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-PATIENT IDENTITY
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-- Patient ID: ${userId}
-- Primary follow-up physician: ${liverDoc}
-
-CRITICAL RULES:
-- NEVER ask about or suggest screening for a condition already listed in the diagnoses — treat all listed conditions as confirmed, existing diagnoses.
-- ALWAYS cross-reference medications and surgical history when explaining any abnormal lab value.
-- For anything related to transplant graft health, immunosuppression management, organ function, or rejection risk: direct the patient to ${liverDoc}.
-- For general health, glucose management, blood pressure, lipids: reference ${pcpDoc}.
-- ALL lab results and vitals listed below come directly from this patient's records loaded into this app. You HAVE full access to ALL of them. Never claim you cannot see data that appears in the sections below.
-- CLARIFYING QUESTIONS: Only ask clarifying questions when the answer genuinely cannot be given without them — this should be rare. When you do ask, include them inline as part of your response (never as a standalone reply with no analysis), number them, and ask at most 3 at a time.
-- CUSTOM LAB RANGES: Where a lab shows "patient's doctor range: X–Y", treat that as the primary reference range for this patient. Always mention both the standard lab range and the doctor's range when discussing that result.
-- CONDITION-LINKED FLAGS: Where a lab is annotated "[condition-linked: patient may have an individual target range]", include an action item in your analysis reminding the patient to confirm their personal target range with their care team — phrase it as something to bring up at their next visit, not a clinical concern.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-RESPONSE FORMATTING RULES (follow exactly — these control on-screen rendering)
-━━━━━━━━━━━━━━━━━━━━━━━━━
-- NO emojis of any kind anywhere in your response
-- NO markdown table pipes (|) — instead use bolded label lines: **Label:** value
-- NO ✦ symbol in response text
-- Use **bold text** for ALL section headers — each header on its own line
-- Use ----- (five dashes) on its own line as a divider between major sections
-- Use bullet points starting with "- " for unordered lists
-- Use numbered lists (1. 2. 3.) for questions to ask, steps, or ranked items
-- Bold key values inline: e.g. "Your **Tacrolimus** is **3.2 ng/mL**"
-- End most responses with a **Bottom Line** section summarizing key actions
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-DIAGNOSES & ACTIVE CONDITIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━
+  return `DIAGNOSES & ACTIVE CONDITIONS
 ${condStr}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
 SURGICAL & PROCEDURE HISTORY
-━━━━━━━━━━━━━━━━━━━━━━━━━
 ${surgStr}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
 CURRENT MEDICATIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━
 ${medsStr}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
 ALLERGIES
-━━━━━━━━━━━━━━━━━━━━━━━━━
 ${allergies.length > 0
   ? allergies.map(a => `- ${a.name}${a.reaction ? ` — Reaction: ${a.reaction}` : ""}${a.severity ? ` (${a.severity})` : ""}`).join("\n")
-  : "- No known allergies on file"}
-CRITICAL: Always cross-check any medication suggestion, new prescription, or antibiotic recommendation against this allergy list before including it in a response.
+  : "- No known allergies on file."}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
 CARE TEAM
-━━━━━━━━━━━━━━━━━━━━━━━━━
 ${careStr}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
-ALL LAB RESULTS (complete history from patient records)
-━━━━━━━━━━━━━━━━━━━━━━━━━
+LAB RESULTS (full history — replaced by the 12-month digest under A-03)
 ${labStr}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
 VITALS HISTORY
-━━━━━━━━━━━━━━━━━━━━━━━━━
 ${vitalsStr}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━
-MEDICATIONS TO AVOID — CRITICAL LIST
-━━━━━━━━━━━━━━━━━━━━━━━━━
-NSAIDs (ABSOLUTELY AVOID):
-- Ibuprofen, Naproxen, Ketorolac, Indomethacin, Celecoxib, Aspirin >81mg
-- Reason: nephrotoxic in transplant patients — risk of acute kidney injury; also increases hepatotoxicity risk when combined with immunosuppressants
-- Safe pain alternative: Acetaminophen (Tylenol) ≤2g/day
-
-Antibiotics / antifungals that interact with Tacrolimus (CYP3A4/P-gp):
-- Clarithromycin, Erythromycin — STRONG inhibitors, spike Tacrolimus dangerously
-- Fluconazole, Voriconazole, Itraconazole — major CYP3A4 inhibitors
-- Rifampin — strong inducer, drops Tacrolimus; rejection risk
-- Always alert prescribers he is on Tacrolimus before any new antibiotic
-
-Statins contraindicated with Tacrolimus:
-- Simvastatin, Lovastatin — avoid; myopathy/rhabdomyolysis risk with CNIs
-- Atorvastatin ≤40mg acceptable; pravastatin also safe
-
-Herbal supplements (AVOID):
-- St. John's Wort — drops Tacrolimus 50%+; acute rejection risk
-- Echinacea, Cat's Claw, Astragalus — immune stimulants, counteract immunosuppression
-- Licorice root — raises BP, interacts with prednisone
-
-OTC cautions:
-- Potassium supplements or salt substitutes — hyperkalemia risk (Lisinopril + CKD)
-- Pseudoephedrine / decongestants — raises BP
-- Antacids (Mg/Al) — separate from Tacrolimus by ≥2 hours
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-FOODS & DIETARY RESTRICTIONS
-━━━━━━━━━━━━━━━━━━━━━━━━━
-AVOID completely:
-- Grapefruit, pomelo, Seville oranges — CYP3A4 inhibitor; unpredictably raises Tacrolimus
-- Raw/undercooked meat, fish, shellfish, eggs — infection risk
-- Unpasteurized dairy, soft cheeses — Listeria risk
-- Raw sprouts, deli meats (unless steaming hot), unpasteurized juices
-
-Limit / monitor:
-- High-potassium foods (bananas, avocado, spinach, potatoes) — hyperkalemia risk
-- High-phosphorus foods (dairy, nuts, cola) — CKD management
-- Sodium — target <2g/day for hypertension
-- High-sugar foods — Diabetes Mellitus management; tacrolimus and prednisone worsen glucose control
-- Alcohol — hepatotoxic, interacts with immunosuppressants
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-INFECTION & IMMUNOSUPPRESSION RISKS
-━━━━━━━━━━━━━━━━━━━━━━━━━
-- Avoid live vaccines (MMR, varicella, live flu, yellow fever)
-- Safe: inactivated flu, COVID, pneumococcal, Tdap, Shingrix (recombinant)
-- CMV: D-/R+ profile — monitor CMV PCR; Valganciclovir prophylaxis ongoing
-- BK virus: monitor if creatinine rises unexpectedly
-- Fever >38°C (100.4°F): same-day contact with transplant team
-- Annual dermatology screening — elevated skin cancer risk on long-term immunosuppression
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-ASSISTANT GUIDELINES
-━━━━━━━━━━━━━━━━━━━━━━━━━
-- Be clear, direct, medically accurate, and use plain language
-- Flag anything urgent prominently
-- Always name the specific doctor best suited to address each concern
-- NEVER diagnose, recommend tests or treatments, suggest medication changes, or give clinical advice of any kind. You inform and analyze — all clinical decisions belong to the patient's doctors.
-- Frame any mention of tests, treatments, or next steps as: "Your doctor may consider..." or "Things to discuss with your doctor include..." or "Questions worth raising with [doctor name]:" — never as a direct recommendation from you.
-- Cross-check any medication question against both the current med list AND the avoid list
-- APPOINTMENT PREP: When preparing the patient for any upcoming medical appointment, always include as a final question to ask the doctor: "What reference materials, handbooks, or patient guides do you recommend for managing my condition long-term?"
-- Treat this as a comprehensive clinical intelligence tool, not a general chatbot
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
-CLINICAL REASONING PROTOCOL — apply this to every question
-━━━━━━━━━━━━━━━━━━━━━━━━━
-This is not a data lookup tool. Every response — whether the question is about a lab value, a symptom, a medication, a pattern in vitals, appointment preparation, or a general health concern — requires active clinical reasoning that connects the patient's data across all categories. Follow this sequence:
-
-STEP 1 — ANCHOR THE FINDING
-Identify exactly what is being analyzed: the specific lab value, symptom, vital sign, or concern. Note any trend (rising, falling, fluctuating) and cite the relevant dates and values from the patient's record.
-
-STEP 2 — SCAN ALL PATIENT DATA FOR CONNECTIONS (do this before drawing on general knowledge)
-Proactively search every data category below for anything that could causally or temporally explain the anchor finding. Do not wait for the patient to make these connections — surfacing them unprompted is the primary purpose of this tool.
-- SURGICAL & PROCEDURE HISTORY: Was any procedure performed in the preceding 12 months? Calculate the elapsed time between the procedure date and the lab/symptom date. Any procedure — orthopedic, abdominal, dermatologic, cardiac, or other — can have downstream lab and physiological effects. Cite by name, date, and weeks elapsed.
-- MEDICATIONS: Are any current medications known to cause or contribute to this finding? Were any medications added, changed, or stopped around the relevant timeframe? Check both the active medication list and the avoid/interaction list.
-- ACTIVE CONDITIONS: Which diagnosed conditions are known causes or contributors to this finding? Cross-reference even conditions that seem unrelated at first glance.
-- OTHER LABS & VITALS: Are there correlated changes in other lab values or vital signs around the same dates that support a specific explanation or narrow the differential?
-- CLINICAL FINDINGS & UPLOADED DOCUMENTS: Do any extracted findings or uploaded records contain relevant context?
-
-STEP 3 — EXPLAIN THE MECHANISM
-For every connection identified in Step 2, briefly explain WHY it produces the finding. State the biological mechanism in plain language (e.g., "bone-building cells release ALP during healing after joint replacement"). A response that names a connection without explaining the mechanism is incomplete.
-
-STEP 4 — APPLY GENERAL MEDICAL KNOWLEDGE
-After exhausting patient-specific connections, draw on general medical knowledge to identify any remaining recognized causes not already addressed by the patient's data. Flag which general causes are made unlikely by the patient's specific data and which remain possible.
-
-STEP 5 — QUESTIONS AND TOPICS FOR THE DOCTOR
-Do not recommend tests, treatments, or clinical actions. Instead, identify what a doctor might consider given this picture and frame it as topics for the patient to raise. Use language such as:
-- "Your doctor may want to look at..."
-- "Things worth discussing with [doctor name] include..."
-- "Questions to bring to your next appointment:"
-If the situation appears urgent, say clearly: "This is worth contacting [doctor name] about promptly" — but do not instruct the patient to take any specific clinical action yourself.
-
-STEP 6 — BOTTOM LINE
-End with a concise plain-language summary of the most likely explanation and which doctor is best suited to address it. Close with a statement such as: "As always, bring these findings to your doctor before drawing any conclusions or making any changes" — or a natural equivalent. This closing reminder is not optional.${modeInstructions}${refDocsSection}${findingsSection}`;
+${TRIPWIRE_UNAVAILABLE}${refDocsSection}${findingsSection}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -847,7 +670,8 @@ export default function AIAnalysis({ onNavChange }) {
     setMessages(prev => [...prev, { role: "assistant", text: "", streaming: true, mode, conv }]);
 
     // Build system prompt with prompt caching blocks
-    const systemPromptText = buildSystemPrompt(mode);
+    const { userId, age, sex } = getIdentity();
+    const { system: systemPromptText } = buildSurfaceA({ userId, age, sex, dataSections: buildDataSections() });
     const systemBlocks = [
       {
         type: "text",
@@ -1041,7 +865,7 @@ Keep the summary concise — it should fit on one to two printed pages.`;
         surface: "chat.summary",
         mode,
         stream: false,
-        system: [{ type: "text", text: buildSystemPrompt(mode), cache_control: { type: "ephemeral" } }],
+        system: [{ type: "text", text: buildSurfaceA({ ...getIdentity(), dataSections: buildDataSections() }).system, cache_control: { type: "ephemeral" } }],
         messages: apiMessages,
       });
       if (!res.ok) throw new Error("server");

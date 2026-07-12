@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { callAI } from "../../lib/aiClient.js";
+import { getIdentity } from "../../prompts/identity.js";
+import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
+import { TRIPWIRE_UNAVAILABLE } from "../../prompts/core.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -729,17 +732,9 @@ export default function App({ onNavChange }) {
         ? meds.filter(m => m.status !== "inactive").map(m => `- ${m.name}${m.dose ? ` ${m.dose}` : ""}${m.frequency ? `, ${m.frequency}` : ""}${m.category ? ` [${m.category}]` : ""}`).join("\n")
         : "None recorded";
 
-      // Build care team string, highlighting liver/hepatology contact
       const careStr = careTeam.length > 0
         ? careTeam.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.facility ? ` — ${d.facility}` : ""}`).join("\n")
-        : "- Dr. Mariana Zapata, Hepatology Lead\n- Dr. Jonathan Hand, PCP";
-
-      // Find hepatology lead for specific reference in prompt
-      const hepatoDoc = careTeam.find(d => /hepat/i.test(d.role) || /hepat/i.test(d.name)) || { name: "Dr. Mariana Zapata" };
-      const liverDoc = hepatoDoc.name;
-
-      // Patient name from profile
-      const patientName = (() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "the patient"; } catch { return "the patient"; } })();
+        : "None recorded";
 
       // Build lab summary from most recent imported results (deduplicated by name — latest per test)
       const dedupForAI = {};
@@ -756,51 +751,25 @@ export default function App({ onNavChange }) {
         return `${l.name}: ${l.value} ${l.unit}${rangeStr}${oor}${l.category ? ` [${l.category}]` : ""}${l.date ? ` on ${l.date}` : ""}${l.facility ? ` at ${l.facility}` : ""}`;
       }).join("\n");
 
-      const systemPrompt = `You are an intelligent health assistant analyzing lab results for ${patientName}. Cross-reference their profile when explaining findings. Never ask about conditions already listed — treat them as known facts.
-
-PATIENT: ${patientName}
-
-ACTIVE CONDITIONS:
+      const dataSections = `ACTIVE CONDITIONS
 ${condStr}
 
-SURGICAL HISTORY:
+SURGICAL HISTORY
 ${surgStr}
 
-ACTIVE MEDICATIONS:
+ACTIVE MEDICATIONS
 ${medsStr}
 
-CARE TEAM:
+CARE TEAM
 ${careStr}
-Note: For liver/hepatic findings, reference ${liverDoc}.
 
-CLINICAL COMMUNICATION RULES:
-- For non-emergency findings, do not instruct that a test, medication change, or treatment "should" occur. Phrase these as care-team discussion points unless the action is limited to contacting the appropriate clinician.
-- Do not instruct the patient to order tests, adjust medication, stop medication, start medication, schedule procedures, or make treatment decisions independently.
-- Only patient-safe actions: Discuss with care team · Ask whether… · Message/call the appropriate clinician · Contact the clinician's office today · Seek emergency care if symptoms or danger signs are present.
+LAB RESULTS (most recent per test — replaced by the 12-month digest under A-03)
+${labSummary || "No imported labs available yet."}
 
-RESPONSE FORMAT: No emojis. No pipe tables. Bold section headers on their own line. Use ----- as section dividers. Bullet points for lists.
+${TRIPWIRE_UNAVAILABLE}`;
 
-For each abnormal or clinically relevant finding, use this structure:
-
-**Finding:**
-State the value, date, reference range, and whether it is high/low/trending.
-
-**Why it matters:**
-Explain the clinical context using the patient's history, but do not diagnose.
-
-**Urgency:**
-Classify as one of: Routine (discuss at next appropriate appointment) · Soon (message or raise with the appropriate clinician in the near future) · Today (contact the appropriate clinician's office today) · Emergency (seek emergency care or contact emergency services, especially if symptoms are present).
-
-**Best clinician to discuss with:**
-Name the most relevant care-team member if available.
-
-**Patient action:**
-One of the patient-safe actions listed above.
-
-**Suggested question:**
-One plain-language question the patient can ask — phrased as "Should we…?", "Do you want me to…?", "Is this something you want to monitor?", or "Does this change anything about my current plan?"
-
-CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely cannot be given without it. This should be rare. In almost all cases, provide the best analysis possible with the information already available.`;
+      const { userId, age, sex } = getIdentity();
+      const { system: systemPrompt } = buildSurfaceB1({ userId, age, sex, dataSections });
 
       const res = await callAI({
         surface: "labs.fullAnalysis",
@@ -808,12 +777,7 @@ CLARIFYING QUESTIONS: Only ask a clarifying question if the answer genuinely can
         system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
         messages: [{
             role: "user",
-            content: `Analyze the following lab results in the context of ${patientName}'s profile. Cross-reference medications and surgical history with any abnormal or borderline findings. Use the Finding/Why it matters/Urgency/Best clinician/Patient action/Suggested question structure for each relevant finding.
-
-LAB RESULTS (most recent per test):
-${labSummary || "No imported labs available yet."}
-
-Identify all abnormal or clinically relevant values. For borderline values that may matter given this patient's conditions, include them as separate findings. Be direct and clinically specific.`,
+            content: `Review the lab results below. Identify all abnormal or clinically relevant values, and note borderline values that may matter given the recorded conditions and medications. Be direct and clinically specific.`,
         }],
       });
       if (!res.ok) {
@@ -850,7 +814,6 @@ Identify all abnormal or clinically relevant values. For borderline values that 
       const safeRead = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
       const conditions = safeRead("mi_conditions");
       const meds = safeRead("mi_meds_full");
-      const qaPatientName = (() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || "the patient"; } catch { return "the patient"; } })();
       const condStr = conditions.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}`).join("\n") || "None recorded";
       const medsStr = meds.filter(m => m.status !== "inactive").map(m => `- ${m.name} ${m.dose || ""} ${m.frequency || ""}`.trim()).join("\n") || "None recorded";
       const byDate = {};
@@ -866,16 +829,20 @@ Identify all abnormal or clinically relevant values. For borderline values that 
           return `- ${l.name}: ${l.value}${l.unit ? " " + l.unit : ""}${rangeStr}${oor}`;
         }).join("\n")
       ).join("\n\n");
-      const qaSystem = `You are a personal health assistant for ${qaPatientName}. Answer questions about their lab results using the data provided. Be concise and clinically specific. Never ask about conditions already listed. No emojis. Bold section headers on their own line. Use ----- as dividers. Bullet points for lists. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best answer possible with available information.
 
-CONDITIONS:
+      const qaDataSections = `CONDITIONS
 ${condStr}
 
-MEDICATIONS:
+MEDICATIONS
 ${medsStr}
 
-ALL LAB RESULTS:
-${labsStr}`;
+SELECTED LAB RESULTS
+${labsStr}
+
+${TRIPWIRE_UNAVAILABLE}`;
+
+      const { userId: qaUserId, age: qaAge, sex: qaSex } = getIdentity();
+      const { system: qaSystem } = buildSurfaceB2({ userId: qaUserId, age: qaAge, sex: qaSex, dataSections: qaDataSections });
 
       const res = await callAI({
         surface: "labs.qa",

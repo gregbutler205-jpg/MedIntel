@@ -15,6 +15,61 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-09 / PG-06:** Prompts as code. New `src/prompts/` module: `core.js`
+  holds the Clinical Safety Core (CSC v1.1, `CSC_VERSION` exported, the 14
+  HARD RULES copied verbatim from `INSINA_AI_PROMPTS.md` §3), the shared
+  FORMATTING and ROUTING blocks, and `assembleSystem()` which every builder
+  composes through. `identity.js` is the minimal identity helper the
+  builders need now (`getUserId`/`getAge`/`getSex`/`getIdentity`) — a stable
+  pseudonymous ID plus computed age, never DOB; the full identity-audit pass
+  against §2's complete allowlist is P-01, next. One builder module per
+  Surface A–H (`surfaceA.js`.. `surfaceH.js`), each exporting a
+  `PROMPT_VERSION` and a `build*(payload) => { system, promptVersion }`
+  matching its section-7 spec (delta text, injection variables, CSC +
+  optional display/routing blocks).
+  - New `core.js` export `TRIPWIRE_UNAVAILABLE`: a standard envelope-status
+    note every dataSections builder prepends until A-01 (the deterministic
+    tripwire engine) exists. Without it, CSC rule 4 has nothing telling the
+    model whether an unflagged value means "checked, no flag" or "never
+    checked" — silence would let the model guess, which rule 4 forbids.
+  - **Wired into consumers:** Tab11 (Surface A, both the streaming-chat and
+    conversation-summary calls), Tab05 (Surface B1 Full Analysis, B2 Lab
+    Q&A), Tab10 (Surface C Note summary). Each tab's inline
+    `buildSystemPrompt`/system-string code is replaced by a lean
+    `buildDataSections()`-style helper (record-data assembly only) feeding
+    the shared builder. This deletes every hardcoded patient-specific
+    clinical fact that stood in as a "no data yet" fallback (real diagnoses,
+    medications, doctors' names, an entire unconditional NSAID/Tacrolimus/diet
+    /infection-risk reference block) — CSC rule 7 (data fidelity) prohibits
+    presenting fabricated defaults as record data, and condition-specific
+    reference content is A-06's conditionModules mechanism, not a block
+    injected for every patient regardless of diagnosis. Tab05's Full Analysis
+    and Lab Q&A also stop sending the patient's real name (`mi_profile_personal
+    .name`) — CSC rule 12 — using the pseudonymous `{userId}` instead, same as
+    Tab10's A-02-era fix and Tab11's pre-existing pattern.
+  - **Deviations reported, not silently taken:** Surface D (document
+    extraction) and Surface E (Vision OCR) are built exactly to spec but not
+    wired into Tab09/Tab12's extraction calls or the proxy's OCR prompt —
+    those call sites' existing output schemas feed Documents/Labs/Findings
+    record creation directly, and migrating them is a data-model change
+    across multiple tabs, larger than "prompts as code." Surface H (report
+    generation) is built to spec's deterministic-template-plus-annotation
+    architecture, but Tab14's Consultation Prep currently generates the whole
+    report as AI free text with no template layer to annotate — same
+    reasoning. Surface F (companion visit summary) has a real candidate
+    consumer, `visitCapture.js`'s `summarizeVisit()`, but it returns
+    structured JSON that `confirmMedChange()` and the action-item UI parse —
+    a different output contract than F's markdown-narrative spec. Surface G
+    (symptom preparation) has no consumer at all yet; no symptom-prep screen
+    exists in the companion app. All four modules exist, are correct to
+    spec, and are ready for their consumers once those larger changes land.
+    The kidney-to-liver rewrite regex in Tab11's surgical-history formatting
+    is carried over unchanged into `buildDataSections()` — A-05/PG-07 is the
+    tracked item to remove it, not this one.
+  - Verified: `npm run build` passes. A standalone Node harness (localStorage
+    polyfill, no app runtime) exercised all 9 builders plus `getIdentity()`'s
+    stability across repeated calls and its `P-XXXXXXXXXXXXXXXX` ID format —
+    11/11 checks passed.
 - **S-05 item 3 / PG-04:** Pilot bearer tokens. The client now always attaches
   `Authorization: Bearer <token>` (via `aiClient.js`'s `getAuthHeaders()`, wired
   up now that A-02 gives it one place to do so) whenever a pilot token is
