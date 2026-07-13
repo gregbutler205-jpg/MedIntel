@@ -15,6 +15,15 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-10:** Settled decision recorded, no implementation this item. Verified
+  all three requirements already satisfied by earlier work this phase: the
+  DEC entry (`DEC-016`: BYO key stays, hardened at S-08, dormant through the
+  pilot — A-02 already removed the direct-to-Anthropic calls) was already
+  logged; the parked proxy-forwarded-vs-direct routing sub-decision was
+  already noted in `FEATURE_INTAKE.md` as `CL-033`; and Tab13's API-key
+  modal is confirmed genuinely unreachable — `setModal("apikey")` is never
+  called anywhere in the codebase, so the modal renders conditionally on a
+  state value nothing ever sets. No code change needed.
 - **P-02 / PG-10:** Passphrase-derived encryption at rest. The passphrase
   IS the encryption key now, not a UI gate — in a non-custodial, server-less
   architecture a password that only unlocks a screen protects nothing, since
