@@ -15,6 +15,50 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **P-06 / PG-11 and P-05:** Legal drafts. New `TERMS_OF_SERVICE.md` and
+  `PRIVACY_POLICY.md` at repo root — plain-language, both explicitly marked
+  DRAFT pending attorney review, describing the non-custodial architecture
+  accurately (including P-03's proxy-logging scope) rather than
+  aspirationally. New `INCIDENT_PLAYBOOK.md` (P-05): breach scenarios given
+  the actual architecture, immediate response steps, and the FTC Health
+  Breach Notification Rule's general notification framework (exact
+  triggers/deadlines flagged for counsel confirmation at the time of any
+  real incident, since the rule has been amended before).
+  - **Found and fixed a real "zero-log" overstatement (P-03) in three
+    places** the audit was specifically looking for: `AIModeOnboardingModal.jsx`
+    and `PrintableConsent.jsx` (both the printable and inline consent text)
+    called Insina's proxy "zero-logging" without qualification. Corrected to
+    "does not store or log message content," with the caveat that Render's
+    hosting infrastructure still retains standard HTTP access metadata
+    regardless of the app's own code — `proxy/DEPLOY.md` gets the same
+    correction.
+  - **Found and fixed a genuinely self-contradictory line** in Tab13's FAQ:
+    "Is my data private?" claimed data "never leaves your device" in the
+    same sentence that acknowledged AI requests are routed through a proxy
+    — the exact pattern spec section P-06 names for removal. Rewritten to
+    match the approved UI-5 wording. A parallel "data stays local" label in
+    Tab11's AI-chat footer had the same problem and is fixed the same way.
+  - **New "Before You Start" section in `AIModeOnboardingModal.jsx`**,
+    required for either AI mode (not just Advanced — Standard Mode's own
+    first use is a first AI use too): the UI-5 approved wording verbatim,
+    an expandable "What information is sent?" explanation, an explicit
+    "pseudonymous is not anonymous" statement, and a pre-commercial /
+    not-a-medical-device acknowledgment checkbox that now gates the confirm
+    button regardless of which mode is chosen.
+  - **New "Legal" section in Settings** (Tab13) with a "View" button
+    surfacing condensed Terms/Privacy content in-app, clearly marked DRAFT
+    with a pointer to the full documents in the repository — the "terms/
+    privacy page" the spec's own "Where" names.
+  - Visit-capture's existing recording-consent screen (Mississippi/Louisiana
+    two-party-consent awareness, "always ask first") is unchanged and keeps
+    its own separate external-validation requirement before that feature
+    ships to any pilot user beyond Greg — confirmed present, not touched.
+  - Verified: `npm run build` passes. Live-verified in the browser: the new
+    onboarding section renders with the correct copy, the "What information
+    is sent?" toggle expands correctly, the confirm button is correctly
+    gated until the acknowledgment is checked (for Standard Mode as well as
+    Advanced), and the new Settings → Legal modal opens and displays the
+    intended content.
 - **A-10:** Settled decision recorded, no implementation this item. Verified
   all three requirements already satisfied by earlier work this phase: the
   DEC entry (`DEC-016`: BYO key stays, hardened at S-08, dormant through the

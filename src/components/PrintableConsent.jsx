@@ -126,10 +126,14 @@ export function printConsent(consentData = {}) {
 
   <h2>Your Data and Privacy</h2>
   <p>
-    Your health data is processed to generate AI responses. In Advanced Mode, your data is sent
-    to the Insina proxy server and then to the Anthropic API for analysis. Insina does not store
-    your health data on its servers. The proxy server is zero-logging — no request content is
-    retained after the response is delivered.
+    Your health record is stored on your device. When you use AI, information needed for your
+    request is sent pseudonymously and securely through Insina to Anthropic to generate the
+    response. Insina's proxy does not store or log message content — no request content is
+    retained after the response is delivered. The hosting infrastructure that runs the proxy
+    (Render) retains standard HTTP access metadata (IP addresses, timestamps, request paths) as
+    part of normal server operation, independent of anything Insina's own code does. Pseudonymous
+    is not the same as anonymous: your data is identified only by a random ID, never your name,
+    but it is still your data.
   </p>
   <ul>
     <li>Your data is never sold or shared with third parties.</li>
@@ -214,8 +218,9 @@ export default function ConsentText({ style = {} }) {
 
       <div style={h2}>Your Data</div>
       <ul style={{ paddingLeft: 16, marginBottom: 10 }}>
-        <li style={li}>Your data is sent to Anthropic's API via Insina's zero-logging proxy.</li>
-        <li style={li}>No health data is stored on Insina servers after your response is delivered.</li>
+        <li style={li}>Your health record is stored on your device. Information needed for your request is sent pseudonymously and securely through Insina to Anthropic to generate the response.</li>
+        <li style={li}>Insina's proxy does not store or log message content, though the hosting infrastructure retains standard HTTP access metadata (IPs, timestamps, paths) as part of normal operation.</li>
+        <li style={li}>Pseudonymous is not the same as anonymous — your data is identified by a random ID, never your name, but it is still your data.</li>
         <li style={li}>You can return to Standard Mode at any time in Settings &amp; Backup.</li>
       </ul>
 

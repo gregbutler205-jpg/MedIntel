@@ -1259,7 +1259,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             </div>
             <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between" }}>
               <span>Shift+Enter for new line · Enter to send</span>
-              <span>{isAdvanced ? "Advanced Mode · Claude Opus" : "Standard Mode · Claude Sonnet"} · data stays local</span>
+              <span>{isAdvanced ? "Advanced Mode · Claude Opus" : "Standard Mode · Claude Sonnet"} · sent pseudonymously per message</span>
             </div>
           </div>
         </div>

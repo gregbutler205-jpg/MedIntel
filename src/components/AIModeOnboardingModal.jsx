@@ -12,8 +12,14 @@ export default function AIModeOnboardingModal({ onConfirm }) {
   const [selected, setSelected]       = useState("standard"); // "standard" | "advanced"
   const [consentChecked, setConsent]  = useState(false);
   const [showConsent, setShowConsent] = useState(false);
+  // P-06 / PG-11: AI-limitations + pre-commercial acknowledgment, required for
+  // EITHER mode — this is separate from, and in addition to, Advanced Mode's
+  // own deeper informed-consent section below. First AI use of any kind needs
+  // this; Advanced Mode needs this AND the Advanced-specific consent.
+  const [foundationChecked, setFoundationChecked] = useState(false);
+  const [showWhatIsSent, setShowWhatIsSent]       = useState(false);
 
-  const canConfirm = selected === "standard" || (selected === "advanced" && consentChecked);
+  const canConfirm = foundationChecked && (selected === "standard" || (selected === "advanced" && consentChecked));
 
   const handleConfirm = () => {
     if (!canConfirm) return;
@@ -23,6 +29,8 @@ export default function AIModeOnboardingModal({ onConfirm }) {
       consentVersion: selected === "advanced" ? CONSENT_VERSION : null,
       consentDate: selected === "advanced" ? now : null,
       activatedDate: now,
+      aiLimitationsAckVersion: CONSENT_VERSION,
+      aiLimitationsAckDate: now,
     };
     onConfirm(modeData);
   };
@@ -71,6 +79,69 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           </div>
         </div>
 
+        {/* Before You Start — P-06 / PG-11: AI-limitations + pre-commercial ack, required regardless of mode */}
+        <div style={{
+          background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 10,
+          padding: "16px 18px", marginBottom: 20,
+        }}>
+          <div style={{
+            fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase",
+            color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 10,
+          }}>Before You Start</div>
+
+          <p style={{ fontSize: 12, color: "#c4d8ee", lineHeight: 1.65, marginBottom: 10 }}>
+            Your health record is stored on your device. When you use AI, information needed
+            for your request is sent pseudonymously and securely through Insina to Anthropic
+            to generate the response. <strong>Pseudonymous is not the same as anonymous</strong> —
+            your data is identified by a random ID, never your name, but it is still your data.
+          </p>
+
+          <p style={{ fontSize: 12, color: "#c4d8ee", lineHeight: 1.65, marginBottom: 10 }}>
+            Insina Health is an informational tool. It does not diagnose, treat, or direct
+            medical care — it helps you understand your own record and prepare questions for
+            your care team. Always verify anything the AI says with your care team, and in an
+            emergency, call 911 rather than using this app.
+          </p>
+
+          <button
+            onClick={() => setShowWhatIsSent(p => !p)}
+            style={{
+              background: "none", border: "none", color: "#4f8ef7", fontSize: 11,
+              fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 10,
+              display: "flex", alignItems: "center", gap: 5,
+            }}
+          >
+            {showWhatIsSent ? "▾" : "▸"} What information is sent?
+          </button>
+          {showWhatIsSent && (
+            <div style={{
+              fontSize: 11, color: "#a8c4dc", lineHeight: 1.7, marginBottom: 12,
+              background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "12px 14px",
+            }}>
+              Only the record fields your specific question needs — for example, relevant lab
+              values, active conditions, or current medications — are sent, under your
+              pseudonymous ID. Your legal name, date of birth, address, phone number, email,
+              and insurance or ID numbers are never sent; the app is built so those fields are
+              never read into an AI request in the first place, not filtered out afterward.
+              See <code style={{ fontFamily: "'DM Mono', monospace", fontSize: 10.5, color: "#7eb8d8" }}>PRIVACY_POLICY.md</code> for the complete picture.
+            </div>
+          )}
+
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={foundationChecked}
+              onChange={e => setFoundationChecked(e.target.checked)}
+              style={{ marginTop: 2, width: 14, height: 14, accentColor: "#4f8ef7", flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.6 }}>
+              I understand Insina Health is pre-commercial pilot software, is not a medical
+              device, and does not diagnose, treat, or direct medical care. I understand how my
+              data is used as described above.
+            </span>
+          </label>
+        </div>
+
         {/* Mode Cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
 
@@ -111,7 +182,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
             <div style={{ fontSize: 12, color: "#7eb8d8", lineHeight: 1.65, paddingLeft: 26 }}>
               Uses <strong style={{ color: "#c4d8ee" }}>Claude Sonnet</strong> for clear, well-reasoned health analysis.
               Flags critical lab values automatically. Ideal for day-to-day use.
-              No additional consent required.
+              No additional consent beyond the acknowledgment above.
             </div>
           </button>
 
@@ -152,7 +223,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
             <div style={{ fontSize: 12, color: "#7eb8d8", lineHeight: 1.65, paddingLeft: 26 }}>
               Uses <strong style={{ color: "#c4d8ee" }}>Claude Opus</strong> for deeper, more thorough analysis
               with richer cross-referencing of your health data. Requires informed consent.
-              Your data is processed via Insina's zero-logging proxy.
+              Your data is sent pseudonymously through Insina's proxy, which does not store or log message content.
             </div>
           </button>
         </div>
@@ -253,11 +324,13 @@ export default function AIModeOnboardingModal({ onConfirm }) {
             transition: "all .15s",
           }}
         >
-          {selected === "standard"
-            ? "Start with Standard Mode"
-            : consentChecked
-              ? "Enable Advanced Mode"
-              : "Check consent box above to continue"}
+          {!foundationChecked
+            ? "Check the acknowledgment above to continue"
+            : selected === "standard"
+              ? "Start with Standard Mode"
+              : consentChecked
+                ? "Enable Advanced Mode"
+                : "Check consent box above to continue"}
         </button>
 
         <div style={{

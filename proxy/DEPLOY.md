@@ -1,9 +1,12 @@
 # Insina Proxy — Render Deployment
 
 ## What This Is
-A zero-logging Node.js/Express server that proxies AI requests from the Insina web app
-to the Anthropic API. It handles authentication server-side so the Anthropic API key
-is never exposed in the browser.
+A Node.js/Express server that proxies AI requests from the Insina web app to the
+Anthropic API. It handles authentication server-side so the Anthropic API key is
+never exposed in the browser. The server code does not store or log request bodies
+(P-03): Render's hosting infrastructure still retains standard HTTP access metadata
+(IPs, timestamps, request paths) as part of normal operation, independent of anything
+this code does — "zero-logging" overstates that. See PRIVACY_POLICY.md.
 
 ---
 
@@ -153,7 +156,9 @@ is no separate revocation list.
 - CORS is restricted to the GitHub Pages origin (`https://gregbutler205-jpg.github.io`)
   and localhost for dev. If your GitHub username differs, update `ALLOWED_ORIGINS`
   in `server.js` to match `https://<your-username>.github.io`.
-- Zero-logging: request bodies (which contain health data) are never logged.
+- The server code never logs request bodies (which contain health data). Render's
+  own infrastructure still retains standard HTTP access metadata (IPs, timestamps,
+  paths) regardless — see the P-03 note above and PRIVACY_POLICY.md.
 - The Anthropic API key lives only in Render's environment — never in the browser
   or in the repo.
 - Render free tier spins down after 15 minutes of inactivity. The first request

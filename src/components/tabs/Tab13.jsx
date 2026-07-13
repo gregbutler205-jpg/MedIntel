@@ -139,7 +139,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   const [autoLockMin, setAutoLockMin] = useState(() => getAutoLockMinutes());
   const [backups, setBackups]     = useState(() => { try { return JSON.parse(localStorage.getItem("mi_backup_history") || "[]"); } catch { return []; } });
   const [toast, setToast]         = useState("");
-  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "pilot_token" | "advanced_consent" | "changepin"
+  const [modal, setModal]         = useState(null); // "clear" | "reset" | "restore" | "apikey" | "pilot_token" | "advanced_consent" | "changepin" | "legal"
   const [pinForm, setPinForm]     = useState({ current: "", next: "", confirm: "" });
   const [pinError, setPinError]   = useState("");
   const [pinSuccess, setPinSuccess] = useState(false);
@@ -582,7 +582,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           { q: "How do I import lab results?", a: "Go to Import Records in the sidebar. Select 'Lab Results' as the document type, then upload one or more PDF files. The AI will extract your results automatically and save them to the Labs tab." },
           { q: "How do I ask AI about a record or document?", a: "Open any record in the Records tab and tap '✦ Ask AI'. For lab analysis, open the Labs tab and use the AI Analysis panel. You can type follow-up questions in either view." },
           { q: "What is Standard vs. Advanced AI mode?", a: "Standard mode uses Claude Sonnet — fast and clear for everyday analysis. Advanced mode uses Claude Opus — deeper cross-referenced reasoning for complex cases. Advanced mode requires separate consent and is available as a subscription upgrade." },
-          { q: "Is my data private?", a: "All your health data is stored only in your browser's local storage — it never leaves your device unless you explicitly export or back it up. AI analysis requests are routed through a secure proxy; no health data is logged or retained on any server." },
+          { q: "Is my data private?", a: "Your health record is stored on your device, encrypted under your own passphrase — Insina Health has no server copy. When you use AI, the specific information your request needs is sent pseudonymously (identified by a random ID, never your name) through Insina's proxy to Anthropic to generate the response; the proxy does not store or log that content. See Privacy Policy for the complete picture, including what pseudonymous does and doesn't mean." },
           { q: "What happens if I clear my browser?", a: "Clearing browser data will erase all locally stored records. Always export a Full Backup before clearing, or connect Google Drive in Settings & Backup to automatically protect against data loss." },
           { q: "How do I reorder lab categories?", a: "Go to Settings & Backup → Lab Category Order. Use the up/down arrows to set the order categories appear in the Labs tab." },
         ];
@@ -871,6 +871,22 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         </div>
       </div>
 
+      {/* Legal (P-06 / PG-11) */}
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "18px 20px" }}>
+        <div style={sectionLbl}>Legal</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
+            Terms of Service and Privacy Policy — draft, pending attorney review.
+          </div>
+          <button
+            onClick={() => setModal("legal")}
+            style={{ padding: "7px 16px", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#7eb8d8", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
+          >
+            View
+          </button>
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div style={{ background: "#0b1220", border: "1px solid rgba(239,68,68,.2)", borderRadius: 14, padding: "18px 20px" }}>
         <div style={{ fontSize: 10, color: "rgba(239,68,68,.5)", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
@@ -963,6 +979,46 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <button onClick={() => setModal(null)} style={{ flex: 1, padding: "9px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#98afc4", fontSize: 12, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Cancel</button>
               <button onClick={handleChangePin} style={{ flex: 1, padding: "9px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Save</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "legal" && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: "28px", width: "100%", maxWidth: 560, maxHeight: "80vh", overflowY: "auto", fontFamily: "'Sora', sans-serif" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>Terms &amp; Privacy</div>
+            <div style={{ fontSize: 10, color: "#f59e0b", fontFamily: "'DM Mono', monospace", marginBottom: 18, background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 6, padding: "6px 10px" }}>
+              DRAFT — pending attorney review. Full text: TERMS_OF_SERVICE.md and PRIVACY_POLICY.md in the project repository.
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>What Insina Health is</div>
+            <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 16 }}>
+              A pre-commercial pilot personal health record app. It is not a medical device and
+              does not diagnose, treat, or direct medical care — every AI feature is
+              informational only. This pilot is offered to a small number of invited users at
+              Greg Butler's discretion, not to the general public.
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your data</div>
+            <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 16 }}>
+              Your health record is stored on your device, encrypted under your own passphrase —
+              there is no Insina Health server copy and no password reset. When you use AI,
+              information your request needs is sent pseudonymously through Insina's proxy to
+              Anthropic; the proxy does not store or log message content, though the hosting
+              infrastructure retains standard HTTP access metadata as part of normal operation.
+              Pseudonymous is not the same as anonymous. You retain ownership of your data at
+              all times, can export it at any time, and can delete it from your device at any
+              time.
+            </div>
+
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your responsibility</div>
+            <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 20 }}>
+              You are responsible for your passphrase and recovery key — losing both means your
+              data cannot be recovered by anyone. Use Insina Health only for your own health
+              information (or that of someone you're legally authorized to manage it for).
+            </div>
+
+            <button onClick={() => setModal(null)} style={{ width: "100%", padding: "9px", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Close</button>
           </div>
         </div>
       )}
