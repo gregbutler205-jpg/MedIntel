@@ -4,13 +4,16 @@ import { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
-import { callAI } from "../../lib/aiClient.js";
+import { callAI, MODEL_MAP } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
+import AnalysisOverlay from "../AnalysisOverlay.jsx";
+import { mkAnalysisNote } from "../../lib/analysisExport.js";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName } from "../../lib/tripwire.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 import { formatDocumentBlock, stripControlChars } from "../../prompts/documents.js";
+import { sortReadingsByRecency } from "../../lib/vitals.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -139,20 +142,25 @@ function buildDataSections() {
   const conditionModulesSection = conditionModulesText ? `\n\n${conditionModulesText}` : "";
 
   // ── Vitals ─────────────────────────────────────────────────────────────────
+  // Field names match the shared vital schema (A-12, src/lib/vitals.js:
+  // bp_s/bp_d, hr, o2 …). The previous names here (systolic/pulse/spo2) were
+  // fields nothing ever wrote, so BP/HR/O2 silently never reached Surface A.
   const readings = safeRead("mi_readings", []);
   let vitalsStr;
   if (readings.length > 0) {
-    const sorted = [...readings].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const sorted = sortReadingsByRecency(readings);
     vitalsStr = sorted.slice(0, 30).map(r => {
       const parts = [];
-      if (r.systolic && r.diastolic) parts.push(`BP ${r.systolic}/${r.diastolic}`);
-      if (r.pulse)   parts.push(`HR ${r.pulse}`);
-      if (r.spo2)    parts.push(`O2 ${r.spo2}%`);
-      if (r.weight)  parts.push(`Weight ${r.weight} lbs`);
-      if (r.glucose) parts.push(`Glucose ${r.glucose} mg/dL`);
-      if (r.temp)    parts.push(`Temp ${r.temp}°F`);
+      if (r.bp_s != null && r.bp_d != null) parts.push(`BP ${r.bp_s}/${r.bp_d}`);
+      if (r.hr != null)         parts.push(`HR ${r.hr}`);
+      if (r.resting_hr != null) parts.push(`Resting HR ${r.resting_hr}`);
+      if (r.o2 != null)         parts.push(`O2 ${r.o2}%`);
+      if (r.weight != null)     parts.push(`Weight ${r.weight} lbs`);
+      if (r.glucose != null)    parts.push(`Glucose ${r.glucose} mg/dL`);
+      if (r.temp != null)       parts.push(`Temp ${r.temp}°F`);
+      if (r.sleep != null)      parts.push(`Sleep ${r.sleep} hrs`);
       const line = parts.join(", ");
-      return line ? `- ${r.date || "Unknown"}: ${line}${r.flag ? " ⚠ FLAGGED" : ""}` : null;
+      return line ? `- ${r.date || "Unknown"}${r.time ? ` ${r.time}` : ""}: ${line}${r.flag ? " ⚠ FLAGGED" : ""}` : null;
     }).filter(Boolean).join("\n") || "No vital readings recorded.";
   } else {
     vitalsStr = "No vital readings recorded.";
@@ -450,9 +458,10 @@ function renderMarkdown(rawText) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Message component
 // ─────────────────────────────────────────────────────────────────────────────
-function Message({ role, text, streaming, mode }) {
+function Message({ role, text, streaming, mode, ts, onOpenReport }) {
   const isUser = role === "user";
   const isAdvanced = mode === "advanced";
+  const tsLabel = ts ? new Date(ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : null;
   return (
     <div style={{ display: "flex", gap: 12, marginBottom: 20, flexDirection: isUser ? "row-reverse" : "row", alignItems: "flex-start" }}>
       <div style={{
@@ -477,9 +486,9 @@ function Message({ role, text, streaming, mode }) {
         {isUser
           ? <span style={{ color: "#7eb8d8" }}>{text}</span>
           : <div>
-              {/* Mode badge per response */}
+              {/* Mode badge + timestamp per response (UI-15: model names de-emphasized) */}
               {!streaming && text && (
-                <div style={{ marginBottom: 8 }}>
+                <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{
                     fontSize: 9, fontFamily: "'DM Mono',monospace",
                     background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
@@ -487,8 +496,18 @@ function Message({ role, text, streaming, mode }) {
                     border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
                     padding: "1px 7px", borderRadius: 3, letterSpacing: "0.4px",
                   }}>
-                    {isAdvanced ? "Advanced · Opus" : "Standard · Sonnet"}
+                    {isAdvanced ? "Advanced" : "Standard"}
                   </span>
+                  {tsLabel && <span style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{tsLabel}</span>}
+                  <div style={{ flex: 1 }} />
+                  {onOpenReport && (
+                    <button
+                      onClick={onOpenReport}
+                      title="Open this response as a full-screen report with Print and Save"
+                      className="no-print"
+                      style={{ background: "none", border: "none", color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono',monospace", cursor: "pointer", padding: 0, opacity: 0.8 }}
+                    >⤢ Open as report</button>
+                  )}
                 </div>
               )}
               {renderMarkdown(text)}
@@ -496,7 +515,7 @@ function Message({ role, text, streaming, mode }) {
               {/* Footer disclaimer — all responses */}
               {!streaming && text && (
                 <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
-                  {isAdvanced ? "Advanced · Opus" : "Standard · Sonnet"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
+                  {isAdvanced ? "Advanced Mode" : "Standard Mode"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
                 </div>
               )}
             </div>
@@ -553,6 +572,11 @@ export default function AIAnalysis({ onNavChange }) {
   const contextCounts                 = getContextCounts();
   const [summaryNote, setSummaryNote] = useState("");
   const [newConvConfirm, setNewConvConfirm]   = useState(false);
+  // A-13: per-response report overlay — { title, content, mode, timestamp } | null.
+  const [analysisOverlay, setAnalysisOverlay] = useState(null);
+  // UI-15: collapsible sidebar panels.
+  const [quickPromptsOpen, setQuickPromptsOpen] = useState(true);
+  const [dataUsedOpen, setDataUsedOpen]         = useState(true);
 
   // ── Mode state ─────────────────────────────────────────────────────────────
   const [modeData, setModeDataState]  = useState(() => loadModeData());
@@ -639,7 +663,7 @@ export default function AIAnalysis({ onNavChange }) {
     const mode = loadModeData()?.mode || "standard";
 
     const conv = currentConv;
-    const userMsg  = { role: "user", text: trimmed, conv };
+    const userMsg  = { role: "user", text: trimmed, conv, ts: new Date().toISOString() };
     const baseMessages = messagesOverride !== null ? messagesOverride : messages;
     const newMsgs  = [...baseMessages, userMsg];
     setMessages(newMsgs);
@@ -717,11 +741,11 @@ export default function AIAnalysis({ onNavChange }) {
 
       setMessages(prev => {
         const copy = [...prev];
-        copy[assistantIdx] = { role: "assistant", text: accum, mode, conv };
+        copy[assistantIdx] = { role: "assistant", text: accum, mode, conv, ts: new Date().toISOString() };
         return copy;
       });
 
-      appendAuditLog({ event: "message_sent", mode, model, tokens: accum.length });
+      appendAuditLog({ event: "message_sent", mode, model: MODEL_MAP[mode] || MODEL_MAP.standard, tokens: accum.length });
 
     } catch (e) {
       if (e.name === "AbortError") {
@@ -758,15 +782,16 @@ export default function AIAnalysis({ onNavChange }) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
   };
 
+  // DEC-022: saved conversations carry the explicit AI-generated label, in
+  // Tab10's canonical note shape (the previous writer here used a `heading`
+  // field Tab10's editor doesn't read).
   const saveConversationToNotes = (msgs) => {
     if (!msgs || msgs.length === 0) return;
     try {
       const notes = JSON.parse(localStorage.getItem("mi_notes") || "[]");
-      const ts = new Date().toISOString();
       const title = `AI Analysis — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
-      const preview = msgs.find(m => m.role === "user")?.text?.slice(0, 120) || "AI conversation";
       const content = msgs.map(m => `${m.role === "user" ? "You" : "AI"}: ${m.text}`).join("\n\n---\n\n");
-      const note = { id: Date.now().toString(), title, pinned: false, tag: "General", date: ts, preview, linked: [], sections: [{ heading: "", body: content }] };
+      const note = mkAnalysisNote({ title, content, mode: msgs.find(m => m.mode)?.mode || currentMode });
       notes.unshift(note);
       localStorage.setItem("mi_notes", JSON.stringify(notes));
     } catch {}
@@ -968,6 +993,17 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
       {/* First-run onboarding modal */}
       {showOnboarding && <AIModeOnboardingModal onConfirm={handleModeConfirm} />}
 
+      {/* A-13: per-response report overlay — modal, not window.open */}
+      {analysisOverlay && (
+        <AnalysisOverlay
+          title={analysisOverlay.title}
+          content={analysisOverlay.content}
+          mode={analysisOverlay.mode}
+          timestamp={analysisOverlay.timestamp}
+          onClose={() => setAnalysisOverlay(null)}
+        />
+      )}
+
       {/* Topbar */}
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         {onNavChange && (
@@ -995,7 +1031,9 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         </span>
       </div>
 
-      {/* Mode indicator bar */}
+      {/* Mode indicator bar — compact, with a Change action (UI-15). Model
+          names are de-emphasized: the raw model-id chip is gone; the id still
+          appears in Settings where the mode is actually chosen. */}
       <div style={{
         height: 36, background: isAdvanced ? "rgba(79,142,247,.06)" : "rgba(16,185,129,.05)",
         borderBottom: `1px solid ${isAdvanced ? "rgba(79,142,247,.15)" : "rgba(16,185,129,.12)"}`,
@@ -1011,16 +1049,16 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           {isAdvanced ? "Advanced Mode" : "Standard Mode"}
         </span>
         <span style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
-          {isAdvanced ? "Claude Opus · deeper analysis · consent given" : "Claude Sonnet · recommended for daily use"}
+          {isAdvanced ? "deeper analysis · consent given" : "recommended for daily use"}
         </span>
+        {onNavChange && (
+          <button
+            onClick={() => onNavChange("backup")}
+            title="Change AI mode in Settings & Backup"
+            style={{ background: "none", border: "1px solid #111e30", borderRadius: 4, color: "#7eb8d8", fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 9px", cursor: "pointer", letterSpacing: "0.4px" }}
+          >Change</button>
+        )}
         <div style={{ flex: 1 }} />
-        <span style={{
-          fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace",
-          background: "#07090f", border: "1px solid #111e30",
-          padding: "2px 10px", borderRadius: 4,
-        }}>
-          {isAdvanced ? "claude-opus-4-6" : "claude-sonnet-4-6"}
-        </span>
       </div>
 
       {/* Stale consent banner */}
@@ -1044,21 +1082,36 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
       {/* Body */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {/* Sidebar */}
+        {/* Sidebar — Quick Prompts and Data Used collapse (UI-15), keeping the
+            conversation workspace dominant. */}
         <div style={{ width: 236, minWidth: 236, borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", padding: "16px 12px", overflowY: "auto" }}>
-          <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Quick Prompts</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
-            {PRESETS.map((p, i) => (
-              <button key={i} className="preset-btn" onClick={() => setInput(p.prompt)} disabled={streaming}>
-                <span style={{ color: "#4f8ef7", fontSize: 12, flexShrink: 0 }}>✦</span>
-                <span>{p.label}</span>
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={() => setQuickPromptsOpen(o => !o)}
+            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 8 }}
+          >
+            <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Quick Prompts</span>
+            <span style={{ fontSize: 9, color: "#4a5c6a" }}>{quickPromptsOpen ? "▾" : "▸"}</span>
+          </button>
+          {quickPromptsOpen && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+              {PRESETS.map((p, i) => (
+                <button key={i} className="preset-btn" onClick={() => setInput(p.prompt)} disabled={streaming}>
+                  <span style={{ color: "#4f8ef7", fontSize: 12, flexShrink: 0 }}>✦</span>
+                  <span>{p.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Context Loaded</div>
-            {contextCounts.map(({ label, color }) => (
+            <button
+              onClick={() => setDataUsedOpen(o => !o)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 10 }}
+            >
+              <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>Data used in this analysis</span>
+              <span style={{ fontSize: 9, color: "#4a5c6a" }}>{dataUsedOpen ? "▾" : "▸"}</span>
+            </button>
+            {dataUsedOpen && contextCounts.map(({ label, color }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
                 {label}
@@ -1180,6 +1233,10 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                             role={m.role} text={m.text}
                             streaming={m.streaming && idx === messages.length - 1}
                             mode={m.mode || currentMode}
+                            ts={m.ts}
+                            onOpenReport={m.role === "assistant" && !m.streaming && m.text
+                              ? () => setAnalysisOverlay({ title: "AI Analysis", content: m.text, mode: m.mode || currentMode, timestamp: m.ts || new Date().toISOString() })
+                              : null}
                           />
                         </div>
                       );
@@ -1259,7 +1316,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             </div>
             <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between" }}>
               <span>Shift+Enter for new line · Enter to send</span>
-              <span>{isAdvanced ? "Advanced Mode · Claude Opus" : "Standard Mode · Claude Sonnet"} · sent pseudonymously per message</span>
+              <span>{isAdvanced ? "Advanced Mode" : "Standard Mode"} · sent pseudonymously per message</span>
             </div>
           </div>
         </div>

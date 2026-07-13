@@ -4,9 +4,11 @@
 // model by default; escalate to a stronger one only for long/complex work.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { activeConditions, activeMeds, readings } from "./companionData.js";
+import { activeConditions, activeMeds, readings, rls } from "./companionData.js";
 import { callAI, MODEL_MAP } from "./aiClient.js";
-import { getUserId } from "../prompts/identity.js";
+import { getUserId, getIdentity } from "../prompts/identity.js";
+import { buildSurfaceG } from "../prompts/surfaceG.js";
+import { getTripwireEnvelope, formatTripwireEnvelope } from "./tripwire.js";
 
 // Re-exported from the single MODEL_MAP (aiClient.js) so there is exactly one
 // place that resolves a model string — these names stay stable for the
@@ -31,6 +33,52 @@ Current Medications: ${ms}
 Recent Vitals: ${vitals}
 
 Always advise consulting their physician for clinical decisions. In an emergency, tell them to call 911 immediately.${extra ? "\n\n" + extra : ""}`;
+}
+
+/**
+ * A-13: Surface G system prompt for companion symptom preparation — the full
+ * CSC + display rules + routing rule + Surface G delta (context gathering,
+ * rule-5 emergency precedence) via the prompts-as-code builder. Before this,
+ * the symptom-prep handoff ran on buildRecordSystem() above, which carries
+ * none of the Clinical Safety Core — buildSurfaceG existed but was never
+ * called. Payload per spec: symptomsRecent, conditionsActive,
+ * medicationsActive, tripwireFlags, careTeam.
+ */
+export function buildSymptomPrepSystem() {
+  const conds = activeConditions();
+  const condStr = conds.length
+    ? conds.map(c => `- ${c.name}${c.status ? ` (${c.status})` : ""}`).join("\n")
+    : "- No conditions on file.";
+  const ms = activeMeds();
+  const medsStr = ms.length
+    ? ms.map(m => `- ${m.name}${m.dose ? ` ${m.dose}` : ""}${m.frequency ? `, ${m.frequency}` : ""}`).join("\n")
+    : "- No active medications on file.";
+  const symptoms = rls("mi_symptoms", []).slice(0, 10);
+  const sympStr = symptoms.length
+    ? symptoms.map(s => `- ${s.date || "Unknown date"}: ${s.name}${s.severity ? ` (${s.severity})` : ""}${s.notes ? ` — ${s.notes}` : ""}`).join("\n")
+    : "- No symptoms logged.";
+  const team = rls("mi_care_team", []);
+  const teamStr = team.length
+    ? team.map(d => `- ${d.name}${d.role ? `, ${d.role}` : ""}${d.specialty ? ` (${d.specialty})` : ""}${d.phone ? ` · ${d.phone}` : ""}`).join("\n")
+    : "- No care team members on file.";
+
+  const dataSections = `RECENT SYMPTOMS
+${sympStr}
+
+ACTIVE CONDITIONS
+${condStr}
+
+CURRENT MEDICATIONS
+${medsStr}
+
+CARE TEAM
+${teamStr}
+
+${formatTripwireEnvelope(getTripwireEnvelope())}`;
+
+  const { userId, age, sex } = getIdentity();
+  const { system } = buildSurfaceG({ userId, age, sex, dataSections });
+  return system;
 }
 
 /**
@@ -70,9 +118,9 @@ const toApiMsgs = (messages) => messages.map(m => ({
  * Streaming chat (SSE passthrough from the proxy). Calls onDelta(textChunk) as
  * tokens arrive. Returns the full accumulated text. Reuses Tab11's proxy pattern.
  */
-export async function askInsinaStream({ system, messages, model = MODEL_LITE, max_tokens = 512, onDelta, signal }) {
+export async function askInsinaStream({ system, messages, model = MODEL_LITE, max_tokens = 512, surface = "companion.chat", onDelta, signal }) {
   const res = await callAI({
-    surface: "companion.chat",
+    surface,
     model, maxTokens: max_tokens, stream: true, system,
     messages: toApiMsgs(messages), signal,
   });

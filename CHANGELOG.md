@@ -15,6 +15,57 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-13 / merged UI-15:** Analysis context gathering + AI screen. The
+  prompt-side rules (v2.3 CONTEXT GATHERING, {sessionContext}, v2.4
+  four-section response structure) already existed in `src/prompts/`; this
+  item wires them to real UI and closes the gaps around them (DEC-029).
+  - New `src/components/AnalysisOverlay.jsx`: analyses open in a
+    full-screen in-page overlay (modal, not window.open — popup blockers
+    and the mobile PWA are non-issues) with Print through a print
+    stylesheet scoped to the overlay (branded header/footer render only in
+    print), "Save to My Notes" with the explicit AI-generated label
+    (DEC-022), and a dated markdown download carrying the {lastSync}
+    freshness stamp and the standing Surface H footer. Shared helpers in
+    new `src/lib/analysisExport.js`.
+  - `Tab05.jsx` (Labs): new optional free-text field on the Full Analysis
+    launch flows in as {sessionContext} (patient-reported, never record
+    data); Full Analysis always opens in the overlay. The old silent
+    auto-save to Notes is removed — it wrote a flat note shape Tab10's
+    editor crashed on; saving is now the overlay's explicit, labeled
+    button.
+  - `Tab11.jsx` (AI Analysis): Quick Prompts and the context panel
+    (renamed "Data used in this analysis") are collapsible; compact mode
+    bar with a Change action into Settings; model names de-emphasized
+    (raw model-id chip removed, badges say Standard/Advanced); responses
+    carry timestamps and an "Open as report" control into the overlay;
+    save-to-Notes uses the shared AI-labeled note shape.
+    - **Fixed two real Tab11 bugs found in passing:** `buildDataSections()`
+      formatted vitals from field names nothing writes
+      (`systolic`/`pulse`/`spo2`), so BP/HR/O2 silently never reached
+      Surface A; and `sendMessage`'s audit-log call referenced an
+      undefined `model` variable, throwing inside the success path and
+      replacing every completed streamed answer with "Error: model is not
+      defined."
+  - **Companion Surface G safety gap closed:** `buildSurfaceG()` (the
+    CSC-backed symptom-prep prompt) existed but was never called — the
+    "Ask Insina about this" symptom handoff ran on a thin ad-hoc prompt
+    with no Clinical Safety Core, tripwire envelope, or rule-5 emergency
+    routing. Symptom handoffs now run the whole session on the Surface G
+    system prompt with the spec's payload (new
+    `buildSymptomPrepSystem()` in `companionAI.js`), inheriting Surface
+    A's context-gathering rules. The companion's generic chat remains on
+    the lightweight prompt — no spec surface covers it; logged as OPEN-15.
+  - `Tab10.jsx` (Notes): AI-generated notes show an explicit AI badge in
+    the list and an AI-generated banner in the editor with a markdown
+    download; legacy note shapes from the two older AI writers (flat
+    `content`, `heading` sections) are normalized read-time so they open
+    instead of crashing the editor.
+  - Verified: `npm run build` passes; 7-check Node harness passes
+    (canonical note shape + AI label, markdown export stamps/footer,
+    Surface G system carries CSC/tripwire/context-gathering/no patient
+    name, B1 sessionContext injection present and absent, Surface A four
+    sections). Live browser verification deferred with A-12's (OPEN-14 —
+    vault-locked dev app).
 - **A-12 / merged UI-4:** Input plausibility guard + one shared vital schema.
   New `src/config/plausibilityBounds.js` (versioned hard/soft bounds per
   vital and per lab analyte) and `src/lib/plausibility.js`

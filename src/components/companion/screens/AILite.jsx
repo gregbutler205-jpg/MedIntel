@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from "react";
 import { C, mono, sans } from "../companionUI.jsx";
 import MicButton from "../MicButton.jsx";
-import { askInsinaStream, buildRecordSystem } from "../../../lib/companionAI.js";
+import { askInsinaStream, buildRecordSystem, buildSymptomPrepSystem } from "../../../lib/companionAI.js";
 
 const PROMPTS = [
   "Summarize my current status",
@@ -12,7 +12,7 @@ const PROMPTS = [
   "How is my tacrolimus trend?",
 ];
 
-export default function AILite({ initialPrompt, onPromptConsumed }) {
+export default function AILite({ initialPrompt, initialSurface, onPromptConsumed }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -20,6 +20,13 @@ export default function AILite({ initialPrompt, onPromptConsumed }) {
   const abortRef = useRef(null);
   const bottomRef = useRef(null);
   const sentInitialRef = useRef(false);
+  // A-13: a session opened from a symptom handoff runs on Surface G (CSC +
+  // context gathering via buildSurfaceG) for the whole session, so the
+  // model's follow-up questions and the patient's answers stay under the
+  // same system prompt. Generic sessions keep the lightweight record prompt.
+  const isSymptomPrep = initialSurface === "symptomPrep" && !!initialPrompt;
+  const symptomPrepRef = useRef(isSymptomPrep);
+  if (isSymptomPrep) symptomPrepRef.current = true;
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -42,8 +49,11 @@ export default function AILite({ initialPrompt, onPromptConsumed }) {
     setInput(""); setStreaming(true);
     const ctrl = new AbortController(); abortRef.current = ctrl;
     try {
+      const symptomPrep = symptomPrepRef.current;
       await askInsinaStream({
-        system: buildRecordSystem(),
+        system: symptomPrep ? buildSymptomPrepSystem() : buildRecordSystem(),
+        surface: symptomPrep ? "companion.symptomPrep" : "companion.chat",
+        max_tokens: symptomPrep ? 1024 : 512,
         messages: next,
         signal: ctrl.signal,
         onDelta: (_chunk, accum) => setMessages(prev => { const c = [...prev]; c[c.length - 1] = { role: "assistant", text: accum, streaming: true }; return c; }),

@@ -18,7 +18,9 @@
 
 import { getPilotToken } from "./pilotAuth.js";
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || "http://localhost:3001";
+// Optional-chained so this module also loads under plain Node (test harnesses);
+// Vite always defines import.meta.env in the browser build.
+const PROXY_URL = import.meta.env?.VITE_PROXY_URL || "http://localhost:3001";
 
 // Resolved once, in one place. "extraction" and "lite" are not literally
 // standard/advanced modes but are real, already-shipped tiers: extraction
@@ -52,6 +54,7 @@ export const SURFACE_MAX_TOKENS = {
   "appointments.prep":         1024, // Tab14 consultation prep
   "companion.visitPrep":       1024,
   "companion.chat":              512, // askInsinaStream default
+  "companion.symptomPrep":      1024, // Surface G: symptom prep + context gathering (A-13)
   "companion.oneShot":         1024, // askInsina default
   "companion.flagSelect":       200, // selectRelevantFlags
   "companion.jsonStructured":  1024, // askInsinaJSON default

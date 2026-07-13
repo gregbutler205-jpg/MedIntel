@@ -241,7 +241,7 @@ function Symptoms({ queueSync, askAI }) {
         <Card style={{ marginBottom: 12, border: `1px solid ${C.green}40` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 11, color: C.green, fontFamily: mono, flex: 1, minWidth: 130 }}>✓ {savedEntry.name} saved — will sync to Drive</span>
-            {askAI && <button onClick={() => askAI(symptomPrompt(savedEntry))} style={askBtn}>✦ Ask Insina about this</button>}
+            {askAI && <button onClick={() => askAI(symptomPrompt(savedEntry), "symptomPrep")} style={askBtn}>✦ Ask Insina about this</button>}
           </div>
         </Card>
       )}
@@ -282,7 +282,7 @@ function Symptoms({ queueSync, askAI }) {
             </div>
             <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{e.date}</div>
             {e.notes && <div style={{ fontSize: 11, color: C.dim, marginTop: 3 }}>{e.notes}</div>}
-            {askAI && <button onClick={() => askAI(symptomPrompt(e))} style={{ ...askBtn, marginTop: 8 }}>✦ Ask Insina about this</button>}
+            {askAI && <button onClick={() => askAI(symptomPrompt(e), "symptomPrep")} style={{ ...askBtn, marginTop: 8 }}>✦ Ask Insina about this</button>}
           </div>
           <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: C.ghost, cursor: "pointer", fontSize: 14, alignSelf: "flex-start" }}>✕</button>
         </div>

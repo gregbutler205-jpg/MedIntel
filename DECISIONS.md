@@ -800,6 +800,56 @@ previously unknown surface, not a new item.
 
 ---
 
+## DEC-029: A-13/UI-15 implementation — DEC-022 governs Save; Surface G safety gap closed in-item; Tab11 layout redesigned in place
+
+**Date:** 2026-07-13
+**Status:** Settled (Greg's decisions via AskUserQuestion during A-13; shipped in code).
+
+**Decision.** Four calls made implementing A-13 + merged UI-15:
+
+1. **Stale spec text vs settled decision on Save.** APP_CHANGES_SPEC's A-13 entry says saving
+   analyses into Notes is "future work … not built now," but DEC-022 (Settled, 2026-07-11, same
+   day) and INSINA_UI_CHANGES UI-15 both approve "Save to My Notes" with an explicit AI-generated
+   label. DEC-022 governs: the analysis overlay's Save writes an `aiGenerated: true` note in
+   Tab10's canonical shape, and analyses remain downloadable as dated markdown (type + date
+   filename, {lastSync} freshness stamp, Surface H footer).
+
+2. **Surface G was dead code — fixed as part of A-13** (Greg's explicit choice). The companion's
+   symptom-prep AI ran on `companionAI.js`'s thin ad-hoc prompt carrying no Clinical Safety Core,
+   no tripwire envelope, and no rule-5 emergency routing; `buildSurfaceG()` existed but was never
+   called anywhere. A-13's "Surface G inherits the same context-gathering block" could not be true
+   without fixing this. Now: a symptom handoff ("Ask Insina about this") tags the AI session as
+   symptom prep, and the whole session runs on `buildSymptomPrepSystem()` — the full Surface G
+   builder with the spec's payload (recent symptoms, active conditions, medications, care team,
+   tripwire envelope). The companion's *generic* chat still runs on the lightweight
+   `buildRecordSystem()` prompt, because no spec surface covers generic companion chat — inventing
+   one would be improvisation; logged as OPEN-15 instead.
+
+3. **UI-15 redesigns Tab11's main screen in place** (Greg's explicit choice), not a separate new
+   screen: Quick Prompts and the context panel (renamed "Data used in this analysis") collapse;
+   the mode bar gains a Change action (routes to Settings & Backup, where mode/consent is actually
+   managed) and drops the raw model-id chip; per-message badges/footers say Standard/Advanced
+   without model names; assistant messages carry timestamps and an "Open as report" control into
+   the shared full-screen `AnalysisOverlay` (modal, not window.open — its Print uses a print
+   stylesheet scoped to the overlay, satisfying the popup-blocker/PWA requirement).
+
+4. **Tab05's silent Full-Analysis auto-save to Notes is removed**, replaced by the overlay's
+   explicit, labeled Save button. The auto-save wrote a flat-`content` note shape that crashed
+   Tab10's editor on open (`note.sections.map` of undefined); Tab11's save-to-Notes had a sibling
+   bug (`heading` vs the `header` field Tab10 reads). Both writers now use one shared
+   `mkAnalysisNote()`, and Tab10 normalizes the legacy shapes read-time so existing broken notes
+   open instead of crashing.
+
+**Bug found and fixed in passing:** Tab11's `buildDataSections()` formatted vitals from field
+names nothing ever writes (`systolic`/`pulse`/`spo2` instead of the schema's `bp_s`/`hr`/`o2`), so
+BP, HR, and O2 silently never reached Surface A's VITALS HISTORY section; and `sendMessage`
+referenced an undefined `model` variable in its audit-log call, throwing inside the success path
+and overwriting every completed streamed answer with "Error: model is not defined." Both corrected.
+
+**Related:** A-13, UI-15, DEC-020, DEC-022, INSINA_AI_PROMPTS v2.3/v2.4, OPEN-15.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
@@ -865,4 +915,14 @@ previously unknown surface, not a new item.
   P-02 vault passphrase, which Claude Code does not have and should not be given. Worth an
   in-browser pass (hard block, soft confirm, suggestion-apply, per-vital latest/prev correctness,
   same-day multi-reading, migration against real pre-existing data) next time Greg has the vault
-  unlocked. (Spawned by DEC-028.)
+  unlocked. A-13's surfaces (analysis overlay Print/Save, Tab11 collapsibles and open-as-report,
+  Tab05 launch field, companion symptom-prep session) carry the same gap for the same reason —
+  prompt builders and note/markdown helpers are unit-tested, the UI is not live-verified.
+  (Spawned by DEC-028; extended by DEC-029.)
+- **OPEN-15:** The companion's *generic* AI chat (AILite sessions not started from a symptom
+  handoff) still runs on `companionAI.js`'s lightweight `buildRecordSystem()` prompt, which
+  carries no Clinical Safety Core, tripwire envelope, or rule-5 emergency routing text. No
+  INSINA_AI_PROMPTS surface covers generic companion chat, so A-13 did not invent one; the spec
+  needs either a new surface definition or an explicit decision that Surface A's (or G's) rules
+  extend to it. Until then this is the one remaining AI surface outside the prompts-as-code
+  architecture. (Spawned by DEC-029.)

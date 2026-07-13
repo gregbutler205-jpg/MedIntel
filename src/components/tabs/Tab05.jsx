@@ -6,6 +6,7 @@ import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName, dismissTripwireFlag } from "../../lib/tripwire.js";
 import { checkLabReading } from "../../lib/plausibility.js";
+import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -569,6 +570,13 @@ export default function App({ onNavChange }) {
   const [aiAnalysis, setAiAnalysis]     = useState("");
   const [aiAnalyzing, setAiAnalyzing]   = useState(false);
   const [aiError, setAiError]           = useState("");
+  // A-13: optional patient-supplied launch context, injected as {sessionContext}
+  // into Surface B1 — the app-side equivalent of context gathering for a
+  // one-shot analysis. App decides inclusion; never the model.
+  const [sessionContext, setSessionContext] = useState("");
+  // A-13: the Full Analysis result opens in the full-screen overlay (modal,
+  // not window.open) — { title, content, mode, timestamp } | null.
+  const [analysisOverlay, setAnalysisOverlay] = useState(null);
   const [aiQuestion, setAiQuestion]     = useState("");
   const [aiQA, setAiQA]                 = useState([]);
   const [aiQALoading, setAiQALoading]   = useState(false);
@@ -817,7 +825,9 @@ ${labsWindowStr}
 ${formatTripwireEnvelope(tripwireEnvelope)}${conditionModulesText ? `\n\n${conditionModulesText}` : ""}`;
 
       const { userId, age, sex } = getIdentity();
-      const { system: systemPrompt } = buildSurfaceB1({ userId, age, sex, dataSections });
+      // A-13: the optional launch field flows in as {sessionContext} — injected
+      // under a SESSION CONTEXT header, treated as patient-reported, not record data.
+      const { system: systemPrompt } = buildSurfaceB1({ userId, age, sex, dataSections, sessionContext: sessionContext.trim() });
 
       const res = await callAI({
         surface: "labs.fullAnalysis",
@@ -835,13 +845,17 @@ ${formatTripwireEnvelope(tripwireEnvelope)}${conditionModulesText ? `\n\n${condi
       const data = await res.json();
       const analysisText = data.content[0].text.trim();
       setAiAnalysis(analysisText);
-      // Auto-save to Notes so it's retrievable later and appears in Attach Records
-      try {
-        const noteTitle = `AI Analysis — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
-        const note = { id: Date.now().toString(), title: noteTitle, date: new Date().toISOString(), content: analysisText, pinned: false };
-        const existing = JSON.parse(localStorage.getItem("mi_notes") || "[]");
-        localStorage.setItem("mi_notes", JSON.stringify([note, ...existing]));
-      } catch { /* non-critical */ }
+      setSessionContext("");
+      // A-13: Full Analysis always opens in the report overlay. Saving to Notes
+      // is the overlay's explicit, AI-labeled Save button (DEC-022) — the old
+      // silent auto-save wrote a flat-content note shape Tab10's editor
+      // couldn't open, and is removed.
+      setAnalysisOverlay({
+        title: "Full Lab Analysis",
+        content: analysisText,
+        mode: "standard",
+        timestamp: new Date().toISOString(),
+      });
     } catch (e) {
       const isNetworkErr = e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("waking");
       setAiError(isNetworkErr
@@ -1453,6 +1467,18 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 </button>
               </div>
 
+              {/* A-13: optional launch context for Full Analysis — flows in as
+                  {sessionContext}, treated as patient-reported, not record data. */}
+              <div style={{ marginBottom: 10 }}>
+                <input
+                  value={sessionContext}
+                  onChange={e => setSessionContext(e.target.value)}
+                  placeholder="Optional: anything going on right now the Full Analysis should know? (e.g. new symptom, missed doses)"
+                  disabled={aiAnalyzing || aiQALoading}
+                  style={{ width: "100%", background: "#0b1220", border: `1px solid ${sessionContext.trim() ? "rgba(79,142,247,.4)" : "#111e30"}`, color: "#c4d8ee", padding: "8px 12px", borderRadius: 8, fontFamily: "'Sora',sans-serif", fontSize: 11.5, outline: "none" }}
+                />
+              </div>
+
               {/* Question input */}
               <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
                 <input
@@ -1498,15 +1524,15 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 </div>
               )}
 
-              {/* Full analysis result */}
+              {/* Full analysis result — opens in the report overlay (A-13); the
+                  inline copy stays here so it isn't lost when the overlay closes. */}
               {aiAnalysis && (
                 <div style={{ fontSize: 12, color: "#a8c4dc", borderTop: aiQA.length > 0 ? "1px solid #111e30" : "none", paddingTop: aiQA.length > 0 ? 14 : 0 }}>
                   {renderMarkdown(aiAnalysis)}
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:10, paddingTop:8, borderTop:"1px solid #111e30" }}>
-                    <span style={{ fontSize:9, color:"#10b981", fontFamily:"'DM Mono',monospace", opacity:0.75 }}>✓ Saved to Notes</span>
-                    <button onClick={() => printAIResponse("Full Lab Analysis", aiAnalysis, PRINT_LOGO)}
-                      style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
-                      ⎙ Print
+                  <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:14, marginTop:10, paddingTop:8, borderTop:"1px solid #111e30" }}>
+                    <button onClick={() => setAnalysisOverlay({ title: "Full Lab Analysis", content: aiAnalysis, mode: "standard", timestamp: new Date().toISOString() })}
+                      style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.8, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                      ⤢ Open as report
                     </button>
                   </div>
                 </div>
@@ -1627,6 +1653,17 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             </div>
           </div>
         </div>
+      )}
+
+      {/* A-13: Full Analysis report overlay — modal, not window.open */}
+      {analysisOverlay && (
+        <AnalysisOverlay
+          title={analysisOverlay.title}
+          content={analysisOverlay.content}
+          mode={analysisOverlay.mode}
+          timestamp={analysisOverlay.timestamp}
+          onClose={() => setAnalysisOverlay(null)}
+        />
       )}
 
       {/* A-12: manual-lab plausibility gate. Hard band blocks the save with

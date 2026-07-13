@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceC } from "../../prompts/surfaceC.js";
+import { downloadAnalysisMarkdown } from "../../lib/analysisExport.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -41,6 +42,9 @@ function NoteItem({ note, active, onClick }) {
         <div style={{ fontSize: 12, fontWeight: 600, color: active ? "#c4d8ee" : "#7eb8d8", lineHeight: 1.3, flex: 1, marginRight: 6 }}>
           {note.title}
         </div>
+        {note.aiGenerated && (
+          <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
+        )}
         {note.pinned && <span style={{ fontSize: 10, color: "#f59e0b", flexShrink: 0 }}>📌</span>}
       </div>
       <div style={{ fontSize: 10, color: "#98afc4", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
@@ -153,6 +157,28 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
           style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#dde8f5", fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.3px", marginBottom: 4 }}
         />
         <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{note.date}</div>
+
+        {/* DEC-022: explicit AI-generated label — distinguishes this from
+            clinician or patient-authored text, plus a markdown download. */}
+        {note.aiGenerated && (
+          <div style={{ background: "rgba(79,142,247,.07)", border: "1px solid rgba(79,142,247,.22)", borderRadius: 8, padding: "9px 13px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 6px", borderRadius: 3, fontFamily: "'DM Mono', monospace", letterSpacing: "0.5px", flexShrink: 0 }}>AI</span>
+            <span style={{ fontSize: 11, color: "#7eb8d8", flex: 1, lineHeight: 1.5 }}>
+              AI-generated analysis — informational only, not clinician text. Verify against source records.
+            </span>
+            <button
+              onClick={() => downloadAnalysisMarkdown({
+                analysisType: note.title,
+                content: (note.sections || []).map(s => s.type === "checklist"
+                  ? (s.items || []).map(i => `- [${i.done ? "x" : " "}] ${i.text}`).join("\n")
+                  : s.body || "").join("\n\n"),
+                mode: note.aiMode,
+              })}
+              title="Download this analysis as a dated markdown file"
+              style={{ background: "none", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono', monospace", padding: "3px 10px", cursor: "pointer", flexShrink: 0 }}
+            >↓ .md</button>
+          </div>
+        )}
 
         {note.linked && (
           <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
@@ -292,8 +318,25 @@ function AIPanel({ note, onClose }) {
   );
 }
 
+// Tolerate the older mi_notes shapes two earlier AI-analysis writers produced
+// (a flat `content` string with no sections, and sections keyed `heading`
+// instead of `header`) — either previously crashed or mis-rendered the editor.
+// Read-time only; the note is written back normalized on its next edit.
+function normalizeNote(n) {
+  if (Array.isArray(n.sections)) {
+    return { ...n, preview: n.preview ?? "", sections: n.sections.map(s => s.header == null && s.heading != null ? { ...s, header: s.heading } : s) };
+  }
+  return {
+    ...n,
+    preview: n.preview ?? (n.content || "").slice(0, 110),
+    sections: [{ id: "s1", type: "text", header: "Notes", body: n.content || "" }],
+  };
+}
+
 export default function Notes() {
-  const [notes, setNotes] = useState(() => { try { const r = localStorage.getItem("mi_notes"); return r ? JSON.parse(r) : []; } catch { return []; } });
+  const [notes, setNotes] = useState(() => {
+    try { const r = localStorage.getItem("mi_notes"); return r ? JSON.parse(r).map(normalizeNote) : []; } catch { return []; }
+  });
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
