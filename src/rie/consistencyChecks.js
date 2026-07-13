@@ -8,6 +8,7 @@
 
 import { mkFinding } from "./findings.js";
 import { genericOf, labKeyOf, similarity, ALLERGY_CONFLICTS } from "./medDictionary.js";
+import { checkVitalReading, checkVitalCrossFields, checkLabReading } from "../lib/plausibility.js";
 
 const safe = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
 const obj  = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
@@ -219,6 +220,60 @@ export function checkTransplantTerminology() {
   return out;
 }
 
+// ── Vitals & labs plausibility (A-12) ────────────────────────────────────────
+// Background audit pass reusing the same deterministic checks as the entry-time
+// guard (src/lib/plausibility.js) — surfaces anything that reached storage
+// implausible (synced from another device, a soft-band value the patient
+// confirmed, or an extraction path with no gate of its own yet) into the same
+// Review Queue as every other RIE finding. Distinct from the tripwire (A-01):
+// this flags input-shape problems, not genuine clinical extremes. DEC-019.
+export function checkVitalPlausibility() {
+  const readings = safe("mi_readings");
+  const out = [];
+  readings.forEach((r, i) => {
+    const fieldIssues = checkVitalReading(r);
+    Object.entries(fieldIssues).forEach(([field, issue]) => {
+      out.push(mkFinding({
+        severity: issue.band === "hard" ? "warning" : "info",
+        checkType: "consistency",
+        module: "vitals",
+        fieldPath: `readings[${r.id ?? i}].${field}`,
+        original: `${issue.label}: ${r[field]} ${issue.unit}`,
+        message: `${issue.label} of ${r[field]} ${issue.unit} on ${r.date || "an unknown date"} is ${issue.band === "hard" ? "outside a plausible range" : "far from a typical range"} — check for a data-entry error.`,
+      }));
+    });
+    checkVitalCrossFields(r).forEach(issue => {
+      out.push(mkFinding({
+        severity: "info",
+        checkType: "consistency",
+        module: "vitals",
+        fieldPath: `readings[${r.id ?? i}].${issue.fields.join("+")}`,
+        original: issue.fields.map(f => `${f}: ${r[f]}`).join(", "),
+        message: `${issue.message} (reading on ${r.date || "an unknown date"})`,
+      }));
+    });
+  });
+  return out;
+}
+
+export function checkLabPlausibility() {
+  const labs = safe("mi_labs");
+  const out = [];
+  labs.forEach((l, i) => {
+    const issue = checkLabReading(l);
+    if (!issue.band) return;
+    out.push(mkFinding({
+      severity: issue.band === "hard" ? "warning" : "info",
+      checkType: "consistency",
+      module: "labs",
+      fieldPath: `labs[${i}].value`,
+      original: `${l.name}: ${l.value} ${issue.unit}`,
+      message: `${l.name} of ${l.value} ${issue.unit}${l.date ? ` on ${l.date}` : ""} is ${issue.band === "hard" ? "outside a plausible range" : "far from a typical range"} — check for a data-entry error.`,
+    }));
+  });
+  return out;
+}
+
 export function runConsistency() {
   return [
     ...checkMedications(),
@@ -227,5 +282,7 @@ export function runConsistency() {
     ...checkConditionsAllergies(),
     ...checkDocumentsRecords(),
     ...checkTransplantTerminology(),
+    ...checkVitalPlausibility(),
+    ...checkLabPlausibility(),
   ];
 }

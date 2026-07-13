@@ -5,6 +5,7 @@ import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName, dismissTripwireFlag } from "../../lib/tripwire.js";
+import { checkLabReading } from "../../lib/plausibility.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -572,6 +573,8 @@ export default function App({ onNavChange }) {
   const [aiQA, setAiQA]                 = useState([]);
   const [aiQALoading, setAiQALoading]   = useState(false);
   const [showAddLab, setShowAddLab]     = useState(false);
+  // A-12: pending manual-lab plausibility gate — { entry, issue } | null.
+  const [pendingLabPlausibility, setPendingLabPlausibility] = useState(null);
   const [newLab, setNewLab]             = useState({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
   const [showDupModal, setShowDupModal] = useState(false);
   const [dupGroups, setDupGroups]       = useState([]);
@@ -611,6 +614,16 @@ export default function App({ onNavChange }) {
     localStorage.setItem("mi_lab_custom_ranges", JSON.stringify(updated));
   }
 
+  function commitLabEntry(entry) {
+    const updated = [entry, ...importedLabs];
+    setImportedLabs(updated);
+    try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
+    window.dispatchEvent(new Event("mi-data-synced")); // A-01: manual-entry hook for the tripwire engine
+    setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
+    setShowAddLab(false);
+    setSelectedImportedLab(entry);
+  }
+
   function handleAddLab() {
     if (!newLab.name.trim() || !newLab.value.trim()) return;
     // Auto-detect flag from ref range
@@ -633,13 +646,30 @@ export default function App({ onNavChange }) {
       notes: newLab.notes.trim(),
       flag,
     };
-    const updated = [entry, ...importedLabs];
-    setImportedLabs(updated);
-    try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
-    window.dispatchEvent(new Event("mi-data-synced")); // A-01: manual-entry hook for the tripwire engine
-    setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
-    setShowAddLab(false);
-    setSelectedImportedLab(entry);
+    // A-12: plausibility guard — deterministic input-error check on manual lab
+    // entry, distinct from the tripwire (A-01). Runs before the write; resolves
+    // before any tripwire evaluation on the same entry (DEC-019).
+    const issue = checkLabReading({ name: entry.name, value: entry.value });
+    if (issue.band) {
+      setPendingLabPlausibility({ entry, issue });
+      return;
+    }
+    commitLabEntry(entry);
+  }
+
+  function commitPendingLab() {
+    if (!pendingLabPlausibility) return;
+    commitLabEntry(pendingLabPlausibility.entry);
+    setPendingLabPlausibility(null);
+  }
+
+  function applyLabSuggestion(value) {
+    if (!pendingLabPlausibility) return;
+    const updatedEntry = { ...pendingLabPlausibility.entry, value: String(value) };
+    const issue = checkLabReading({ name: updatedEntry.name, value: updatedEntry.value });
+    if (issue.band) { setPendingLabPlausibility({ entry: updatedEntry, issue }); return; }
+    setPendingLabPlausibility(null);
+    commitLabEntry(updatedEntry);
   }
 
   // Recompute duplicate groups whenever labs change
@@ -1598,6 +1628,55 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
           </div>
         </div>
       )}
+
+      {/* A-12: manual-lab plausibility gate. Hard band blocks the save with
+          suggestion buttons (nothing auto-corrects); soft band confirms and
+          saves in one tap. DEC-019. */}
+      {pendingLabPlausibility && (() => {
+        const { entry, issue } = pendingLabPlausibility;
+        const hasHard = issue.band === "hard";
+        return (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.78)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+            <div style={{ width:360, maxWidth:"90vw", background:"#0b1220", border:"1px solid #16273c", borderRadius:14, padding:"20px 22px", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}>
+              <div style={{ fontSize:9, color: hasHard ? "#f87171" : "#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:6 }}>
+                {hasHard ? "CHECK THIS VALUE" : "UNUSUAL VALUE"}
+              </div>
+              <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:17, color:"#dde8f5", marginBottom:14 }}>
+                {hasHard ? "This doesn't look right" : "Save this result?"}
+              </div>
+              <div style={{ fontSize:12, color:"#c4d8ee", marginBottom:14, lineHeight:1.5 }}>
+                {entry.name}: <strong>{entry.value}</strong> {issue.unit} is {hasHard ? "outside a plausible range." : "far from a typical range."}
+              </div>
+              {hasHard && (
+                issue.suggestions.length > 0 ? (
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:4 }}>
+                    {issue.suggestions.map(s => (
+                      <button key={s} onClick={() => applyLabSuggestion(s)}
+                        style={{ padding:"7px 12px", background:"#132036", border:"1px solid #244266", borderRadius:8, color:"#7eb8d8", fontSize:12.5, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                        Use {s} {issue.unit}?
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize:11, color:"#98afc4", marginBottom:4 }}>No suggested correction — please edit the value manually.</div>
+                )
+              )}
+              <div style={{ display:"flex", gap:8, marginTop:16 }}>
+                {!hasHard && (
+                  <button onClick={commitPendingLab}
+                    style={{ flex:1, padding:"11px", background:"#10b981", border:"none", borderRadius:9, color:"#fff", fontSize:13, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer" }}>
+                    Save Anyway
+                  </button>
+                )}
+                <button onClick={() => setPendingLabPlausibility(null)}
+                  style={{ flex: hasHard ? 1 : "none", padding:"11px 16px", background:"#0b1220", border:"1px solid #111e30", borderRadius:9, color:"#b0c4d8", fontSize:13, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
+                  {hasHard ? "Edit Manually" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

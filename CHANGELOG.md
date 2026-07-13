@@ -12,9 +12,61 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
+## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-12 / merged UI-4:** Input plausibility guard + one shared vital schema.
+  New `src/config/plausibilityBounds.js` (versioned hard/soft bounds per
+  vital and per lab analyte) and `src/lib/plausibility.js`
+  (`checkVitalReading`/`checkVitalCrossFields`/`checkLabReading`/
+  `suggestCorrections`) — a deterministic, AI-free check distinct from the
+  tripwire (A-01): hard band (physiologically impossible) blocks the save
+  with correction-suggestion buttons the patient picks from, nothing
+  auto-corrects; soft band (implausible but possible) confirms and saves
+  with one tap and never blocks (DEC-019).
+  - New `src/lib/vitals.js`: one shared vital schema/helper
+    (`mkReading`/`saveReading`/`getLatestFieldValue`/`getFieldHistory`/
+    `getSyntheticLatestReading`) replacing four independently-written
+    vital-save paths (two in the desktop Vitals tab, two in the companion
+    app) that disagreed on shape, plus a fifth, previously-undocumented one
+    found during this item — the Dashboard's "Quick Vitals" modal in
+    `App.jsx` (DEC-028). Readings are now id-keyed, not date-keyed, so two
+    legitimate same-day readings never silently collide; a blank field is
+    always `null`, never silently carried forward from the last reading
+    (the exact bug UI-4 named for removal); `enteredAt` is stored separately
+    from the reading's own editable date/time.
+  - New migration v2 in `src/lib/migrations.js` (A-08 rails): normalizes
+    every pre-existing `mi_readings` entry onto the shared schema
+    regardless of which of the old shapes produced it, idempotent on
+    re-run.
+  - `Tab06.jsx` (desktop Vitals): both save paths route through the guard;
+    added an optional Time field alongside the existing editable Date;
+    fixed per-field "latest/previous" computation (a partial entry in one
+    field no longer hides an earlier real reading in another) for both the
+    selected-vital view and every sidebar card independently; fixed
+    inconsistent O2/SpO2 labeling (chart, inline form, history table) to
+    read "O2 Saturation"/"O2 Sat %" throughout.
+  - `Tab05.jsx` (Labs): manual lab entry (`handleAddLab`) routes through the
+    same guard for the single lab value.
+  - Companion `Log.jsx`: both write paths (structured Vitals tab, Quick
+    Log's AI-drafted vital branch) route through the shared helpers and the
+    guard; Quick Log now shows the reading date (editable) before filing,
+    per UI-4.
+  - `App.jsx`'s Dashboard "Quick Vitals" modal: rewired off its own
+    carry-forward + date-keyed `mergeReadings()` write path onto the shared
+    helpers and the guard; added a real Date/Time picker in place of a
+    free-text date field.
+  - `src/rie/consistencyChecks.js`: new `checkVitalPlausibility()` /
+    `checkLabPlausibility()`, wired into `runConsistency()` — reuses the
+    existing Review Queue as the extraction-path / background-audit
+    surface the spec calls for, rather than building new UI.
+  - `src/components/Dashboard.jsx` was found to be dead code (not imported
+    anywhere — the live dashboard is inline in `App.jsx`) and left
+    untouched; flagged as OPEN-13 for its own small cleanup.
+  - Verified: `npm run build` passes; Node-level unit tests against
+    `plausibility.js`, `vitals.js`, and `migrations.js` all pass. Live
+    browser verification of the gates was skipped this session — the dev
+    app is now locked behind the P-02 vault passphrase; flagged as OPEN-14.
 - **P-06 / PG-11 and P-05:** Legal drafts. New `TERMS_OF_SERVICE.md` and
   `PRIVACY_POLICY.md` at repo root — plain-language, both explicitly marked
   DRAFT pending attorney review, describing the non-custodial architecture

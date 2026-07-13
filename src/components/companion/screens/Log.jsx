@@ -4,8 +4,71 @@
 import { useState } from "react";
 import { C, mono, sans, Card, SL, Btn, Empty, Pill } from "../companionUI.jsx";
 import { rls, wls, uid, toISO, readings, latestWith, recentAverage, activeMeds } from "../../../lib/companionData.js";
+import { mkReading, saveReading } from "../../../lib/vitals.js";
+import { checkVitalReading, checkVitalCrossFields } from "../../../lib/plausibility.js";
 import { askInsinaJSON } from "../../../lib/companionAI.js";
 import MicButton from "../MicButton.jsx";
+
+// A-12: run the plausibility guard on a candidate reading before it's ever
+// written — same deterministic check as the desktop Vitals tab, distinct
+// from the tripwire (A-01). Returns { hardIssues, softFieldIssues,
+// crossFieldIssues } (all empty arrays if the reading is plausible).
+function evaluatePlausibility(reading) {
+  const fieldIssues = checkVitalReading(reading);
+  const crossFieldIssues = checkVitalCrossFields(reading);
+  const hardIssues = Object.entries(fieldIssues).filter(([, v]) => v.band === "hard");
+  const softFieldIssues = Object.entries(fieldIssues).filter(([, v]) => v.band === "soft");
+  return { hardIssues, softFieldIssues, crossFieldIssues };
+}
+function isClean({ hardIssues, softFieldIssues, crossFieldIssues }) {
+  return hardIssues.length === 0 && softFieldIssues.length === 0 && crossFieldIssues.length === 0;
+}
+
+// ── Plausibility gate card — hard band blocks with suggestion buttons
+// (nothing auto-corrects); soft band + cross-field issues confirm-and-save
+// in one tap. DEC-019. ────────────────────────────────────────────────────
+function PlausibilityGateCard({ pending, onConfirm, onSuggestion, onCancel }) {
+  const { reading, hardIssues, softFieldIssues, crossFieldIssues } = pending;
+  const hasHard = hardIssues.length > 0;
+  return (
+    <Card style={{ marginBottom: 16, border: `1px solid ${hasHard ? C.red : C.amber}40` }}>
+      <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: hasHard ? C.red : C.amber, fontFamily: mono, marginBottom: 8 }}>
+        {hasHard ? "Check this value" : "Unusual value"}
+      </div>
+      {hardIssues.map(([field, issue]) => (
+        <div key={field} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: C.p, marginBottom: 6, lineHeight: 1.5 }}>
+            {issue.label}: <strong>{reading[field]}</strong> {issue.unit} is outside a plausible range.
+          </div>
+          {issue.suggestions.length > 0 ? (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {issue.suggestions.map(s => (
+                <button key={s} onClick={() => onSuggestion(field, s)}
+                  style={{ padding: "6px 10px", background: "rgba(79,142,247,.1)", border: `1px solid ${C.blue}40`, borderRadius: 8, color: C.blue, fontSize: 11.5, fontFamily: mono, cursor: "pointer" }}>
+                  Use {s} {issue.unit}?
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: 10.5, color: C.ghost }}>No suggested correction — edit the value manually.</div>
+          )}
+        </div>
+      ))}
+      {softFieldIssues.map(([field, issue]) => (
+        <div key={field} style={{ fontSize: 12, color: C.p, marginBottom: 8, lineHeight: 1.5 }}>
+          {issue.label}: <strong>{reading[field]}</strong> {issue.unit} is far from your typical range.
+        </div>
+      ))}
+      {crossFieldIssues.map((issue, i) => (
+        <div key={i} style={{ fontSize: 12, color: C.p, marginBottom: 8, lineHeight: 1.5 }}>{issue.message}</div>
+      ))}
+      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+        {!hasHard && <Btn onClick={onConfirm} color={C.green}>Save Anyway</Btn>}
+        <Btn onClick={onCancel} color={C.ghost}>{hasHard ? "Edit Manually" : "Cancel"}</Btn>
+      </div>
+    </Card>
+  );
+}
 
 const SUBTABS = [
   { key: "vitals",   label: "Vitals" },
@@ -55,19 +118,37 @@ const BLANK_V = Object.fromEntries(VITAL_FIELDS.map(f => [f.key, ""]));
 function Vitals({ queueSync }) {
   const [form, setForm] = useState(BLANK_V);
   const [saved, setSaved] = useState(false);
+  // A-12: pending plausibility gate — { reading, hardIssues, softFieldIssues, crossFieldIssues } | null.
+  const [pending, setPending] = useState(null);
   const recent = readings();
 
   const prevBP = latestWith("bp_s");
   const avgSys = recentAverage("bp_s");
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
-  function save() {
-    if (!Object.values(form).some(v => v !== "")) return;
-    const r = { id: uid(), ts: Date.now(), date: toISO(), source: "companion", flag: false };
-    VITAL_FIELDS.forEach(f => { if (form[f.key] !== "") r[f.store] = +form[f.key]; });
-    wls("mi_readings", [r, ...rls("mi_readings", [])]);
+
+  function commit(reading) {
+    saveReading(reading);
     setForm(BLANK_V); setSaved(true); setTimeout(() => setSaved(false), 2500);
     queueSync?.();
+  }
+
+  function attemptSave(reading) {
+    const result = evaluatePlausibility(reading);
+    if (isClean(result)) { commit(reading); return; }
+    setPending({ reading, ...result });
+  }
+
+  function save() {
+    if (!Object.values(form).some(v => v !== "")) return;
+    attemptSave(mkReading({ source: "companion", ...form }));
+  }
+
+  function applySuggestion(field, value) {
+    if (!pending) return;
+    const updated = { ...pending.reading, [field]: value };
+    setPending(null);
+    attemptSave(updated);
   }
 
   return (
@@ -80,19 +161,30 @@ function Vitals({ queueSync }) {
         </div>
       )}
 
-      <Card style={{ marginBottom: 16 }}>
-        <SL>New Reading</SL>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-          {VITAL_FIELDS.map(f => (
-            <div key={f.key}>
-              <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{f.label}</div>
-              <input type="number" inputMode="decimal" value={form[f.key]} placeholder={f.ph} onChange={e => set(f.key, e.target.value)}
-                style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, padding: "9px 10px", color: C.p, fontSize: 14, fontFamily: mono, outline: "none", boxSizing: "border-box" }} />
-            </div>
-          ))}
-        </div>
-        <Btn onClick={save} color={C.green}>Save Reading</Btn>
-      </Card>
+      {pending && (
+        <PlausibilityGateCard
+          pending={pending}
+          onConfirm={() => { commit(pending.reading); setPending(null); }}
+          onSuggestion={applySuggestion}
+          onCancel={() => setPending(null)}
+        />
+      )}
+
+      {!pending && (
+        <Card style={{ marginBottom: 16 }}>
+          <SL>New Reading</SL>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+            {VITAL_FIELDS.map(f => (
+              <div key={f.key}>
+                <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{f.label}</div>
+                <input type="number" inputMode="decimal" value={form[f.key]} placeholder={f.ph} onChange={e => set(f.key, e.target.value)}
+                  style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, padding: "9px 10px", color: C.p, fontSize: 14, fontFamily: mono, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            ))}
+          </div>
+          <Btn onClick={save} color={C.green}>Save Reading</Btn>
+        </Card>
+      )}
 
       <SL>Recent Readings</SL>
       {recent.length === 0 ? <Empty>No readings recorded yet.</Empty> : recent.slice(0, 12).map(r => (
@@ -205,8 +297,14 @@ function Symptoms({ queueSync, askAI }) {
 function QuickLog({ queueSync, onDone }) {
   const [text, setText] = useState("");
   const [draft, setDraft] = useState(null);
+  // UI-4: the reading date Quick Log will file a vital draft under, shown
+  // and editable before saving — defaults to today, not silently assumed.
+  const [draftDate, setDraftDate] = useState(toISO());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // A-12: pending plausibility gate for the vital branch — same guard as the
+  // structured Vitals tab, distinct from the tripwire (A-01). DEC-019.
+  const [pending, setPending] = useState(null);
 
   async function interpret() {
     const t = text.trim();
@@ -221,17 +319,37 @@ Include only the sub-object matching "kind"; omit any numeric field you don't kn
         messages: [{ role: "user", content: t }],
       });
       setDraft(data);
+      setDraftDate(toISO());
     } catch (e) { setError(e.message || "Couldn’t interpret that — try the Vitals or Symptoms tab."); }
     finally { setBusy(false); }
+  }
+
+  function commitVital(reading) {
+    saveReading(reading);
+    setDraft(null); setText(""); setPending(null); queueSync?.();
+    onDone?.("vitals");
+  }
+
+  function attemptSaveVital(reading) {
+    const result = evaluatePlausibility(reading);
+    if (isClean(result)) { commitVital(reading); return; }
+    setPending({ reading, ...result });
+  }
+
+  function applySuggestion(field, value) {
+    if (!pending) return;
+    const updated = { ...pending.reading, [field]: value };
+    setPending(null);
+    attemptSaveVital(updated);
   }
 
   function confirm() {
     if (!draft) return;
     if (draft.kind === "vital" && draft.vital) {
-      const r = { id: uid(), ts: Date.now(), date: toISO(), source: "companion", flag: false };
-      ["bp_s", "bp_d", "hr", "o2", "weight", "temp"].forEach(k => { if (draft.vital[k] != null) r[k] = +draft.vital[k]; });
-      wls("mi_readings", [r, ...rls("mi_readings", [])]);
-    } else if (draft.kind === "symptom" && draft.symptom) {
+      attemptSaveVital(mkReading({ date: draftDate, source: "companion", ...draft.vital }));
+      return;
+    }
+    if (draft.kind === "symptom" && draft.symptom) {
       const s = { id: uid(), name: draft.symptom.name || "Symptom", severity: draft.symptom.severity || "Moderate", date: toISO(), notes: draft.symptom.notes || "", source: "companion" };
       wls("mi_symptoms", [s, ...rls("mi_symptoms", [])]);
     } else if (draft.kind === "medication" && draft.medication) {
@@ -256,11 +374,27 @@ Include only the sub-object matching "kind"; omit any numeric field you don't kn
       <Btn onClick={interpret} disabled={busy || !text.trim()}>{busy ? "Interpreting…" : "Interpret"}</Btn>
       {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10 }}>{error}</div>}
 
-      {draft && (
+      {pending && (
+        <PlausibilityGateCard
+          pending={pending}
+          onConfirm={() => commitVital(pending.reading)}
+          onSuggestion={applySuggestion}
+          onCancel={() => setPending(null)}
+        />
+      )}
+
+      {!pending && draft && (
         <Card style={{ marginTop: 14, border: `1px solid ${C.blue}40` }}>
           <SL>Insina suggests filing</SL>
           <div style={{ fontSize: 13, color: C.p, marginBottom: 4 }}>{draft.summary || `${draft.kind} entry`}</div>
           <Pill color={C.blue}>{draft.kind}</Pill>
+          {draft.kind === "vital" && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Reading Date</div>
+              <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
+                style={{ padding: "7px 10px", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, color: C.p, fontSize: 12, fontFamily: mono, outline: "none" }} />
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <Btn onClick={confirm} color={C.green}>Confirm & file</Btn>
             <Btn onClick={() => setDraft(null)} color={C.ghost}>Discard</Btn>

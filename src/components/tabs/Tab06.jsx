@@ -1,5 +1,25 @@
 import { useState, useEffect } from "react";
-import { getStore, setStore, mergeReadings } from "../../store.js";
+import { getStore, setStore } from "../../store.js";
+import { mkReading, saveReading, getFieldHistory } from "../../lib/vitals.js";
+import { checkVitalReading, checkVitalCrossFields } from "../../lib/plausibility.js";
+
+// UI-4: one shared mapping from a vital-card id to the mi_readings field it
+// reads — "latest"/"previous" must be looked up per field, not per record,
+// since a record may be a partial entry (e.g. a weight-only log has null
+// bp_s and must not hide an earlier, still-current BP reading).
+const FIELD_KEY_BY_VITAL_ID = {
+  bp: "bp_s", hr: "hr", resting_hr: "resting_hr", o2: "o2",
+  weight: "weight", temp: "temp", glucose: "glucose", sleep: "sleep",
+  bmi: "weight", // BMI is derived from weight; no field of its own
+};
+function latestForVitalId(id) {
+  const key = FIELD_KEY_BY_VITAL_ID[id];
+  return key ? (getFieldHistory(key)[0] ?? null) : null;
+}
+function prevForVitalId(id) {
+  const key = FIELD_KEY_BY_VITAL_ID[id];
+  return key ? (getFieldHistory(key)[1] ?? null) : null;
+}
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -283,7 +303,7 @@ const VITALS = [
     latestNum: r => r.o2,
     statusFn: r => r.o2 == null ? { label: "No data", color: "#98afc4" } : r.o2 >= 98 ? { label: "Excellent", color: "#10b981" } : r.o2 >= 95 ? { label: "Normal", color: "#7eb8d8" } : { label: "Low", color: "#ef4444" },
     chartType: "line", chartKeys: ["o2"], chartColors: ["#10b981"],
-    chartLabels: ["SpO2"],
+    chartLabels: ["O2 Saturation"],
     refLines: [{ val: 95, color: "#ef4444" }],
     chartYMin: 88, chartYMax: 102,
     data: "manual",
@@ -357,7 +377,7 @@ const VITALS = [
 // Log form
 function LogPanel({ onClose, onSave }) {
   const todayISO = new Date().toISOString().split("T")[0];
-  const [form, setForm] = useState({ date: todayISO, bp_s: "", bp_d: "", hr: "", resting_hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
+  const [form, setForm] = useState({ date: todayISO, time: "", bp_s: "", bp_d: "", hr: "", resting_hr: "", o2: "", weight: "", temp: "", glucose: "", sleep: "" });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const fields = [
@@ -381,17 +401,24 @@ function LogPanel({ onClose, onSave }) {
         <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
-        {/* Date */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Date of Reading</div>
-          <input type="date" value={form.date} onChange={e => set("date", e.target.value)}
-            style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${form.date !== todayISO ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
-          {form.date !== todayISO && (
-            <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
-              Logging for past date — {new Date(form.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-            </div>
-          )}
+        {/* Date + optional time */}
+        <div style={{ marginBottom: 16, display: "flex", gap: 8 }}>
+          <div style={{ flex: 2 }}>
+            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Date of Reading</div>
+            <input type="date" value={form.date} onChange={e => set("date", e.target.value)}
+              style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${form.date !== todayISO ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Time (optional)</div>
+            <input type="time" value={form.time} onChange={e => set("time", e.target.value)}
+              style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+          </div>
         </div>
+        {form.date !== todayISO && (
+          <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginTop: -10, marginBottom: 16 }}>
+            Logging for past date — {new Date(form.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}{form.time ? ` at ${form.time}` : ""}
+          </div>
+        )}
         <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
         {fields.map(({ label, inputs, unit }) => (
           <div key={label} style={{ marginBottom: 16 }}>
@@ -411,7 +438,7 @@ function LogPanel({ onClose, onSave }) {
         </div>
       </div>
       <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
-        <button onClick={() => { onSave(form); onClose(); }}
+        <button onClick={() => onSave(form)}
           style={{ flex: 1, padding: "11px", background: "#10b981", border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
           Save Entry
         </button>
@@ -419,6 +446,73 @@ function LogPanel({ onClose, onSave }) {
           style={{ padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
           Cancel
         </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A-12: the plausibility gate modal. Hard-band fields block the save and
+ * offer suggestion buttons (value never auto-corrects — the patient picks);
+ * soft-band fields and cross-field issues (e.g. systolic/diastolic swapped)
+ * never block, only confirm-and-save with one tap. DEC-019.
+ */
+function PlausibilityGate({ pending, onConfirm, onSuggestion, onCancel }) {
+  const { reading, hardIssues, softFieldIssues, crossFieldIssues } = pending;
+  const hasHard = hardIssues.length > 0;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(4,7,14,0.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+      <div style={{ width: 360, maxWidth: "90vw", background: "#0b1220", border: "1px solid #16273c", borderRadius: 14, padding: "20px 22px", boxShadow: "0 20px 60px rgba(0,0,0,.5)" }}>
+        <div style={{ fontSize: 9, color: hasHard ? "#f87171" : "#f59e0b", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 6 }}>
+          {hasHard ? "CHECK THIS VALUE" : "UNUSUAL VALUE"}
+        </div>
+        <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 17, color: "#dde8f5", marginBottom: 14 }}>
+          {hasHard ? "This doesn't look right" : "Save this reading?"}
+        </div>
+
+        {hardIssues.map(([field, issue]) => (
+          <div key={field} style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: "#c4d8ee", marginBottom: 8, lineHeight: 1.5 }}>
+              {issue.label}: <strong>{reading[field]}</strong> {issue.unit} is outside a plausible range.
+            </div>
+            {issue.suggestions.length > 0 ? (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {issue.suggestions.map(s => (
+                  <button key={s} onClick={() => onSuggestion(field, s)}
+                    style={{ padding: "7px 12px", background: "#132036", border: "1px solid #244266", borderRadius: 8, color: "#7eb8d8", fontSize: 12.5, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}>
+                    Use {s} {issue.unit}?
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: "#98afc4" }}>No suggested correction — please edit the value manually.</div>
+            )}
+          </div>
+        ))}
+
+        {softFieldIssues.map(([field, issue]) => (
+          <div key={field} style={{ fontSize: 12, color: "#c4d8ee", marginBottom: 10, lineHeight: 1.5 }}>
+            {issue.label}: <strong>{reading[field]}</strong> {issue.unit} is far from your typical range.
+          </div>
+        ))}
+
+        {crossFieldIssues.map((issue, i) => (
+          <div key={i} style={{ fontSize: 12, color: "#c4d8ee", marginBottom: 10, lineHeight: 1.5 }}>{issue.message}</div>
+        ))}
+
+        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+          {!hasHard && (
+            <button onClick={onConfirm}
+              style={{ flex: 1, padding: "11px", background: "#10b981", border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
+              Save Anyway
+            </button>
+          )}
+          <button onClick={onCancel}
+            style={{ flex: hasHard ? 1 : "none", padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+            {hasHard ? "Edit Manually" : "Cancel"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -434,9 +528,13 @@ export default function App({ onNavChange }) {
   const [watchReadings, setWatchReadings]   = useState(() => getStore('watch_daily') ?? []);
   const [time, setTime] = useState(new Date());
   const [showEntryForm, setShowEntryForm] = useState(false);
-  const [newReading, setNewReading] = useState({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+  const [newReading, setNewReading] = useState({ date:"", time:"", ts:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
   const [showFlagged, setShowFlagged] = useState(false);
   const [vitalSearch, setVitalSearch] = useState("");
+  // A-12: pending plausibility gate — { reading, hardIssues, softIssues, onDone } | null.
+  // Blocks the save until hard-band issues are resolved (or the reading is
+  // edited/cancelled); soft-band issues need only a one-tap confirm.
+  const [pendingPlausibility, setPendingPlausibility] = useState(null);
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
 
@@ -460,51 +558,68 @@ export default function App({ onNavChange }) {
   const filteredData = config.id === "bmi"
     ? filteredRaw.map(r => ({ ...r, bmi_calc: calcBMI(r.weight) })).filter(r => r.bmi_calc != null)
     : filteredRaw;
-  const latest = manualReadings[0];
-  const latestWatch = watchReadings[0];
-  const prev = manualReadings[1];
+  // UI-4: per-field, not per-record — see FIELD_KEY_BY_VITAL_ID above.
+  const latest = latestForVitalId(config.id);
+  const latestWatch = watchReadings[0] ?? null;
+  const prev = prevForVitalId(config.id);
+
+  /**
+   * A-12: run the plausibility guard on a candidate reading before it's
+   * ever written. Hard band blocks the save (patient picks a suggestion or
+   * edits manually — nothing auto-corrects); soft band confirms with one
+   * tap and never blocks (real extreme values are what the tripwire, A-01,
+   * exists to catch, not this guard). Plausibility resolves BEFORE the
+   * write, so a blocked typo never reaches mi_readings and can never fire a
+   * tripwire flag; a confirmed extreme is written and evaluated normally.
+   */
+  const attemptSaveReading = (reading, onDone) => {
+    const fieldIssues = checkVitalReading(reading);
+    const crossFieldIssues = checkVitalCrossFields(reading);
+    const hardIssues = Object.entries(fieldIssues).filter(([, v]) => v.band === "hard");
+    const softFieldIssues = Object.entries(fieldIssues).filter(([, v]) => v.band === "soft");
+    if (hardIssues.length === 0 && softFieldIssues.length === 0 && crossFieldIssues.length === 0) {
+      const merged = saveReading(reading);
+      setManualReadings(merged);
+      onDone();
+      return;
+    }
+    setPendingPlausibility({ reading, hardIssues, softFieldIssues, crossFieldIssues, onDone });
+  };
+
+  const commitPendingReading = () => {
+    if (!pendingPlausibility) return;
+    const merged = saveReading(pendingPlausibility.reading);
+    setManualReadings(merged);
+    pendingPlausibility.onDone();
+    setPendingPlausibility(null);
+  };
+
+  const applySuggestionToPending = (field, value) => {
+    if (!pendingPlausibility) return;
+    const updated = { ...pendingPlausibility.reading, [field]: value };
+    setPendingPlausibility(null);
+    attemptSaveReading(updated, pendingPlausibility.onDone);
+  };
 
   const handleSave = form => {
-    const ts   = form.date || new Date().toISOString().split('T')[0];
-    const date = new Date(ts + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    const r = {
-      date, ts,
-      bp_s: +form.bp_s || null, bp_d: +form.bp_d || null,
-      hr: +form.hr || null, resting_hr: +form.resting_hr || null,
-      o2: +form.o2 || null,
-      weight: +form.weight || null, temp: +form.temp || null,
-      glucose: +form.glucose || null, sleep: +form.sleep || null,
-      flag: (+form.bp_s || 0) >= 160,
-    };
-    const merged = mergeReadings([r]);
-    setManualReadings(merged);
+    const reading = mkReading({
+      date: form.date, time: form.time,
+      bp_s: form.bp_s, bp_d: form.bp_d, hr: form.hr, resting_hr: form.resting_hr,
+      o2: form.o2, weight: form.weight, temp: form.temp, glucose: form.glucose, sleep: form.sleep,
+    });
+    attemptSaveReading(reading, () => setShowLog(false));
   };
 
   const handleSaveReading = () => {
-    const today = new Date();
-    const ts = newReading.date || today.toISOString().split('T')[0];
-    const dateLabel = newReading.date
-      ? new Date(newReading.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric" })
-      : today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-    // Carry forward most recent non-null value for each field independently
-    const bp_s      = newReading.bp_s      ? parseInt(newReading.bp_s)        : manualReadings.find(r => r.bp_s      != null)?.bp_s;
-    const bp_d      = newReading.bp_d      ? parseInt(newReading.bp_d)        : manualReadings.find(r => r.bp_d      != null)?.bp_d;
-    const hr        = newReading.hr        ? parseInt(newReading.hr)          : manualReadings.find(r => r.hr        != null)?.hr;
-    const resting_hr= newReading.resting_hr? parseInt(newReading.resting_hr)  : manualReadings.find(r => r.resting_hr!= null)?.resting_hr;
-    const o2        = newReading.o2        ? parseFloat(newReading.o2)        : manualReadings.find(r => r.o2        != null)?.o2;
-    const weight    = newReading.weight    ? parseFloat(newReading.weight)    : manualReadings.find(r => r.weight    != null)?.weight;
-    const temp      = newReading.temp      ? parseFloat(newReading.temp)      : manualReadings.find(r => r.temp      != null)?.temp;
-    const glucose   = newReading.glucose   ? parseInt(newReading.glucose)     : manualReadings.find(r => r.glucose   != null)?.glucose;
-    const sleep     = newReading.sleep     ? parseFloat(newReading.sleep)     : manualReadings.find(r => r.sleep     != null)?.sleep;
-    const reading = {
-      date: dateLabel, ts,
-      bp_s, bp_d, hr, resting_hr, o2, weight, temp, glucose, sleep,
-      flag: bp_s >= 160,
-    };
-    const merged = mergeReadings([reading]);
-    setManualReadings(merged);
-    setShowEntryForm(false);
-    setNewReading({ date:"", ts:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+    const reading = mkReading({
+      date: newReading.date, time: newReading.time,
+      bp_s: newReading.bp_s, bp_d: newReading.bp_d, hr: newReading.hr, resting_hr: newReading.resting_hr,
+      o2: newReading.o2, weight: newReading.weight, temp: newReading.temp, glucose: newReading.glucose, sleep: newReading.sleep,
+    });
+    attemptSaveReading(reading, () => {
+      setShowEntryForm(false);
+      setNewReading({ date:"", time:"", ts:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+    });
   };
 
   const flaggedManual = manualReadings.filter(r => r.flag).length;
@@ -632,9 +747,11 @@ export default function App({ onNavChange }) {
             {/* Vital cards */}
             {VITALS.filter(v => v.label.toLowerCase().includes(vitalSearch.toLowerCase())).map((vc, i) => {
               const isWatch = vc.data === "watch";
-              const latestR = isWatch ? latestWatch : latest;
+              // Per-card, not the outer latest/prev (those are for the currently-SELECTED vital only).
+              const latestR = isWatch ? (watchReadings[0] ?? null) : latestForVitalId(vc.id);
+              const cardPrev = isWatch ? (watchReadings[1] ?? null) : prevForVitalId(vc.id);
               const val = latestR ? vc.latestNum(latestR) : null;
-              const status = latestR ? vc.statusFn(latestR, prev) : null;
+              const status = latestR ? vc.statusFn(latestR, cardPrev) : null;
               const isSelected = selectedId === vc.id;
               return (
                 <div key={vc.id} className={`vcard ${isSelected?"sel":""}`} style={{ animationDelay:`${i*40}ms` }} onClick={()=>setSelectedId(vc.id)}>
@@ -670,11 +787,12 @@ export default function App({ onNavChange }) {
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:12 }}>
                   {[
                     { label:"DATE", key:"date", placeholder:"", type:"date" },
+                    { label:"TIME (OPTIONAL)", key:"time", placeholder:"", type:"time" },
                     { label:"BP SYSTOLIC", key:"bp_s", placeholder:"131" },
                     { label:"BP DIASTOLIC", key:"bp_d", placeholder:"71" },
                     { label:"HEART RATE", key:"hr", placeholder:"64" },
                     { label:"RESTING HR", key:"resting_hr", placeholder:"58" },
-                    { label:"O2 SAT %", key:"o2", placeholder:"99" },
+                    { label:"O2 SATURATION %", key:"o2", placeholder:"99" },
                     { label:"WEIGHT (lbs)", key:"weight", placeholder:"184.2" },
                     { label:"TEMP (°F)", key:"temp", placeholder:"98.4" },
                     { label:"GLUCOSE", key:"glucose", placeholder:"98" },
@@ -818,7 +936,7 @@ export default function App({ onNavChange }) {
                          { h:"HR",        fn:r=>r.hr??'—',   c:r=>"#7eb8d8" }]
                     : id === "o2"
                       ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
-                         { h:"SpO2 %",     fn:r=>r.o2!=null?`${r.o2}%`:'—', c:r=>r.o2!=null&&r.o2<95?"#ef4444":r.o2!=null&&r.o2<97?"#f59e0b":"#10b981", bold:true },
+                         { h:"O2 Sat %",     fn:r=>r.o2!=null?`${r.o2}%`:'—', c:r=>r.o2!=null&&r.o2<95?"#ef4444":r.o2!=null&&r.o2<97?"#f59e0b":"#10b981", bold:true },
                          { h:"HR",         fn:r=>r.hr??'—',  c:r=>"#7eb8d8" }]
                     : id === "weight"
                       ? [{ h:"Date",   fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
@@ -886,6 +1004,14 @@ export default function App({ onNavChange }) {
           {showLog && <LogPanel onClose={()=>setShowLog(false)} onSave={handleSave} />}
         </div>
       </div>
+      {pendingPlausibility && (
+        <PlausibilityGate
+          pending={pendingPlausibility}
+          onConfirm={commitPendingReading}
+          onSuggestion={applySuggestionToPending}
+          onCancel={() => setPendingPlausibility(null)}
+        />
+      )}
     </div>
   );
 }

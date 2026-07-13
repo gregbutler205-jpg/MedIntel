@@ -67,8 +67,50 @@ const MIGRATIONS = [
     description: "Baseline: stamp existing installs with schema version 1. No data changed — establishes the starting point for every future migration.",
     run() { /* no-op: version stamp only */ },
   },
-  // Future migrations (P-02 vault encryption, A-07 blob-store move, etc.)
-  // append here, in order, each bumping `version` by 1.
+  {
+    version: 2,
+    major: false, // additive only: adds fields, never removes or restructures existing ones
+    description: "UI-4 / A-12: normalize mi_readings onto the shared vital schema (id, canonical date, enteredAt, optional time). Fixes four independently-written vital-save paths disagreeing on shape — one used a locale display string for `date` and a separate `ts` for the real date, another used an epoch-millisecond `ts` with no `date` at all.",
+    run() {
+      let readings;
+      try { readings = JSON.parse(localStorage.getItem("mi_readings") || "[]"); } catch { readings = []; }
+      if (!Array.isArray(readings) || readings.length === 0) return;
+
+      const isCanonicalDate = (s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
+      let idCounter = 0;
+      const genId = () => `mig-${Date.now().toString(36)}-${(idCounter++).toString(36)}`;
+
+      const migrated = readings.map((r) => {
+        // Already on the new schema (has id, enteredAt, and a canonical date) — leave untouched.
+        if (r.id && r.enteredAt && isCanonicalDate(r.date)) return r;
+
+        let canonicalDate;
+        if (isCanonicalDate(r.date)) {
+          canonicalDate = r.date; // companion entries: already YYYY-MM-DD
+        } else if (isCanonicalDate(r.ts)) {
+          canonicalDate = r.ts; // Tab06 entries: ts held the real YYYY-MM-DD, `date` was a display string
+        } else if (typeof r.ts === "number" && Number.isFinite(r.ts)) {
+          const d = new Date(r.ts);
+          canonicalDate = isNaN(d) ? new Date().toISOString().slice(0, 10) : d.toISOString().slice(0, 10);
+        } else {
+          canonicalDate = new Date().toISOString().slice(0, 10); // unrecoverable — last resort, not silently dropped
+        }
+
+        return {
+          ...r,
+          id: r.id || genId(),
+          date: canonicalDate,
+          time: r.time || "",
+          enteredAt: r.enteredAt || `${canonicalDate}T12:00:00.000Z`,
+          source: r.source || "manual",
+        };
+      });
+
+      localStorage.setItem("mi_readings", JSON.stringify(migrated));
+    },
+  },
+  // Future migrations (A-07 blob-store move, etc.) append here, in order,
+  // each bumping `version` by 1.
 ];
 
 /**

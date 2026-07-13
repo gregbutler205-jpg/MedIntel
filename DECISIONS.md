@@ -762,6 +762,44 @@ DEC-008.
 
 ---
 
+## DEC-028: A-12/UI-4 full scope — a fifth, previously-undocumented vital-entry surface found and fixed
+
+**Date:** 2026-07-13
+**Status:** Settled (Greg's decision via AskUserQuestion: "Full scope now"; shipped in code).
+
+**Decision.** A-12's spec named two vital-save paths in the desktop Vitals tab (Tab06) and two in
+the companion app. A survey ahead of implementation found a fifth, undocumented one: `App.jsx`'s
+Dashboard "Quick Vitals" modal (`showVitalsModal`/`quickReading`/`handleQuickSave`), reachable from
+the Dashboard's "Log Vitals" hot button. It carried the same class of bugs the other four had:
+silent carry-forward of the last known value into any blank field (`cf()`'s
+`readings.find(r => r[key] != null)?.[key] ?? null` fallback), a free-text "DATE" input with no
+picker, no time field, `store.js`'s date-keyed `mergeReadings()` (which keys by `.ts` — a field the
+new shared schema doesn't produce, so calling it on a `mkReading()`-shaped object would have
+collapsed every reading without a `.ts` into one map entry), and no plausibility check at all.
+Fixed under the same "Full scope now" answer already given for A-12: rewired onto
+`mkReading`/`saveReading` (`src/lib/vitals.js`), added a real date + optional time picker, and wired
+the same hard-block/soft-confirm plausibility gate used everywhere else in this item. `store.js`'s
+`mergeReadings()` is left in place for the bulk-import path (Tab09/Tab12 parsed-import merge),
+which is out of this item's scope.
+
+Separately, `src/components/Dashboard.jsx` (a standalone file with its own `MANUAL_READINGS`
+module-level frozen constant and the crash bugs the spec described — `MANUAL_READINGS[0].weight`
+with no guard) was found to be dead code: not imported anywhere. The live dashboard is the inline
+one in `App.jsx`, which already read `readings` as live state and already guarded per-field lookups
+(`readings.find(r => r.bp_s != null && ...)`) — it did not have the crash bug the spec's brief
+description implied; the undocumented Quick Vitals modal did. `components/Dashboard.jsx` was left
+untouched (not deleted) — deleting dead files is not what this item specifies, and removing it is
+better scoped as its own small cleanup (see OPEN-13).
+
+**Reasoning.** The master prompt's own instruction is to report the delta between spec and reality
+rather than patch blind or silently expand scope. This is the same category of bug already in
+A-12's granted full scope (silent same-day/blank-field data loss, no plausibility gate) on a
+previously unknown surface, not a new item.
+
+**Related:** A-12, DEC-019, UI-4.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
@@ -818,3 +856,13 @@ DEC-008.
   ciphertext-only upload (DEC-027) assumes every device sharing a Drive backup unlocks with the
   same passphrase/recovery key (single-DEK model). A second real device has not been exercised
   against a live Drive backup produced by this code. (Spawned by DEC-027.)
+- **OPEN-13:** `src/components/Dashboard.jsx` is dead code (not imported anywhere — the live
+  dashboard is inline in `App.jsx`). Low-risk deletion, out of scope for A-12 itself. (Spawned by
+  DEC-028.)
+- **OPEN-14:** A-12's plausibility gates (Tab06, Tab05, App.jsx Dashboard, companion Log.jsx) are
+  verified by Node-level unit tests against `plausibility.js`/`vitals.js`/`migrations.js` only —
+  live browser verification was skipped this session because the dev app is now locked behind the
+  P-02 vault passphrase, which Claude Code does not have and should not be given. Worth an
+  in-browser pass (hard block, soft confirm, suggestion-apply, per-vital latest/prev correctness,
+  same-day multi-reading, migration against real pre-existing data) next time Greg has the vault
+  unlocked. (Spawned by DEC-028.)

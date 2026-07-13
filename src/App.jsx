@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
+import { mkReading, saveReading } from './lib/vitals.js';
+import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
 import LockScreen from './components/LockScreen.jsx';
 import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
@@ -706,7 +708,10 @@ function AppShell() {
     return [];
   });
   const [showVitalsModal, setShowVitalsModal] = useState(false);
-  const [quickReading, setQuickReading] = useState({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+  const [quickReading, setQuickReading] = useState({ date:"", time:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+  // A-12: pending plausibility gate for the Dashboard's Quick Vitals modal —
+  // { reading, hardIssues, softFieldIssues, crossFieldIssues } | null.
+  const [pendingPlausibility, setPendingPlausibility] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
 
   // ── Google Drive auth & sync state ──────────────────────────────────────────
@@ -879,34 +884,45 @@ function AppShell() {
     setLastImport(ts);
   }, []);
 
-  const handleQuickSave = () => {
-    const today = new Date();
-    const ts = today.toISOString().split('T')[0];
-    const dateLabel = today.toLocaleDateString("en-US", { month:"short", day:"numeric" });
-    const cf = (key, parse) => {
-      const v = quickReading[key];
-      if (v !== "" && v != null) return parse(v);
-      return readings.find(r => r[key] != null)?.[key] ?? null;
-    };
-    const bp_s       = cf("bp_s",       v => parseInt(v));
-    const bp_d       = cf("bp_d",       v => parseInt(v));
-    const hr         = cf("hr",         v => parseInt(v));
-    const resting_hr = cf("resting_hr", v => parseInt(v));
-    const o2         = cf("o2",         v => parseInt(v));
-    const weight     = cf("weight",     v => parseFloat(v));
-    const temp       = cf("temp",       v => parseFloat(v));
-    const glucose    = cf("glucose",    v => parseInt(v));
-    const sleep      = cf("sleep",      v => parseFloat(v));
-    const reading = {
-      date: quickReading.date || dateLabel,
-      ts,
-      bp_s, bp_d, hr, resting_hr, o2, weight, temp, glucose, sleep,
-      flag: bp_s != null && bp_s >= 160,
-    };
-    const merged = mergeReadings([reading]);
+  // A-12/UI-4: routed through the shared vital schema (mkReading/saveReading)
+  // instead of a hand-rolled carry-forward + date-keyed merge — a blank field
+  // is null, never silently the last known value, and the plausibility guard
+  // runs before the write (DEC-019), same as the desktop Vitals tab and the
+  // companion app's two entry paths.
+  function commitQuickReading(reading) {
+    const merged = saveReading(reading);
     setReadings(merged);
     setShowVitalsModal(false);
-    setQuickReading({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+    setPendingPlausibility(null);
+    setQuickReading({ date:"", time:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" });
+  }
+
+  function attemptQuickSave(reading) {
+    const fieldIssues = checkVitalReading(reading);
+    const crossFieldIssues = checkVitalCrossFields(reading);
+    const hardIssues = Object.entries(fieldIssues).filter(([, v]) => v.band === "hard");
+    const softFieldIssues = Object.entries(fieldIssues).filter(([, v]) => v.band === "soft");
+    if (hardIssues.length === 0 && softFieldIssues.length === 0 && crossFieldIssues.length === 0) {
+      commitQuickReading(reading);
+      return;
+    }
+    setPendingPlausibility({ reading, hardIssues, softFieldIssues, crossFieldIssues });
+  }
+
+  function applyQuickSuggestion(field, value) {
+    if (!pendingPlausibility) return;
+    const updated = { ...pendingPlausibility.reading, [field]: value };
+    setPendingPlausibility(null);
+    attemptQuickSave(updated);
+  }
+
+  const handleQuickSave = () => {
+    const reading = mkReading({
+      date: quickReading.date, time: quickReading.time,
+      bp_s: quickReading.bp_s, bp_d: quickReading.bp_d, hr: quickReading.hr, resting_hr: quickReading.resting_hr,
+      o2: quickReading.o2, weight: quickReading.weight, temp: quickReading.temp, glucose: quickReading.glucose, sleep: quickReading.sleep,
+    });
+    attemptQuickSave(reading);
   };
 
   const handleDismissAlert = useCallback((fp, source) => {
@@ -1117,7 +1133,7 @@ function AppShell() {
                       lastWeeklyBackup={lastWeeklyBackup}
                       onSync={signIn}
                       meds={meds}
-                      onLogVitals={() => setShowVitalsModal(true)}
+                      onLogVitals={() => { setQuickReading(q => ({ ...q, date: q.date || new Date().toISOString().slice(0, 10) })); setShowVitalsModal(true); }}
                     />
 
                     {/* ── Current Vitals panel ── */}
@@ -1337,13 +1353,30 @@ function AppShell() {
       {showVitalsModal && (
         <div
           style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.65)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9000 }}
-          onClick={e => { if (e.target === e.currentTarget) { setShowVitalsModal(false); setQuickReading({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); } }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowVitalsModal(false); setQuickReading({ date:"", time:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); } }}
         >
           <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:"24px", width:"min(94vw, 580px)", maxHeight:"90vh", overflowY:"auto" }}>
             <div style={{ fontSize:11, fontWeight:700, color:"#dde8f5", fontFamily:"'DM Mono',monospace", letterSpacing:"2px", textTransform:"uppercase", marginBottom:20 }}>New Vital Reading</div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:12, marginBottom:20 }}>
+              <div>
+                <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>DATE</label>
+                <input
+                  type="date"
+                  style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
+                  value={quickReading.date}
+                  onChange={e => setQuickReading(prev => ({ ...prev, date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>TIME (OPTIONAL)</label>
+                <input
+                  type="time"
+                  style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
+                  value={quickReading.time}
+                  onChange={e => setQuickReading(prev => ({ ...prev, time: e.target.value }))}
+                />
+              </div>
               {[
-                { label:"DATE",          key:"date",       placeholder:"Jan 1" },
                 { label:"BP SYSTOLIC",   key:"bp_s",       placeholder:"131" },
                 { label:"BP DIASTOLIC",  key:"bp_d",       placeholder:"71" },
                 { label:"HEART RATE",    key:"hr",         placeholder:"72" },
@@ -1367,7 +1400,7 @@ function AppShell() {
             </div>
             <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
               <button
-                onClick={() => { setShowVitalsModal(false); setQuickReading({ date:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); }}
+                onClick={() => { setShowVitalsModal(false); setQuickReading({ date:"", time:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); }}
                 style={{ padding:"9px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
               >Cancel</button>
               <button
@@ -1378,6 +1411,65 @@ function AppShell() {
           </div>
         </div>
       )}
+
+      {/* A-12: Quick Vitals plausibility gate — hard band blocks with
+          suggestion buttons (nothing auto-corrects); soft band + cross-field
+          issues confirm-and-save in one tap. DEC-019. */}
+      {pendingPlausibility && (() => {
+        const { reading, hardIssues, softFieldIssues, crossFieldIssues } = pendingPlausibility;
+        const hasHard = hardIssues.length > 0;
+        return (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.78)", zIndex:9500, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+            <div style={{ width:360, maxWidth:"90vw", background:"#0b1220", border:"1px solid #16273c", borderRadius:14, padding:"20px 22px", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}>
+              <div style={{ fontSize:9, color: hasHard ? "#f87171" : "#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:6 }}>
+                {hasHard ? "CHECK THIS VALUE" : "UNUSUAL VALUE"}
+              </div>
+              <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:17, color:"#dde8f5", marginBottom:14 }}>
+                {hasHard ? "This doesn't look right" : "Save this reading?"}
+              </div>
+              {hardIssues.map(([field, issue]) => (
+                <div key={field} style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:12, color:"#c4d8ee", marginBottom:8, lineHeight:1.5 }}>
+                    {issue.label}: <strong>{reading[field]}</strong> {issue.unit} is outside a plausible range.
+                  </div>
+                  {issue.suggestions.length > 0 ? (
+                    <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                      {issue.suggestions.map(s => (
+                        <button key={s} onClick={() => applyQuickSuggestion(field, s)}
+                          style={{ padding:"7px 12px", background:"#132036", border:"1px solid #244266", borderRadius:8, color:"#7eb8d8", fontSize:12.5, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                          Use {s} {issue.unit}?
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize:11, color:"#98afc4" }}>No suggested correction — please edit the value manually.</div>
+                  )}
+                </div>
+              ))}
+              {softFieldIssues.map(([field, issue]) => (
+                <div key={field} style={{ fontSize:12, color:"#c4d8ee", marginBottom:10, lineHeight:1.5 }}>
+                  {issue.label}: <strong>{reading[field]}</strong> {issue.unit} is far from your typical range.
+                </div>
+              ))}
+              {crossFieldIssues.map((issue, i) => (
+                <div key={i} style={{ fontSize:12, color:"#c4d8ee", marginBottom:10, lineHeight:1.5 }}>{issue.message}</div>
+              ))}
+              <div style={{ display:"flex", gap:8, marginTop:16 }}>
+                {!hasHard && (
+                  <button onClick={() => commitQuickReading(reading)}
+                    style={{ flex:1, padding:"11px", background:"#10b981", border:"none", borderRadius:9, color:"#fff", fontSize:13, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer" }}>
+                    Save Anyway
+                  </button>
+                )}
+                <button onClick={() => setPendingPlausibility(null)}
+                  style={{ flex: hasHard ? 1 : "none", padding:"11px 16px", background:"#0b1220", border:"1px solid #111e30", borderRadius:9, color:"#b0c4d8", fontSize:13, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
+                  {hasHard ? "Edit Manually" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Global Search Popup (fixed overlay — works over standalone tabs too) ── */}
       {showSearch && (
