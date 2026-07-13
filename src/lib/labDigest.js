@@ -1,16 +1,19 @@
 // ── A-03 v1: lab digest builder ──────────────────────────────────────────────
 // Per canonical analyte, a 12-month digest replacing both the full-history
 // dump (Tab11, cost/attention degradation) and the latest-value-only summary
-// (Tab05, trend-blind). Grouping is by normalized raw name (trim, lowercase)
-// — A-04 (Phase 2) upgrades this to canonical IDs with alias merging across
-// facilities.
+// (Tab05, trend-blind). Grouping is by canonical id (A-04): seed synonyms plus
+// the patient's confirmed mi_lab_name_map, so the same analyte named
+// differently across facilities (FK506 / Tacrolimus, ALT / SGPT) forms one
+// digest line instead of several.
 //
 // Exports data builders (buildLabDigestData/formatLabDigest for {labDigest},
 // formatLabsWindow for {labsWindow}) so callers can reuse the raw analyte
 // objects for on-screen rendering, not just the AI payload text.
 
+import { canonicalLabId } from "./labCanonical.js";
+
 function normalizeLabName(name) {
-  return (name || "").toLowerCase().trim();
+  return canonicalLabId(name);
 }
 
 function parseNum(v) {
@@ -30,9 +33,15 @@ function parseRefRange(str) {
   return { low: null, high: null };
 }
 
+function customRangeFor(lab, customRanges) {
+  if (!customRanges) return null;
+  // Custom ranges may be keyed by the canonical id (new) or the raw
+  // lowercased name (pre-A-04 entries) — try both so neither breaks.
+  return customRanges[canonicalLabId(lab.name)] || customRanges[(lab.name || "").toLowerCase().trim()] || null;
+}
+
 function effectiveRange(lab, customRanges) {
-  const key = normalizeLabName(lab.name);
-  const c = customRanges?.[key];
+  const c = customRangeFor(lab, customRanges);
   if (c && c.low != null && c.high != null) return { low: +c.low, high: +c.high, source: "doctor" };
   return { ...parseRefRange(lab.refRange), source: "lab" };
 }
@@ -103,7 +112,7 @@ export function buildLabDigestData(labs, customRanges = {}, { windowDays = 365, 
       return a !== null && b !== null ? a - b : null;
     })() : null;
 
-    const custom = customRanges?.[normalizeLabName(newest.name)];
+    const custom = customRangeFor(newest, customRanges);
 
     analytes.push({
       name: newest.name, // most recent raw name, verbatim

@@ -7,8 +7,9 @@
 // fields and Phase 1 surfaces everything in one queue. Easy to retune later.
 
 import { mkFinding } from "./findings.js";
-import { genericOf, labKeyOf, similarity, ALLERGY_CONFLICTS } from "./medDictionary.js";
+import { genericOf, similarity, ALLERGY_CONFLICTS } from "./medDictionary.js";
 import { checkVitalReading, checkVitalCrossFields, checkLabReading } from "../lib/plausibility.js";
+import { canonicalLabId, displayLabName } from "../lib/labCanonical.js";
 
 const safe = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
 const obj  = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
@@ -62,14 +63,24 @@ export function checkLabs() {
     if (d && dob && d < dob) out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].date`, original: `${nm} ${l.date}`, message: `${nm} has a draw date before your date of birth (${l.date})` }));
     const dk = `${(nm || "").toLowerCase()}|${l.date}|${l.value}`;
     seen[dk] = (seen[dk] || 0) + 1;
-    const lk = labKeyOf(nm);
+    // A-04: group by the unified canonical id (seed synonyms + the patient's
+    // confirmed mi_lab_name_map) instead of medDictionary's standalone
+    // labKeyOf — so a grouping the patient has already confirmed no longer
+    // re-nags here.
+    const lk = canonicalLabId(nm);
     (nameByKey[lk] = nameByKey[lk] || new Set()).add(nm);
   });
   Object.entries(seen).forEach(([dk, n]) => {
     if (n > 1) { const [nm, date] = dk.split("|"); out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs.dup.${dk}`, original: nm, message: `${nm} on ${date} appears entered more than once with the same value` })); }
   });
   Object.entries(nameByKey).forEach(([lk, names]) => {
-    if (names.size > 1) { const arr = [...names]; out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs.synonym.${lk}`, original: arr.join(" / "), message: `"${arr.join('" and "')}" may be the same test under different names` })); }
+    // Only nag when the differing source names don't already resolve to one
+    // confirmed display name (i.e. still ungrouped). flag, don't fix.
+    if (names.size > 1) {
+      const arr = [...names];
+      const displays = new Set(arr.map(n => displayLabName(n)));
+      if (displays.size > 1) out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs.synonym.${lk}`, original: arr.join(" / "), message: `"${arr.join('" and "')}" may be the same test under different names` }));
+    }
   });
   return out;
 }

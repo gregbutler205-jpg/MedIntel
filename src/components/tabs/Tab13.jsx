@@ -311,7 +311,8 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           ["mi_labs","mi_meds_full","mi_readings","mi_conditions","mi_surgeries",
            "mi_care_team","mi_notes","mi_appointments","mi_symptoms","mi_milestones",
            "mi_profile_personal","mi_profile_insurance","mi_allergies","mi_emergency_contacts",
-           "mi_care_goals","mi_preventive","mi_care_team_selected","mi_lab_canonical"].forEach(k => {
+           "mi_care_goals","mi_preventive","mi_care_team_selected","mi_lab_canonical",
+           "mi_lab_name_map","mi_lab_custom_ranges"].forEach(k => {
             if (data[k] !== undefined) { localStorage.setItem(k, JSON.stringify(data[k])); count++; }
           });
           showToast(`Restored ${count} data sections — reloading…`);

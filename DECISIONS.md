@@ -850,6 +850,50 @@ and overwriting every completed streamed answer with "Error: model is not define
 
 ---
 
+## DEC-030: A-04 minimal — canonical grouping is a reversible name map, not a record rewrite
+
+**Date:** 2026-07-13
+**Status:** Settled.
+
+**Decision.** Lab test-name canonicalization is implemented as one new module,
+`src/lib/labCanonical.js`, exposing `canonicalLabId(name)` — the single source of truth for
+"same analyte across facilities." Two layers: a seed synonym table (the union of the three
+alias tables that already existed but never fed grouping — tripwire.js's inline `ALIASES`,
+plausibilityBounds' `LAB_ALIASES`, medDictionary's `LAB_SYNONYMS`), and a patient-confirmed
+`mi_lab_name_map` (`{ normalized source name → canonical display name }`). Every grouping site now
+keys on `canonicalLabId`: the digest (`labDigest.js`), Tab05's dedupe / detail history / print,
+custom-range lookup, and tripwire evaluation's dedupe. The RIE `checkLabs` synonym nag also uses
+it and stops firing once a grouping is confirmed.
+
+Three UI-3 requirements drove the shape:
+
+1. **Non-destructive / source-preserving.** The pre-existing "Duplicate Lab Names" merge
+   *rewrote* `lab.name` in place, losing the original string, was irreversible, and wrote a
+   `mi_lab_canonical` map nothing ever read. That is replaced: confirming a group writes only the
+   name map; `mi_labs` records keep their original names forever. `displayLabName()` applies the
+   chosen canonical label at render time only.
+2. **Reversible.** Because records are never rewritten, "Ungroup" simply removes the mapping and
+   the original names reappear — no data reconstruction needed.
+3. **Manual grouping + asks before grouping.** The Group Tests panel is always available (not
+   only when auto-candidates exist): it lists confirmed groups with Ungroup, offers a
+   multi-select "group these arbitrary names" affordance, and still surfaces auto-detected
+   candidates (seed-synonym or noise-stripped collisions) for one-tap confirmation. Nothing groups
+   without the patient's action (flag, don't fix).
+
+**Flag badge (UI-3, other half).** Ordinary out-of-range values get a compact amber "FLAGGED"
+badge in the routine lab list. Amber is deliberate: the urgent tripwire banner and the detail
+"OUT OF RANGE" pill both already use red, so an ordinary flag must not read as urgent. The
+badge/dot/value amber (`#f59e0b`) matches the existing out-of-range dot color.
+
+**Scope.** The seeded-synonym *richness* (a large clinical alias library) and the full
+canonical-ID digest upgrade stay Phase 2 per the spec's A-04 split; this is the minimal slice the
+A-03 digest and multi-facility pilot data need. `mi_lab_name_map` is added to the backup/restore
+key list and syncs to Drive with the rest of the `mi_*` record.
+
+**Related:** A-04, UI-3, A-03, A-01 (tripwire dedupe now shares this canonicalization).
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.

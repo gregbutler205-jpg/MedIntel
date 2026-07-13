@@ -15,6 +15,35 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **A-04 (minimal) / UI-3:** Lab test-name canonicalization + flag badge. New
+  `src/lib/labCanonical.js` resolves a lab name to one canonical grouping id
+  (seed synonyms — FK506 = Tacrolimus, SGPT = ALT, eGFR = Estimated GFR, etc.
+  — plus the patient's confirmed `mi_lab_name_map`). Every grouping site now
+  keys on it: the 12-month digest, Tab05's dedupe / detail history / print,
+  custom-range lookup, and the tripwire engine's per-analyte dedupe (its
+  former 4-entry inline alias table is gone).
+  - **Group Tests** (Tab05, replaces the old "Duplicate Lab Names" merge):
+    the previous merge rewrote `lab.name` in place — destructive,
+    irreversible, and its `mi_lab_canonical` output was never read. Grouping
+    is now a reversible name map: source records keep their original names,
+    the chosen canonical label is applied at render only, and Ungroup
+    restores the originals. The panel is always available (manual grouping of
+    arbitrary names), shows confirmed groups with Ungroup, and still surfaces
+    auto-detected candidates for one-tap confirmation — nothing groups
+    silently.
+  - **Ordinary flag badge:** a compact amber "FLAGGED" badge on out-of-range
+    values in the lab list, deliberately amber so it never reads as the red
+    urgent/tripwire treatment.
+  - Custom ranges are now keyed canonically (a range set on Tacrolimus also
+    covers FK506); existing raw-keyed ranges still resolve via a fallback.
+    `mi_lab_name_map` is added to backup/restore and syncs to Drive. The RIE
+    "same test under different names" nag now uses the unified id and stops
+    firing once a grouping is confirmed.
+  - Verified: `npm run build` passes; 9-check Node harness passes (seed
+    grouping, confirmed mapping + reversibility, records never rewritten,
+    digest collapses aliases to one analyte, canonical custom-range
+    resolution). Live browser verification deferred (OPEN-14, vault-locked
+    dev app).
 - **A-13 / merged UI-15:** Analysis context gathering + AI screen. The
   prompt-side rules (v2.3 CONTEXT GATHERING, {sessionContext}, v2.4
   four-section response structure) already existed in `src/prompts/`; this

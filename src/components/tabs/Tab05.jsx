@@ -7,13 +7,14 @@ import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName, dismissTripwireFlag } from "../../lib/tripwire.js";
 import { checkLabReading } from "../../lib/plausibility.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
+import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLabGroup, getConfirmedGroups } from "../../lib/labCanonical.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
-
-const CANONICAL_MAP_KEY = "mi_lab_canonical";
+// A-04: `mi_lab_canonical` (the old destructive merge's write-only map) is
+// superseded by `mi_lab_name_map` in src/lib/labCanonical.js.
 
 const NAV = [
   // ── Core ───────────────────────────────────────────────────────────────────
@@ -279,8 +280,9 @@ function parseRefRange(str) {
 // The range that determines in/out-of-range: the doctor's custom range when set,
 // otherwise the lab report's printed reference range.
 function effectiveRange(lab, customRanges) {
-  const key = (lab.name || "").toLowerCase().trim();
-  const c = customRanges?.[key];
+  // A-04: tolerate custom ranges keyed by canonical id (new) or raw lowercased
+  // name (pre-A-04), so grouping aliases doesn't drop an existing doctor range.
+  const c = customRanges?.[canonicalLabId(lab.name)] || customRanges?.[(lab.name || "").toLowerCase().trim()];
   if (c && c.low != null && c.high != null) return { low: +c.low, high: +c.high, source: "doctor" };
   const r = parseRefRange(lab.refRange);
   return { low: r.low, high: r.high, source: "lab" };
@@ -330,10 +332,10 @@ function printAIResponse(question, answer, logoUrl) {
 }
 
 function printLabReport(labs, logoUrl) {
-  // Most recent entry per test name
+  // Most recent entry per canonical analyte (A-04)
   const latest = {};
   labs.forEach(l => {
-    const key = (l.name || "").toLowerCase().trim();
+    const key = canonicalLabId(l.name);
     if (!key) return;
     if (!latest[key] || new Date(l.date || 0) > new Date(latest[key].date || 0)) latest[key] = l;
   });
@@ -356,11 +358,10 @@ function printLabReport(labs, logoUrl) {
     const rows = grouped[cat].map(t => {
       const oor = labOutOfRange(t, customRanges);
       const status = oor === true ? '<span style="color:#d97706;font-weight:700">⚠ Flagged</span>' : '<span style="color:#059669">✓ Normal</span>';
-      const ck = (t.name || "").toLowerCase().trim();
-      const cr = customRanges[ck];
+      const cr = customRanges[canonicalLabId(t.name)] || customRanges[(t.name || "").toLowerCase().trim()];
       const rangeCell = (cr && cr.low != null && cr.high != null) ? `${cr.low}–${cr.high} <span style="color:#888">(your range)</span>` : (t.refRange || "—");
       return `<tr>
-        <td>${(t.name||"").replace(/</g,"&lt;")}</td>
+        <td>${(displayLabName(t.name)||"").replace(/</g,"&lt;")}</td>
         <td style="text-align:center;font-weight:600">${t.value||"—"}</td>
         <td style="text-align:center">${t.unit||"—"}</td>
         <td style="text-align:center">${rangeCell}</td>
@@ -527,32 +528,71 @@ function LabGroupReorder({ presentCats }) {
   );
 }
 
+// A-04 / UI-3: propose grouping candidates without ever rewriting a record.
+// A candidate is a set of 2+ distinct SOURCE names that resolve to the same
+// canonical id (via seed synonyms) OR collapse to the same noise-stripped stem
+// — but only when the patient hasn't already confirmed a grouping that covers
+// them. The patient confirms; nothing merges silently (flag, don't fix).
 function detectDuplicates(labs) {
-  const groups = {};
+  const byName = {};
   labs.forEach(l => {
-    const norm = normalizeName(l.name);
-    if (!norm) return;
-    if (!groups[norm]) groups[norm] = new Set();
-    groups[norm].add(l.name);
+    const name = l.name;
+    if (!name) return;
+    if (!byName[name]) byName[name] = { count: 0, dates: [] };
+    byName[name].count += 1;
+    if (l.date) byName[name].dates.push(l.date);
   });
-  return Object.entries(groups)
-    .filter(([, names]) => names.size >= 2)
-    .map(([norm, names]) => {
-      const nameArr = [...names];
-      return {
-        norm,
-        names: nameArr,
-        variants: nameArr.map(name => ({
-          name,
-          count: labs.filter(l => l.name === name).length,
-          dateRange: (() => {
-            const dates = labs.filter(l => l.name === name && l.date).map(l => l.date).sort();
-            if (!dates.length) return null;
-            return dates.length === 1 ? dates[0] : `${dates[0]} – ${dates[dates.length - 1]}`;
-          })(),
-        })).sort((a, b) => b.count - a.count), // most common first
-      };
+  const distinctNames = Object.keys(byName);
+
+  const buckets = {};
+  distinctNames.forEach(name => {
+    // Prefer the seed/confirmed canonical id; fall back to the noise-stripped
+    // stem so near-duplicates ("Tacrolimus Level (Trough)" vs "Tacrolimus")
+    // still surface even before any mapping exists.
+    const canon = canonicalLabId(name);
+    const stem = stripLabNoise(name);
+    const key = canon || stem;
+    (buckets[key] = buckets[key] || new Set()).add(name);
+    if (stem && stem !== key) (buckets[stem] = buckets[stem] || new Set()).add(name);
+  });
+
+  const seen = new Set();
+  const candidates = [];
+  Object.entries(buckets).forEach(([norm, nameSet]) => {
+    const names = [...nameSet];
+    if (names.length < 2) return;
+    // Skip if every name already maps to one confirmed canonical display.
+    const displays = new Set(names.map(n => displayLabName(n)));
+    if (displays.size === 1) return;
+    const sig = names.slice().sort().join("|");
+    if (seen.has(sig)) return;
+    seen.add(sig);
+    candidates.push({
+      norm,
+      names,
+      variants: names.map(name => ({
+        name,
+        count: byName[name].count,
+        dateRange: (() => {
+          const dates = byName[name].dates.slice().sort();
+          if (!dates.length) return null;
+          return dates.length === 1 ? dates[0] : `${dates[0]} – ${dates[dates.length - 1]}`;
+        })(),
+      })).sort((a, b) => b.count - a.count), // most common first
     });
+  });
+  return candidates;
+}
+
+// UI-3: compact "Flagged" badge for ordinary out-of-range values in routine
+// views. Amber, deliberately distinct from the red urgent/tripwire treatment
+// so an ordinary flag never reads as urgent (and vice versa).
+function FlaggedBadge() {
+  return (
+    <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(245,158,11,.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,.35)", padding: "0 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, lineHeight: 1.6 }}>
+      FLAGGED
+    </span>
+  );
 }
 
 export default function App({ onNavChange }) {
@@ -588,6 +628,9 @@ export default function App({ onNavChange }) {
   const [dupGroups, setDupGroups]       = useState([]);
   // { [norm]: { canonical: string, skip: bool } }
   const [dupDecisions, setDupDecisions] = useState({});
+  // A-04 / UI-3 manual grouping: selected source names + chosen canonical name.
+  const [manualSel, setManualSel]       = useState([]);
+  const [manualCanon, setManualCanon]   = useState("");
 
   const [labCatOrder, setLabCatOrder] = useState(getLabCatOrder);
   const [reorderOpen, setReorderOpen] = useState(false);
@@ -605,7 +648,9 @@ export default function App({ onNavChange }) {
   const [customRangeForm, setCustomRangeForm] = useState({ low: "", high: "" });
 
   function saveCustomRange(labName, low, high) {
-    const key = (labName || "").toLowerCase().trim();
+    // A-04: key by canonical id so one doctor's range covers every alias of
+    // the analyte (a range set on "Tacrolimus" also applies to "FK506").
+    const key = canonicalLabId(labName);
     const lo = parseFloat(low), hi = parseFloat(high);
     if (!key || isNaN(lo) || isNaN(hi) || lo >= hi) return;
     const updated = { ...customRanges, [key]: { low: lo, high: hi } };
@@ -615,9 +660,10 @@ export default function App({ onNavChange }) {
   }
 
   function removeCustomRange(labName) {
-    const key = (labName || "").toLowerCase().trim();
+    // Remove both the canonical key and any legacy raw-name key for this analyte.
     const updated = { ...customRanges };
-    delete updated[key];
+    delete updated[canonicalLabId(labName)];
+    delete updated[(labName || "").toLowerCase().trim()];
     setCustomRanges(updated);
     localStorage.setItem("mi_lab_custom_ranges", JSON.stringify(updated));
   }
@@ -692,31 +738,39 @@ export default function App({ onNavChange }) {
     });
     setDupGroups(groups);
     setDupDecisions(decisions);
+    setManualSel([]);
+    setManualCanon("");
     setShowDupModal(true);
   }
 
+  // A-04 / UI-3: confirm groupings as reversible NAME MAPPINGS — source
+  // records are never rewritten, so every original name is preserved and
+  // ungrouping restores the original presentation. `dec.canonical` is the
+  // display name the patient chose for the group.
   function applyMerges() {
-    let updated = [...importedLabs];
     dupGroups.forEach(g => {
       const dec = dupDecisions[g.norm];
-      if (!dec || dec.skip) return;
-      updated = updated.map(lab =>
-        g.names.includes(lab.name) && lab.name !== dec.canonical
-          ? { ...lab, name: dec.canonical }
-          : lab
-      );
-      // Persist canonical map so other components can use it
-      try {
-        const map = JSON.parse(localStorage.getItem(CANONICAL_MAP_KEY) || "{}");
-        g.names.forEach(n => { map[n.toLowerCase()] = dec.canonical; });
-        localStorage.setItem(CANONICAL_MAP_KEY, JSON.stringify(map));
-      } catch {}
+      if (!dec || dec.skip || !dec.canonical) return;
+      setLabMappings(g.names, dec.canonical);
     });
-    setImportedLabs(updated);
-    try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
-    window.dispatchEvent(new Event("mi-data-synced")); // A-01: re-evaluate after a name merge changes canonical matching
+    // setLabMappings already dispatched mi-data-synced; force a local recompute.
+    setImportedLabs(labs => [...labs]);
     setSelectedImportedLab(null);
     setShowDupModal(false);
+  }
+
+  // Manual grouping from the Group Tests panel: an arbitrary set of source
+  // names the patient declares to be the same analyte.
+  function applyManualGroup(sourceNames, canonicalDisplay) {
+    if (!canonicalDisplay || sourceNames.length < 2) return;
+    setLabMappings(sourceNames, canonicalDisplay);
+    setImportedLabs(labs => [...labs]);
+  }
+
+  // Reverse a confirmed grouping.
+  function ungroup(canonicalDisplay) {
+    removeLabGroup(canonicalDisplay);
+    setImportedLabs(labs => [...labs]);
   }
 
   useEffect(() => {
@@ -749,11 +803,13 @@ export default function App({ onNavChange }) {
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
-  // Deduplicated: latest entry per test name
+  // Deduplicated: latest entry per canonical analyte (A-04 — so FK506 and
+  // Tacrolimus collapse to one row). The surviving row keeps its own source
+  // name; displayLabName() applies the confirmed canonical label at render.
   const dedupedLabs = (() => {
     const latest = {};
     importedLabs.forEach(lab => {
-      const key = (lab.name || "").toLowerCase().trim();
+      const key = canonicalLabId(lab.name);
       if (!key) return;
       if (!latest[key] || new Date(lab.date || 0) > new Date(latest[key].date || 0)) {
         latest[key] = lab;
@@ -1067,11 +1123,16 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               {tripwireEnv.status === "unavailable" && "Threshold check: not yet active (pending clinical review of the default threshold library)"}
             </div>
 
-            {/* Duplicate detection badge */}
-            {duplicateGroups.length > 0 && (
-              <button onClick={openDupModal} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.3)", borderRadius:8, color:"#f59e0b", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
+            {/* A-04 / UI-3: Group Tests — always available (manual grouping),
+                highlighted when duplicate candidates are auto-detected. */}
+            {importedLabs.length > 0 && (
+              <button onClick={openDupModal} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background: duplicateGroups.length > 0 ? "rgba(245,158,11,.07)" : "rgba(79,142,247,.06)", border:`1px solid ${duplicateGroups.length > 0 ? "rgba(245,158,11,.3)" : "rgba(79,142,247,.22)"}`, borderRadius:8, color: duplicateGroups.length > 0 ? "#f59e0b" : "#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
                 <span style={{ fontSize:13 }}>⚡</span>
-                <span style={{ flex:1, textAlign:"left" }}>{duplicateGroups.length} duplicate group{duplicateGroups.length > 1 ? "s" : ""} detected</span>
+                <span style={{ flex:1, textAlign:"left" }}>
+                  {duplicateGroups.length > 0
+                    ? `${duplicateGroups.length} possible duplicate${duplicateGroups.length > 1 ? "s" : ""} — Group Tests`
+                    : "Group Tests"}
+                </span>
                 <span style={{ fontSize:10, opacity:0.65 }}>Review →</span>
               </button>
             )}
@@ -1202,22 +1263,27 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           );
                         }
                         const { lab } = item;
-                        const isSelected = selectedImportedLab && (selectedImportedLab.name || "").toLowerCase() === (lab.name || "").toLowerCase();
-                        // Count how many readings exist for this test
-                        const histCount = importedLabs.filter(l => (l.name || "").toLowerCase() === (lab.name || "").toLowerCase()).length;
+                        const labCanon = canonicalLabId(lab.name);
+                        const isSelected = selectedImportedLab && canonicalLabId(selectedImportedLab.name) === labCanon;
+                        // Count readings for this canonical analyte (A-04 — alias variants included)
+                        const histCount = importedLabs.filter(l => canonicalLabId(l.name) === labCanon).length;
+                        const oor = labOutOfRange(lab, customRanges);
                         return (
                           <div key={`${lab.name}-${i}`} className={`lab-row ${isSelected ? "sel" : ""}`}
                             onClick={() => selectImportedLab(lab)}
                             style={{ animationDelay: `${i * 18}ms`, flexDirection: "column", gap: 3, cursor: "pointer" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: labOutOfRange(lab, customRanges) ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
+                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: oor ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
                               <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", textAlign: "left" }}>{lab.name}</div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", textAlign: "left", display: "flex", alignItems: "center", gap: 6 }}>
+                                  {displayLabName(lab.name)}
+                                  {oor === true && <FlaggedBadge />}
+                                </div>
                                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>
                                   {lab.date || "—"}{histCount > 1 ? ` · ${histCount} readings` : ""}
                                 </div>
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: labOutOfRange(lab, customRanges) ? "#f59e0b" : "#10b981", flexShrink: 0, textAlign: "right" }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: oor ? "#f59e0b" : "#10b981", flexShrink: 0, textAlign: "right" }}>
                                 {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
                               </div>
                             </div>
@@ -1241,8 +1307,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             {selectedImportedLab && (() => {
               const { low, high } = parseRefRange(selectedImportedLab.refRange);
               const val = parseFloat(selectedImportedLab.value);
-              const labKey = (selectedImportedLab.name || "").toLowerCase().trim();
-              const customRange = customRanges[labKey] || null;
+              const customRange = customRanges[canonicalLabId(selectedImportedLab.name)] || customRanges[(selectedImportedLab.name || "").toLowerCase().trim()] || null;
               const customLow  = customRange?.low  ?? null;
               const customHigh = customRange?.high ?? null;
               // Doctor's custom range wins for the in/out-of-range status; fall
@@ -1252,7 +1317,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               const inRange = effLow !== null && effHigh !== null && !isNaN(val) ? (val >= effLow && val <= effHigh) : null;
               // All historical readings for this test, sorted oldest → newest
               const allHistory = [...importedLabs]
-                .filter(l => (l.name || "").toLowerCase() === (selectedImportedLab.name || "").toLowerCase())
+                .filter(l => canonicalLabId(l.name) === canonicalLabId(selectedImportedLab.name))
                 .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
               // Filter by selected trend range
               const cutoff = new Date();
@@ -1559,17 +1624,78 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             <div style={{ padding:"18px 22px 14px", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"flex-start", gap:12, flexShrink:0 }}>
               <span style={{ fontSize:18, color:"#f59e0b", marginTop:1 }}>⚡</span>
               <div style={{ flex:1 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"#c4d8ee", marginBottom:3 }}>Duplicate Lab Names Detected</div>
+                <div style={{ fontSize:14, fontWeight:700, color:"#c4d8ee", marginBottom:3 }}>Group Tests</div>
                 <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", lineHeight:1.55 }}>
-                  {dupGroups.length} group{dupGroups.length > 1 ? "s" : ""} of tests appear to be the same test under different names.<br />
-                  Select which name to use as the canonical (official) name, then click Apply.
+                  Group different names for the same test (e.g. FK506 and Tacrolimus) so trends and
+                  analysis treat them as one. Your original entries are never renamed or deleted —
+                  grouping is reversible.
                 </div>
               </div>
               <button onClick={() => setShowDupModal(false)} style={{ background:"none", border:"none", color:"#a0b4c8", fontSize:18, cursor:"pointer", padding:0, lineHeight:1, flexShrink:0, marginTop:1 }}>✕</button>
             </div>
 
-            {/* Groups list */}
+            {/* Body */}
             <div style={{ overflowY:"auto", padding:"16px 22px", flex:1 }}>
+
+              {/* Confirmed groups — reversible */}
+              {(() => {
+                const confirmed = getConfirmedGroups();
+                if (!confirmed.length) return null;
+                return (
+                  <div style={{ marginBottom:18 }}>
+                    <div style={{ fontSize:9, color:"#10b981", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Confirmed groups</div>
+                    {confirmed.map(grp => (
+                      <div key={grp.canonical} style={{ background:"#0b1220", border:"1px solid rgba(16,185,129,.25)", borderRadius:10, padding:"10px 13px", marginBottom:8, display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:12, color:"#c4d8ee", fontWeight:600 }}>{grp.canonical}</div>
+                          <div style={{ fontSize:9, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.5 }}>grouped from: {grp.sources.join(", ")}</div>
+                        </div>
+                        <button onClick={() => ungroup(grp.canonical)} style={{ flexShrink:0, background:"none", border:"1px solid #1a2840", borderRadius:6, color:"#a0b4c8", fontSize:10, fontFamily:"'DM Mono',monospace", padding:"4px 10px", cursor:"pointer" }}>Ungroup</button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* Manual grouping */}
+              {(() => {
+                const distinctNames = Array.from(new Set(importedLabs.map(l => l.name).filter(Boolean))).sort();
+                const toggle = (name) => setManualSel(sel => sel.includes(name) ? sel.filter(n => n !== name) : [...sel, name]);
+                return (
+                  <div style={{ marginBottom:18 }}>
+                    <div style={{ fontSize:9, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Group manually</div>
+                    <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginBottom:8 }}>Select two or more names that are the same test, then name the group.</div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10, maxHeight:120, overflowY:"auto" }}>
+                      {distinctNames.map(name => {
+                        const on = manualSel.includes(name);
+                        return (
+                          <button key={name} onClick={() => toggle(name)}
+                            style={{ padding:"5px 10px", borderRadius:14, border:`1px solid ${on ? "rgba(79,142,247,.5)" : "#1a2840"}`, background: on ? "rgba(79,142,247,.12)" : "transparent", color: on ? "#7eb8d8" : "#98afc4", fontSize:10.5, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                            {on ? "✓ " : ""}{name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {manualSel.length >= 2 && (
+                      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                        <input value={manualCanon} onChange={e => setManualCanon(e.target.value)}
+                          placeholder="Group name (e.g. Tacrolimus)"
+                          style={{ flex:1, background:"#0b1220", border:"1px solid #1a2f4a", color:"#c4d8ee", padding:"7px 11px", borderRadius:8, fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" }} />
+                        <button onClick={() => { applyManualGroup(manualSel, manualCanon.trim()); setManualSel([]); setManualCanon(""); }}
+                          disabled={!manualCanon.trim()}
+                          style={{ padding:"7px 16px", background: manualCanon.trim() ? "rgba(16,185,129,.14)" : "#0f1e30", border:`1px solid ${manualCanon.trim() ? "rgba(16,185,129,.4)" : "#1a2840"}`, borderRadius:8, color: manualCanon.trim() ? "#10b981" : "#4a5c6a", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor: manualCanon.trim() ? "pointer" : "not-allowed", whiteSpace:"nowrap" }}>
+                          Group
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Auto-detected candidates */}
+              {dupGroups.length > 0 && (
+                <div style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Possible duplicates</div>
+              )}
               {dupGroups.map((g, gi) => {
                 const dec = dupDecisions[g.norm] || { canonical: g.variants[0]?.name, skip: false };
                 const totalEntries = g.variants.reduce((s, v) => s + v.count, 0);
@@ -1635,21 +1761,24 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             <div style={{ padding:"14px 22px", borderTop:"1px solid #0d1a28", display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
               <div style={{ flex:1, fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                 {(() => {
-                  const merging = dupGroups.filter(g => !dupDecisions[g.norm]?.skip).length;
-                  return merging > 0
-                    ? `${merging} group${merging !== 1 ? "s" : ""} will be merged`
-                    : "No groups selected for merge";
+                  if (dupGroups.length === 0) return "No auto-detected duplicates";
+                  const grouping = dupGroups.filter(g => !dupDecisions[g.norm]?.skip).length;
+                  return grouping > 0
+                    ? `${grouping} group${grouping !== 1 ? "s" : ""} will be grouped`
+                    : "No groups selected";
                 })()}
               </div>
               <button onClick={() => setShowDupModal(false)} style={{ padding:"8px 16px", background:"transparent", border:"1px solid #1a2840", borderRadius:8, color:"#a0b4c8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
-                Cancel
+                Done
               </button>
-              <button
-                onClick={applyMerges}
-                disabled={dupGroups.every(g => dupDecisions[g.norm]?.skip)}
-                style={{ padding:"8px 20px", background: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#0f1e30" : "rgba(16,185,129,.14)", border:`1px solid ${dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#1a2840" : "rgba(16,185,129,.4)"}`, borderRadius:8, color: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#4a5c6a" : "#10b981", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "not-allowed" : "pointer" }}>
-                Apply Merges
-              </button>
+              {dupGroups.length > 0 && (
+                <button
+                  onClick={applyMerges}
+                  disabled={dupGroups.every(g => dupDecisions[g.norm]?.skip)}
+                  style={{ padding:"8px 20px", background: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#0f1e30" : "rgba(16,185,129,.14)", border:`1px solid ${dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#1a2840" : "rgba(16,185,129,.4)"}`, borderRadius:8, color: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "#4a5c6a" : "#10b981", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor: dupGroups.every(g => dupDecisions[g.norm]?.skip) ? "not-allowed" : "pointer" }}>
+                  Group Selected
+                </button>
+              )}
             </div>
           </div>
         </div>

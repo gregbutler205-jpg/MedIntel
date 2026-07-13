@@ -5,6 +5,7 @@
 // originates. Deterministic, no AI involved.
 import { DEFAULT_LIBRARY } from "../config/tripwireDefaults.js";
 import { appendAudit } from "../rie/auditLog.js";
+import { canonicalLabId } from "./labCanonical.js";
 
 const FLAG_STORE_KEY = "mi_tripwire_flags";
 // Shared with A-06's condition-module gate: one "let me preview unreviewed
@@ -12,20 +13,17 @@ const FLAG_STORE_KEY = "mi_tripwire_flags";
 const ALLOW_UNREVIEWED_KEY = "mi_allow_unreviewed_modules";
 const DISMISS_KEY = "mi_tripwire_dismissed"; // { [flagId]: true } — re-surfaces on a new qualifying value since the id embeds date+value
 
-// A few unambiguous abbreviations only — full alias/canonical-ID matching
-// across facilities is A-04 (Phase 2). Anything not listed here must match
-// canonicalId or name exactly (case/whitespace-insensitive).
-const ALIASES = { hgb: "hemoglobin", hb: "hemoglobin", plt: "platelets", glu: "glucose" };
-
 function safeRead(key, fallback) {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
 }
 function allowUnreviewed() {
   try { return localStorage.getItem(ALLOW_UNREVIEWED_KEY) === "true"; } catch { return false; }
 }
+// A-04: canonical-id matching (seed synonyms + the patient's confirmed
+// mi_lab_name_map) is now the single source of truth for "same analyte
+// across facilities" — replacing this engine's former 4-entry inline table.
 function canonicalize(name) {
-  const key = (name || "").toLowerCase().trim();
-  return ALIASES[key] || key;
+  return canonicalLabId(name);
 }
 /** Exported so other modules (labDigest.js) match analytes against flags the same way the engine does. */
 export const canonicalizeLabName = canonicalize;
