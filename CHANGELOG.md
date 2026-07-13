@@ -15,6 +15,91 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-12 (Phase 1: pilot gate — in progress)
 
 ### Added
+- **P-02 / PG-10:** Passphrase-derived encryption at rest. The passphrase
+  IS the encryption key now, not a UI gate — in a non-custodial, server-less
+  architecture a password that only unlocks a screen protects nothing, since
+  the data sits in plaintext localStorage either way.
+  - New `src/lib/vault.js`: PBKDF2-SHA256 (600,000 iterations, random
+    16-byte salt) derives a passphrase KEK; a random 256-bit AES-GCM DEK
+    (fresh 12-byte IV per encryption, never reused) actually encrypts the
+    record; the DEK is wrapped twice — once under the passphrase KEK, once
+    under an independent one-time-shown 256-bit recovery key — so a
+    forgotten passphrase can never destroy the record. Changing the
+    passphrase re-wraps the DEK only; no data is ever re-encrypted.
+  - New `src/lib/secureStorage.js`: the integration layer. **Architecture
+    decision (DEC-027):** P-02's spec assumed `store.js` was the access
+    point for `mi_*` data; a grep found 167 direct
+    `localStorage.getItem/setItem/removeItem` call sites across 25 other
+    files bypassing it entirely, matching OPEN-6's own prior finding that a
+    storage abstraction layer didn't exist yet. Greg chose Storage-API
+    interception over building that abstraction first:
+    `Storage.prototype.getItem/setItem/removeItem` are patched for `mi_*`
+    keys against an in-memory plaintext cache (populated by decrypting
+    every ciphertext blob at unlock — WebCrypto is async, `getItem` isn't,
+    so this is how the two are reconciled without an async rewrite of every
+    call site). Every existing call site keeps calling
+    `localStorage.getItem/setItem` completely unchanged and transparently
+    gets plaintext in, ciphertext out. Locked reads of a managed key return
+    `null` (fail-safe), never raw ciphertext.
+  - **Migration:** `setupVaultAndMigrate()` — backup-export first (a
+    pre-migration JSON download, LockScreen-triggered), encrypts each
+    existing plaintext value in place, round-trip-verifies it before the
+    plaintext is overwritten, and only clears the interrupted flag once
+    everything is verified. Resumable: the envelope is persisted *before*
+    any data is encrypted specifically so a retry after an interruption
+    re-derives the same DEK from the same envelope rather than generating a
+    new, incompatible one (a real bug caught during testing — see below).
+  - **Drive sync (`driveSync.js`) uploads ciphertext only** (spec point 7):
+    a new `collectLocalCiphertext()` reads raw ciphertext blobs for Drive
+    upload/weekly-backup, distinct from the existing `collectLocalData()`
+    (unchanged, still plaintext — it backs the local "download backup" file
+    the patient explicitly downloads to their own device, same reasoning as
+    Tab13's export feature staying human-readable). `mergeIntoLocal()`
+    decrypts Drive ciphertext and local ciphertext before merging arrays/
+    objects, then re-encrypts on write — never writes plaintext to disk.
+  - **`LockScreen.jsx` rebuilt** around passphrase setup / unlock /
+    recovery-key entry, replacing the 4-digit PIN flow. The old "Forgot
+    PIN → delete all data" destructive reset is replaced by the recovery-key
+    unlock path; a destructive wipe remains available only as the explicit
+    last resort when both the passphrase and recovery key are lost (per
+    spec point 9, there is nothing else to offer at that point — the data
+    is cryptographically unrecoverable). `App.jsx`'s inactivity auto-lock
+    now calls `secureStorage.lock()`, clearing the DEK from memory so a
+    timeout genuinely re-requires the passphrase (point 6); the initial
+    `unlocked` state no longer trusts `sessionStorage.mi_unlocked` — a page
+    reload always starts locked, matching how real disk-at-rest encryption
+    behaves. Tab13's "Change PIN" settings panel is replaced with "Change
+    Passphrase" (`secureStorage.changePassphrase()`) rather than left in
+    place — a working PIN-change UI that no longer gates anything would
+    itself be the false-security pattern this item exists to eliminate.
+  - **Deferred (DEC-027, OPEN-11):** spec point 6's optional PIN
+    "quick-unlock" convenience layered in front of an already-unlocked
+    vault is not built in this pass — every unlock goes through the real
+    passphrase or recovery key. `urgencyThresholds.js`-style dead PIN code
+    (`hashPin`) removed.
+  - **Bugs found and fixed during testing, before any real data was ever at
+    risk** (per Greg's own instruction to test thoroughly with synthetic
+    data first): a migration retry after an interruption was deriving a
+    *new* DEK instead of re-unwrapping the original, which would have
+    permanently orphaned any key already encrypted under the first attempt
+    — fixed by persisting the envelope before encrypting any data; the
+    resume path was populating the in-memory cache only for freshly-
+    encrypted keys, leaving already-migrated keys unreadable after a
+    successful resume — fixed to decrypt-and-cache skipped keys too; live
+    browser testing surfaced that `setupVaultAndMigrate()` could be invoked
+    concurrently (most likely React 18 StrictMode's dev-mode double-invoke)
+    causing a real race — fixed with an in-flight promise guard.
+  - Verified: `npm run build` passes. Three Node test suites (vault.js
+    crypto core, secureStorage.js integration including a simulated
+    interrupted-migration resume, driveSync.js ciphertext decrypt-merge-
+    re-encrypt) — 33/33 checks passed, covering round-trip encryption, IV
+    uniqueness, AES-GCM tamper detection, wrong-passphrase/wrong-recovery-
+    key rejection, passphrase change without data loss, and the concurrency
+    guard. Live-verified in the browser end to end: fresh setup → passphrase
+    creation → recovery-key display → continue → writing a real condition
+    through the UI → full page reload (confirms the DEK is genuinely gone
+    from memory, not persisted) → locked reads correctly return null →
+    unlock with the passphrase → the condition is readable again.
 - **S-07:** Prompt-injection defense at prompt-build time. New
   `src/prompts/documents.js`: `stripControlChars()` removes C0/C1 control
   characters (keeping `\n`/`\t`); `formatDocumentBlock({id, source, date,

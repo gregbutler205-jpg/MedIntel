@@ -1,243 +1,280 @@
 import { useState, useEffect } from "react";
+import * as secureStorage from "../lib/secureStorage.js";
+
 const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
-const PIN_LENGTH = 4;
-
-async function hashPin(pin) {
-  const buf  = new TextEncoder().encode(pin + "intellitrax-salt-2026");
-  const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
+// ── P-02 / PG-10 ───────────────────────────────────────────────────────────
+// Replaces the old 4-digit-PIN LockScreen. The passphrase IS the encryption
+// key (via PBKDF2 -> AES-GCM, see src/lib/vault.js) — a PIN gating only the
+// UI would protect nothing in a non-custodial, server-less architecture.
+// SCOPE NOTE: spec point 6 allows the old PIN to remain as an optional
+// in-session "quick-unlock" convenience layered in front of an already-
+// unlocked vault. Not built in this pass — every unlock goes through the
+// real passphrase (or the recovery key). Convenience quick-unlock is
+// deferred, tracked in DECISIONS.md.
 export default function LockScreen({ onUnlock }) {
-  const hasPin = !!localStorage.getItem("mi_auth_hash");
-  const [mode, setMode]       = useState(hasPin ? "enter" : "setup"); // setup | enter | confirm | forgot
-  const [pin, setPin]         = useState("");
-  const [setupPin, setSetupPin] = useState("");
-  const [error, setError]     = useState("");
-  const [shake, setShake]     = useState(false);
-  const [forgotStep, setForgotStep] = useState(false);
+  const [mode, setMode] = useState(() => {
+    if (secureStorage.hasInterruptedVaultMigration() && secureStorage.hasVault()) return "resume";
+    return secureStorage.hasVault() ? "enter" : "setup-intro";
+  });
 
-  // Auto-submit when PIN is full length
-  useEffect(() => {
-    if (pin.length === PIN_LENGTH) {
-      handleSubmit(pin);
+  const [passphrase, setPassphrase] = useState("");
+  const [confirmPassphrase, setConfirmPassphrase] = useState("");
+  const [recoveryInput, setRecoveryInput] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [recoveryKeyDisplay, setRecoveryKeyDisplay] = useState(null);
+  const [recoverySaved, setRecoverySaved] = useState(false);
+  const [wipeConfirm, setWipeConfirm] = useState(false);
+
+  useEffect(() => { setError(""); }, [mode]);
+
+  async function handleSetupSubmit(e) {
+    e.preventDefault();
+    if (passphrase.length < 12) { setError("Use at least 12 characters — this passphrase is the actual encryption key, not just a screen lock."); return; }
+    if (passphrase !== confirmPassphrase) { setError("Passphrases don't match."); return; }
+    setBusy(true); setError("");
+    try {
+      downloadPreMigrationBackup();
+      const result = await secureStorage.setupVaultAndMigrate(passphrase);
+      setRecoveryKeyDisplay(result.recoveryKeyDisplay);
+      setMode("show-recovery");
+    } catch (err) {
+      setError(err.message || "Setup failed. Your existing data was not touched.");
+    } finally {
+      setBusy(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pin]);
-
-  function triggerShake() {
-    setShake(true);
-    setTimeout(() => setShake(false), 500);
   }
 
-  function press(digit) {
-    if (pin.length >= PIN_LENGTH) return;
-    setError("");
-    setPin(p => p + digit);
-  }
-
-  function del() {
-    setPin(p => p.slice(0, -1));
-    setError("");
-  }
-
-  async function handleSubmit(currentPin) {
-    if (currentPin.length < PIN_LENGTH) return;
-
-    if (mode === "setup") {
-      // First entry — move to confirm step
-      setSetupPin(currentPin);
-      setPin("");
-      setMode("confirm");
-      return;
+  async function handleResumeSubmit(e) {
+    e.preventDefault();
+    setBusy(true); setError("");
+    try {
+      await secureStorage.setupVaultAndMigrate(passphrase); // same passphrase as the original attempt — re-derives the same DEK
+      afterUnlock();
+    } catch (err) {
+      setError("That passphrase didn't unlock the in-progress vault. Enter the exact passphrase you set the first time.");
+    } finally {
+      setBusy(false);
     }
+  }
 
-    if (mode === "confirm") {
-      if (currentPin !== setupPin) {
-        setError("PINs don't match. Try again.");
-        triggerShake();
-        setPin("");
-        return;
+  async function handleUnlockSubmit(e) {
+    e.preventDefault();
+    setBusy(true); setError("");
+    try {
+      await secureStorage.unlock(passphrase);
+      afterUnlock();
+    } catch {
+      setError("Incorrect passphrase.");
+    } finally {
+      setBusy(false);
+      setPassphrase("");
+    }
+  }
+
+  async function handleRecoverySubmit(e) {
+    e.preventDefault();
+    setBusy(true); setError("");
+    try {
+      await secureStorage.unlockWithRecovery(recoveryInput);
+      afterUnlock();
+    } catch {
+      setError("That recovery key didn't work. Check it against the copy you saved at setup.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Every mi_* value the app read at boot (before this unlock) came back
+   * null (locked, fail-safe) — engines like the A-01 tripwire evaluator that
+   * ran once at startup need to re-run now against the real decrypted
+   * record, not wait for the next incidental write. */
+  function afterUnlock() {
+    window.dispatchEvent(new Event("mi-data-synced"));
+    onUnlock();
+  }
+
+  function downloadPreMigrationBackup() {
+    try {
+      const snapshot = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        // Raw read, not localStorage.getItem(): interception is installed at
+        // boot and returns null for any managed key while locked (which is
+        // exactly the case here — the vault doesn't exist yet). Before
+        // migration runs, the raw stored value for a managed key IS still
+        // plaintext, so a raw read is both safe and the only way to see it.
+        if (key?.startsWith("mi_")) snapshot[key] = secureStorage.getRawCiphertext(key);
       }
-      const h = await hashPin(currentPin);
-      localStorage.setItem("mi_auth_hash", h);
-      sessionStorage.setItem("mi_unlocked", "1");
-      onUnlock();
-      return;
-    }
-
-    if (mode === "enter") {
-      const h    = await hashPin(currentPin);
-      const stored = localStorage.getItem("mi_auth_hash");
-      if (h === stored) {
-        sessionStorage.setItem("mi_unlocked", "1");
-        onUnlock();
-      } else {
-        setError("Incorrect PIN.");
-        triggerShake();
-        setPin("");
-      }
-      return;
-    }
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `insina-backup-pre-encryption-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) { console.warn("[LockScreen] pre-migration backup failed:", e); }
   }
 
-  function handleForgot() {
-    // Clear all mi_ keys
+  function downloadRecoveryKey() {
+    const blob = new Blob([
+      `Insina Health — Recovery Key\n\nGenerated: ${new Date().toLocaleString()}\n\n${recoveryKeyDisplay}\n\nThis is the ONLY way to recover your data if you forget your passphrase.\nThere is no password reset — Insina Health has no server and no copy of\nyour passphrase or this key. Store this somewhere safe and separate from\nyour passphrase (a password manager, a safe, or printed and filed).\n`
+    ], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "insina-health-recovery-key.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  function handleWipe() {
     const keys = Object.keys(localStorage).filter(k => k.startsWith("mi_"));
     keys.forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem("mi_unlocked");
-    setForgotStep(false);
-    setMode("setup");
-    setPin("");
-    setSetupPin("");
-    setError("");
+    setWipeConfirm(false);
+    setMode("setup-intro");
+    setPassphrase(""); setConfirmPassphrase(""); setRecoveryInput(""); setError("");
   }
 
-  const dots = Array.from({ length: PIN_LENGTH }, (_, i) => i < pin.length);
-
-  const title = mode === "setup"   ? "Create your PIN"
-              : mode === "confirm" ? "Confirm your PIN"
-              : "Enter PIN";
-  const subtitle = mode === "setup"   ? "Choose a 4-digit PIN to secure your health data"
-                 : mode === "confirm" ? "Re-enter the same PIN to confirm"
-                 : "Insina Health is locked";
-
   return (
-    <div style={{
-      position: "fixed", inset: 0,
-      background: "#07090f",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      fontFamily: "'Sora', sans-serif",
-      userSelect: "none",
-      WebkitUserSelect: "none",
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes shake {
-          0%,100% { transform: translateX(0); }
-          20%     { transform: translateX(-10px); }
-          40%     { transform: translateX(10px); }
-          60%     { transform: translateX(-7px); }
-          80%     { transform: translateX(7px); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .lock-wrap { animation: fadeIn .35s ease both; }
-        .key-btn {
-          width: 72px; height: 72px; border-radius: 50%;
-          background: rgba(255,255,255,.05);
-          border: 1px solid rgba(255,255,255,.08);
-          color: #dde8f5; font-size: 22px; font-weight: 500;
-          font-family: 'Sora', sans-serif;
-          cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          flex-direction: column; gap: 1px;
-          transition: background .12s, transform .08s;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .key-btn:active { background: rgba(79,142,247,.25); transform: scale(.93); }
-        .key-btn.del { background: transparent; border-color: transparent; font-size: 20px; }
-        .key-btn.del:active { background: rgba(255,255,255,.06); }
-        .key-sub { font-size: 9px; letter-spacing: 1.5px; color: #6a8090; font-family: 'DM Mono', monospace; }
-      `}</style>
+    <div style={styles.wrap}>
+      <style>{css}</style>
+      <div className="lock-wrap" style={styles.inner}>
+        <img src={LOGO} alt="Insina Health" style={styles.logo} />
 
-      <div className="lock-wrap" style={{ display:"flex", flexDirection:"column", alignItems:"center", width:"100%", maxWidth:340, padding:"0 24px" }}>
+        {mode === "setup-intro" && (
+          <>
+            <Title>Encrypt your health record</Title>
+            <Subtitle>
+              Choose a passphrase. It becomes the actual encryption key for your data —
+              not just a screen lock. There is no password reset: if you forget it,
+              the recovery key shown after setup is the only way back in.
+            </Subtitle>
+            <form onSubmit={handleSetupSubmit} style={styles.form}>
+              <input type="password" autoFocus placeholder="New passphrase (12+ characters)" value={passphrase}
+                onChange={e => setPassphrase(e.target.value)} style={styles.input} />
+              <input type="password" placeholder="Confirm passphrase" value={confirmPassphrase}
+                onChange={e => setConfirmPassphrase(e.target.value)} style={styles.input} />
+              {error && <div style={styles.error}>{error}</div>}
+              <button type="submit" disabled={busy} style={styles.primaryBtn}>
+                {busy ? "Encrypting your record…" : "Create passphrase & encrypt"}
+              </button>
+            </form>
+          </>
+        )}
 
-        {/* Logo */}
-        <img src={LOGO} alt="Insina Health" style={{ width:300, height:"auto", objectFit:"contain", marginBottom:32, opacity:.9 }} />
+        {mode === "resume" && (
+          <>
+            <Title>Finish encrypting</Title>
+            <Subtitle>
+              A previous setup attempt didn't finish. Enter the exact passphrase you
+              set then to resume — nothing was lost, and your plaintext data was not
+              touched until every value is verified.
+            </Subtitle>
+            <form onSubmit={handleResumeSubmit} style={styles.form}>
+              <input type="password" autoFocus placeholder="Your passphrase" value={passphrase}
+                onChange={e => setPassphrase(e.target.value)} style={styles.input} />
+              {error && <div style={styles.error}>{error}</div>}
+              <button type="submit" disabled={busy} style={styles.primaryBtn}>
+                {busy ? "Resuming…" : "Resume encryption"}
+              </button>
+            </form>
+          </>
+        )}
 
-        {/* Title */}
-        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#dde8f5", marginBottom:8, textAlign:"center" }}>
-          {title}
-        </div>
-        <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginBottom:36, textAlign:"center", lineHeight:1.5 }}>
-          {subtitle}
-        </div>
-
-        {/* PIN dots */}
-        <div
-          style={{
-            display:"flex", gap:16, marginBottom:12,
-            animation: shake ? "shake .45s ease both" : "none",
-          }}
-        >
-          {dots.map((filled, i) => (
-            <div key={i} style={{
-              width: 14, height: 14, borderRadius: "50%",
-              background: filled ? "#4f8ef7" : "transparent",
-              border: `2px solid ${filled ? "#4f8ef7" : "#2a3a50"}`,
-              transition: "background .15s, border-color .15s",
-              boxShadow: filled ? "0 0 10px rgba(79,142,247,.5)" : "none",
-            }} />
-          ))}
-        </div>
-
-        {/* Error */}
-        <div style={{ height:18, marginBottom:24, fontSize:12, color:"#ef4444", fontFamily:"'DM Mono',monospace", textAlign:"center" }}>
-          {error}
-        </div>
-
-        {/* Keypad */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 72px)", gap:14, marginBottom:28 }}>
-          {[
-            ["1",""],["2","ABC"],["3","DEF"],
-            ["4","GHI"],["5","JKL"],["6","MNO"],
-            ["7","PQRS"],["8","TUV"],["9","WXYZ"],
-          ].map(([digit, sub]) => (
-            <button key={digit} className="key-btn" onClick={() => press(digit)}>
-              <span>{digit}</span>
-              {sub && <span className="key-sub">{sub}</span>}
+        {mode === "show-recovery" && (
+          <>
+            <Title>Save your recovery key</Title>
+            <Subtitle>
+              Shown once. This is the only way to unlock your data if you forget your
+              passphrase — Insina Health cannot reset it for you.
+            </Subtitle>
+            <div style={styles.recoveryBox}>{recoveryKeyDisplay}</div>
+            <button type="button" onClick={downloadRecoveryKey} style={styles.secondaryBtn}>Download as file</button>
+            <label style={styles.checkboxRow}>
+              <input type="checkbox" checked={recoverySaved} onChange={e => setRecoverySaved(e.target.checked)} />
+              <span>I've saved this recovery key somewhere safe</span>
+            </label>
+            <button type="button" disabled={!recoverySaved} onClick={afterUnlock}
+              style={{ ...styles.primaryBtn, opacity: recoverySaved ? 1 : 0.5 }}>
+              Continue to Insina Health
             </button>
-          ))}
-          {/* Bottom row: empty, 0, delete */}
-          <div />
-          <button className="key-btn" onClick={() => press("0")}>
-            <span>0</span>
-          </button>
-          <button className="key-btn del" onClick={del}>
-            ⌫
-          </button>
-        </div>
-
-        {/* Forgot PIN */}
-        {mode === "enter" && !forgotStep && (
-          <button
-            onClick={() => setForgotStep(true)}
-            style={{ background:"transparent", border:"none", color:"#4f8ef7", fontSize:13, cursor:"pointer", fontFamily:"'DM Mono',monospace", padding:"8px 0" }}
-          >
-            Forgot PIN?
-          </button>
+          </>
         )}
 
-        {/* Forgot confirm */}
-        {forgotStep && (
-          <div style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.25)", borderRadius:12, padding:"16px 18px", textAlign:"center" }}>
-            <div style={{ fontSize:13, color:"#f87171", marginBottom:12, lineHeight:1.5 }}>
-              This will <strong>delete all your health data</strong> and reset the PIN. This cannot be undone.
-            </div>
-            <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-              <button
-                onClick={() => setForgotStep(false)}
-                style={{ padding:"7px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontSize:12, cursor:"pointer", fontFamily:"'Sora',sans-serif" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleForgot}
-                style={{ padding:"7px 18px", background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.35)", borderRadius:8, color:"#ef4444", fontSize:12, cursor:"pointer", fontFamily:"'Sora',sans-serif" }}
-              >
-                Reset &amp; Clear Data
-              </button>
-            </div>
-          </div>
+        {mode === "enter" && (
+          <>
+            <Title>Insina Health is locked</Title>
+            <Subtitle>Enter your passphrase to unlock your record.</Subtitle>
+            <form onSubmit={handleUnlockSubmit} style={styles.form}>
+              <input type="password" autoFocus placeholder="Passphrase" value={passphrase}
+                onChange={e => setPassphrase(e.target.value)} style={styles.input} />
+              {error && <div style={styles.error}>{error}</div>}
+              <button type="submit" disabled={busy} style={styles.primaryBtn}>{busy ? "Unlocking…" : "Unlock"}</button>
+            </form>
+            <button type="button" onClick={() => setMode("recovery")} style={styles.linkBtn}>Forgot your passphrase?</button>
+          </>
         )}
 
+        {mode === "recovery" && (
+          <>
+            <Title>Recovery key</Title>
+            <Subtitle>Enter the recovery key you saved when you set up encryption.</Subtitle>
+            <form onSubmit={handleRecoverySubmit} style={styles.form}>
+              <input type="text" autoFocus placeholder="XXXXXXXX-XXXXXXXX-…" value={recoveryInput}
+                onChange={e => setRecoveryInput(e.target.value.toUpperCase())} style={{ ...styles.input, fontFamily: "'DM Mono',monospace", fontSize: 13 }} />
+              {error && <div style={styles.error}>{error}</div>}
+              <button type="submit" disabled={busy} style={styles.primaryBtn}>{busy ? "Unlocking…" : "Unlock with recovery key"}</button>
+            </form>
+            <button type="button" onClick={() => setMode("enter")} style={styles.linkBtn}>Back to passphrase</button>
+            {!wipeConfirm ? (
+              <button type="button" onClick={() => setWipeConfirm(true)} style={{ ...styles.linkBtn, color: "#6a8090", marginTop: 18 }}>
+                Lost the recovery key too?
+              </button>
+            ) : (
+              <div style={styles.wipeBox}>
+                <div style={{ fontSize: 13, color: "#f87171", marginBottom: 12, lineHeight: 1.5 }}>
+                  Without your passphrase or recovery key, your encrypted data cannot be
+                  decrypted by anyone — including Insina Health. The only remaining option
+                  is to <strong>erase it and start fresh</strong>. This cannot be undone.
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                  <button onClick={() => setWipeConfirm(false)} style={styles.secondaryBtn}>Cancel</button>
+                  <button onClick={handleWipe} style={styles.dangerBtn}>Erase & Start Fresh</button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 }
+
+function Title({ children }) { return <div style={styles.title}>{children}</div>; }
+function Subtitle({ children }) { return <div style={styles.subtitle}>{children}</div>; }
+
+const styles = {
+  wrap: { position: "fixed", inset: 0, background: "#07090f", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Sora', sans-serif", userSelect: "none" },
+  inner: { display: "flex", flexDirection: "column", alignItems: "center", width: "100%", maxWidth: 380, padding: "0 24px" },
+  logo: { width: 260, height: "auto", objectFit: "contain", marginBottom: 28, opacity: .9 },
+  title: { fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", marginBottom: 8, textAlign: "center" },
+  subtitle: { fontSize: 12, color: "#8aa0b8", fontFamily: "'DM Mono',monospace", marginBottom: 24, textAlign: "center", lineHeight: 1.6 },
+  form: { width: "100%", display: "flex", flexDirection: "column", gap: 10 },
+  input: { width: "100%", padding: "12px 14px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora',sans-serif" },
+  error: { fontSize: 12, color: "#ef4444", fontFamily: "'DM Mono',monospace", textAlign: "center" },
+  primaryBtn: { width: "100%", padding: "13px 0", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 10, color: "#7eb8d8", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 4 },
+  secondaryBtn: { padding: "9px 16px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#b0c4d8", fontSize: 12, cursor: "pointer", marginBottom: 14 },
+  dangerBtn: { padding: "9px 16px", background: "rgba(239,68,68,.12)", border: "1px solid rgba(239,68,68,.35)", borderRadius: 8, color: "#ef4444", fontSize: 12, cursor: "pointer" },
+  linkBtn: { background: "transparent", border: "none", color: "#4f8ef7", fontSize: 12.5, cursor: "pointer", fontFamily: "'DM Mono',monospace", padding: "10px 0" },
+  recoveryBox: { width: "100%", padding: "16px", background: "rgba(79,142,247,.06)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 10, color: "#dde8f5", fontFamily: "'DM Mono',monospace", fontSize: 13, textAlign: "center", letterSpacing: 1, lineHeight: 1.8, marginBottom: 14, wordBreak: "break-all" },
+  checkboxRow: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#b0c4d8", marginBottom: 16, cursor: "pointer" },
+  wipeBox: { marginTop: 16, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 12, padding: "16px 18px", textAlign: "center" },
+};
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .lock-wrap { animation: fadeIn .35s ease both; }
+`;

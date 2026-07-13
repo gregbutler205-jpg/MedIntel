@@ -696,6 +696,70 @@ instead.
 
 ---
 
+## DEC-027: Vault encryption (P-02) — Storage-API interception over a store-abstraction rewrite; PIN quick-unlock deferred; migration made idempotent against concurrent invocation
+
+**Date:** 2026-07-12
+**Status:** Settled (Greg's decision via AskUserQuestion during P-02; shipped in code).
+
+**Decision.** P-02's spec names `store.js` as an integration point, assuming it is the access layer
+for `mi_*` data. It isn't: `store.js` wraps a handful of keys; a grep found 167 direct
+`localStorage.getItem/setItem/removeItem("mi_...")` call sites across 25 other files (Tab05, Tab11,
+Tab13, Tab14, companionData.js, and more), none going through any shared abstraction. This matches
+OPEN-6, which had already flagged "build the storage abstraction layer ahead of encryption" as
+unfinished prerequisite work. Rather than either build that abstraction first (a separate,
+multi-session undertaking) or ship encryption covering only the fraction of data `store.js` already
+wraps, Greg chose: intercept at the Storage API itself. `src/lib/secureStorage.js` monkey-patches
+`Storage.prototype.getItem/setItem/removeItem` for `mi_*` keys against an in-memory plaintext cache
+(populated by decrypting every ciphertext blob at unlock); all 167 existing call sites keep calling
+`localStorage.getItem/setItem` completely unchanged and transparently get plaintext in, ciphertext
+out. `src/lib/vault.js` implements the crypto primitives: PBKDF2-SHA256 (600k iterations) deriving a
+KEK that wraps a random AES-GCM DEK, with a second independent wrap under a one-time-shown 256-bit
+recovery key. `LockScreen.jsx` is rebuilt around passphrase setup/unlock/recovery instead of a PIN.
+
+Two scope decisions made in the same item: (1) spec point 6 allows the old PIN to remain as an
+optional in-session "quick-unlock" layered in front of an already-unlocked vault — not built; every
+unlock in this pass goes through the real passphrase or recovery key. Tab13's PIN-management UI is
+replaced with a passphrase-change UI (`secureStorage.changePassphrase()`, re-wraps the DEK, never
+re-encrypts data) rather than left in place, since a working "Change PIN" panel that no longer
+gates anything would itself be exactly the false-security pattern this item exists to eliminate.
+(2) The old LockScreen's "Forgot PIN → delete all data" destructive reset is replaced by the
+recovery-key unlock path; a destructive wipe is offered only as the explicit last resort when both
+passphrase and recovery key are lost (per spec point 9: no reset restores access without one of
+those two, and cryptographically there is nothing else to offer at that point).
+
+**Bugs found and fixed during implementation** (all caught before touching real data, per Greg's
+own instruction to test thoroughly with synthetic data first): (a) an early version of the
+migration's resume path derived a *fresh* DEK on retry instead of re-deriving the original from the
+already-persisted envelope — a second interrupted-migration attempt would have permanently orphaned
+any key already encrypted under the first DEK. Fixed by persisting the envelope before encrypting
+any data, so a resume always unwraps the same DEK. (b) the resume/migration loop populated the
+in-memory plaintext cache only for freshly-encrypted keys, not for keys skipped because they were
+already ciphertext from an earlier partial attempt — leaving them unreadable after a successful
+resume despite being correctly encrypted on disk. (c) live browser testing (not caught by the Node
+test suite, which calls the module directly) surfaced that `setupVaultAndMigrate()` is reachable
+concurrently — observed in practice, most likely React 18 StrictMode's dev-mode double-invoke
+behavior — and a genuine race between two concurrent calls was possible. Fixed with an in-flight
+promise guard so a second call while one is running returns the first call's result rather than
+racing it.
+
+**Reasoning.** Ambiguity resolves upward (CLAUDE.md ground rule 1): the spec's own assumption about
+`store.js` didn't match the codebase, and picking between "encrypt everything via a new interception
+layer" and "build the abstraction layer first, encryption later" is an architecture-scale call with
+real risk (a bug either way risks the patient's actual medical record), not a detail to improvise.
+Interception was chosen because it achieves point 5's "all mi_* record stores encrypt" without a
+separate, larger refactor first, at the cost of an unusual (though not unprecedented) pattern
+instead of the spec's assumed literal architecture. Every fix in the "bugs found" section came from
+actually exercising the code — first an adversarial Node test suite designed to simulate exactly the
+interrupted-migration and concurrent-call scenarios a real device could hit, then a live browser
+walkthrough of setup → migration → recovery-key display → lock → reload → unlock → data-persists —
+rather than trusting the crypto logic's correctness from inspection alone.
+
+**Related:** P-02, PILOT_GATE PG-10, OPEN-6 (superseded by this decision for the encryption-access
+question specifically; the general storage-abstraction cleanup remains open for its own sake),
+DEC-008.
+
+---
+
 ---
 
 ## Open items (spawned by the decisions above)
@@ -715,7 +779,11 @@ instead.
   commercializing the AI module.
 - **OPEN-6:** Build the storage abstraction layer (a unified read/write interface over localStorage
   and Drive) ahead of encryption, per DEC-008 part 3. Bucket 2 design, then Claude Code. This is the
-  contained-change enabler; it is worth doing before launch pressure, not during it.
+  contained-change enabler; it is worth doing before launch pressure, not during it. **Partially
+  addressed by DEC-027:** P-02 shipped encryption without this layer, via Storage-API interception
+  instead — the "encrypt everything" need this item named is met. The general cleanup case (one
+  real API instead of 167 scattered direct-localStorage call sites, easier future maintenance) is
+  still open on its own merits.
 - **OPEN-7:** Emergency Card option B (a patient-designated, lighter-protected in-app subset:
   transplant status, allergies, meds, emergency contacts). A deliberate, documented weakening of the
   P-02 encryption boundary; requires its own DEC before any build. Pending founder decision.
@@ -741,3 +809,12 @@ instead.
   tacrolimus-specific analytes (Tacrolimus itself, CMV PCR, liver/kidney panel, LDL/HbA1c) per
   A-01's "optional condition-aware defaults activated by condition modules." Until reviewed, the
   urgent tier produces zero flags for any user. (Spawned by DEC-026.)
+- **OPEN-11:** Build the optional PIN "quick-unlock" convenience layer P-02 spec point 6 allows
+  (front an already-unlocked vault with a lighter re-entry for brief screen-privacy locks, distinct
+  from the real auto-lock timeout which must clear the DEK and require the passphrase). Needs
+  design for how it interacts with the existing single inactivity-timeout `lock()` path in
+  `App.jsx`, which today always does a full DEK-clearing lock. (Spawned by DEC-027.)
+- **OPEN-12:** Drive-sync-side multi-device key handling is unverified beyond unit tests — P-02's
+  ciphertext-only upload (DEC-027) assumes every device sharing a Drive backup unlocks with the
+  same passphrase/recovery key (single-DEK model). A second real device has not been exercised
+  against a live Drive backup produced by this code. (Spawned by DEC-027.)

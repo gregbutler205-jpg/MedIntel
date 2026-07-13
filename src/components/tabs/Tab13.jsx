@@ -3,6 +3,7 @@ import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup } from "../../lib/driveSync.js";
+import { unlock, changePassphrase } from "../../lib/secureStorage.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { APP_VERSION } from "../../version.js";
 import { getAutoLockMinutes, setAutoLockMinutes, AUTOLOCK_OPTIONS } from "../../lib/autoLock.js";
@@ -336,27 +337,24 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
     showToast(token ? "Pilot access token saved" : "Pilot access token cleared");
   }
 
-  async function hashPin(pin) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pin + "intellitrax-salt-2026"));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-  }
-
   async function handleChangePin() {
     setPinError("");
     const { current, next, confirm } = pinForm;
-    if (next.length !== 4 || !/^\d{4}$/.test(next)) { setPinError("New PIN must be exactly 4 digits."); return; }
-    if (next !== confirm) { setPinError("New PINs don't match."); return; }
-    const stored = localStorage.getItem("mi_auth_hash");
-    if (stored) {
-      const currentHash = await hashPin(current);
-      if (currentHash !== stored) { setPinError("Current PIN is incorrect."); return; }
+    if (next.length < 12) { setPinError("Use at least 12 characters — this is the actual encryption key, not a screen lock."); return; }
+    if (next !== confirm) { setPinError("New passphrases don't match."); return; }
+    try {
+      // changePassphrase() requires the vault already unlocked in this session
+      // (true here — the app is running) using the CURRENT passphrase for
+      // re-derivation; verify it explicitly first so a wrong "current"
+      // entry fails clearly rather than silently re-wrapping under a stale KEK.
+      await unlock(current);
+      await changePassphrase(next);
+      setPinForm({ current: "", next: "", confirm: "" });
+      setPinSuccess(true);
+      setTimeout(() => { setPinSuccess(false); setModal(null); }, 2000);
+    } catch {
+      setPinError("Current passphrase is incorrect.");
     }
-    const newHash = await hashPin(next);
-    localStorage.setItem("mi_auth_hash", newHash);
-    sessionStorage.setItem("mi_unlocked", "1");
-    setPinForm({ current: "", next: "", confirm: "" });
-    setPinSuccess(true);
-    setTimeout(() => { setPinSuccess(false); setModal(null); }, 2000);
   }
 
   function handleClearData() {
@@ -682,7 +680,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                   {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
                 <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
-                  Locks back to the PIN screen when idle. Your data is hidden until you re-enter your PIN.
+                  Locks when idle and clears your encryption key from memory. Your data is unreadable until you re-enter your passphrase.
                 </div>
               </div>
 
@@ -858,16 +856,17 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={sectionLbl}>Security</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>App PIN</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>Passphrase</div>
             <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
-              {localStorage.getItem("mi_auth_hash") ? "PIN is set — tap to change it." : "No PIN set — tap to create one."}
+              Your passphrase is the actual encryption key for your data (P-02). Changing it re-wraps
+              the key — your data is never re-encrypted or at risk during the change.
             </div>
           </div>
           <button
             onClick={() => { setPinForm({ current: "", next: "", confirm: "" }); setPinError(""); setPinSuccess(false); setModal("changepin"); }}
             style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
           >
-            {localStorage.getItem("mi_auth_hash") ? "Change PIN" : "Set PIN"}
+            Change Passphrase
           </button>
         </div>
       </div>
@@ -927,49 +926,42 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       {modal === "changepin" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
           <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: "28px 28px 24px", width: "100%", maxWidth: 340, fontFamily: "'Sora', sans-serif" }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>
-              {localStorage.getItem("mi_auth_hash") ? "Change PIN" : "Set PIN"}
-            </div>
-            <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>Enter a 4-digit numeric PIN.</div>
-
-            {localStorage.getItem("mi_auth_hash") && (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current PIN</div>
-                <input
-                  type="password" inputMode="numeric" maxLength={4} value={pinForm.current}
-                  onChange={e => setPinForm(f => ({ ...f, current: e.target.value.replace(/\D/g, "") }))}
-                  style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'DM Mono', monospace", letterSpacing: 6, boxSizing: "border-box" }}
-                  placeholder="••••"
-                />
-              </div>
-            )}
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>Change Passphrase</div>
+            <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>Re-wraps your encryption key. Your data is not re-encrypted or touched.</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New PIN</div>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current Passphrase</div>
               <input
-                type="password" inputMode="numeric" maxLength={4} value={pinForm.next}
-                onChange={e => setPinForm(f => ({ ...f, next: e.target.value.replace(/\D/g, "") }))}
-                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'DM Mono', monospace", letterSpacing: 6, boxSizing: "border-box" }}
-                placeholder="••••"
+                type="password" value={pinForm.current}
+                onChange={e => setPinForm(f => ({ ...f, current: e.target.value }))}
+                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora', sans-serif", boxSizing: "border-box" }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New Passphrase (12+ characters)</div>
+              <input
+                type="password" value={pinForm.next}
+                onChange={e => setPinForm(f => ({ ...f, next: e.target.value }))}
+                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora', sans-serif", boxSizing: "border-box" }}
               />
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New PIN</div>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New Passphrase</div>
               <input
-                type="password" inputMode="numeric" maxLength={4} value={pinForm.confirm}
-                onChange={e => setPinForm(f => ({ ...f, confirm: e.target.value.replace(/\D/g, "") }))}
-                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'DM Mono', monospace", letterSpacing: 6, boxSizing: "border-box" }}
-                placeholder="••••"
+                type="password" value={pinForm.confirm}
+                onChange={e => setPinForm(f => ({ ...f, confirm: e.target.value }))}
+                style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora', sans-serif", boxSizing: "border-box" }}
               />
             </div>
 
             {pinError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
-            {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ PIN updated successfully.</div>}
+            {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Passphrase updated successfully.</div>}
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setModal(null)} style={{ flex: 1, padding: "9px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#98afc4", fontSize: 12, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Cancel</button>
-              <button onClick={handleChangePin} style={{ flex: 1, padding: "9px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Save PIN</button>
+              <button onClick={handleChangePin} style={{ flex: 1, padding: "9px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Save</button>
             </div>
           </div>
         </div>

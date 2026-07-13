@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import LockScreen from './components/LockScreen.jsx';
+import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
 import PreflightHost from './rie/PreflightHost.jsx';
 import SearchPopup from './components/SearchPopup.jsx';
@@ -618,12 +619,16 @@ function AppSidebar({ activeNav, setActiveNav }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [unlocked, setUnlocked] = useState(
-    () => sessionStorage.getItem("mi_unlocked") === "1"
-  );
+  // P-02: the DEK lives in a JS module variable, not sessionStorage — a
+  // fresh page load always starts locked (secureStorage.isUnlocked() is
+  // false until LockScreen's unlock()/setupVaultAndMigrate() runs), same as
+  // real disk-at-rest encryption. sessionStorage.mi_unlocked no longer gates
+  // anything security-relevant; LockScreen calling onUnlock() is the only path in.
+  const [unlocked, setUnlocked] = useState(() => secureStorage.isUnlocked());
   const [autoLockVersion, setAutoLockVersion] = useState(0);
 
   const lock = useCallback(() => {
+    secureStorage.lock(); // clears the DEK from memory — P-02 point 6: auto-lock re-requires the passphrase
     sessionStorage.removeItem("mi_unlocked");
     setUnlocked(false);
   }, []);

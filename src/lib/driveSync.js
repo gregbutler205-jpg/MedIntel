@@ -2,6 +2,15 @@
 // Stores all health data in the user's own Google Drive appDataFolder.
 // This is a hidden folder only accessible by Insina Health — users can't see
 // these files in their Drive UI, and Insina Health servers never touch them.
+//
+// P-02 point 7: Drive uploads ciphertext only. collectLocalData() (plaintext,
+// via the transparent decrypt-on-read interception in secureStorage.js) stays
+// exactly as it was — it also backs the LOCAL "download backup" file, which
+// is intentionally left human-readable for the patient's own portability,
+// same reasoning as Tab13's export feature. Drive-bound functions use
+// collectLocalCiphertext() instead, and merge logic decrypts before merging
+// and re-encrypts before writing back.
+import * as secureStorage from "./secureStorage.js";
 
 const BACKUP_FILENAME        = "insina-health-backup.json";
 const WEEKLY_BACKUP_PREFIX   = "insina-health-weekly-";
@@ -16,7 +25,7 @@ const EXCLUDE_KEYS = new Set(["mi_google_user", "mi_unlocked", "mi_auth_hash"]);
 
 // ── Local data helpers ────────────────────────────────────────────────────────
 
-/** Snapshot all mi_* localStorage keys into a plain object. */
+/** Snapshot all mi_* localStorage keys into a plain object. Plaintext — for the local, human-readable "download backup" file only. Never used for Drive. */
 export function collectLocalData() {
   const data = { _exportedAt: new Date().toISOString() };
   for (let i = 0; i < localStorage.length; i++) {
@@ -24,6 +33,18 @@ export function collectLocalData() {
     if (!key?.startsWith("mi_") || EXCLUDE_KEYS.has(key)) continue;
     try   { data[key] = JSON.parse(localStorage.getItem(key)); }
     catch { data[key] = localStorage.getItem(key); }
+  }
+  return data;
+}
+
+/** Snapshot all managed mi_* keys as raw ciphertext blobs. Used for every Drive upload — P-02 point 7. */
+function collectLocalCiphertext() {
+  const data = { _exportedAt: new Date().toISOString() };
+  for (const key of secureStorage.allManagedKeys()) {
+    if (EXCLUDE_KEYS.has(key)) continue;
+    const raw = secureStorage.getRawCiphertext(key);
+    if (raw == null) continue;
+    try { data[key] = JSON.parse(raw); } catch { /* not yet migrated to ciphertext — skip rather than upload plaintext */ }
   }
   return data;
 }
@@ -52,7 +73,7 @@ async function findBackupFile(token) {
  * Returns the ISO timestamp of the sync.
  */
 export async function uploadToDrive(token) {
-  const content = JSON.stringify(collectLocalData(), null, 2);
+  const content = JSON.stringify(collectLocalCiphertext(), null, 2);
   const blob    = new Blob([content], { type: "application/json" });
 
   const existing = await findBackupFile(token);
@@ -100,7 +121,13 @@ export async function downloadFromDrive(token) {
 }
 
 /**
- * Restore Drive data into localStorage.
+ * Restore Drive data into localStorage. Drive values arrive as ciphertext
+ * blobs ({v,iv,data} — collectLocalCiphertext()'s output); each is decrypted
+ * with the local (unlocked) DEK before merging — P-02's single-device-key
+ * model assumes every device sharing this Drive backup unlocks with the same
+ * passphrase/recovery key, so Drive ciphertext is always decryptable locally
+ * once unlocked. The merged plaintext is re-encrypted on write via
+ * secureStorage.setEncrypted(), never written as plaintext.
  * Strategy:
  *   - Key missing locally → write Drive value
  *   - Both are arrays → merge (local takes priority for same-key items)
@@ -108,30 +135,34 @@ export async function downloadFromDrive(token) {
  *   - Primitive / unknown → keep local (active session data)
  * Returns the count of keys processed.
  */
-export function mergeIntoLocal(driveData) {
+export async function mergeIntoLocal(driveData) {
   if (!driveData) return 0;
   let count = 0;
 
-  for (const [key, value] of Object.entries(driveData)) {
-    if (!key.startsWith("mi_") || EXCLUDE_KEYS.has(key)) continue;
+  for (const [key, blob] of Object.entries(driveData)) {
+    if (!key.startsWith("mi_") || EXCLUDE_KEYS.has(key) || key === "_exportedAt") continue;
     try {
-      const raw = localStorage.getItem(key);
-      if (!raw) {
-        localStorage.setItem(key, JSON.stringify(value));
+      const driveRaw = await secureStorage.decryptRaw(JSON.stringify(blob));
+      const value = JSON.parse(driveRaw);
+
+      const localRaw = secureStorage.getRawCiphertext(key);
+      const localPlain = localRaw != null ? await secureStorage.decryptRaw(localRaw) : null;
+
+      if (localPlain == null) {
+        await secureStorage.setEncrypted(key, JSON.stringify(value));
       } else {
-        const local = JSON.parse(raw);
+        const local = JSON.parse(localPlain);
         if (Array.isArray(value) && Array.isArray(local)) {
-          localStorage.setItem(key, JSON.stringify(_mergeArrays(local, value)));
+          await secureStorage.setEncrypted(key, JSON.stringify(_mergeArrays(local, value)));
         } else if (value && typeof value === "object" && !Array.isArray(value)) {
-          localStorage.setItem(key, JSON.stringify({ ...local, ...value }));
+          await secureStorage.setEncrypted(key, JSON.stringify({ ...local, ...value }));
         }
         // primitives: keep local
       }
       count++;
     } catch {
       // Local value exists but couldn't be parsed — keep it as-is rather than
-      // overwriting with a JSON.stringify'd copy that would corrupt raw strings
-      // (e.g. hex hashes, plain-string values stored without JSON encoding).
+      // overwriting with a copy that would corrupt an unparseable local value.
       count++;
     }
   }
@@ -147,7 +178,7 @@ export function mergeIntoLocal(driveData) {
  */
 export async function fullSync(token) {
   const driveData = await downloadFromDrive(token);
-  mergeIntoLocal(driveData);
+  await mergeIntoLocal(driveData);
   return await uploadToDrive(token);
 }
 
@@ -179,7 +210,7 @@ async function deleteFile(token, fileId) {
 export async function uploadWeeklyBackup(token) {
   const dateStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
   const filename = `${WEEKLY_BACKUP_PREFIX}${dateStr}.json`;
-  const content  = JSON.stringify({ ...collectLocalData(), _weeklyBackup: true }, null, 2);
+  const content  = JSON.stringify({ ...collectLocalCiphertext(), _weeklyBackup: true }, null, 2);
   const blob     = new Blob([content], { type: "application/json" });
 
   // Upload new snapshot
