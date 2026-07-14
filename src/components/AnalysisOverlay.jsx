@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { renderAiMarkdownToHtml } from "../lib/renderAiText.js";
 import { saveAnalysisToNotes, downloadAnalysisMarkdown, getLastSyncStamp, ANALYSIS_FOOTER } from "../lib/analysisExport.js";
+import { PrintLabel } from "./icons.jsx";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
@@ -59,7 +60,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
         <span style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{dateLabel}</span>
         <button onClick={() => window.print()}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", flexShrink: 0 }}>
-          ⎙ Print
+          <PrintLabel />
         </button>
         <button onClick={handleSave} disabled={saved}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: saved ? "rgba(16,185,129,.10)" : "rgba(16,185,129,.14)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: saved ? "default" : "pointer", flexShrink: 0 }}>

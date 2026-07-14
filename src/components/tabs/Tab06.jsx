@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getStore, setStore } from "../../store.js";
 import { mkReading, saveReading, getFieldHistory } from "../../lib/vitals.js";
 import { checkVitalReading, checkVitalCrossFields } from "../../lib/plausibility.js";
+import { PrintLabel } from "../icons.jsx";
 
 // UI-4: one shared mapping from a vital-card id to the mi_readings field it
 // reads — "latest"/"previous" must be looked up per field, not per record,
@@ -710,7 +711,7 @@ export default function App({ onNavChange }) {
             + Log Vitals
           </button>
           <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-            ⎙ Print
+            <PrintLabel />
           </button>
           <div style={{ width:32, height:32, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>G</div>
         </div>

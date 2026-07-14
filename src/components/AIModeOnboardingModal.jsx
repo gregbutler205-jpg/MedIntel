@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ConsentText, { printConsent } from "./PrintableConsent";
 import { CONSENT_VERSION } from "../config/urgencyThresholds";
+import { PrintLabel } from "./icons.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AIModeOnboardingModal
@@ -295,7 +296,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
                 display: "flex", alignItems: "center", gap: 5,
               }}
             >
-              ⎙ Print / save this consent document
+              <PrintLabel>Print / save this consent document</PrintLabel>
             </button>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PrintLabel } from "../icons.jsx";
 import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
@@ -769,7 +770,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 <button
                   onClick={() => printConsent({ mode: "Advanced", consentDate: consentDate || "—", consentVersion: consentVersion || CONSENT_VERSION })}
                   style={{ marginTop: 8, background: "none", border: "none", color: "#4a5c6a", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 5 }}
-                >⎙ View / reprint consent document</button>
+                ><PrintLabel size={11}>View / reprint consent document</PrintLabel></button>
               </div>
             ) : (
               // Currently Standard → show switch to Advanced with consent

@@ -3,6 +3,7 @@ import { getStore, setStore, mergeRecords } from "../../store.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
+import { PrintLabel } from "../icons.jsx";
 
 // PG-08 / A-10: the local callAI() that used to live here fell back to a
 // direct api.anthropic.com call on a 429, using the BYO key from mi_ak. That
@@ -578,7 +579,7 @@ export default function ImportTab({ onImport, onNavChange }) {
             </p>
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"flex-start", marginTop:4 }}>
-            <button className="imp-btn btn-ghost" onClick={handlePrint}>🖨 Print</button>
+            <button className="imp-btn btn-ghost" onClick={handlePrint}><PrintLabel /></button>
           </div>
         </div>
 

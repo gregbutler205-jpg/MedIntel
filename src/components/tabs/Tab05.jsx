@@ -8,6 +8,7 @@ import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName, dismi
 import { checkLabReading } from "../../lib/plausibility.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLabGroup, getConfirmedGroups } from "../../lib/labCanonical.js";
+import { PrintLabel } from "../icons.jsx";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -1078,7 +1079,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               {dedupedLabs.length > 0 && (
                 <button onClick={() => requestReport("labs", () => printLabReport(importedLabs, PRINT_LOGO))}
                   style={{ marginTop:4, padding:"4px 10px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:6, color:"#7eb8d8", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
-                  ⎙ Print Report
+                  <PrintLabel>Print Report</PrintLabel>
                 </button>
               )}
             </div>
@@ -1578,7 +1579,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                               <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8, paddingTop:6, borderTop:"1px solid #111e30" }}>
                                 <button onClick={() => printAIResponse(item.q, item.a, PRINT_LOGO)}
                                   style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
-                                  ⎙ Print
+                                  <PrintLabel />
                                 </button>
                               </div>
                             </>

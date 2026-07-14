@@ -21,6 +21,16 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   Dashboard.jsx also carried stale crash-prone code and an out-of-date NAV.
 
 ### Changed
+- **UI-14 (Print, partial):** One consistent printer icon + visible "Print"
+  label across every print control. New `src/components/icons.jsx` exports a
+  shared inline-SVG `PrinterIcon` and a `PrintLabel` (icon + label as one
+  alignment-safe inline-flex unit). Replaced the inconsistent print-button
+  treatments — the `⎙` glyph (renders unevenly across platforms), the `🖨`
+  emoji (Tab02, Tab12), and a `✦` used for a print action (Tab11 Summary) —
+  in every real print button: AnalysisOverlay, Tab02/04/05/06/09/10/11/12/14/
+  15/16, and the two consent-print buttons. Icon-and-Print scope only; the
+  broader UI-14 icon-family unification (nav glyphs, emoji hot-buttons) stays
+  with the deferred U1 visual work.
 - **UI-11 (labels):** Standardized nav labels — Profile → Health Profile,
   Records → Medical Records, Documents → Source Documents, Notes → My Notes
   (Import Records already matched). Applied in the shared sidebar (App.jsx),

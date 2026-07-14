@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds } from "../../store.js";
 import { requestReport } from "../../rie/preflightChecks.js";
+import { PrintLabel } from "../icons.jsx";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -799,10 +800,10 @@ export default function App({ onNavChange }) {
             Last import: Mar 12, 2026
           </div>
           <button onClick={() => requestReport("medications", () => printRefillReport(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#f87171", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-            ⎙ Refill Report
+            <PrintLabel>Refill Report</PrintLabel>
           </button>
           <button onClick={() => requestReport("medications", () => printMedicationList(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-            ⎙ Print Med List
+            <PrintLabel>Print Med List</PrintLabel>
           </button>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
         </div>

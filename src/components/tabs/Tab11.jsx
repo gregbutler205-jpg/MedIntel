@@ -9,6 +9,7 @@ import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { mkAnalysisNote } from "../../lib/analysisExport.js";
+import { PrintLabel, PrinterIcon } from "../icons.jsx";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName } from "../../lib/tripwire.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
@@ -1216,9 +1217,9 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                     <div className="conv-head no-print">
                       <span className="conv-label" title={firstQ}>{gi + 1}. {label}</span>
                       <div className="line" />
-                      <button className="conv-print-btn" onClick={() => printConversationTranscript(convMsgs)} title="Print this conversation word-for-word">⎙ Transcript</button>
+                      <button className="conv-print-btn" onClick={() => printConversationTranscript(convMsgs)} title="Print this conversation word-for-word"><PrintLabel size={11}>Transcript</PrintLabel></button>
                       <button className="conv-print-btn" disabled={busy || streaming} onClick={() => printConversationSummary(g.conv, convMsgs)} title="Print an AI summary of this conversation">
-                        {busy ? "⏳ …" : "✦ Summary"}
+                        {busy ? "⏳ …" : <PrintLabel size={11}>Summary</PrintLabel>}
                       </button>
                     </div>
                     {g.items.map(({ m, idx }, j) => {
@@ -1269,7 +1270,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
 
             {summaryNote && (
               <div style={{ background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10, lineHeight: 1.55 }}>
-                <span style={{ flex: 1 }}>⎙ {summaryNote}</span>
+                <span style={{ flex: 1 }}><PrinterIcon size={11} style={{ marginRight: 5, verticalAlign: "-1px" }} />{summaryNote}</span>
                 <button onClick={() => setSummaryNote("")} style={{ background: "none", border: "none", color: "#c4a060", cursor: "pointer", fontSize: 13, padding: 0, flexShrink: 0 }}>✕</button>
               </div>
             )}

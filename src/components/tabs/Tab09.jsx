@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI, extractPdfVision } from "../../lib/aiClient.js";
+import { PrintLabel } from "../icons.jsx";
 import { formatDocumentBlock } from "../../prompts/documents.js";
 
 // ── Categories (base — counts computed dynamically from docs) ─────────────────
@@ -595,7 +596,7 @@ export default function DocumentsTab() {
         </button>
         <button onClick={() => window.print()}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-          ⎙ Print
+          <PrintLabel />
         </button>
       </div>
 

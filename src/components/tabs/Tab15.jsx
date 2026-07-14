@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { PrintLabel } from "../icons.jsx";
 
 const STATUS_CFG = {
   active:   { color: "#ef4444", bg: "rgba(239,68,68,.10)",   border: "rgba(239,68,68,.25)",   label: "Active"   },
@@ -245,7 +246,7 @@ export default function ConditionsTab() {
             </p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
-            <button onClick={() => window.print()} style={btnGhost}>⎙ Print</button>
+            <button onClick={() => window.print()} style={btnGhost}><PrintLabel /></button>
             <button onClick={() => setModal(BLANK)} style={btnPrimary}>+ Add Condition</button>
           </div>
         </div>

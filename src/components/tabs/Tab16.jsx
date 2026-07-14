@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { PrintLabel } from "../icons.jsx";
 
 const ANESTHESIA = ["General", "Regional", "Local", "Spinal", "Epidural", "Sedation", "None / N/A"];
 const OUTCOMES   = ["Successful", "Successful with complications", "Incomplete", "Cancelled", "Unknown"];
@@ -218,7 +219,7 @@ export default function SurgeriesTab() {
             </p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
-            <button onClick={() => window.print()} style={btnGhost}>⎙ Print</button>
+            <button onClick={() => window.print()} style={btnGhost}><PrintLabel /></button>
             <button onClick={() => setModal(BLANK)} style={btnPrimary}>+ Add Surgery</button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceC } from "../../prompts/surfaceC.js";
 import { downloadAnalysisMarkdown } from "../../lib/analysisExport.js";
+import { PrintLabel } from "../icons.jsx";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -374,7 +375,7 @@ export default function Notes() {
         
         <div style={{ flex: 1 }} />
         <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
-          ⎙ Print
+          <PrintLabel />
         </button>
       </div>
 

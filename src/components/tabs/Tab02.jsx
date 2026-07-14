@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { PrintLabel } from "../icons.jsx";
 const LOGO_WHITE = import.meta.env.BASE_URL + "logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
@@ -691,7 +692,7 @@ export default function ProfileTab() {
           onClick={() => { if (cards.length > 1) setCardSelectOpen(true); else requestReport("profile", () => handlePrint(cards.map(c => c.id))); }}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
         >
-          🖨 Print Profile
+          <PrintLabel>Print Profile</PrintLabel>
         </button>
         <div style={{ width:32, height:32, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
           {(P.name || "G").charAt(0).toUpperCase()}
