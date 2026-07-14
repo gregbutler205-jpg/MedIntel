@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as secureStorage from "../lib/secureStorage.js";
+import { runMigrations } from "../lib/migrations.js";
 
 const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -87,10 +88,16 @@ export default function LockScreen({ onUnlock }) {
   }
 
   /** Every mi_* value the app read at boot (before this unlock) came back
-   * null (locked, fail-safe) — engines like the A-01 tripwire evaluator that
-   * ran once at startup need to re-run now against the real decrypted
-   * record, not wait for the next incidental write. */
+   * null (locked, fail-safe) — so anything that ran at startup ran against
+   * an apparently-empty record and must re-run now that it's decrypted:
+   * 1. Data migrations (A-08 rails). The boot-time runMigrations() in
+   *    main.jsx can't see managed keys while locked, so any migration that
+   *    touches actual health data (A-12's mi_readings normalization onward)
+   *    only truly runs here. Idempotent by contract, so re-running is safe.
+   * 2. Engines like the A-01 tripwire evaluator, re-triggered via
+   *    mi-data-synced (dispatched after migrations so they see final shapes). */
   function afterUnlock() {
+    runMigrations();
     window.dispatchEvent(new Event("mi-data-synced"));
     onUnlock();
   }

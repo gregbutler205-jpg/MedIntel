@@ -4,7 +4,7 @@ import App from './App.jsx'
 import CompanionApp from './components/companion/CompanionApp.jsx'
 import { runMigrations } from './lib/migrations.js'
 import { runTripwireEvaluation } from './lib/tripwire.js'
-import { installInterception } from './lib/secureStorage.js'
+import { installInterception, hasVault } from './lib/secureStorage.js'
 import './index.css'
 
 // P-02: install the localStorage interception before anything else touches
@@ -16,13 +16,13 @@ installInterception()
 // A-08: run schema migrations once, synchronously, before either entry point
 // renders — both the full app and the companion read/write the same mi_*
 // record, so this must happen above the isCompanion branch, not inside it.
-// NOTE (P-02): this runs before any vault unlock, so a future migration that
-// touches actual health data (not just metadata like mi_schema_version)
-// cannot run here — it would only ever see locked-out nulls. Such a
-// migration needs its own post-unlock hook; none of today's migrations
-// (including P-02's own, which runs from LockScreen's setup flow, not this
-// list) need one yet.
-runMigrations()
+// P-02/A-12: ONLY when no vault exists (legacy plaintext installs, first
+// run). With a vault present the record is locked here, every managed key
+// reads null, and a data migration (A-12's mi_readings normalization
+// onward) would silently no-op yet still stamp its version — permanently
+// skipping itself. Encrypted installs migrate in LockScreen's afterUnlock()
+// instead, once the record is actually readable.
+if (!hasVault()) runMigrations()
 
 // A-01: importing tripwire.js registers its mi-data-synced listener (module
 // load side effect) so it evaluates on every future lab write regardless of

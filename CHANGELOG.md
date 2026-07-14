@@ -15,6 +15,23 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
 ### Fixed
+- **Data migrations never ran on encrypted vaults + restore-flow gaps
+  (found by real-data live verification):** three connected fixes.
+  (1) `main.jsx` ran the A-08 migrations at boot, before any unlock — under
+  P-02 every managed key reads null while locked, so a data migration
+  (A-12's mi_readings normalization onward) silently no-op'd yet still
+  stamped its version, permanently skipping itself. Boot now runs
+  migrations only when no vault exists (legacy plaintext installs, first
+  run); encrypted installs migrate in LockScreen's `afterUnlock()`, once
+  the record is actually readable — verified live: 8/8 real restored
+  readings normalized on unlock.
+  (2) Restore-from-file while locked silently wrote nothing (secureStorage
+  drops managed-key writes when locked) while still toasting "Restored N
+  data sections." Restore now refuses up front with a clear message.
+  (3) Restored backups bypassed migrations entirely (the device's version
+  stamp was already current). Restore now resets the stamp to the v1
+  baseline so the next unlock re-runs the idempotent data migrations
+  against whatever shape the backup carried.
 - **Manual lab entry crash (pre-existing), found by live verification:** the
   Add Lab Result form's category dropdown referenced `LAB_CATEGORIES`, a
   constant that doesn't exist (it's `ALL_LAB_CATEGORIES`) — a

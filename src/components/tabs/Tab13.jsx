@@ -4,7 +4,7 @@ import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup } from "../../lib/driveSync.js";
-import { unlock, changePassphrase } from "../../lib/secureStorage.js";
+import { unlock, changePassphrase, isUnlocked } from "../../lib/secureStorage.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { APP_VERSION } from "../../version.js";
 import { getAutoLockMinutes, setAutoLockMinutes, AUTOLOCK_OPTIONS } from "../../lib/autoLock.js";
@@ -278,6 +278,13 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   }
 
   function handleImport() {
+    // P-02: while locked, secureStorage silently ignores writes to managed
+    // mi_* keys — a restore would toast "Restored N sections" having written
+    // nothing. Refuse up front instead.
+    if (!isUnlocked()) {
+      showToast("Unlock your record first — restore can't write while locked");
+      return;
+    }
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json";
@@ -316,6 +323,14 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
            "mi_lab_name_map","mi_lab_custom_ranges"].forEach(k => {
             if (data[k] !== undefined) { localStorage.setItem(k, JSON.stringify(data[k])); count++; }
           });
+          // A-08/A-12: restored data may predate the current schema (e.g. a
+          // backup exported before the vital-schema migration), but the boot
+          // migrations are gated by mi_schema_version, which this device has
+          // already stamped — so restored records would silently bypass them.
+          // Reset the stamp to the v1 baseline; every data migration above it
+          // is required to be idempotent, so re-running them on reload is safe
+          // and normalizes whatever shape the backup carried.
+          if (count > 0) localStorage.setItem("mi_schema_version", "1");
           showToast(`Restored ${count} data sections — reloading…`);
           setTimeout(() => window.location.reload(), 1800);
         } catch {
