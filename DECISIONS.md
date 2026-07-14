@@ -950,9 +950,9 @@ key list and syncs to Drive with the rest of the `mi_*` record.
   ciphertext-only upload (DEC-027) assumes every device sharing a Drive backup unlocks with the
   same passphrase/recovery key (single-DEK model). A second real device has not been exercised
   against a live Drive backup produced by this code. (Spawned by DEC-027.)
-- **OPEN-13:** `src/components/Dashboard.jsx` is dead code (not imported anywhere — the live
-  dashboard is inline in `App.jsx`). Low-risk deletion, out of scope for A-12 itself. (Spawned by
-  DEC-028.)
+- **OPEN-13:** ~~`src/components/Dashboard.jsx` is dead code~~ RESOLVED (UI-1 track cleanup): both
+  `Dashboard.jsx` and the likewise-unimported `Sidebar.jsx` were confirmed dead (the live
+  dashboard and sidebar are inline in `App.jsx`) and deleted. (Spawned by DEC-028.)
 - **OPEN-14:** A-12's plausibility gates (Tab06, Tab05, App.jsx Dashboard, companion Log.jsx) are
   verified by Node-level unit tests against `plausibility.js`/`vitals.js`/`migrations.js` only —
   live browser verification was skipped this session because the dev app is now locked behind the

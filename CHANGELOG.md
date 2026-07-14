@@ -14,6 +14,12 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
+### Removed
+- **Dead-file cleanup (OPEN-13, UI-1 track):** Deleted
+  `src/components/Dashboard.jsx` and `src/components/Sidebar.jsx` — both
+  unimported anywhere (the live dashboard and sidebar are inline in App.jsx).
+  Dashboard.jsx also carried stale crash-prone code and an out-of-date NAV.
+
 ### Changed
 - **UI-11 (labels):** Standardized nav labels — Profile → Health Profile,
   Records → Medical Records, Documents → Source Documents, Notes → My Notes
