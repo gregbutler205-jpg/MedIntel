@@ -5,7 +5,7 @@ const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const NAV = [
   // ── Core ───────────────────────────────────────────────────────────────────
   { id: "dashboard",   icon: "⬡", label: "Dashboard" },
-  { id: "profile",     icon: "◯", label: "Profile" },
+  { id: "profile",     icon: "◯", label: "Health Profile" },
   { id: "conditions",  icon: "◎", label: "Conditions" },
   { id: "surgeries",   icon: "✦", label: "Surgeries" },
   { id: "medications", icon: "⬡", label: "Medications" },
@@ -15,9 +15,9 @@ const NAV = [
   { id: "appointments",icon: "◻", label: "Appointments" },
   { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
   // ── System ─────────────────────────────────────────────────────────────────
-  { id: "records",     icon: "▤", label: "Records" },
-  { id: "documents",   icon: "▣", label: "Documents" },
-  { id: "notes",       icon: "◻", label: "Notes" },
+  { id: "records",     icon: "▤", label: "Medical Records" },
+  { id: "documents",   icon: "▣", label: "Source Documents" },
+  { id: "notes",       icon: "◻", label: "My Notes" },
   { id: "ai",          icon: "✦", label: "AI Analysis" },
   { id: "import",      icon: "↓", label: "Import Records" },
   { id: "backup",      icon: "◈", label: "Settings & Backup" },

@@ -14,6 +14,16 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
+### Changed
+- **UI-11 (labels):** Standardized nav labels — Profile → Health Profile,
+  Records → Medical Records, Documents → Source Documents, Notes → My Notes
+  (Import Records already matched). Applied in the shared sidebar (App.jsx),
+  the four standalone tabs' duplicated NAV arrays (Medications, Labs, Vitals,
+  Symptoms), and the Search result categories. "Export & Backup" and "App
+  Settings" both still map onto the single Settings & Backup tab; splitting
+  them is a new tab, not a relabel, so it's left as one entry (follow-up).
+  Renamed early so later UI items use the settled names.
+
 ### Added
 - **A-04 (minimal) / UI-3:** Lab test-name canonicalization + flag badge. New
   `src/lib/labCanonical.js` resolves a lab name to one canonical grouping id

@@ -29,7 +29,7 @@ const CATEGORIES = {
   appointments: { label: "Appointments",    color: "#4f8ef7", tab: "appointments" },
   symptoms:     { label: "Symptoms",        color: "#ef4444", tab: "symptoms"     },
   surgeries:    { label: "Surgeries",       color: "#7eb8d8", tab: "surgeries"    },
-  documents:    { label: "Documents",       color: "#f59e0b", tab: "documents"    },
+  documents:    { label: "Source Documents", color: "#f59e0b", tab: "documents"    },
   aiHistory:    { label: "AI History",      color: "#a78bfa", tab: "ai"           },
 };
 
