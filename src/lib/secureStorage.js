@@ -90,7 +90,13 @@ export function installInterception() {
   Storage.prototype.removeItem = function (key) {
     if (this === localStorage && isManaged(key)) {
       plaintextCache.delete(key);
-      if (dek !== null) nativeRemove(key);
+      // Deletion never needs the DEK — you're erasing, not decrypting — so
+      // always clear the real ciphertext too, even while locked. The former
+      // `if (dek !== null)` guard meant the "Erase & Start Fresh" reset (which
+      // runs entirely from the lock screen) removed only the exempt keys and
+      // left every encrypted health blob orphaned on disk (data remanence,
+      // P-02 spec point 9 / DEC-027).
+      nativeRemove(key);
       return;
     }
     return native.removeItem.call(this, key);

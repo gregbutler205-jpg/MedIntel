@@ -14,6 +14,16 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
+### Fixed
+- **P-02 data-remanence bug (DEC-032), found by live verification:** "Erase &
+  Start Fresh" (the destructive reset when both passphrase and recovery key
+  are lost) ran from the lock screen while locked, and `secureStorage`'s
+  patched `removeItem` only forwarded managed-key deletions to real storage
+  when *unlocked* — so the reset cleared only the exempt keys and left every
+  encrypted health blob orphaned on disk. `removeItem` now always clears real
+  storage for managed keys (deletion never needs the DEK). Verified by a new
+  Node regression test and live in-browser.
+
 ### Removed
 - **Dead-file cleanup (OPEN-13, UI-1 track):** Deleted
   `src/components/Dashboard.jsx` and `src/components/Sidebar.jsx` — both

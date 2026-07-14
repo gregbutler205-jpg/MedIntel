@@ -894,6 +894,37 @@ key list and syncs to Drive with the rest of the `mi_*` record.
 
 ---
 
+## DEC-032: P-02 data-remanence bug — "Erase & Start Fresh" left encrypted health blobs on disk
+
+**Date:** 2026-07-13
+**Status:** Settled (bug fix, found by live verification).
+
+**Decision / fix.** `secureStorage.js`'s patched `Storage.prototype.removeItem` only forwarded a
+managed-key deletion to real storage when the vault was *unlocked*
+(`if (dek !== null) nativeRemove(key)`). But the destructive reset,
+`LockScreen.handleWipe()`, runs entirely from the lock screen — i.e. while locked — so every
+`removeItem("mi_…")` it issued cleared only the in-memory cache (empty while locked) and left the
+actual encrypted blob on disk. The reset removed only the *exempt* keys (`mi_vault`,
+`mi_schema_version`); all managed ciphertext (`mi_labs`, `mi_meds_full`, `mi_rie_audit`,
+`mi_tripwire_flags`, …) survived, orphaned and undecryptable but physically present. A user who
+chose "erase everything" (P-02 spec point 9 / DEC-027 — the only path left when both passphrase and
+recovery key are lost) would still have all their encrypted PHI sitting in localStorage.
+
+Fix: `removeItem` now always calls `nativeRemove(key)` for managed keys regardless of lock state —
+deletion never needs the DEK (you are erasing, not decrypting), so gating it on being unlocked was
+the defect.
+
+**How found.** Live browser verification (this is precisely the class of bug the Node suite missed,
+because it calls the module directly rather than exercising the lock-screen reset): clicking "Erase
+& Start Fresh" on a locked vault left `mi_vault` and the managed blobs in place, and the app
+returned to the unlock screen on reload instead of the first-run setup. Confirmed fixed both by a
+new Node regression test (managed keys cleared by a locked wipe) and live (`removeItem` loop while
+locked now empties every `mi_` key).
+
+**Related:** P-02, DEC-027, PG-10.
+
+---
+
 ## DEC-031: UI-1 Foundation split — mechanical slice done now, sweeping visual work deferred to live verification
 
 **Date:** 2026-07-13
