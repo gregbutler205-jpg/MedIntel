@@ -894,6 +894,39 @@ key list and syncs to Drive with the rest of the `mi_*` record.
 
 ---
 
+## DEC-031: UI-1 Foundation split — mechanical slice done now, sweeping visual work deferred to live verification
+
+**Date:** 2026-07-13
+**Status:** Settled (Greg's decision via AskUserQuestion).
+
+**Decision.** The UI-1 Foundation set (UI-10 shared shell, UI-8 typography/contrast tokens, UI-11
+labels, UI-14 semantic icons, UI-9 collapsible nav) is almost entirely *visual*, and its
+done-when lines are visual acceptance tests ("readable without zoom," "no competing global nav,"
+"one consistent icon"). The dev app is currently locked behind the P-02 vault passphrase, so none
+of it can be live-verified this session. A survey also showed UI-10 is a high-risk ~15-file
+structural rewrite (the four standalone tabs — Medications/Labs/Vitals/Symptoms — each re-implement
+the entire sidebar/topbar/NAV inline, and App.jsx runs a dual standalone-vs-shell render path)
+that everything else sits on.
+
+Rather than rewrite 15 files blind, Greg chose to ship only the mechanical, reason-verifiable
+slice now and defer the sweeping visual work until the vault can be unlocked for in-browser
+verification:
+
+- **Done now:** UI-11 nav-label standardization (Health Profile / Medical Records / Source
+  Documents / My Notes, applied in the shared sidebar, the four duplicated standalone-tab NAVs,
+  and Search); dead-file deletion (OPEN-13 — Dashboard.jsx + Sidebar.jsx, both unimported); and
+  the UI-14 *Print* half (a shared `PrinterIcon`/`PrintLabel`, adopting one consistent printer
+  icon + visible "Print" label across every print button, replacing the `⎙`/`🖨`/`✦` mix).
+- **Deferred to a vault-unlocked session (part of OPEN-14 verification):** UI-10 shell
+  consolidation, UI-8 body-size increases (11→15px) across hundreds of inline styles, UI-9
+  collapsible Today/My Health/Records & Tools nav with direct Emergency access, and the rest of
+  UI-14's icon-family unification (nav glyphs, emoji hot-buttons). Also unresolved: the
+  "Export & Backup" vs "App Settings" label split, which needs a new tab, not a relabel.
+
+**Related:** UI-10, UI-8, UI-11, UI-14, UI-9, OPEN-13, OPEN-14.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
