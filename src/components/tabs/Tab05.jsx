@@ -1176,7 +1176,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     onChange={e => setNewLab(p => ({ ...p, category: e.target.value }))}
                     style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
                   >
-                    {LAB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {ALL_LAB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div style={{ marginBottom:12 }}>
