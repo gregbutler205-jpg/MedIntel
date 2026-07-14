@@ -12,7 +12,7 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
+## v1.25.0 — 2026-07-14 (Phase 1: pilot gate)
 
 ### Fixed
 - **Data migrations never ran on encrypted vaults + restore-flow gaps

@@ -1,7 +1,16 @@
 # Pilot Gate - Small-Group MVP Readiness
 
-Status: Not yet met. This file tracks what must be true before Insina Health
-holds data for anyone other than the founder.
+Status (2026-07-14, Phase 1 checkpoint): all eleven PG items are implemented
+in code and verified (build gates, Node test harnesses, and a live in-browser
+pass against a restored copy of the founder's real record). Three human/
+external actions remain before actually inviting a second user — they gate
+the invitation, not this deploy: (1) Anthropic monthly spend cap confirmed
+set in the console (PG-04 backstop, HUMAN); (2) pilot bearer tokens issued
+out-of-band to each invitee (PG-04, HUMAN, at invite time); (3) attorney
+review of the terms/privacy/consent drafts, which ship marked DRAFT (PG-11,
+external — see APP_CHANGES_SPEC Part 4). Also outstanding: clinical review
+of the default tripwire threshold library (OPEN-10) — until then the urgent
+tier is gated off and the app says so ("pending clinical review").
 
 Scope: a small, invited pilot group. Passphrase-derived encryption replaces
 the PIN lock now. Two-step authorization is deferred until there is a
@@ -203,14 +212,18 @@ Do not invite a second user until every Category A and Category B item is
 checked, and PG-10 (passphrase-derived encryption) and PG-11 (consent/terms)
 are in place. Category C beyond PG-10 and anything in Deferred can wait.
 
-- [ ] PG-01 - GitHub token rotated and purged
-- [ ] PG-02 - HTML escaping in applyBold
-- [ ] PG-03 - pdf.js bundled, CDN import removed
-- [ ] PG-04 - Proxy rate limiting on, spend cap set, per-user tokens issued
-- [ ] PG-05 - CSP meta tag added
-- [ ] PG-06 - Prompt text de-personalized
-- [ ] PG-07 - Silent auto-correct routed to Review Queue
-- [ ] PG-08 - Tab10 routed through proxy
-- [ ] PG-09 - Urgency thresholds evaluated in code
-- [ ] PG-10 - Passphrase-derived encryption shipped
-- [ ] PG-11 - Consent and terms in place
+- [x] PG-01 - GitHub token rotated and purged (S-01; history rewritten, push protection on)
+- [x] PG-02 - HTML escaping in applyBold (S-02; one shared renderer, `renderAiText.js`)
+- [x] PG-03 - pdf.js bundled, CDN import removed (S-04)
+- [x] PG-04 - Proxy rate limiting on (S-05); bearer-token support shipped (S-05 item 3).
+      HUMAN remaining: confirm Anthropic console spend cap; issue tokens at invite time.
+- [x] PG-05 - CSP meta tag added (S-03)
+- [x] PG-06 - Prompt text de-personalized (A-09 prompts-as-code + A-06 condition modules)
+- [x] PG-07 - Silent auto-correct deleted; RIE flags to Review Queue (A-05)
+- [x] PG-08 - Tab10 routed through proxy (A-02 unified client; no direct Anthropic calls remain)
+- [x] PG-09 - Urgency thresholds evaluated deterministically (A-01 tripwire engine + fixtures).
+      OPEN-10 remaining: clinical review of the default library before the urgent tier activates.
+- [x] PG-10 - Passphrase-derived encryption shipped (P-02: PBKDF2→AES-GCM, recovery key,
+      ciphertext-only Drive uploads; DEC-032 remanence fix; post-unlock migrations)
+- [x] PG-11 - Consent and terms in place (P-06: in-app Before-You-Start + acknowledgment,
+      TERMS/PRIVACY drafts marked DRAFT pending attorney review — external gate for invites)
