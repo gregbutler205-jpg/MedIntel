@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { C, mono, sans, Card, SL, Btn, Empty, Pill } from "../companionUI.jsx";
 import { rls, wls, uid, toISO, readings, latestWith, recentAverage, activeMeds } from "../../../lib/companionData.js";
-import { mkReading, saveReading } from "../../../lib/vitals.js";
+import { mkReading, saveReading, defaultVitalFlag } from "../../../lib/vitals.js";
 import { checkVitalReading, checkVitalCrossFields } from "../../../lib/plausibility.js";
 import { askInsinaJSON } from "../../../lib/companionAI.js";
 import MicButton from "../MicButton.jsx";
@@ -147,6 +147,7 @@ function Vitals({ queueSync }) {
   function applySuggestion(field, value) {
     if (!pending) return;
     const updated = { ...pending.reading, [field]: value };
+    updated.flag = defaultVitalFlag(updated); // corrected value must not keep the typo's stale flag
     setPending(null);
     attemptSave(updated);
   }
@@ -339,6 +340,7 @@ Include only the sub-object matching "kind"; omit any numeric field you don't kn
   function applySuggestion(field, value) {
     if (!pending) return;
     const updated = { ...pending.reading, [field]: value };
+    updated.flag = defaultVitalFlag(updated); // corrected value must not keep the typo's stale flag
     setPending(null);
     attemptSaveVital(updated);
   }

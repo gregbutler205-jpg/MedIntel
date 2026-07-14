@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
-import { mkReading, saveReading } from './lib/vitals.js';
+import { mkReading, saveReading, defaultVitalFlag } from './lib/vitals.js';
 import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
 import LockScreen from './components/LockScreen.jsx';
 import * as secureStorage from './lib/secureStorage.js';
@@ -917,6 +917,9 @@ function AppShell() {
   function applyQuickSuggestion(field, value) {
     if (!pendingPlausibility) return;
     const updated = { ...pendingPlausibility.reading, [field]: value };
+    // Recompute the flag — the corrected value must not keep the stale flag
+    // the original typo earned (e.g. 1138 → flag, corrected 113.8 → no flag).
+    updated.flag = defaultVitalFlag(updated);
     setPendingPlausibility(null);
     attemptQuickSave(updated);
   }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getStore, setStore } from "../../store.js";
-import { mkReading, saveReading, getFieldHistory } from "../../lib/vitals.js";
+import { mkReading, saveReading, getFieldHistory, defaultVitalFlag } from "../../lib/vitals.js";
 import { checkVitalReading, checkVitalCrossFields } from "../../lib/plausibility.js";
 import { PrintLabel } from "../icons.jsx";
 
@@ -598,6 +598,9 @@ export default function App({ onNavChange }) {
   const applySuggestionToPending = (field, value) => {
     if (!pendingPlausibility) return;
     const updated = { ...pendingPlausibility.reading, [field]: value };
+    // Recompute the flag — the corrected value must not keep the stale flag
+    // the original typo earned.
+    updated.flag = defaultVitalFlag(updated);
     setPendingPlausibility(null);
     attemptSaveReading(updated, pendingPlausibility.onDone);
   };

@@ -34,6 +34,15 @@ function genId() {
 }
 
 /**
+ * The default "flag this reading" rule, in one place — recompute after ANY
+ * field change (e.g. applying a plausibility-suggestion correction), or a
+ * corrected value keeps the stale flag its typo earned.
+ */
+export function defaultVitalFlag(reading) {
+  return reading.bp_s != null && Number(reading.bp_s) >= 160;
+}
+
+/**
  * Build a canonical reading object. `fields` may include any of
  * VITAL_FIELDS plus `date`/`time`; blank/undefined vital fields become
  * null (never carried forward from a prior reading).
@@ -50,7 +59,7 @@ export function mkReading({ date, time = "", source = "manual", flag: explicitFl
     const raw = fields[f];
     reading[f] = raw === "" || raw == null ? null : Number(raw);
   }
-  reading.flag = explicitFlag != null ? explicitFlag : (reading.bp_s != null && reading.bp_s >= 160);
+  reading.flag = explicitFlag != null ? explicitFlag : defaultVitalFlag(reading);
   return reading;
 }
 

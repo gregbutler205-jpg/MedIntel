@@ -15,6 +15,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-13 (Phase 1: pilot gate — in progress)
 
 ### Fixed
+- **Manual lab entry crash (pre-existing), found by live verification:** the
+  Add Lab Result form's category dropdown referenced `LAB_CATEGORIES`, a
+  constant that doesn't exist (it's `ALL_LAB_CATEGORIES`) — a
+  `ReferenceError` that crashed the whole Labs tab the moment the form
+  opened. Introduced by a pre-session commit ("Fix 6 user-reported issues"),
+  invisible to the build because it's a runtime reference. Manual lab entry
+  had been unusable since.
+- **A-12 stale flag on corrected readings, found by live verification:**
+  applying a plausibility-gate suggestion patched the field value but kept
+  the `flag` computed from the original typo — a systolic of 1138 corrected
+  to 113.8 still saved as a flagged reading and raised a false "Flagged
+  vital reading" dashboard alert. The default flag rule now lives in one
+  place (`defaultVitalFlag()` in vitals.js) and every suggestion-apply path
+  (Tab06, Dashboard Quick Vitals, both companion paths) recomputes it.
 - **P-02 data-remanence bug (DEC-032), found by live verification:** "Erase &
   Start Fresh" (the destructive reset when both passphrase and recovery key
   are lost) ran from the lock screen while locked, and `secureStorage`'s
