@@ -1308,7 +1308,11 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             {selectedImportedLab && (() => {
               const { low, high } = parseRefRange(selectedImportedLab.refRange);
               const val = parseFloat(selectedImportedLab.value);
-              const customRange = customRanges[canonicalLabId(selectedImportedLab.name)] || customRanges[(selectedImportedLab.name || "").toLowerCase().trim()] || null;
+              // A-04: custom ranges key by canonical id (raw-name fallback for
+              // pre-A-04 entries); labKey is also the editing-state key the
+              // Doctor's Range panel below uses.
+              const labKey = canonicalLabId(selectedImportedLab.name);
+              const customRange = customRanges[labKey] || customRanges[(selectedImportedLab.name || "").toLowerCase().trim()] || null;
               const customLow  = customRange?.low  ?? null;
               const customHigh = customRange?.high ?? null;
               // Doctor's custom range wins for the in/out-of-range status; fall
