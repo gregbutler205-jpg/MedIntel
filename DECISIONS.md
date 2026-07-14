@@ -1017,16 +1017,21 @@ verification:
 - **OPEN-13:** ~~`src/components/Dashboard.jsx` is dead code~~ RESOLVED (UI-1 track cleanup): both
   `Dashboard.jsx` and the likewise-unimported `Sidebar.jsx` were confirmed dead (the live
   dashboard and sidebar are inline in `App.jsx`) and deleted. (Spawned by DEC-028.)
-- **OPEN-14:** A-12's plausibility gates (Tab06, Tab05, App.jsx Dashboard, companion Log.jsx) are
-  verified by Node-level unit tests against `plausibility.js`/`vitals.js`/`migrations.js` only —
-  live browser verification was skipped this session because the dev app is now locked behind the
-  P-02 vault passphrase, which Claude Code does not have and should not be given. Worth an
-  in-browser pass (hard block, soft confirm, suggestion-apply, per-vital latest/prev correctness,
-  same-day multi-reading, migration against real pre-existing data) next time Greg has the vault
-  unlocked. A-13's surfaces (analysis overlay Print/Save, Tab11 collapsibles and open-as-report,
-  Tab05 launch field, companion symptom-prep session) carry the same gap for the same reason —
-  prompt builders and note/markdown helpers are unit-tested, the UI is not live-verified.
-  (Spawned by DEC-028; extended by DEC-029.)
+- **OPEN-14 (largely resolved 2026-07-14):** the live in-browser pass ran against a throwaway
+  test vault Greg unlocked. Verified live: A-12 Dashboard Quick Vitals (date/time pickers, hard
+  gate on systolic 1138 with correction suggestion and no bypass, suggestion-apply saving with a
+  correctly recomputed flag, cross-field soft gate with one-tap Save Anyway, two same-day
+  readings stored separately); A-04 (FK506+Tacrolimus grouped to one row/trend series, amber
+  FLAGGED badge, Group Tests modal with manual grouping, confirm writing only mi_lab_name_map —
+  source records untouched — and Ungroup restoring the original presentation, RIE synonym nag
+  clearing on confirmation); A-13/UI-15 Tab11 layout (compact mode bar + Change, no model-id
+  chip, collapsible Quick Prompts / Data-used panels, bottom composer) and Tab05's
+  sessionContext launch field; UI-11 labels; UI-14 printer icon. The pass also caught and fixed
+  four real bugs (DEC-032 data remanence; pre-existing LAB_CATEGORIES crash; A-12 stale flag
+  after suggestion-apply; A-04 orphaned labKey crash). Still not live-exercised: flows needing a
+  real AI response (AnalysisOverlay Print/Save/open-as-report end-to-end, context gathering),
+  the companion surfaces, and the A-12 migration against real pre-existing data — these remain
+  unit-test-verified only. (Spawned by DEC-028; extended by DEC-029.)
 - **OPEN-15:** The companion's *generic* AI chat (AILite sessions not started from a symptom
   handoff) still runs on `companionAI.js`'s lightweight `buildRecordSystem()` prompt, which
   carries no Clinical Safety Core, tripwire envelope, or rule-5 emergency routing text. No
