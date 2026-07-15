@@ -92,6 +92,11 @@ export default function AppSidebar({ activeNav, onNav }) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
   const toggleGroup = (key) => {
+    // Collapsing the group that holds the active screen is a visual no-op
+    // (it force-renders expanded) — don't silently store a collapse the user
+    // never saw happen, or the group snaps shut later when they navigate away.
+    const group = NAV_GROUPS.find(g => g.key === key);
+    if (group?.ids.includes(activeNav) && !collapsed[key]) return;
     setCollapsed(prev => {
       const next = { ...prev, [key]: !prev[key] };
       try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(next)); } catch { /* quota/denied: state still works this session */ }
