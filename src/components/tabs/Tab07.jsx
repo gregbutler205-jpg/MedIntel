@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
+import { safeAverage, safeNumber } from "../../lib/displaySafe.js";
 
 
 
@@ -352,8 +353,15 @@ export default function App({ onNavChange }) {
 
   const displayed = entries.filter(e => filter === "all" ? true : e.status === filter);
   const active = entries.filter(e => e.status === "active");
-  const avgSeverity = entries.length ? (entries.reduce((s, e) => s + e.severity, 0) / entries.length).toFixed(1) : "—";
-  const maxSeverity = entries.length ? Math.max(...entries.map(e => e.severity)) : 0;
+  // UI-2: average only the numeric severities — companion entries store text
+  // ("Moderate"), which used to turn the whole average into NaN on screen.
+  const avgSeverity = safeAverage(entries.map(e => e.severity)) ?? "No severity recorded";
+  // UI-2: peak over numeric severities only (text severities from the
+  // companion would turn Math.max into NaN); null when none are numeric.
+  const maxSeverity = (() => {
+    const nums = entries.map(e => safeNumber(e.severity)).filter(n => n !== null);
+    return nums.length ? Math.max(...nums) : null;
+  })();
 
   // Group by date
   const grouped = displayed.reduce((acc, entry) => {
@@ -432,8 +440,8 @@ export default function App({ onNavChange }) {
               {[
                 { label:"Active", value: active.length, color: active.length > 0 ? "#ef4444" : "#10b981" },
                 { label:"Total Logged", value: entries.length, color:"#4f8ef7" },
-                { label:"Avg Severity", value: avgSeverity, color: avgSeverity >= 6 ? "#ef4444" : avgSeverity >= 4 ? "#f59e0b" : "#10b981" },
-                { label:"Peak Severity", value: maxSeverity || "—", color: severityColor(maxSeverity || 5) },
+                { label:"Avg Severity", value: avgSeverity, color: safeNumber(avgSeverity) == null ? "#98afc4" : safeNumber(avgSeverity) >= 6 ? "#ef4444" : safeNumber(avgSeverity) >= 4 ? "#f59e0b" : "#10b981" },
+                { label:"Peak Severity", value: maxSeverity ?? "—", color: severityColor(maxSeverity ?? 5) },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 16px", animation:"fadeUp .3s ease both" }}>
                   <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>

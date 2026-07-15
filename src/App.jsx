@@ -6,6 +6,7 @@ import LockScreen from './components/LockScreen.jsx';
 import AppSidebar from './components/AppSidebar.jsx';
 import { printEmergency } from './lib/printEmergency.js';
 import { FlaskIcon, PillIcon, CalendarIcon, ThermometerIcon, HeartIcon, DownloadIcon, RefreshIcon, AlertTriangleIcon, ClockIcon, SaveIcon } from './components/icons.jsx';
+import { daysAgoLabel } from './lib/displaySafe.js';
 import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
 import PreflightHost from './rie/PreflightHost.jsx';
@@ -943,8 +944,9 @@ function AppShell() {
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:"#dde8f5" }}>Weekly backup overdue</div>
                           <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
-                            {lastWeeklyBackup
-                              ? `Last backed up ${Math.floor((Date.now() - new Date(lastWeeklyBackup).getTime()) / 86400000)} days ago.`
+                            {/* UI-2: never "NaN days ago" — unparseable timestamps fall back */}
+                            {daysAgoLabel(lastWeeklyBackup, null)
+                              ? `Last backed up ${daysAgoLabel(lastWeeklyBackup, null)}.`
                               : "Your data has never been backed up."}
                             {" "}Connect Google Drive in Settings for automatic weekly backups.
                           </div>

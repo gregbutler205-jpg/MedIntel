@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PrintLabel } from "../icons.jsx";
+import { daysAgoLabel } from "../../lib/displaySafe.js";
 import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
@@ -490,10 +491,13 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>WEEKLY SNAPSHOT</div>
                 <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                   {(() => {
+                    // UI-2: daysAgoLabel never renders "NaN days ago" — a
+                    // malformed/JSON-quoted timestamp (how snapshot-restored
+                    // scalars arrive) falls back to the no-backup copy.
                     const ts = localStorage.getItem("mi_last_weekly_backup");
-                    if (!ts) return "No weekly backup yet — will run automatically on next app open.";
-                    const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
-                    return `Last snapshot ${days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`} · keeps 4 rolling weeks on Drive`;
+                    const label = daysAgoLabel(ts, null);
+                    if (!label) return "No snapshot created yet — will run automatically on next app open.";
+                    return `Last snapshot ${label} · keeps 4 rolling weeks on Drive`;
                   })()}
                 </div>
               </div>
