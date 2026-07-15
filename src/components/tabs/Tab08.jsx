@@ -483,8 +483,9 @@ function CareTeam() {
         <SL mb={0}>Care Team</SL>
         <button className="add-badge-btn" onClick={() => setEditingDoc({ ...BLANK_MEMBER })}>+ Add Member</button>
       </div>
-      <p style={{ fontSize:11, color:"#6a8090", fontFamily:mono, fontStyle:"italic", marginBottom:16, lineHeight:1.55 }}>
-        Check which doctors to show on the Dashboard and in printed reports. Up to 10 may be selected.
+      {/* UI-25: approved descriptor wording */}
+      <p style={{ fontSize:12, color:"#98afc4", fontFamily:mono, marginBottom:16, lineHeight:1.55 }}>
+        Select the care team members you want shown on your Dashboard and Health Profile. Up to 10 may be selected.
       </p>
       <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
         {team.map(t => {
