@@ -3,6 +3,7 @@ import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, 
 import { mkReading, saveReading, defaultVitalFlag } from './lib/vitals.js';
 import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
 import LockScreen from './components/LockScreen.jsx';
+import AppSidebar from './components/AppSidebar.jsx';
 import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
 import PreflightHost from './rie/PreflightHost.jsx';
@@ -11,7 +12,6 @@ import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from '
 import { getAutoLockMinutes } from './lib/autoLock.js';
 import { fullSync, uploadToDrive, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
 
-const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
 // ── Tab component imports ─────────────────────────────────────────────────────
 import TabProfile     from './components/tabs/Tab02.jsx';
@@ -120,31 +120,8 @@ function getFeaturedLabs() {
 // ── Assets & static data ──────────────────────────────────────────────────────
 const SHIELD_LOGO = "data:image/jpeg;base64,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";
 
-// UI-11: standardized nav labels. Health Profile / Medical Records / Source
-// Documents / My Notes / Import Records are the approved names. "Export &
-// Backup" and "App Settings" both map onto the single Settings & Backup tab
-// (Tab13) today; splitting them would be a new tab, not a relabel — left as
-// one entry, flagged as follow-up.
-const NAV = [
-  // ── Core ────────────────────────────────────────────────────────────────────
-  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
-  { id: "profile",     icon: "◯", label: "Health Profile" },
-  { id: "conditions",  icon: "◎", label: "Conditions" },
-  { id: "surgeries",   icon: "✦", label: "Surgeries" },
-  { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs",        icon: "◈", label: "Labs & Trends" },
-  { id: "vitals",      icon: "♡", label: "Vitals" },
-  { id: "symptoms",    icon: "◎", label: "Symptoms" },
-  { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
-  // ── System ──────────────────────────────────────────────────────────────────
-  { id: "records",     icon: "▤", label: "Medical Records" },
-  { id: "documents",   icon: "▣", label: "Source Documents" },
-  { id: "notes",       icon: "◻", label: "My Notes" },
-  { id: "ai",          icon: "✦", label: "AI Analysis" },
-  { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Settings & Backup" },
-];
+// UI-10: NAV and the sidebar live in src/components/AppSidebar.jsx now — one
+// definition shared with the standalone tabs instead of five parallel copies.
 
 // ── Helper functions (accept data as params so they work with live state) ─────
 function parseRefillDate(str) {
@@ -573,56 +550,8 @@ function WeightCard({ readings }) {
 }
 
 // ── Shared sidebar component (used for non-standalone tabs) ───────────────────
-function AppSidebar({ activeNav, setActiveNav }) {
-  return (
-    <aside style={{
-      width: 220, minWidth: 220, height: "100vh",
-      background: "#080c14",
-      borderRight: "1px solid #0d1a28",
-      display: "flex", flexDirection: "column",
-      flexShrink: 0,
-    }}>
-      {/* Logo */}
-      <div style={{ padding: "10px 20px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: "100%", height: "auto", display: "block" }} />
-      </div>
-
-      {/* Patient info */}
-      <div style={{ padding: "12px 18px", borderBottom: "1px solid #0d1a28" }}>
-        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>PATIENT</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>
-          {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })()}
-        </div>
-      </div>
-
-      {/* Nav items */}
-      <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-        <div style={{ padding: "8px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>CORE</div>
-        {NAV.slice(0, 10).map(({ id, icon, label }) => (
-          <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
-            <span className="nav-icon">{icon}</span>
-            <span>{label}</span>
-          </div>
-        ))}
-        <div style={{ padding: "12px 16px 4px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>SYSTEM</div>
-        {NAV.slice(10).map(({ id, icon, label }) => (
-          <div key={id} className={`nav-item ${activeNav === id ? "active" : ""}`} onClick={() => setActiveNav(id)}>
-            <span className="nav-icon">{icon}</span>
-            <span>{label}</span>
-            {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "1px 5px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>AI</span>}
-          </div>
-        ))}
-      </nav>
-
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #0d1a28" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 10, color: "#1e4030", fontFamily: "'DM Mono',monospace" }}>
-          <div className="live-dot" />
-          All systems nominal
-        </div>
-      </div>
-    </aside>
-  );
-}
+// UI-10: AppSidebar extracted to src/components/AppSidebar.jsx (shared with
+// the four standalone tabs).
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
@@ -965,10 +894,6 @@ function AppShell() {
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #1a2840; border-radius: 4px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .nav-item { display:flex; align-items:center; gap:10px; padding:8px 16px; cursor:pointer; font-size:12.5px; color:#b0c4d8; border-left:2px solid transparent; transition:all .15s; user-select:none; }
-        .nav-item:hover { color:#7eb8d8; background:rgba(79,142,247,.04); }
-        .nav-item.active { color:#4f8ef7; background:rgba(79,142,247,.08); border-left-color:#4f8ef7; }
-        .nav-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
         .stat-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; padding:20px; position:relative; overflow:hidden; transition:border-color .2s; animation: fadeUp .4s ease both; }
         .stat-card:hover { border-color:#1a2f4a; }
         .stat-card::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(255,255,255,.015) 0%, transparent 60%); pointer-events:none; }
@@ -981,7 +906,6 @@ function AppShell() {
         .badge-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px; }
         .ai-btn { width:100%; padding:12px; background:linear-gradient(135deg, rgba(79,142,247,.15), rgba(167,139,250,.1)); border:1px solid rgba(79,142,247,.3); border-radius:10px; color:#7eb8d8; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
         .ai-btn:hover { background:linear-gradient(135deg, rgba(79,142,247,.25), rgba(167,139,250,.18)); border-color:rgba(79,142,247,.5); color:#b8d4f0; }
-        .live-dot { width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981; animation:pulse 2s infinite; flex-shrink:0; }
       `}</style>
 
       {/* Record Integrity Engine — floating Review Queue, present on every tab */}
@@ -997,7 +921,7 @@ function AppShell() {
       {!isStandalone && (
         <AppSidebar
           activeNav={activeNav}
-          setActiveNav={setActiveNav}
+          onNav={setActiveNav}
         />
       )}
 

@@ -1,27 +1,7 @@
 import { useState, useEffect } from "react";
+import AppSidebar from "../AppSidebar.jsx";
 
-const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
-const NAV = [
-  // ── Core ───────────────────────────────────────────────────────────────────
-  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
-  { id: "profile",     icon: "◯", label: "Health Profile" },
-  { id: "conditions",  icon: "◎", label: "Conditions" },
-  { id: "surgeries",   icon: "✦", label: "Surgeries" },
-  { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs",        icon: "◈", label: "Labs & Trends" },
-  { id: "vitals",      icon: "♡", label: "Vitals" },
-  { id: "symptoms",    icon: "◎", label: "Symptoms" },
-  { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
-  // ── System ─────────────────────────────────────────────────────────────────
-  { id: "records",     icon: "▤", label: "Medical Records" },
-  { id: "documents",   icon: "▣", label: "Source Documents" },
-  { id: "notes",       icon: "◻", label: "My Notes" },
-  { id: "ai",          icon: "✦", label: "AI Analysis" },
-  { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Settings & Backup" },
-];
 
 // Common symptoms relevant to transplant / immunosuppressed patients
 const COMMON_SYMPTOMS = [
@@ -373,11 +353,6 @@ export default function App({ onNavChange }) {
         @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-        .nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:#b0c4d8;border-left:2px solid transparent;transition:all .15s;user-select:none}
-        .nav-item:hover{color:#7eb8d8;background:rgba(79,142,247,.04)}
-        .nav-item.active{color:#4f8ef7;background:rgba(79,142,247,.08);border-left-color:#4f8ef7}
-        .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
-        .live-dot{width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;flex-shrink:0}
         .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
         .entry-row{background:#0b1220;border:1px solid #111e30;border-radius:11px;padding:14px 16px;cursor:pointer;transition:all .15s;animation:fadeUp .3s ease both;margin-bottom:7px}
         .entry-row:hover{border-color:#1a2f4a}
@@ -388,38 +363,7 @@ export default function App({ onNavChange }) {
       `}</style>
 
       {/* Sidebar */}
-      <aside style={{ width:220, minWidth:220, background:"#080c14", borderRight:"1px solid #0d1a28", display:"flex", flexDirection:"column", height:"100vh" }}>
-        <div style={{ padding: "10px 20px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ width: "100%", height: "auto", display: "block" }} />
-        </div>
-        <div style={{ padding:"14px 18px", borderBottom:"1px solid #0d1a28" }}>
-          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>PATIENT</div>
-          <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>
-            {(() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return p.name || ""; } catch { return ""; } })()}
-          </div>
-          {(() => { try { const c = JSON.parse(localStorage.getItem("mi_conditions") || "[]"); const a = c.filter(x => x.status === "active"); return a.length > 0 ? <div style={{ fontSize:11, color:"#98afc4", marginTop:2 }}>{a[0].name}</div> : null; } catch { return null; } })()}
-        </div>
-        <nav style={{ flex:1, overflowY:"auto", padding:"10px 0" }}>
-          <div style={{ padding:"8px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>CORE</div>
-          {NAV.slice(0,10).map(({id,icon,label}) => (
-            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
-              <span className="nav-icon">{icon}</span><span>{label}</span>
-            </div>
-          ))}
-          <div style={{ padding:"12px 16px 4px", fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", textTransform:"uppercase" }}>SYSTEM</div>
-          {NAV.slice(10).map(({id,icon,label}) => (
-            <div key={id} className={`nav-item ${activeNav===id?"active":""}`} onClick={()=>handleNav(id)}>
-              <span className="nav-icon">{icon}</span><span>{label}</span>
-              {id==="ai"&&<span style={{marginLeft:"auto",fontSize:8,background:"#4f8ef7",color:"#fff",padding:"1px 5px",borderRadius:8,fontFamily:"'DM Mono',monospace"}}>AI</span>}
-            </div>
-          ))}
-        </nav>
-        <div style={{ padding:"12px 16px", borderTop:"1px solid #0d1a28" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:7, fontSize:10, color:"#1e4030", fontFamily:"'DM Mono',monospace" }}>
-            <div className="live-dot"/>All systems nominal
-          </div>
-        </div>
-      </aside>
+      <AppSidebar activeNav={activeNav} onNav={handleNav} />
 
       {/* Main */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
