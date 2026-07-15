@@ -14,6 +14,33 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ## v1.25.0 — 2026-07-14 (Phase 1: pilot gate)
 
+### Changed
+- **UI-1 Foundation visual work (DEC-033), live-verified against the real
+  record:**
+  - **UI-8:** design tokens established in `src/index.css` (:root custom
+    properties — surface/text/accent colors, font stacks, 15px body/nav,
+    13px floor, 44px touch targets); the shared shell consumes them. Google
+    Fonts load once from index.html — the identical `@import` previously
+    duplicated in 16 files' `<style>` blocks is removed. Inline sizes in tab
+    content bodies adopt the tokens progressively as later UI items touch
+    each module.
+  - **UI-10:** one shared sidebar (`src/components/AppSidebar.jsx`) replaces
+    the five byte-identical copies in App.jsx and the four standalone tabs
+    (Medications, Labs, Vitals, Symptoms), which also carried their own NAV
+    arrays and nav CSS. No module has a competing global nav definition
+    anymore.
+  - **UI-9:** the nav renders as three collapsible groups — Today / My
+    Health / Records & Tools — with collapse state persisted (plain
+    non-vault key), the active screen's group force-expanded, and
+    **Emergency Information pinned on every screen** (opens the printable
+    packet; builder moved to `src/lib/printEmergency.js`). Follow-up fix:
+    clicking the active group's header no longer silently stores a collapse
+    the user never saw.
+  - **UI-14:** shared stroke-SVG icon family in `icons.jsx` replaces every
+    emoji in routine controls — dashboard hot buttons (🧪💊📅🤒❤️⬇🔄🚨🕐),
+    backup banner (💾), Tab11 Clear All (🗑), Tab10 pins (📌). The primary
+    nav keeps its existing uniform geometric-glyph family (not emoji).
+
 ### Fixed
 - **Data migrations never ran on encrypted vaults + restore-flow gaps
   (found by real-data live verification):** three connected fixes.

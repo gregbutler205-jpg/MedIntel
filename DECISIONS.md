@@ -958,6 +958,43 @@ verification:
 
 ---
 
+## DEC-033: UI-1 Foundation visual work — scope shipped, choices made
+
+**Date:** 2026-07-14
+**Status:** Settled (shipped; live-verified against the real record in the dev pane).
+
+**Decision.** The DEC-031-deferred visual half of the UI-1 Foundation shipped in five commits
+(UI-8 tokens, UI-10 shared sidebar, UI-9 grouped nav + a follow-up fix, UI-14 icons). The
+judgment calls, each the minimal reading of its spec item:
+
+1. **UI-8 is "establish and adopt in the shell," not a whole-app sweep.** `src/index.css` now
+   defines the tokens (surface/text/accent custom properties, font stacks, 15px body/nav,
+   13px floor, 44px touch targets) and the shared shell classes consume them. The hundreds of
+   9–11px inline literals inside tab content bodies are adopted progressively as later UI items
+   touch each module — sweeping them blind was the risk DEC-031 deferred in the first place.
+   Google Fonts load once from index.html; the identical @import in 16 files is gone.
+2. **UI-10 is sidebar consolidation, not a full shell rewrite.** The five byte-identical
+   sidebar/NAV copies (App.jsx + the four standalone tabs) became one `AppSidebar.jsx`. The
+   standalone tabs keep owning their own layout and topbar — those are module headers, not a
+   competing global nav, so the done-when holds without restructuring App.jsx's dual render
+   path.
+3. **UI-9 group assignment:** Today = Dashboard, Appointments; My Health = Health Profile,
+   Conditions, Surgeries, Medications, Labs & Trends, Vitals, Symptoms, Care Plan/Team;
+   Records & Tools = Medical Records, Source Documents, My Notes, AI Analysis, Import Records,
+   Settings & Backup. Collapse state persists in a plain non-vault key (`insina_nav_collapsed`
+   — a mi_* key would be encrypted and unreadable while locked); the active screen's group
+   force-expands; Emergency Information is pinned below the groups on every screen and opens
+   the printable packet (DEC-023 model), whose builder moved to `src/lib/printEmergency.js`.
+4. **UI-14: emoji are gone from routine controls; the nav's geometric-glyph family stays.**
+   The spec bans emoji in primary nav and routine controls — the nav glyphs (⬡◯◈…) are a
+   uniform non-emoji family already, so replacing them was not required; the actual emoji
+   (dashboard hot buttons, backup banner, Clear All, pins, the print buttons earlier) are now
+   one shared stroke-SVG family in `icons.jsx`.
+
+**Related:** UI-8, UI-9, UI-10, UI-14, DEC-031, DEC-023.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
