@@ -121,6 +121,12 @@ function ConditionModal({ condition, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK, ...condition });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  // UI-29: closing a dirty form prompts before discarding.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const initialRef = useRef(JSON.stringify({ ...BLANK, ...condition }));
+  const dirty = JSON.stringify(form) !== initialRef.current;
+  const requestClose = () => { if (dirty) setConfirmDiscard(true); else onClose(); };
+
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
       <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:28, width:520, maxHeight:"90vh", overflowY:"auto" }}>
@@ -175,11 +181,25 @@ function ConditionModal({ condition, onSave, onClose }) {
         </div>
 
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
-          <button onClick={onClose} style={btnGhost}>Cancel</button>
+          <button onClick={requestClose} style={btnGhost}>Cancel</button>
           <button onClick={() => { if (!form.name) return; onSave({ ...form, id: form.id || genId() }); }} style={btnPrimary}>
             {form.id ? "Save Changes" : "Add Condition"}
           </button>
         </div>
+
+        {/* UI-29: discard prompt for a dirty form */}
+        {confirmDiscard && (
+          <div role="alertdialog" aria-modal="true" aria-label="Discard unsaved changes?" style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(8,12,20,.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:16, color:"#dde8f5", marginBottom:8 }}>Discard unsaved changes?</div>
+              <div style={{ fontSize:12, color:"#98afc4", marginBottom:18 }}>This condition has changes that haven't been saved.</div>
+              <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+                <button onClick={() => setConfirmDiscard(false)} style={btnPrimary}>Keep editing</button>
+                <button onClick={onClose} style={btnGhost}>Discard</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -217,6 +237,14 @@ export default function ConditionsTab() {
     return () => window.removeEventListener("insina-pending-select", apply);
   }, []);
 
+  // UI-29: brief success confirmation, announced to screen readers.
+  const [savedMsg, setSavedMsg] = useState(null);
+  useEffect(() => {
+    if (!savedMsg) return;
+    const t = setTimeout(() => setSavedMsg(null), 4000);
+    return () => clearTimeout(t);
+  }, [savedMsg]);
+
   function handleSave(c) {
     const updated = c.id && conditions.some(x => x.id === c.id)
       ? conditions.map(x => x.id === c.id ? c : x)
@@ -224,6 +252,7 @@ export default function ConditionsTab() {
     setConditions(updated);
     save(updated);
     setModal(null);
+    setSavedMsg("Condition saved.");
   }
   function handleDelete(id) {
     const updated = conditions.filter(x => x.id !== id);
@@ -279,6 +308,13 @@ export default function ConditionsTab() {
             <button onClick={() => setModal(BLANK)} style={btnPrimary}>+ Add Condition</button>
           </div>
         </div>
+
+        {/* UI-29: save confirmation strip */}
+        {savedMsg && (
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", color:"#10b981", marginBottom:16 }}>
+            ✓ {savedMsg}
+          </div>
+        )}
 
         {/* Print header (only visible when printing) */}
         <div style={{ display:"none" }} className="print-only">

@@ -15,6 +15,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-15 (Phase 1: pilot gate)
 
 ### Changed
+- **UI-7 (Appointment duplicates):** manually adding an appointment that
+  looks like one already on file (same date + similar title, or same date
+  + same provider) now prompts — Use existing / Update existing / Keep
+  both — instead of silently creating a duplicate. Nothing is saved or
+  discarded until the user chooses. Edits, reschedules, and Confirm on a
+  synced suggestion keep their identity and never trigger the prompt;
+  Google Calendar sync already routed everything through the suggested-
+  review gate and is unchanged.
+- **UI-29 (Save/unsaved-change behavior):** the appointment and condition
+  modals now prompt before discarding a dirty form (Keep editing /
+  Discard); saving shows a brief "saved" confirmation with a ✓ text
+  marker, announced to screen readers (role="status"). Repeated-click
+  safety and error data-preservation were already satisfied by the
+  synchronous save flow.
 - **UI-26 (Search):** selecting a search result now opens the underlying
   record, not just its tab — labs open the lab's detail view, medications
   select the medication, conditions filter to and expand the card,

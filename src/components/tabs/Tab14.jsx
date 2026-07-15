@@ -186,6 +186,12 @@ function ApptModal({ appt, onSave, onClose }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const isNew = !form.id;
 
+  // UI-29: closing a dirty form prompts before discarding.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const initialRef = useRef(JSON.stringify({ ...BLANK, ...appt }));
+  const dirty = JSON.stringify(form) !== initialRef.current;
+  const requestClose = () => { if (dirty) setConfirmDiscard(true); else onClose(); };
+
   // Load care team for auto-fill
   const careTeam = (() => {
     try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
@@ -213,12 +219,12 @@ function ApptModal({ appt, onSave, onClose }) {
 
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:620, maxHeight:"90vh", overflowY:"auto", padding:28 }}>
+      <div style={{ position:"relative", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:620, maxHeight:"90vh", overflowY:"auto", padding:28 }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22 }}>
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, color:"#dde8f5", fontWeight:400 }}>
             {isNew ? "New Appointment" : "Edit Appointment"}
           </h2>
-          <button onClick={onClose} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
+          <button onClick={requestClose} aria-label="Close" style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
         </div>
 
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
@@ -320,10 +326,24 @@ function ApptModal({ appt, onSave, onClose }) {
           >
             {isNew ? "Add Appointment" : "Save Changes"}
           </button>
-          <button onClick={onClose} style={{ padding:"10px 20px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:9, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:13, cursor:"pointer" }}>
+          <button onClick={requestClose} style={{ padding:"10px 20px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:9, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:13, cursor:"pointer" }}>
             Cancel
           </button>
         </div>
+
+        {/* UI-29: discard prompt for a dirty form */}
+        {confirmDiscard && (
+          <div role="alertdialog" aria-modal="true" aria-label="Discard unsaved changes?" style={{ position:"fixed", inset:0, zIndex:1001, background:"rgba(8,12,20,.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:16, color:"#dde8f5", marginBottom:8 }}>Discard unsaved changes?</div>
+              <div style={{ fontSize:12, color:"#98afc4", marginBottom:18 }}>This appointment has changes that haven't been saved.</div>
+              <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+                <button onClick={() => setConfirmDiscard(false)} style={{ padding:"9px 18px", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.45)", borderRadius:9, color:"#7eb8d8", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>Keep editing</button>
+                <button onClick={onClose} style={{ padding:"9px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:9, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Discard</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1025,6 +1045,7 @@ export default function AppointmentsTab({ onNavChange }) {
   const [expanded, setExpanded] = useState(null);
   const [showAI, setShowAI]   = useState(null);  // appt.id for which AI panel is open
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [dupPrompt, setDupPrompt] = useState(null);       // UI-7: { incoming, existing } | null
   const [attachTarget, setAttachTarget] = useState(null); // appt for which the Attach modal is open
   const [postVisit, setPostVisit] = useState(null);       // appt just marked complete → capture prompt
 
@@ -1127,12 +1148,51 @@ export default function AppointmentsTab({ onNavChange }) {
     pullFromCalendar(cal);
   };
 
+  // UI-7: likely-duplicate detection for manually added appointments. Edits
+  // (including Confirm on a synced suggestion and reschedules) keep their id
+  // and skip this — only a brand-new entry can collide with an existing one.
+  const normTxt = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  const findLikelyDuplicate = (appt, list) => list.find(a => {
+    if (a.status === "cancelled" || a.date !== appt.date) return false;
+    const t1 = normTxt(a.title), t2 = normTxt(appt.title);
+    if (t1 && t2 && (t1 === t2 || t1.includes(t2) || t2.includes(t1))) return true;
+    const p1 = normTxt(a.provider), p2 = normTxt(appt.provider);
+    return !!(p1 && p2 && p1 === p2);
+  });
+
   const handleSave = (appt) => {
+    const isNew = !appts.some(a => a.id === appt.id);
+    if (isNew) {
+      const dup = findLikelyDuplicate(appt, appts);
+      // Nothing is saved or discarded here — the prompt holds the entered
+      // appointment until the user picks use existing / update / keep both.
+      if (dup) { setDupPrompt({ incoming: appt, existing: dup }); setModal(null); return; }
+    }
     setAppts(prev => {
       const exists = prev.find(a => a.id === appt.id);
       return exists ? prev.map(a => a.id === appt.id ? appt : a) : [appt, ...prev];
     });
     setModal(null);
+    // UI-29: brief success confirmation (auto-clears via the syncMsg timer)
+    setSyncMsg({ kind: "ok", text: "Appointment saved." });
+  };
+
+  const resolveDup = (choice) => {
+    const { incoming, existing } = dupPrompt;
+    if (choice === "update") {
+      // Apply the newly entered non-empty fields onto the existing record;
+      // its identity (id, gcalId, status, attachments) is preserved.
+      const KEEP = new Set(["id", "gcalId", "status", "attachments"]);
+      const updates = Object.fromEntries(Object.entries(incoming).filter(([k, v]) => !KEEP.has(k) && v !== "" && v != null));
+      setAppts(prev => prev.map(a => a.id === existing.id ? { ...a, ...updates } : a));
+    } else if (choice === "keepBoth") {
+      setAppts(prev => [incoming, ...prev]);
+    }
+    // "useExisting": nothing added — just show the record already on file.
+    if (choice !== "keepBoth") { setExpanded(existing.id); setFilter("all"); }
+    setDupPrompt(null);
+    if (choice === "update") setSyncMsg({ kind: "ok", text: "Existing appointment updated." });
+    if (choice === "keepBoth") setSyncMsg({ kind: "ok", text: "Appointment saved." });
   };
 
   const handleDelete = (id) => {
@@ -1241,7 +1301,7 @@ export default function AppointmentsTab({ onNavChange }) {
         {(syncMsg || getSelectedCalendar()) && (
           <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, flexWrap:"wrap" }}>
             {syncMsg && (
-              <div style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace",
+              <div role="status" aria-live="polite" style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace",
                 background: syncMsg.kind === "ok" ? "rgba(16,185,129,.08)" : "rgba(239,68,68,.08)",
                 border: `1px solid ${syncMsg.kind === "ok" ? "rgba(16,185,129,.25)" : "rgba(239,68,68,.25)"}`,
                 color: syncMsg.kind === "ok" ? "#10b981" : "#ef4444" }}>
@@ -1478,6 +1538,25 @@ export default function AppointmentsTab({ onNavChange }) {
       {calPicker && <CalendarPickerModal calendars={calPicker} onPick={handlePickCalendar} onClose={() => setCalPicker(null)} />}
 
       {/* Delete confirm */}
+      {/* UI-7: likely-duplicate prompt — never silently merges or deletes */}
+      {dupPrompt && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div role="alertdialog" aria-modal="true" aria-label="Possible duplicate appointment" style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:14, padding:28, maxWidth:440, textAlign:"center" }}>
+            <div style={{ fontSize:18, color:"#dde8f5", marginBottom:10 }}>Possible duplicate</div>
+            <div style={{ fontSize:12, color:"#98afc4", marginBottom:22, lineHeight:1.6 }}>
+              "{dupPrompt.incoming.title}" looks like "{dupPrompt.existing.title}"
+              {dupPrompt.existing.provider ? ` with ${dupPrompt.existing.provider}` : ""} already on {dupPrompt.existing.date}.
+              Nothing has been saved yet — choose what to do.
+            </div>
+            <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+              <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={() => resolveDup("useExisting")}>Use existing</button>
+              <button className="apt-btn" style={{ background:"rgba(16,185,129,.12)", borderColor:"rgba(16,185,129,.3)", color:"#10b981" }} onClick={() => resolveDup("update")}>Update existing</button>
+              <button className="apt-btn" style={{ background:"transparent", borderColor:"#1a2f4a", color:"#b0c4d8" }} onClick={() => resolveDup("keepBoth")}>Keep both</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {deleteConfirm && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ background:"#0b1220", border:"1px solid #2a1a1a", borderRadius:14, padding:28, maxWidth:360, textAlign:"center" }}>
