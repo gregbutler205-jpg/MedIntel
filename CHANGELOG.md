@@ -15,6 +15,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## v1.25.0 — 2026-07-15 (Phase 1: pilot gate)
 
 ### Changed
+- **UI-26 (Search):** selecting a search result now opens the underlying
+  record, not just its tab — labs open the lab's detail view, medications
+  select the medication, conditions filter to and expand the card,
+  appointments expand the row (filter widens to "all" so past visits
+  aren't hidden), symptoms open the entry detail, and source documents
+  select the matching document (plain navigation when only a reference
+  summary matches). The handoff travels through sessionStorage
+  (`src/lib/searchSelect.js`) so it works across the standalone tabs, and
+  an event covers the already-on-that-tab case. A Search button now sits
+  beside Home (same visual weight, accessible name "Search") on the
+  Medications, Labs, Vitals, and Symptoms standalone screens — previously
+  search was unreachable from them — and the App topbar's dim search icon
+  moved next to Home with the same styling. Symptom search fixed: entries
+  store `symptom`/`note`, but search only read `name`/`notes`, so symptom
+  results never appeared; numeric fields (e.g. severity) no longer crash
+  the matcher.
 - **UI Track U2 — per-module production readiness (nine items):**
   - **UI-16 (Labs chart):** the trend chart shows exactly one range band —
     Doctor's Range when set, else the lab's printed range, never both

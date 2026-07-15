@@ -9,6 +9,7 @@ import { compressImage } from "../../lib/cards.js";
 import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
+import { takePendingSelect } from "../../lib/searchSelect.js";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
@@ -1033,6 +1034,21 @@ export default function AppointmentsTab({ onNavChange }) {
   const [calPicker, setCalPicker]   = useState(null);   // array of calendars when picking
 
   useEffect(() => { saveAppts(appts); }, [appts]);
+
+  // UI-26: a search result targeting an appointment expands that row.
+  // Switch to "all" so a past appointment isn't hidden by the default filter.
+  // Runs on mount and on the event (already the visible tab).
+  useEffect(() => {
+    const apply = () => {
+      const title = takePendingSelect("appointments");
+      if (!title) return;
+      const hit = loadAppts().find(a => a.title === title);
+      if (hit) { setExpanded(hit.id); setFilter("all"); }
+    };
+    apply();
+    window.addEventListener("insina-pending-select", apply);
+    return () => window.removeEventListener("insina-pending-select", apply);
+  }, []);
 
   useEffect(() => {
     if (!syncMsg) return;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PrintLabel } from "../icons.jsx";
+import { takePendingSelect } from "../../lib/searchSelect.js";
 
 const STATUS_CFG = {
   active:   { color: "#ef4444", bg: "rgba(239,68,68,.10)",   border: "rgba(239,68,68,.25)",   label: "Active"   },
@@ -198,6 +199,23 @@ export default function ConditionsTab() {
     next.has(id) ? next.delete(id) : next.add(id);
     return next;
   });
+
+  // UI-26: a search result targeting a condition filters to it and expands
+  // its card (long notes are collapsed by default). Runs on mount and on the
+  // event (already the visible tab).
+  useEffect(() => {
+    const apply = () => {
+      const title = takePendingSelect("conditions");
+      if (!title) return;
+      setCondSearch(title);
+      setFilter("all");
+      const hit = load().find(c => c.name === title);
+      if (hit?.id != null) setExpandedIds(prev => new Set(prev).add(hit.id));
+    };
+    apply();
+    window.addEventListener("insina-pending-select", apply);
+    return () => window.removeEventListener("insina-pending-select", apply);
+  }, []);
 
   function handleSave(c) {
     const updated = c.id && conditions.some(x => x.id === c.id)

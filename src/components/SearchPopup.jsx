@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from "react";
+import { setPendingSelect } from "../lib/searchSelect.js";
 
 const C = {
   overlay: "rgba(0,0,0,.72)",
@@ -39,7 +40,9 @@ function safeRead(key, fb) {
 }
 
 function includes(val, q) {
-  return (val || "").toLowerCase().includes(q);
+  // String() guard: fields like severity can be numeric — .toLowerCase()
+  // on a number would throw and kill the whole search.
+  return String(val ?? "").toLowerCase().includes(q);
 }
 
 function snippet(text, query, radius = 100) {
@@ -123,13 +126,15 @@ function searchAll(query) {
     }
   });
 
-  // Symptoms
+  // Symptoms — the tracker stores the name as `symptom` and notes as `note`;
+  // older/companion entries may carry `name`/`notes`. Search both.
   safeRead("mi_symptoms", []).forEach(s => {
-    if ([s.name, s.notes, s.severity].some(f => includes(f, q))) {
+    const name = s.symptom || s.name;
+    if ([name, s.note, s.notes, s.location, s.severity].some(f => includes(f, q))) {
       results.push({
         category: "symptoms",
-        title:    s.name || "Symptom",
-        subtitle: [s.severity, s.date].filter(Boolean).join(" · "),
+        title:    name || "Symptom",
+        subtitle: [s.severity != null && s.severity !== "" ? `Severity ${s.severity}` : null, s.date].filter(Boolean).join(" · "),
         date: s.date || "",
       });
     }
@@ -210,9 +215,14 @@ export default function SearchPopup({ onClose, onNavChange }) {
     onClose();
   }
 
-  function handleResult(cat) {
+  // UI-26: selecting a result opens the underlying record — the destination
+  // tab takes the pending selection on mount, or via the event if it is
+  // already the visible tab (no remount happens then).
+  function handleResult(cat, result) {
+    if (result?.title) setPendingSelect(cat, result.title);
     onNavChange(CATEGORIES[cat].tab);
     onClose();
+    window.dispatchEvent(new Event("insina-pending-select"));
   }
 
   // Group results by category
@@ -290,7 +300,7 @@ export default function SearchPopup({ onClose, onNavChange }) {
                 {items.slice(0, 6).map((r, i) => (
                   <button
                     key={i}
-                    onClick={() => handleResult(cat)}
+                    onClick={() => handleResult(cat, r)}
                     style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 12, padding: "9px 10px", background: "transparent", border: "1px solid transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", marginBottom: 2, transition: "background .1s" }}
                     onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.03)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}

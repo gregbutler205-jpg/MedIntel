@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { takePendingSelect } from "../../lib/searchSelect.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI, extractPdfVision } from "../../lib/aiClient.js";
 import { PrintLabel } from "../icons.jsx";
@@ -292,6 +293,27 @@ export default function DocumentsTab() {
   // can start without making the user re-pick the file. Cleared on tab unmount.
   const pendingFileRef = useRef(null); // { id: docId, file: File }
   const scanFileRef    = useRef(null); // hidden <input type="file"> for re-pick
+
+  // UI-26: a search result targeting a document opens it. Search hits come
+  // from mi_ref_docs, whose `name` mirrors the source document's title; if no
+  // document matches (ref-only entry), fall back to filtering the list.
+  // Runs on mount and on the event (already the visible tab).
+  useEffect(() => {
+    const apply = () => {
+      const title = takePendingSelect("documents");
+      if (!title) return;
+      const all = loadDocs();
+      const t = title.toLowerCase();
+      const hit = all.find(d => d.title === title)
+        || all.find(d => (d.title || "").toLowerCase().includes(t) || t.includes((d.title || "").toLowerCase()));
+      // No match (ref-only entry): plain navigation — an empty filtered list
+      // would be worse than showing the full document list.
+      if (hit) setSelectedDocId(hit.id);
+    };
+    apply();
+    window.addEventListener("insina-pending-select", apply);
+    return () => window.removeEventListener("insina-pending-select", apply);
+  }, []);
 
   // ── Derived state ──────────────────────────────────────────────────────────
   const selectedDoc  = docs.find(d => d.id === selectedDocId) || null;

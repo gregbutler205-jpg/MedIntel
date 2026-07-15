@@ -586,6 +586,15 @@ function AppShell() {
     return () => clearInterval(t);
   }, []);
 
+  // UI-26: standalone tabs (Medications, Labs, Vitals, Symptoms) own their
+  // full-page layout, so their Search buttons reach the App-level SearchPopup
+  // through this window event.
+  useEffect(() => {
+    const h = () => setShowSearch(true);
+    window.addEventListener("insina-open-search", h);
+    return () => window.removeEventListener("insina-open-search", h);
+  }, []);
+
   // Refresh dashboard data from localStorage each time the user navigates to the dashboard
   useEffect(() => {
     if (activeNav !== "dashboard") return;
@@ -884,19 +893,22 @@ function AppShell() {
                       <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
                     </button>
                   )}
-                  <div className="live-dot" />
-                  <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+                  {/* UI-26: Search sits beside Home, same visual weight */}
                   <button
                     onClick={() => setShowSearch(true)}
-                    title="Search health data"
-                    style={{ display:"flex", alignItems:"center", justifyContent:"center", background:"none", border:"none", cursor:"pointer", padding:"4px 6px", borderRadius:6, color:"#4a5c6a", marginLeft:4 }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.05)"; e.currentTarget.style.color = "#7eb8d8"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#4a5c6a"; }}
+                    title="Search"
+                    aria-label="Search"
+                    style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:2, background:"rgba(79,142,247,.10)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, cursor:"pointer", padding:"5px 10px", color:"#7eb8d8", transition:"all .15s", marginRight:4 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(79,142,247,.20)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.5)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(79,142,247,.10)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.3)"; }}
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
+                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
                   </button>
+                  <div className="live-dot" />
+                  <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
                 </div>
                 {/* ── Google Drive sync ── */}
                 {googleUser ? (

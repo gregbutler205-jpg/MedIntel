@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
 import { safeAverage, safeNumber } from "../../lib/displaySafe.js";
+import { takePendingSelect } from "../../lib/searchSelect.js";
 
 
 
@@ -323,6 +324,23 @@ export default function App({ onNavChange }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 60000); return () => clearInterval(t); }, []);
+
+  // UI-26: a search result targeting a symptom opens that entry's detail.
+  // Entries store the symptom name as `symptom` (companion imports may use
+  // `name`). Runs on mount and on the event (already the visible tab).
+  useEffect(() => {
+    const apply = () => {
+      const title = takePendingSelect("symptoms");
+      if (!title) return;
+      let all = [];
+      try { all = JSON.parse(localStorage.getItem("mi_symptoms") || "[]"); } catch { /* locked */ }
+      const hit = all.find(e => (e.symptom || e.name) === title);
+      if (hit) { setSelectedEntry(hit); setShowLog(false); }
+    };
+    apply();
+    window.addEventListener("insina-pending-select", apply);
+    return () => window.removeEventListener("insina-pending-select", apply);
+  }, []);
   const fmt = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const fmtDate = d => d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
@@ -407,6 +425,20 @@ export default function App({ onNavChange }) {
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
               <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
+            </button>
+            {/* UI-26: Search beside Home — opens the App-level SearchPopup */}
+            <button
+              onClick={() => window.dispatchEvent(new Event("insina-open-search"))}
+              title="Search"
+              aria-label="Search"
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:2, background:"rgba(79,142,247,.10)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, cursor:"pointer", padding:"5px 10px", color:"#7eb8d8", transition:"all .15s", marginRight:4 }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(79,142,247,.20)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.5)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(79,142,247,.10)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.3)"; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
             </button>
             <div className="live-dot"/>
             <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>

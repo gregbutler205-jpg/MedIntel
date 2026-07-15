@@ -649,6 +649,20 @@ export default function App({ onNavChange }) {
               </svg>
               <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
             </button>
+            {/* UI-26: Search beside Home — opens the App-level SearchPopup */}
+            <button
+              onClick={() => window.dispatchEvent(new Event("insina-open-search"))}
+              title="Search"
+              aria-label="Search"
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:2, background:"rgba(79,142,247,.10)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, cursor:"pointer", padding:"5px 10px", color:"#7eb8d8", transition:"all .15s", marginRight:4 }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(79,142,247,.20)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.5)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(79,142,247,.10)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.3)"; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
+            </button>
             <div className="live-dot"/>
             <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>

@@ -11,6 +11,7 @@ import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLabGroup, getConfirmedGroups } from "../../lib/labCanonical.js";
 import { PrintLabel } from "../icons.jsx";
 import { getLastImportLabel } from "../../store.js";
+import { takePendingSelect } from "../../lib/searchSelect.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -775,6 +776,23 @@ export default function App({ onNavChange }) {
     } catch {}
   }, []);
 
+  // UI-26: a search result targeting a lab opens that lab's detail view.
+  // Runs on mount (navigated here) and on the event (already the visible tab).
+  useEffect(() => {
+    const apply = () => {
+      const title = takePendingSelect("labs");
+      if (!title) return;
+      try {
+        const all = JSON.parse(localStorage.getItem("mi_labs") || "[]");
+        const hit = all.find(l => l.name === title || displayLabName(l.name) === title);
+        if (hit) setSelectedImportedLab(hit);
+      } catch { /* locked or malformed — leave view unchanged */ }
+    };
+    apply();
+    window.addEventListener("insina-pending-select", apply);
+    return () => window.removeEventListener("insina-pending-select", apply);
+  }, []);
+
   // A-01: evaluation status + flags, kept live across evaluation runs and dismissals
   const [tripwireEnv, setTripwireEnv] = useState(() => getTripwireEnvelope());
   useEffect(() => {
@@ -1010,6 +1028,20 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
               <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
+            </button>
+            {/* UI-26: Search beside Home — opens the App-level SearchPopup */}
+            <button
+              onClick={() => window.dispatchEvent(new Event("insina-open-search"))}
+              title="Search"
+              aria-label="Search"
+              style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:2, background:"rgba(79,142,247,.10)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, cursor:"pointer", padding:"5px 10px", color:"#7eb8d8", transition:"all .15s", marginRight:4 }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(79,142,247,.20)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.5)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(79,142,247,.10)"; e.currentTarget.style.borderColor = "rgba(79,142,247,.3)"; }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
             </button>
             <div className="live-dot" />
             <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
