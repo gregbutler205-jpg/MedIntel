@@ -103,12 +103,25 @@ function LogPanel({ onClose, onSave }) {
             />
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 14px" }}>
+            {/* UI-22: free-form entry prominent at the TOP of symptom
+                selection — findable without scrolling the catalog */}
+            <div style={{ marginBottom: 16, background: "rgba(79,142,247,.05)", border: "1px solid rgba(79,142,247,.18)", borderRadius: 10, padding: "10px 12px" }}>
+              <div style={{ fontSize: 9, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>Describe in your own words</div>
+              <input
+                placeholder="e.g. Tingling in left hand..."
+                value={custom}
+                onChange={e => { setCustom(e.target.value); if (e.target.value) setSelected(null); }}
+                style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${custom ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none" }}
+              />
+              <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>…or pick from the common symptoms below</div>
+            </div>
+
             {categories.map(cat => (
               <div key={cat} style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>{cat}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {filtered.filter(s => s.category === cat).map(s => (
-                    <button key={s.id} onClick={() => setSelected(selected?.id === s.id ? null : s)}
+                    <button key={s.id} onClick={() => { setSelected(selected?.id === s.id ? null : s); if (selected?.id !== s.id) setCustom(""); }}
                       style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${selected?.id === s.id ? "#4f8ef7" : "#111e30"}`, background: selected?.id === s.id ? "rgba(79,142,247,.15)" : "#0b1220", color: selected?.id === s.id ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
                       {s.label}
                     </button>
@@ -116,17 +129,6 @@ function LogPanel({ onClose, onSave }) {
                 </div>
               </div>
             ))}
-
-            {/* Custom */}
-            <div style={{ marginTop: 4 }}>
-              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", textTransform: "uppercase", marginBottom: 7 }}>Or describe in your own words</div>
-              <input
-                placeholder="e.g. Tingling in left hand..."
-                value={custom}
-                onChange={e => { setCustom(e.target.value); if (e.target.value) setSelected(null); }}
-                style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${custom ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none" }}
-              />
-            </div>
           </div>
           <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", flexShrink: 0 }}>
             <button onClick={() => canProceed && setStep(2)}
@@ -203,16 +205,29 @@ function LogPanel({ onClose, onSave }) {
   );
 }
 
-// Severity bar (mini)
+// UI-22: full numbered 1–10 severity scale with marker, score, and label
+// ("Moderate · 5/10") on every card that has a recorded severity.
 function SeverityBar({ value }) {
   const pct = ((value - 1) / 9) * 100;
   const color = severityColor(value);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ flex: 1, height: 4, background: "#0d1a28", borderRadius: 4, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 4 }} />
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <div style={{ flex: 1, position: "relative", height: 4, background: "#0d1a28", borderRadius: 4 }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 4 }} />
+          {/* marker */}
+          <div style={{ position: "absolute", top: -3, left: `${pct}%`, transform: "translateX(-50%)", width: 10, height: 10, borderRadius: "50%", background: color, border: "2px solid #080c14", boxShadow: `0 0 6px ${color}` }} />
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, color, whiteSpace: "nowrap" }}>
+          {SEVERITY_LABELS[value]} · {value}/10
+        </span>
       </div>
-      <span style={{ fontSize: 11, fontWeight: 700, color, minWidth: 14, textAlign: "right" }}>{value}</span>
+      {/* numbered scale */}
+      <div style={{ display: "flex", justifyContent: "space-between", paddingRight: 84 }}>
+        {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
+          <span key={n} style={{ fontSize: 7.5, fontFamily: "'DM Mono',monospace", color: n === value ? color : "#4a5c6a", fontWeight: n === value ? 700 : 400 }}>{n}</span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -224,7 +239,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
       <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: 9, color: entry.status === "active" ? "#ef4444" : "#10b981", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 5, fontWeight: 600 }}>
-            {entry.status === "active" ? "● ACTIVE" : "✓ RESOLVED"}
+            {entry.status === "active" ? "● ACTIVE" : `✓ RESOLVED${entry.resolvedDate ? ` ${entry.resolvedDate}` : ""}`}
           </div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", lineHeight: 1.2 }}>{entry.symptom}</div>
           <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 5 }}>{entry.date} · {entry.location}</div>
@@ -321,8 +336,10 @@ export default function App({ onNavChange }) {
   };
 
   const handleResolve = (id) => {
-    setEntries(e => { const updated = e.map(x => x.id === id ? { ...x, status: "resolved" } : x); saveToStorage(updated); return updated; });
-    setSelectedEntry(prev => prev?.id === id ? { ...prev, status: "resolved" } : prev);
+    // UI-22: record the resolution date so resolved cards stay understandable
+    const resolvedDate = new Date().toISOString().slice(0, 10);
+    setEntries(e => { const updated = e.map(x => x.id === id ? { ...x, status: "resolved", resolvedDate } : x); saveToStorage(updated); return updated; });
+    setSelectedEntry(prev => prev?.id === id ? { ...prev, status: "resolved", resolvedDate } : prev);
   };
 
   // Hand a symptom straight to the AI Analysis tab with a pre-filled prompt.
@@ -471,7 +488,7 @@ export default function App({ onNavChange }) {
                           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
                             <span style={{ fontSize:14, fontWeight:600, color:"#c4d8ee" }}>{entry.symptom}</span>
                             <span style={{ fontSize:9, background: entry.status==="active" ? "rgba(239,68,68,.12)" : "rgba(16,185,129,.1)", color: entry.status==="active" ? "#ef4444" : "#10b981", padding:"2px 7px", borderRadius:20, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
-                              {entry.status === "active" ? "ACTIVE" : "RESOLVED"}
+                              {entry.status === "active" ? "ACTIVE" : entry.resolvedDate ? `RESOLVED ${entry.resolvedDate}` : "RESOLVED"}
                             </span>
                           </div>
                           <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
