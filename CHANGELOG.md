@@ -12,9 +12,56 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.25.0 — 2026-07-14 (Phase 1: pilot gate)
+## v1.25.0 — 2026-07-15 (Phase 1: pilot gate)
 
 ### Changed
+- **UI Track U2 — per-module production readiness (nine items):**
+  - **UI-16 (Labs chart):** the trend chart shows exactly one range band —
+    Doctor's Range when set, else the lab's printed range, never both
+    (display rule only; AI text still references both); every point gains a
+    hover reveal of full date + value; the legend names which range is
+    shown. "Last import" is now one truthful helper — Tab04 had a hardcoded
+    fake date and Tab05 read the oldest log entry.
+  - **UI-18 (Care Team):** renamed from Care Plan/Team; keeps Care Team,
+    Emergency, Reference; Timeline/Goals/Preventive/Milestones removed from
+    the interface only (components + data intact for Phase 2); the module's
+    duplicate 120px logo masthead replaced by the standard slim header.
+  - **UI-25:** approved care-team selection descriptor ("…shown on your
+    Dashboard and Health Profile").
+  - **UI-19 (Medical Records detail):** truthful Source line on every record
+    (Imported from PDF / Entered manually / Imported from Epic export) +
+    date added; imported records link to their Source Document via an
+    inline viewer of the stored extracted text; all Tab12 record creators
+    stamp source/addedAt and link their ref doc; the fake "Open in Epic"
+    example.com button became a plain Epic ID chip; Summary/facility/
+    provider render only when present — no empty headings.
+  - **UI-20 (Import Records):** Upload Document / Manual Entry / Import
+    History are explicit modes (manual form hidden until selected); Import
+    History now renders a real log — every PDF import path writes an entry
+    (name, date, records created, excluded-in-review, linked doc, status;
+    discards trace too); extract → review → save and correct/exclude before
+    save unchanged.
+  - **UI-21 (Export & Backup vs App Settings):** two distinct pages behind a
+    selector; Danger Zone stays on the backup page, separated, with
+    confirmations; Security gathers passphrase change + auto-lock + pilot
+    token; Lab Organization gets 38px ordering targets with aria labels;
+    Reset-to-Demo renders only when VITE_DEMO_BUILD is set and the stale
+    "Demo PIN: 1234" note is gone (PIN auth ended with P-02). Deviations:
+    no Display & Accessibility section yet (no display controls exist — an
+    empty heading would break UI-19's own rule); BYO-key stays dormant per
+    A-10/DEC-016 rather than resurfacing.
+  - **UI-23 (Profile printing):** the report preflight now surfaces only
+    critical findings — warning/info nags (optional blanks, missing refill
+    dates) stay in the Review Queue instead of a pre-print warning wall;
+    the printed header lists only demographics that have values.
+  - **UI-24 (Conditions & Surgeries):** condition search (name/ICD-10/
+    notes) + long-notes collapse; surgeries sort reverse-chronologically at
+    render time and always print a full date with year (legacy non-ISO
+    dates previously rendered "Invalid Date").
+  - **UI-22 (Symptoms):** full numbered 1–10 severity scale with marker,
+    score, and label ("Moderate · 5/10") on every card; Mark as Resolved
+    records and displays the resolution date; free-form entry moved above
+    the catalog.
 - **UI-1 Foundation visual work (DEC-033), live-verified against the real
   record:**
   - **UI-8:** design tokens established in `src/index.css` (:root custom
