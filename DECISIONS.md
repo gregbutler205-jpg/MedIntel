@@ -1065,10 +1065,18 @@ judgment calls, each the minimal reading of its spec item:
   chip, collapsible Quick Prompts / Data-used panels, bottom composer) and Tab05's
   sessionContext launch field; UI-11 labels; UI-14 printer icon. The pass also caught and fixed
   four real bugs (DEC-032 data remanence; pre-existing LAB_CATEGORIES crash; A-12 stale flag
-  after suggestion-apply; A-04 orphaned labKey crash). Still not live-exercised: flows needing a
-  real AI response (AnalysisOverlay Print/Save/open-as-report end-to-end, context gathering),
-  the companion surfaces, and the A-12 migration against real pre-existing data — these remain
-  unit-test-verified only. (Spawned by DEC-028; extended by DEC-029.)
+  after suggestion-apply; A-04 orphaned labKey crash). 2026-07-15 update: a second full pass ran
+  against a restored copy of Greg's COMPLETE real record (45 mi_* keys — 875 labs, 46 records,
+  2 insurance cards, pseudonym id, dismissed-findings state). Verified live against real data:
+  the A-12 migration (16/16 real readings normalized post-unlock), the U1 shell/nav (UI-9 groups,
+  UI-8 sizing, pinned Emergency access), and all nine U2 items (UI-16 chart band + point reveals,
+  UI-18/25 Care Team, UI-19 source labels + working source-doc link, UI-20 modes + history,
+  UI-21 page split with demo controls hidden, UI-22 severity scale "Moderate · 5/10", UI-24
+  search + real dates, UI-23 preflight). Restoring the real backup surfaced and fixed two more
+  restore bugs (string-value double-encoding; the allowlist dropping mi_records/mi_cards/
+  dismissed state — now every mi_* key restores except vault/security state). Still not
+  live-exercised: flows needing a real AI response (AnalysisOverlay end-to-end, context
+  gathering) and the companion surfaces. (Spawned by DEC-028; extended by DEC-029.)
 - **OPEN-15:** The companion's *generic* AI chat (AILite sessions not started from a symptom
   handoff) still runs on `companionAI.js`'s lightweight `buildRecordSystem()` prompt, which
   carries no Clinical Safety Core, tripwire envelope, or rule-5 emergency routing text. No
