@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getStore, setStore, mergeRecords } from "../../store.js";
+import { getStore, setStore, mergeRecords, addImportLog } from "../../store.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
@@ -179,10 +179,15 @@ export default function ImportTab({ onImport, onNavChange }) {
   const [toast, setToast]     = useState("");
   const [deleteId, setDeleteId] = useState(null);
 
+  // UI-20: three clear modes — Upload Document / Manual Entry / Import History.
+  // The manual form is hidden until Manual Entry is selected.
+  const [mode, setMode] = useState("upload"); // "upload" | "manual" | "history"
+
   // PDF upload state
   const [pdfStatus, setPdfStatus]   = useState("idle"); // idle | extracting | parsing | done | error
   const [pdfError, setPdfError]     = useState("");
   const [pdfPreview, setPdfPreview] = useState([]); // extracted labs pending save
+  const [pdfInitialCount, setPdfInitialCount] = useState(0); // UI-20: extraction count, for excluded-in-review history
   const [docPreview, setDocPreview] = useState(null); // extracted non-lab doc pending save
   const [pdfText, setPdfText]       = useState(""); // raw text (kept for AI handoff)
   const [pdfFileName, setPdfFileName] = useState("");
@@ -288,6 +293,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           if (!Array.isArray(extracted) || extracted.length === 0)
             throw new Error("No lab results found in PDF. If this is an imaging report or clinical note, select that type before uploading.");
           setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
+          setPdfInitialCount(extracted.length); // UI-20: for the excluded-in-review count
           setPdfStatus("done");
           showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
         } else {
@@ -377,10 +383,14 @@ export default function ImportTab({ onImport, onNavChange }) {
         addedAt: new Date().toISOString(),
       }]);
       showToast(`${labeled.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} saved.${fail ? ` ${fail} failed — see summary.` : ""}`);
+      // UI-20: Import History entry for the batch
+      addImportLog({ ts: new Date().toISOString(), source: `${ok + fail} PDF file${ok + fail !== 1 ? "s" : ""} (batch)`, records: labeled.length, status: fail ? `Saved (${fail} file${fail !== 1 ? "s" : ""} failed)` : "Saved" });
     } else if (!isLabs) {
       const ok   = summary.filter(s => s.ok).length;
       const fail = summary.filter(s => !s.ok).length;
       if (ok > 0) showToast(`${ok} document${ok !== 1 ? "s" : ""} saved to Records${fail ? `, ${fail} failed` : ""}.`);
+      // UI-20: Import History entry for the batch
+      addImportLog({ ts: new Date().toISOString(), source: `${ok + fail} PDF file${ok + fail !== 1 ? "s" : ""} (batch)`, records: ok, status: fail ? `Saved (${fail} failed)` : "Saved" });
     }
   }
 
@@ -412,6 +422,8 @@ export default function ImportTab({ onImport, onNavChange }) {
     } catch {}
     // Auto-suggest follow-up appointment if the document contains one
     suggestAppointment(record, docPreview.followUpDate, docPreview.followUpNote);
+    // UI-20: Import History entry, linked to its source document
+    addImportLog({ ts: new Date().toISOString(), source: pdfFileName || "PDF upload", records: 1, docName: record.title, status: "Saved" });
     setDocPreview(null);
     setPdfStatus("idle");
     showToast("Document saved to Records.");
@@ -451,6 +463,8 @@ export default function ImportTab({ onImport, onNavChange }) {
     } catch {}
     // Auto-suggest follow-up appointment if the document contains one
     suggestAppointment(record, docPreview.followUpDate, docPreview.followUpNote);
+    // UI-20: Import History entry
+    addImportLog({ ts: new Date().toISOString(), source: pdfFileName || "PDF upload", records: 1, docName: record.title, status: "Saved + sent to AI" });
     setDocPreview(null);
     setPdfStatus("idle");
     // Navigate to AI Analysis
@@ -478,12 +492,25 @@ export default function ImportTab({ onImport, onNavChange }) {
       addedAt: new Date().toISOString(),
     }]);
 
+    // UI-20: Import History entry (excluded = removed during review)
+    addImportLog({
+      ts: new Date().toISOString(),
+      source: pdfFileName || "PDF upload",
+      records: newLabs.length,
+      excluded: Math.max(0, pdfInitialCount - newLabs.length),
+      status: "Saved",
+    });
+
     setPdfPreview([]);
     setPdfStatus("idle");
     showToast(`${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} saved to Labs & Records.`);
   }
 
   function discardPdfLabs() {
+    // UI-20: a discarded review still traces in history
+    if (pdfPreview.length || pdfInitialCount) {
+      addImportLog({ ts: new Date().toISOString(), source: pdfFileName || "PDF upload", records: 0, excluded: pdfInitialCount, status: "Discarded" });
+    }
     setPdfPreview([]);
     setPdfStatus("idle");
     setPdfError("");
@@ -597,7 +624,21 @@ export default function ImportTab({ onImport, onNavChange }) {
           </div>
         </div>
 
+        {/* UI-20: mode selector — Upload / Manual Entry / Import History */}
+        <div style={{ display:"flex", gap:8, marginBottom:20 }}>
+          {[["upload","Upload Document"],["manual","Manual Entry"],["history","Import History"]].map(([id, label]) => (
+            <button key={id} onClick={() => setMode(id)}
+              style={{ padding:"8px 18px", borderRadius:20, fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer", transition:"all .15s",
+                border:`1px solid ${mode === id ? "rgba(79,142,247,.5)" : "#1a2f4a"}`,
+                background: mode === id ? "rgba(79,142,247,.12)" : "#0b1220",
+                color: mode === id ? "var(--accent)" : "var(--text-dim)" }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Document type selector + upload */}
+        {mode === "upload" && (
         <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 18px", marginBottom:20 }}>
           <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:10 }}>Upload Document Type</div>
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:14 }}>
@@ -631,6 +672,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", alignSelf:"center" }}>select one or multiple</span>
           <input ref={fileInputRef} type="file" accept="application/pdf" multiple onChange={handlePdfUpload} style={{ display:"none" }} />
         </div>
+        )}
 
         {/* Batch progress bar */}
         {batchProgress !== null && (
@@ -753,6 +795,44 @@ export default function ImportTab({ onImport, onNavChange }) {
           </div>
         )}
 
+        {/* UI-20: Import History — document name, date, records created,
+            excluded/review counts where available, source doc, final status */}
+        {mode === "history" && (() => {
+          let log = [];
+          try { log = JSON.parse(localStorage.getItem("mi_import_log") || "[]"); } catch {}
+          return (
+            <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"16px 18px" }}>
+              <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:12 }}>Import History</div>
+              {log.length === 0 ? (
+                <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", padding:"12px 0" }}>
+                  No imports recorded yet. Completed uploads and batch imports will appear here.
+                </div>
+              ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  {log.map((e, i) => (
+                    <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", background:"#080c14", border:"1px solid #0d1a28", borderRadius:8, flexWrap:"wrap" }}>
+                      <div style={{ flex:1, minWidth:160 }}>
+                        <div style={{ fontSize:12, fontWeight:600, color:"#c4d8ee" }}>{e.source || "Import"}</div>
+                        {e.docName && <div style={{ fontSize:10, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>→ {e.docName}</div>}
+                      </div>
+                      <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{e.ts ? new Date(e.ts).toLocaleString("en-US", { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" }) : "—"}</span>
+                      <span style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace" }}>{e.records ?? 0} record{(e.records ?? 0) !== 1 ? "s" : ""}</span>
+                      {e.excluded > 0 && <span style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace" }}>{e.excluded} excluded in review</span>}
+                      <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", padding:"2px 8px", borderRadius:4,
+                        background: (e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.1)" : "rgba(16,185,129,.1)",
+                        color: (e.status || "Saved").startsWith("Discard") ? "#ef4444" : "#10b981",
+                        border: `1px solid ${(e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.25)" : "rgba(16,185,129,.25)"}` }}>
+                        {e.status || "Saved"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {mode === "manual" && (
         <div style={{ display:"grid", gridTemplateColumns:"380px 1fr", gap:20 }}>
 
           {/* ── Entry Form ── */}
@@ -894,6 +974,7 @@ export default function ImportTab({ onImport, onNavChange }) {
             })}
           </div>
         </div>
+        )}
       </div>
     </div>
   );
