@@ -322,6 +322,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         } else {
           const extracted = await parseDocWithClaude(text, uploadDocType);
           if (!extracted?.title) throw new Error("Could not extract document info");
+          const batchDocId = (Date.now() + i).toString();
           const record = {
             id: Date.now() + i,
             title:    extracted.title || file.name.replace(/\.pdf$/i, ""),
@@ -330,11 +331,14 @@ export default function ImportTab({ onImport, onNavChange }) {
             facility: extracted.facility || "",
             provider: extracted.provider || "",
             summary:  extracted.summary  || "",
+            source: "Imported from PDF", // UI-19: truthful source label + doc link
+            addedAt: new Date().toISOString(),
+            refDocId: batchDocId,
           };
           mergeRecords([record]);
           // Save to AI Reference Docs — always, even if text extraction returned empty
           try {
-            const docId = (Date.now() + i).toString();
+            const docId = batchDocId;
             const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
             const docText = text || (record.summary ? `[PDF text could not be extracted — possible scanned document]\n\nDocument summary: ${record.summary}` : "[PDF text could not be extracted — possible scanned document]");
             const newDoc = { id: docId, name: record.title, text: docText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
@@ -369,6 +373,8 @@ export default function ImportTab({ onImport, onNavChange }) {
         facility: labeled[0]?.facility || "",
         provider: "",
         summary: `${labeled.length} lab result${labeled.length !== 1 ? "s" : ""} imported from ${ok} PDF${ok !== 1 ? "s" : ""}${fail ? ` (${fail} file${fail !== 1 ? "s" : ""} failed)` : ""}.`,
+        source: "Imported from PDF", // UI-19: truthful source label
+        addedAt: new Date().toISOString(),
       }]);
       showToast(`${labeled.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} saved.${fail ? ` ${fail} failed — see summary.` : ""}`);
     } else if (!isLabs) {
@@ -380,6 +386,7 @@ export default function ImportTab({ onImport, onNavChange }) {
 
   function confirmDoc() {
     if (!docPreview) return;
+    const docId = Date.now().toString();
     const record = {
       id: Date.now(),
       title: docPreview.title || pdfFileName.replace(/\.pdf$/i, "") || "Imported Document",
@@ -388,12 +395,16 @@ export default function ImportTab({ onImport, onNavChange }) {
       facility: docPreview.facility || "",
       provider: docPreview.provider || "",
       summary: docPreview.summary || "",
+      // UI-19: truthful source label + link to the source document (this path
+      // always creates the ref doc below but previously never linked it).
+      source: "Imported from PDF",
+      addedAt: new Date().toISOString(),
+      refDocId: docId,
     };
     mergeRecords([record]);
     // Save to AI Reference Docs — always, even if text extraction returned empty
     // (scanned PDFs get a summary fallback so the AI at least knows the doc exists)
     try {
-      const docId = Date.now().toString();
       const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
       const docText = pdfText || (record.summary ? `[PDF text could not be extracted — possible scanned document]\n\nDocument summary: ${record.summary}` : "[PDF text could not be extracted — possible scanned document]");
       const newDoc = { id: docId, name: record.title, text: docText, addedDate: new Date().toLocaleDateString(), studyDate: record.date, docType: record.type, facility: record.facility };
@@ -423,6 +434,8 @@ export default function ImportTab({ onImport, onNavChange }) {
       facility: docPreview.facility || "",
       provider: docPreview.provider || "",
       summary: docPreview.summary || "",
+      source: "Imported from PDF", // UI-19: truthful source label
+      addedAt: new Date().toISOString(),
     };
     const docId = Date.now().toString();
     // Store refDocId in the record so the Records tab can link back to full text
@@ -461,6 +474,8 @@ export default function ImportTab({ onImport, onNavChange }) {
       facility,
       provider: facility,
       summary: `${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} imported from PDF. Tests: ${newLabs.slice(0,5).map(l=>l.name).join(", ")}${newLabs.length > 5 ? "…" : "."}`,
+      source: "Imported from PDF", // UI-19: truthful source label
+      addedAt: new Date().toISOString(),
     }]);
 
     setPdfPreview([]);

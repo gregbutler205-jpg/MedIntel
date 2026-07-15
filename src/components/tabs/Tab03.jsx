@@ -35,6 +35,13 @@ export default function Records({ onNavChange }) {
   const [addType, setAddType]   = useState(null);
   const [addForm, setAddForm]   = useState({ title: "", facility: "", provider: "", date: "" });
   const [deleteId, setDeleteId] = useState(null);
+  // UI-19: inline source-document viewer toggle (reset per selection)
+  const [showSourceDoc, setShowSourceDoc] = useState(false);
+
+  // UI-19: look up the Source Document an imported record links to.
+  function getRefDoc(refDocId) {
+    try { return (JSON.parse(localStorage.getItem("mi_ref_docs") || "[]")).find(d => d.id === refDocId) || null; } catch { return null; }
+  }
 
   // ── Ask AI about a record ─────────────────────────────────────────────────
   const handleAskAI = (record) => {
@@ -162,7 +169,7 @@ export default function Records({ onNavChange }) {
             <div
               key={r.id}
               className={`rec-row${selected?.id === r.id ? " active" : ""}`}
-              onClick={() => setSelected(r)}
+              onClick={() => { setSelected(r); setShowSourceDoc(false); }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7, gap: 8 }}>
                 <Badge type={r.type} />
@@ -188,12 +195,14 @@ export default function Records({ onNavChange }) {
                 {selected.title}
               </h2>
               <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.facility}</div>
-                <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{selected.provider}</div>
+                {selected.facility && <div style={{ fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.facility}</div>}
+                {selected.provider && <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{selected.provider}</div>}
+                {/* UI-19: truthful metadata — the old "Open in Epic" pointed at a
+                    fake example.com URL; the id is shown as plain text instead. */}
                 {selected.epicId && (
-                  <a className="epic-btn" href={`https://mychart.example.com/record/${selected.epicId}`} target="_blank" rel="noreferrer">
-                    <span style={{ fontSize: 10 }}>↗</span> Open in Epic
-                  </a>
+                  <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "2px 8px", borderRadius: 5 }}>
+                    Epic ID: {selected.epicId}
+                  </span>
                 )}
                 <button
                   onClick={() => handleAskAI(selected)}
@@ -210,13 +219,47 @@ export default function Records({ onNavChange }) {
               </div>
             </div>
 
-            {/* Summary */}
-            <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
-                Summary
-              </div>
-              <p style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.65 }}>{selected.summary}</p>
+            {/* UI-19: source line — truthful label, always present */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16, fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
+              <span>
+                Source: {selected.source || (selected.refDocId ? "Imported from PDF" : selected.epicId ? "Imported from Epic export" : "Entered manually")}
+              </span>
+              {selected.addedAt && (
+                <span style={{ color: "#6a8090" }}>· Added {new Date(selected.addedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+              )}
+              {selected.refDocId && getRefDoc(selected.refDocId) && (
+                <button onClick={() => setShowSourceDoc(s => !s)}
+                  style={{ background: "rgba(167,139,250,.08)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 10px", cursor: "pointer" }}>
+                  {showSourceDoc ? "Hide source document" : "View source document →"}
+                </button>
+              )}
             </div>
+
+            {/* UI-19: inline source-document viewer (the extracted text stored at import) */}
+            {showSourceDoc && selected.refDocId && (() => {
+              const doc = getRefDoc(selected.refDocId);
+              if (!doc) return null;
+              return (
+                <div style={{ background: "#0b1220", border: "1px solid rgba(167,139,250,.25)", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
+                  <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a78bfa", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
+                    Source Document — {doc.name}{doc.addedDate ? ` · added ${doc.addedDate}` : ""}
+                  </div>
+                  <pre style={{ fontSize: 11, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", whiteSpace: "pre-wrap", lineHeight: 1.6, maxHeight: 300, overflowY: "auto", margin: 0 }}>
+                    {doc.text || "(no extracted text stored)"}
+                  </pre>
+                </div>
+              );
+            })()}
+
+            {/* Summary — only when there is one (UI-19: no empty headings) */}
+            {selected.summary && (
+              <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
+                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
+                  Summary
+                </div>
+                <p style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.65 }}>{selected.summary}</p>
+              </div>
+            )}
 
             {/* Key details */}
             {(selected.details ?? []).length > 0 && <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
@@ -317,6 +360,8 @@ export default function Records({ onNavChange }) {
                     summary: "",
                     details: [],
                     tags: [],
+                    source: "Entered manually", // UI-19: truthful source label
+                    addedAt: new Date().toISOString(),
                   };
                   const updated = [newRec, ...records];
                   setRecordsState(updated);
