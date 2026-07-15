@@ -3,7 +3,7 @@ import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceC } from "../../prompts/surfaceC.js";
 import { downloadAnalysisMarkdown } from "../../lib/analysisExport.js";
-import { PrintLabel } from "../icons.jsx";
+import { PrintLabel, PinIcon } from "../icons.jsx";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -46,7 +46,7 @@ function NoteItem({ note, active, onClick }) {
         {note.aiGenerated && (
           <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
         )}
-        {note.pinned && <span style={{ fontSize: 10, color: "#f59e0b", flexShrink: 0 }}>📌</span>}
+        {note.pinned && <span style={{ color: "#f59e0b", flexShrink: 0, display: "flex" }} title="Pinned"><PinIcon size={11} /></span>}
       </div>
       <div style={{ fontSize: 10, color: "#98afc4", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
         {note.preview}
@@ -141,7 +141,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         </select>
         <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>{note.date}</span>
         <div style={{ flex: 1 }} />
-        <span onClick={() => onPin(note.id)} style={{ fontSize: 13, color: note.pinned ? "#f59e0b" : "#98afc4", cursor: "pointer" }} title={note.pinned ? "Unpin" : "Pin"}>📌</span>
+        <span onClick={() => onPin(note.id)} role="button" style={{ color: note.pinned ? "#f59e0b" : "#98afc4", cursor: "pointer", display: "flex" }} title={note.pinned ? "Unpin" : "Pin"}><PinIcon size={14} /></span>
         <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
         <span onClick={() => onAI(note)} style={{ fontSize: 10, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
           onMouseEnter={e => e.target.style.color = "#7eb8d8"} onMouseLeave={e => e.target.style.color = "#98afc4"}>✦ AI</span>

@@ -9,7 +9,7 @@ import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { mkAnalysisNote } from "../../lib/analysisExport.js";
-import { PrintLabel, PrinterIcon } from "../icons.jsx";
+import { PrintLabel, PrinterIcon, TrashIcon } from "../icons.jsx";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName } from "../../lib/tripwire.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
@@ -1170,7 +1170,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                   disabled={messages.length === 0}
                   style={{ width: "100%", justifyContent: "center", opacity: messages.length === 0 ? 0.4 : 1 }}
                 >
-                  🗑 Clear All
+                  <TrashIcon size={12} style={{ marginRight: 5, verticalAlign: "-1px" }} /> Clear All
                 </button>
                 {messages.length > 0 && (
                   <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 7, lineHeight: 1.5 }}>

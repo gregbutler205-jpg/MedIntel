@@ -5,6 +5,7 @@ import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js'
 import LockScreen from './components/LockScreen.jsx';
 import AppSidebar from './components/AppSidebar.jsx';
 import { printEmergency } from './lib/printEmergency.js';
+import { FlaskIcon, PillIcon, CalendarIcon, ThermometerIcon, HeartIcon, DownloadIcon, RefreshIcon, AlertTriangleIcon, ClockIcon, SaveIcon } from './components/icons.jsx';
 import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
 import PreflightHost from './rie/PreflightHost.jsx';
@@ -284,16 +285,17 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
       scrollbarWidth: "none", msOverflowStyle: "none" }}>
       <style>{`.hbrow::-webkit-scrollbar{display:none}`}</style>
 
-      {btn("🧪", "Test Results",    () => setActiveNav("labs"))}
-      {btn("💊", "Medications",     () => setActiveNav("medications"))}
-      {btn("📅", "Appointments",    () => setActiveNav("appointments"))}
-      {btn("🤒", "Symptoms",        () => setActiveNav("symptoms"))}
-      {btn("❤️", "Log Vitals",      onLogVitals)}
-      {btn("⬇", "Import\nRecords", () => setActiveNav("import"))}
-      {btn("🔄", "Refills",         () => printRefills(meds, PRINT_LOGO))}
+      {/* UI-14: SVG icon family (one stroke style, no emoji in routine controls) */}
+      {btn(<FlaskIcon style={{ color: "var(--green)" }} />,       "Test Results",    () => setActiveNav("labs"))}
+      {btn(<PillIcon style={{ color: "var(--amber)" }} />,        "Medications",     () => setActiveNav("medications"))}
+      {btn(<CalendarIcon style={{ color: "var(--accent)" }} />,   "Appointments",    () => setActiveNav("appointments"))}
+      {btn(<ThermometerIcon style={{ color: "var(--purple)" }} />,"Symptoms",        () => setActiveNav("symptoms"))}
+      {btn(<HeartIcon style={{ color: "var(--red)" }} />,         "Log Vitals",      onLogVitals)}
+      {btn(<DownloadIcon style={{ color: "var(--accent-soft)" }} />, "Import\nRecords", () => setActiveNav("import"))}
+      {btn(<RefreshIcon style={{ color: "var(--amber)" }} />,     "Refills",         () => printRefills(meds, PRINT_LOGO))}
 
       {/* Emergency Info — light red */}
-      {btn("🚨", "Emergency\nInfo", printEmergency, {
+      {btn(<AlertTriangleIcon style={{ color: "#f87171" }} />, "Emergency\nInfo", printEmergency, {
         background: "rgba(239,68,68,.12)", borderColor: "rgba(239,68,68,.3)",
         labelColor: "#f87171",
       })}
@@ -313,7 +315,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
           onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.16)"}
           onMouseLeave={e => e.currentTarget.style.background = "rgba(79,142,247,.08)"}
         >
-          <span style={{ fontSize: 16, lineHeight: 1 }}>🕐</span>
+          <span style={{ lineHeight: 1, color: "var(--accent-soft)" }}><ClockIcon size={17} /></span>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, flexShrink: 0, boxShadow: `0 0 5px ${syncColor}80` }} />
             <span style={{ fontSize: 9, color: syncColor, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>
@@ -937,7 +939,7 @@ function AppShell() {
                     {/* Weekly backup reminder — shown only when Drive not connected and backup is overdue */}
                     {showBackupBanner && (
                       <div style={{ display:"flex", alignItems:"center", gap:12, background:"rgba(79,142,247,.07)", border:"1px solid rgba(79,142,247,.22)", borderRadius:12, padding:"11px 16px", marginBottom:18, flexWrap:"wrap" }}>
-                        <span style={{ fontSize:16 }}>💾</span>
+                        <span style={{ color:"var(--accent-soft)", display:"flex" }}><SaveIcon /></span>
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:"#dde8f5" }}>Weekly backup overdue</div>
                           <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
