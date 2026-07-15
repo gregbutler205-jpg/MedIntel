@@ -190,6 +190,14 @@ export default function ConditionsTab() {
   const [filter, setFilter]         = useState("all");
   const [modal, setModal]           = useState(null);   // null | condition obj
   const [deleteId, setDeleteId]     = useState(null);
+  // UI-24: condition search + per-card expand/collapse for long notes
+  const [condSearch, setCondSearch] = useState("");
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const toggleExpanded = (id) => setExpandedIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
 
   function handleSave(c) {
     const updated = c.id && conditions.some(x => x.id === c.id)
@@ -213,7 +221,11 @@ export default function ConditionsTab() {
     if (statusDiff !== 0) return statusDiff;
     return (SEVERITY_ORDER[a.severity] ?? 1) - (SEVERITY_ORDER[b.severity] ?? 1);
   });
-  const filtered = sortConditions(filter === "all" ? conditions : conditions.filter(c => c.status === filter));
+  const q = condSearch.trim().toLowerCase();
+  const searched = q
+    ? conditions.filter(c => (c.name || "").toLowerCase().includes(q) || (c.icd10 || "").toLowerCase().includes(q) || (c.notes || "").toLowerCase().includes(q))
+    : conditions;
+  const filtered = sortConditions(filter === "all" ? searched : searched.filter(c => c.status === filter));
   const activeCt  = conditions.filter(c => c.status === "active").length;
   const managedCt = conditions.filter(c => c.status === "managed").length;
   const resolvedCt= conditions.filter(c => c.status === "resolved").length;
@@ -270,13 +282,19 @@ export default function ConditionsTab() {
           ))}
         </div>
 
-        {/* Filters */}
-        <div style={{ display:"flex", gap:8, marginBottom:18 }} className="no-print">
+        {/* Filters + search (UI-24) */}
+        <div style={{ display:"flex", gap:8, marginBottom:18, alignItems:"center", flexWrap:"wrap" }} className="no-print">
           {["all","active","managed","resolved"].map(f => (
             <button key={f} className={`filter-btn${filter===f?" active":""}`} onClick={() => setFilter(f)}>
               {f.charAt(0).toUpperCase()+f.slice(1)}
             </button>
           ))}
+          <input
+            value={condSearch}
+            onChange={e => setCondSearch(e.target.value)}
+            placeholder="Search conditions…"
+            style={{ flex:1, minWidth:160, background:"#0b1220", border:"1px solid #111e30", borderRadius:8, padding:"7px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" }}
+          />
         </div>
 
         {/* List */}
@@ -302,7 +320,23 @@ export default function ConditionsTab() {
                       {c.diagnosedDate && <span>Dx: {fmtDate(c.diagnosedDate)}</span>}
                       {c.provider && <span>Provider: {c.provider}</span>}
                     </div>
-                    {c.notes && <div style={{ fontSize:12, color:"#7eb8d8", marginTop:4, lineHeight:1.55 }}>{c.notes}</div>}
+                    {/* UI-24: long details collapse so cards stay short */}
+                    {c.notes && (() => {
+                      const LONG = 140;
+                      const isLong = c.notes.length > LONG;
+                      const open = expandedIds.has(c.id);
+                      return (
+                        <div style={{ fontSize:12, color:"#7eb8d8", marginTop:4, lineHeight:1.55 }}>
+                          {isLong && !open ? `${c.notes.slice(0, LONG).trimEnd()}…` : c.notes}
+                          {isLong && (
+                            <button onClick={() => toggleExpanded(c.id)} className="no-print"
+                              style={{ marginLeft:8, background:"none", border:"none", color:"var(--accent)", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", padding:0 }}>
+                              {open ? "Show less" : "Show more"}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16 }} className="no-print">
                     <button onClick={() => setModal(c)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>

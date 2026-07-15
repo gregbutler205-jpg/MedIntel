@@ -18,7 +18,12 @@ function saveSurgeries(list) {
 }
 function fmtDate(iso) {
   if (!iso) return "—";
-  return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  // UI-24: always render the full date INCLUDING year, and tolerate legacy
+  // non-ISO strings ("Apr 22, 2019") — the old ISO-only parse produced
+  // "Invalid Date" for those. Unparseable values fall back to the raw string
+  // rather than an invented date.
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + "T12:00:00") : new Date(iso);
+  return isNaN(d) ? String(iso) : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 function outcomeColor(o) {
   if (o === "Successful") return "#10b981";
@@ -235,7 +240,9 @@ export default function SurgeriesTab() {
             No surgeries or procedures added yet — click Add Surgery to get started.
           </div>
         ) : (
-          surgeries.map((s, i) => (
+          // UI-24: reverse-chronological at render time too — restored/legacy
+          // data isn't guaranteed to arrive pre-sorted.
+          [...surgeries].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).map((s, i) => (
             <div key={s.id} className="surg-card">
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between" }}>
                 <div style={{ flex:1 }}>
