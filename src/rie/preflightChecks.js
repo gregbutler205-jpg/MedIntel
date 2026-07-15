@@ -53,7 +53,12 @@ export const REPORT_LABELS = {
 };
 
 export function runPreflight(reportType) {
-  const base = runFullScan(); // all active findings, already filtered + sorted
+  // UI-23: the preflight surfaces only what genuinely matters before sharing
+  // a document — report-specific essential checks plus CRITICAL full-scan
+  // findings. Warning/info findings (missing refill dates, absent reference
+  // ranges, optional blanks…) live in the Review Queue, not in the print
+  // path — they previously piled into a warning wall before every report.
+  const base = runFullScan().filter(f => f.severity === "critical");
   const specific = (REPORT_CRITICALS[reportType] || [])
     .flatMap(fn => fn())
     .filter(f => !isDismissed(f.id) && !isIgnoredThisSession(f.id));

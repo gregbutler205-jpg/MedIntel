@@ -1056,8 +1056,13 @@ export default function ProfileTab() {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
           <div>
             <h1 style={{ marginBottom:2 }}>{P.name || "Patient Name"}</h1>
+            {/* UI-23: only fields that have values print — no "—" placeholders
+                flagging optional blanks on the report */}
             <div style={{ fontSize:"9pt", color:"#555", fontFamily:"Arial, sans-serif" }}>
-              DOB: {P.dob || "—"} &nbsp;·&nbsp; Age: {P.age || "—"} &nbsp;·&nbsp; Sex: {P.sex || "—"} &nbsp;·&nbsp; Blood Type: {P.blood || "—"}
+              {[["DOB", P.dob], ["Age", P.age], ["Sex", P.sex], ["Blood Type", P.blood]]
+                .filter(([, v]) => v)
+                .map(([l, v]) => `${l}: ${v}`)
+                .join("  ·  ") || "Demographics not recorded"}
             </div>
           </div>
           <div style={{ textAlign:"right", fontSize:"8pt", color:"#444", fontFamily:"Arial, sans-serif" }}>
