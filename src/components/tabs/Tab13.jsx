@@ -321,13 +321,22 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               count++;
             }
           });
-          // Format B: recovery format (mi_ prefixed keys like "mi_labs", "mi_meds_full")
+          // Format B: recovery format (mi_ prefixed keys like "mi_labs", "mi_meds_full").
+          // Values may be parsed objects/arrays (weekly Drive backups) OR raw
+          // JSON strings (the pre-encryption/pre-migration auto-backups, which
+          // snapshot localStorage verbatim) — stringifying a string would
+          // double-encode and corrupt the restore, so strings pass through.
           ["mi_labs","mi_meds_full","mi_readings","mi_conditions","mi_surgeries",
            "mi_care_team","mi_notes","mi_appointments","mi_symptoms","mi_milestones",
            "mi_profile_personal","mi_profile_insurance","mi_allergies","mi_emergency_contacts",
            "mi_care_goals","mi_preventive","mi_care_team_selected","mi_lab_canonical",
-           "mi_lab_name_map","mi_lab_custom_ranges"].forEach(k => {
-            if (data[k] !== undefined) { localStorage.setItem(k, JSON.stringify(data[k])); count++; }
+           "mi_lab_name_map","mi_lab_custom_ranges","mi_ref_docs","mi_documents",
+           "mi_clinical_findings","mi_import_log","mi_lab_category_order"].forEach(k => {
+            if (data[k] !== undefined) {
+              const v = typeof data[k] === "string" ? data[k] : JSON.stringify(data[k]);
+              localStorage.setItem(k, v);
+              count++;
+            }
           });
           // A-08/A-12: restored data may predate the current schema (e.g. a
           // backup exported before the vital-schema migration), but the boot
