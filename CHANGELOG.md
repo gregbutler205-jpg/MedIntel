@@ -12,7 +12,7 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.25.0 — 2026-07-15 (Phase 1: pilot gate)
+## v1.26.0 — 2026-07-15 (Phase 1: UI production readiness)
 
 ### Changed
 - **UI-7 (Appointment duplicates):** manually adding an appointment that
@@ -117,6 +117,17 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
     emoji in routine controls — dashboard hot buttons (🧪💊📅🤒❤️⬇🔄🚨🕐),
     backup banner (💾), Tab11 Clear All (🗑), Tab10 pins (📌). The primary
     nav keeps its existing uniform geometric-glyph family (not emoji).
+
+### Fixed
+- **Restore:** pre-encryption snapshot backups import without value
+  corruption (raw JSON-string values pass through instead of being
+  double-encoded), and restore now carries every `mi_*` key except the
+  vault/security keys — the previous allowlist silently dropped records,
+  cards, and settings.
+
+---
+
+## v1.25.0 — 2026-07-14 (Phase 1: pilot gate)
 
 ### Fixed
 - **Data migrations never ran on encrypted vaults + restore-flow gaps
