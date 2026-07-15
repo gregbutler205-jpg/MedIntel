@@ -27,7 +27,7 @@ export const NAV = [
   { id: "vitals",      icon: "♡", label: "Vitals" },
   { id: "symptoms",    icon: "◎", label: "Symptoms" },
   { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Plan/Team" },
+  { id: "careplan",    icon: "◷", label: "Care Team" },
   // ── System ──────────────────────────────────────────────────────────────────
   { id: "records",     icon: "▤", label: "Medical Records" },
   { id: "documents",   icon: "▣", label: "Source Documents" },

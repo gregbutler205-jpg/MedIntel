@@ -4,7 +4,11 @@ import { getAccessToken } from "../../lib/googleAuth.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
-const TABS = ["Timeline", "Goals", "Care Team", "Preventive", "Emergency", "Milestones", "Reference"];
+// UI-18: MVP keeps Care Team, Emergency, Reference. Timeline, Goals,
+// Preventive, and Milestones are removed from the interface only — their
+// components remain below and their mi_* data is untouched, so they can
+// return in Phase 2 (UI-18-P2).
+const TABS = ["Care Team", "Emergency", "Reference"];
 
 const mono = "'DM Mono',monospace";
 const serif = "'DM Serif Display',serif";
@@ -722,7 +726,7 @@ function Reference() {
 }
 
 export default function CarePlan() {
-  const [tab, setTab] = useState("Timeline");
+  const [tab, setTab] = useState("Care Team");
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#07090f", fontFamily:sora, color:"#d4e2f0", overflow:"hidden", position:"relative" }}>
       <style>{`
@@ -741,25 +745,19 @@ export default function CarePlan() {
         .modal-input:focus{border-color:#1a2f4a;}
       `}</style>
 
-      <div style={{ height:120, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }}>
-        <img src={INTELLITRAX_LOGO} alt="Insina Health" style={{ height: 100, width: "auto", objectFit: "contain" }} />
-        <div style={{ fontFamily:serif, fontSize:20, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.3px" }}>Care Plan</div>
+      {/* UI-18/UI-10: slim header — the shared shell already carries the
+          branding; the old 120px logo masthead was a duplicate. */}
+      <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }}>
+        <div style={{ fontFamily:serif, fontSize:20, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.3px" }}>Care Team</div>
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {TABS.map(t => <button key={t} className={`tab-btn${tab===t?" active":""}`} onClick={() => setTab(t)}>{t}</button>)}
         </div>
-        <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, background:"#0b1220", border:"1px solid #111e30", padding:"5px 12px", borderRadius:6, flexShrink:0 }}>
-          {GOALS.length} goals
-        </div>
       </div>
 
       <div style={{ flex:1, overflow:"hidden" }}>
-        {tab === "Timeline"   && <Timeline />}
-        {tab === "Goals"      && <Goals />}
         {tab === "Care Team"  && <CareTeam />}
-        {tab === "Preventive" && <Preventive />}
         {tab === "Emergency"  && <Emergency />}
-        {tab === "Milestones" && <Milestones />}
         {tab === "Reference"  && <Reference />}
       </div>
     </div>
