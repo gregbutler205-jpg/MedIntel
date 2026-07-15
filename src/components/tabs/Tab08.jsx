@@ -726,7 +726,6 @@ export default function CarePlan() {
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100vh", background:"#07090f", fontFamily:sora, color:"#d4e2f0", overflow:"hidden", position:"relative" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
         ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#1a2840;border-radius:4px;}
         .tab-btn{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid transparent;background:transparent;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}

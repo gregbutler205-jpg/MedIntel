@@ -1,3 +1,50 @@
+/* ── UI-8: shared typography & contrast tokens ────────────────────────────────
+   Established once, here — every UI item consumes these instead of re-hardcoding
+   literals. Values are the codebase's existing dark-theme palette, promoted to
+   custom properties (not a redesign). Text-size floor: nothing important below
+   13px; body/nav 15–17px; ~44px touch targets. */
+
+:root {
+  /* Surfaces */
+  --bg:        #07090f;
+  --bg-deep:   #080c14;
+  --card:      #0b1220;
+  --card-deep: #080c14;
+  --border:    #111e30;
+  --border-strong: #1a2f4a;
+  --divider:   #0d1a28;
+
+  /* Text — dark-theme contrast ladder (brightest → dimmest usable) */
+  --text-bright:    #dde8f5;
+  --text-primary:   #c4d8ee;
+  --text-body:      #a8c4dc;
+  --text-secondary: #98afc4;
+  --text-label:     #a0b4c8;
+  --text-dim:       #8299ad; /* replaces #6a8090/#4a5c6a where text must stay readable */
+
+  /* Accents */
+  --accent:       #4f8ef7;
+  --accent-soft:  #7eb8d8;
+  --green:        #10b981;
+  --amber:        #f59e0b;
+  --red:          #ef4444;
+  --purple:       #a78bfa;
+
+  /* Type */
+  --font-sans:  'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-mono:  'DM Mono', ui-monospace, monospace;
+
+  /* Sizes — UI-8 scale. --fs-min is the floor for anything important. */
+  --fs-body: 15px;
+  --fs-nav:  15px;
+  --fs-min:  13px;
+  --fs-label: 13px;
+
+  /* Touch */
+  --touch-target: 44px;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -10,9 +57,52 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: #0a0f1e;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  background-color: var(--bg);
   color: #e2e8f0;
   overflow: hidden;
+}
+
+/* ── UI-10: shared shell classes ─────────────────────────────────────────────
+   One definition for the sidebar/nav idiom every screen uses — previously each
+   standalone tab re-declared these in its own <style> block. */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;               /* → ≥44px touch target with nav font */
+  min-height: var(--touch-target);
+  cursor: pointer;
+  font-size: var(--fs-nav);
+  color: #b0c4d8;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+  user-select: none;
+}
+.nav-item:hover { color: var(--accent-soft); background: rgba(79,142,247,.04); }
+.nav-item.active { color: var(--accent); background: rgba(79,142,247,.08); border-left-color: var(--accent); }
+.nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 16px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-label);
+  font-family: var(--font-mono);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.section-label {
+  font-size: var(--fs-min);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-label);
+  font-family: var(--font-mono);
+  margin-bottom: 12px;
 }

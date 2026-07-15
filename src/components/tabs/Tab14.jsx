@@ -1176,7 +1176,6 @@ export default function AppointmentsTab({ onNavChange }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100%", background:"#07090f" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing:border-box; }
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         .apt-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; transition:border-color .2s; animation:fadeUp .35s ease both; }

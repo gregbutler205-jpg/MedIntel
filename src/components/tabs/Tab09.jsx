@@ -559,7 +559,6 @@ export default function DocumentsTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", fontFamily: "'Sora',sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; }
         @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.5} }

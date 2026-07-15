@@ -221,7 +221,6 @@ export default function ConditionsTab() {
   return (
     <div style={{ display:"flex", flexDirection:"column", flex:1 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing:border-box; }
         @media print {
           body * { visibility:hidden; }

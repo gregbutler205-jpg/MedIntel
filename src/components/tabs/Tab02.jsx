@@ -622,7 +622,6 @@ export default function ProfileTab() {
   <meta charset="UTF-8"/>
   <title>Insina Health — Patient Profile</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #ffffff; color: #000000; font-family: Georgia, serif; font-size: 10pt; }
     body { padding: 32pt 40pt; }
@@ -674,7 +673,6 @@ export default function ProfileTab() {
   return (
     <div style={{ display:"flex", height:"100vh", background:T.bg, color:"#d4e2f0", fontFamily:"'Sora',sans-serif", flexDirection:"column", overflow:"hidden" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing:border-box; margin:0; padding:0; }
         ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:#1a2840; border-radius:4px; }
         input:focus, select:focus { border-color:#4f8ef7 !important; }
