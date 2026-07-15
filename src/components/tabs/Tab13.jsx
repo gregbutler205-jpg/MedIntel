@@ -133,7 +133,13 @@ function loadAIMode() {
   try { return JSON.parse(localStorage.getItem(AI_MODE_KEY)); } catch { return null; }
 }
 
+// UI-21: demo controls appear only in a demo build (vite --mode with
+// VITE_DEMO_BUILD=true); production builds never render them.
+const IS_DEMO_BUILD = import.meta.env.VITE_DEMO_BUILD === "true";
+
 export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle", lastSyncTs, onSync = () => {}, onSignOut = () => {} }) {
+  // UI-21: two distinct pages — Export & Backup vs App Settings.
+  const [page, setPage] = useState("backup"); // "backup" | "settings"
   const [apiKey, setApiKey]       = useState(() => localStorage.getItem("mi_ak") || "");
   const [pilotToken, setPilotTokenState] = useState(() => getPilotToken());
   const [backupFreq, setBackupFreq] = useState(() => localStorage.getItem("mi_backup_freq") || "Weekly");
@@ -404,11 +410,26 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       </div>
       <div style={{ overflowY: "auto", padding: "24px 28px", flex: 1 }}>
 
-      <div style={{ marginBottom: 22 }}>
+      <div style={{ marginBottom: 16 }}>
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Settings & Backup</h1>
         <p style={{ fontSize: 11, color: "#98afc4", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>App preferences, data exports, backups, and connected sources</p>
       </div>
 
+      {/* UI-21: page selector — backup/export and preferences are separate pages */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {[["backup", "Export & Backup"], ["settings", "App Settings"]].map(([id, label]) => (
+          <button key={id} onClick={() => setPage(id)}
+            style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer", transition: "all .15s",
+              border: `1px solid ${page === id ? "rgba(79,142,247,.5)" : "#1a2f4a"}`,
+              background: page === id ? "rgba(79,142,247,.12)" : "#0b1220",
+              color: page === id ? "var(--accent)" : "var(--text-dim)" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ══ EXPORT & BACKUP page ══ */}
+      <div style={{ display: page === "backup" ? "block" : "none" }}>
       {/* Google Drive Sync */}
       <div style={{ ...cardStyle, marginBottom: 14 }}>
         <div style={sectionLbl}>Google Drive Backup</div>
@@ -591,7 +612,10 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           <ExportTile icon="💊" label="Medication List" sub="Current meds + history as PDF"                  onClick={() => handleExport("Medication List")} />
         </div>
       </div>
+      </div>{/* end backup page block 1 */}
 
+      {/* ══ APP SETTINGS page (Help & Support) ══ */}
+      <div style={{ display: page === "settings" ? "block" : "none" }}>
       {/* Help & Support */}
       {(() => {
         const [helpOpen, setHelpOpen] = [false, () => {}]; // static for now; expand if needed
@@ -635,8 +659,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           </div>
         );
       })()}
+      </div>{/* end settings page block 1 (Help & Support) */}
 
-      {/* Row 3: Backup history + Settings */}
+      {/* ══ EXPORT & BACKUP page (history + backup preferences) ══ */}
+      <div style={{ display: page === "backup" ? "block" : "none" }}>
+      {/* Row 3: Backup history + backup preferences */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
 
         {/* Backup history */}
@@ -674,7 +701,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           const oldest = allDated[0] ? new Date(allDated[0]).toLocaleDateString("en-US", { year: "numeric", month: "long" }) : "No records yet";
           return (
             <div style={cardStyle}>
-              <div style={sectionLbl}>App Settings</div>
+              <div style={sectionLbl}>Backup Preferences &amp; About</div>
 
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-backup frequency</div>
@@ -685,20 +712,6 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 >
                   {["Daily", "Weekly", "Monthly", "Never"].map(f => <option key={f}>{f}</option>)}
                 </select>
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-lock after inactivity</div>
-                <select
-                  value={autoLockMin}
-                  onChange={e => { const v = parseInt(e.target.value, 10); setAutoLockMin(v); setAutoLockMinutes(v); showToast(v === 0 ? "Auto-lock turned off" : `Auto-lock set to ${AUTOLOCK_OPTIONS.find(o => o.value === v)?.label}`); }}
-                  style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
-                >
-                  {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-                <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
-                  Locks when idle and clears your encryption key from memory. Your data is unreadable until you re-enter your passphrase.
-                </div>
               </div>
 
               <div style={{ marginBottom: 16 }}>
@@ -715,20 +728,14 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 </div>
               </div>
 
-              <div>
-                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Pilot access token</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ flex: 1, background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
-                    {pilotToken ? "•".repeat(20) : "Not set — not needed for founder use"}
-                  </div>
-                  <button onClick={() => setModal("pilot_token")} style={btnGhost}>{pilotToken ? "Change" : "Set"}</button>
-                </div>
-              </div>
             </div>
           );
         })()}
       </div>
+      </div>{/* end backup page block 2 */}
 
+      {/* ══ APP SETTINGS page (AI Analysis / Lab Organization / Security / Legal) ══ */}
+      <div style={{ display: page === "settings" ? "block" : "none" }}>
       {/* AI Analysis Mode */}
       <div style={{ ...cardStyle, marginBottom: 14 }}>
         <div style={sectionLbl}>AI Analysis Mode</div>
@@ -845,6 +852,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         </div>
         <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 14, lineHeight: 1.6 }}>
           Set the order categories appear in the Labs tab. Use the arrows to move categories up or down.
+          Grouping different names for the same test (e.g. FK506 / Tacrolimus) lives in Labs &amp; Trends → Group Tests.
         </div>
         {labCatOrder.map((cat, idx) => (
           <div key={cat} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: idx < labCatOrder.length - 1 ? "1px solid #0d1a28" : "none" }}>
@@ -854,24 +862,24 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <button
                 onClick={() => moveCat(idx, -1)}
                 disabled={idx === 0}
-                style={{ width: 26, height: 26, background: "#07090f", border: "1px solid #111e30", borderRadius: 6, color: idx === 0 ? "#1e3040" : "#7eb8d8", cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
-                title="Move up"
+                style={{ width: 38, height: 38, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: idx === 0 ? "#1e3040" : "#7eb8d8", cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
+                title="Move up" aria-label={`Move ${cat} up`}
               >↑</button>
               <button
                 onClick={() => moveCat(idx, 1)}
                 disabled={idx === labCatOrder.length - 1}
-                style={{ width: 26, height: 26, background: "#07090f", border: "1px solid #111e30", borderRadius: 6, color: idx === labCatOrder.length - 1 ? "#1e3040" : "#7eb8d8", cursor: idx === labCatOrder.length - 1 ? "not-allowed" : "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
-                title="Move down"
+                style={{ width: 38, height: 38, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: idx === labCatOrder.length - 1 ? "#1e3040" : "#7eb8d8", cursor: idx === labCatOrder.length - 1 ? "not-allowed" : "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
+                title="Move down" aria-label={`Move ${cat} down`}
               >↓</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Security */}
-      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "18px 20px" }}>
+      {/* Security — UI-21: P-02 passphrase + auto-lock + pilot token live here */}
+      <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
         <div style={sectionLbl}>Security</div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>Passphrase</div>
             <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
@@ -885,6 +893,30 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           >
             Change Passphrase
           </button>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-lock after inactivity</div>
+          <select
+            value={autoLockMin}
+            onChange={e => { const v = parseInt(e.target.value, 10); setAutoLockMin(v); setAutoLockMinutes(v); showToast(v === 0 ? "Auto-lock turned off" : `Auto-lock set to ${AUTOLOCK_OPTIONS.find(o => o.value === v)?.label}`); }}
+            style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+          >
+            {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
+            Locks when idle and clears your encryption key from memory. Your data is unreadable until you re-enter your passphrase.
+          </div>
+        </div>
+
+        <div>
+          <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Pilot access token</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ flex: 1, background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
+              {pilotToken ? "•".repeat(20) : "Not set — not needed for founder use"}
+            </div>
+            <button onClick={() => setModal("pilot_token")} style={btnGhost}>{pilotToken ? "Change" : "Set"}</button>
+          </div>
         </div>
       </div>
 
@@ -904,7 +936,10 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         </div>
       </div>
 
-      {/* Danger Zone */}
+      </div>{/* end settings page block 2 */}
+
+      {/* ══ EXPORT & BACKUP page (Danger Zone — destructive actions, separated) ══ */}
+      <div style={{ display: page === "backup" ? "block" : "none" }}>
       <div style={{ background: "#0b1220", border: "1px solid rgba(239,68,68,.2)", borderRadius: 14, padding: "18px 20px" }}>
         <div style={{ fontSize: 10, color: "rgba(239,68,68,.5)", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
         <div style={{ display: "flex", gap: 10 }}>
@@ -913,14 +948,18 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Permanently removes all locally stored records, notes, and settings. Cannot be undone.</div>
             <button onClick={() => setModal("clear")} style={{ padding: "6px 14px", border: "1px solid rgba(239,68,68,.3)", borderRadius: 6, fontSize: 11, color: "#ef4444", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Clear Data</button>
           </div>
-          <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(245,158,11,.15)", borderRadius: 8, padding: "12px 14px" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#f59e0b", marginBottom: 4 }}>Reset to Demo</div>
-            <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 6 }}>Restore the app to the original demo state with sample data. Clears any personal entries.</div>
-            <div style={{ fontSize: 10, color: "#f59e0b", fontFamily: "'DM Mono', monospace", marginBottom: 10 }}>Demo PIN: <strong>1234</strong></div>
-            <button onClick={() => setModal("reset")} style={{ padding: "6px 14px", border: "1px solid rgba(245,158,11,.3)", borderRadius: 6, fontSize: 11, color: "#f59e0b", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Reset</button>
-          </div>
+          {/* UI-21: demo controls only in the demo build. The stale "Demo PIN:
+              1234" note is gone — PIN auth no longer exists under P-02. */}
+          {IS_DEMO_BUILD && (
+            <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(245,158,11,.15)", borderRadius: 8, padding: "12px 14px" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#f59e0b", marginBottom: 4 }}>Reset to Demo</div>
+              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Restore the app to the original demo state with sample data. Clears any personal entries.</div>
+              <button onClick={() => setModal("reset")} style={{ padding: "6px 14px", border: "1px solid rgba(245,158,11,.3)", borderRadius: 6, fontSize: 11, color: "#f59e0b", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Reset</button>
+            </div>
+          )}
         </div>
       </div>
+      </div>{/* end backup page block 3 */}
 
       {/* Modals */}
       {modal === "apikey" && <ApiKeyModal current={apiKey} onSave={handleSaveApiKey} onClose={() => setModal(null)} />}
