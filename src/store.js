@@ -126,3 +126,16 @@ export function addImportLog(entry) {
   setStore('importLog', updated);
   setStore('lastImport', new Date().toISOString());
 }
+
+// UI-16: one truthful "Last import" label for every topbar that shows it.
+// Entries are PREPENDED above, so the newest is [0] — Tab05 formerly read the
+// oldest ([length-1]) and Tab04 hardcoded a date.
+export function getLastImportLabel() {
+  try {
+    const log = getStore('importLog');
+    if (log.length && log[0].ts) {
+      return new Date(log[0].ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+  } catch { /* fall through */ }
+  return "—";
+}

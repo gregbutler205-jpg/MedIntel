@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
-import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds } from "../../store.js";
+import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds, getLastImportLabel } from "../../store.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 
@@ -737,7 +737,7 @@ export default function App({ onNavChange }) {
             <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
           <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
-            Last import: Mar 12, 2026
+            Last import: {getLastImportLabel()}
           </div>
           <button onClick={() => requestReport("medications", () => printRefillReport(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#f87171", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
             <PrintLabel>Refill Report</PrintLabel>

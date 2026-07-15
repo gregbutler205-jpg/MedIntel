@@ -10,6 +10,7 @@ import { checkLabReading } from "../../lib/plausibility.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLabGroup, getConfirmedGroups } from "../../lib/labCanonical.js";
 import { PrintLabel } from "../icons.jsx";
+import { getLastImportLabel } from "../../store.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -117,7 +118,10 @@ function RangeBar({ value, low, high, customLow = null, customHigh = null, compa
 }
 
 // Full trend chart — works with or without reference range
-function TrendChart({ lab, color, monthLabels }) {
+// UI-16: `lab.low/high` is the ONE applicable range (Doctor's Range when set,
+// else the lab's printed range — the call site decides; never both bands).
+// `dates` are the full per-point draw dates for the hover reveal.
+function TrendChart({ lab, color, monthLabels, dates = [] }) {
   const pts = lab.values.map((v, i) => ({ v, i })).filter(x => x.v !== null && !isNaN(x.v));
   if (pts.length < 2) return null;
   const allV = pts.map(x => x.v);
@@ -154,8 +158,12 @@ function TrendChart({ lab, color, monthLabels }) {
         const bad = hasRef && (v < lab.low || v > lab.high);
         return (
           <g key={i}>
+            {/* UI-16: every point reveals its date and result on hover */}
+            <title>{`${dates[i] || monthLabels[i] || ""}: ${v}`}</title>
             <circle cx={toX(i)} cy={toY(v)} r={4} fill={bad ? "#ef4444" : color} />
             {bad && <circle cx={toX(i)} cy={toY(v)} r={7} fill="none" stroke="#ef4444" strokeWidth={1} opacity={0.4} />}
+            {/* invisible wider hit target so the hover reveal is reachable */}
+            <circle cx={toX(i)} cy={toY(v)} r={10} fill="transparent" />
           </g>
         );
       })}
@@ -1007,7 +1015,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
           <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
-            Last import: {(() => { try { const logs = JSON.parse(localStorage.getItem("mi_import_log") || "[]"); if (logs.length) { const d = new Date(logs[logs.length-1].ts); return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); } } catch {} return "—"; })()}
+            Last import: {getLastImportLabel()}
           </div>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#fff" }}>G</div>
         </div>
@@ -1272,8 +1280,17 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               cutoff.setMonth(cutoff.getMonth() - trendRange);
               const history = allHistory.filter(h => !h.date || new Date(h.date + "T12:00:00") >= cutoff);
               const hasHistory = allHistory.length > 1;
-              // chartData uses null for low/high when ref range unavailable — TrendChart handles it gracefully
-              const chartData = history.length > 1 ? { values: history.map(h => parseFloat(h.value)), low, high } : null;
+              // UI-16: the chart shows exactly ONE range band — the Doctor's
+              // Range when set, otherwise the lab's printed range, never both.
+              // (The AI is still told about both when both exist — that's the
+              // prompt spec's rule for text, a different surface.)
+              // Null low/high (no usable range) renders no band — TrendChart
+              // handles it gracefully.
+              const chartData = history.length > 1
+                ? { values: history.map(h => parseFloat(h.value)), low: effLow, high: effHigh }
+                : null;
+              const chartRangeSource = customRange ? "doctor" : "lab";
+              const chartDates = history.map(h => h.date || "unknown date");
               const histLabels = history.map(h => {
                 if (!h.date) return "—";
                 const d = new Date(h.date + "T12:00:00");
@@ -1419,7 +1436,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                         </div>
                       </div>
                       {chartData ? (
-                        <TrendChart lab={chartData} color={lineColor} monthLabels={histLabels} />
+                        <TrendChart lab={chartData} color={lineColor} monthLabels={histLabels} dates={chartDates} />
                       ) : (
                         <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace", padding: "16px 0", textAlign: "center" }}>
                           No readings in the selected {trendRange}-month window. Try a wider range.
@@ -1427,7 +1444,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       )}
                       <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "1px solid #0d1a28" }}>
                         {[
-                          { dot: null, label: "Reference range" },
+                          { dot: null, label: chartRangeSource === "doctor" ? "Your doctor's range" : "Reference range" },
                           { dot: "#ef4444", label: "Out of range" },
                           { dot: lineColor, label: "In range" },
                         ].map(({ dot, label }) => (
