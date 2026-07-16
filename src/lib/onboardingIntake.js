@@ -159,7 +159,7 @@ export async function downscaleImage(file) {
       el.onload = () => resolve(el);
       el.onerror = () => reject(new Error(
         fileExtension(file.name) === "heic"
-          ? "This browser can't read HEIC photos — convert to JPG, or take the photo again as JPG."
+          ? "This browser can't read HEIC photos. Try uploading from your phone instead (iPhone converts automatically), or set your iPhone camera to Settings → Camera → Formats → Most Compatible so photos save as JPG."
           : "Couldn't read this image file."
       ));
       el.src = url;
