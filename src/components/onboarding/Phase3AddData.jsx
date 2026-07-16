@@ -31,30 +31,48 @@ const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(
 
 let fileSeq = 1;
 
-// ── Documents-module provenance entries (§4.3) ───────────────────────────────
-function upsertDocEntries(result, { extractedText, pageImages, source }) {
+// ── Documents-module provenance entries (§4.3, §11.4) ────────────────────────
+// The ORIGINAL upload (photo pixels, extracted PDF text, pasted text) is
+// always what lands in Documents and backs the side-by-side panel — in
+// fixture mode too, where the extraction RESULT is the demo dataset but the
+// provenance must still be the user's real artifact. Only when no physical
+// source exists (module-driven staging in tests) do rendered fixture pages
+// stand in.
+function upsertDocEntries(result, { extractedText, pageImages, source, uploadTitle }) {
   let docs;
   try { docs = JSON.parse(localStorage.getItem("mi_documents") || "[]"); } catch { docs = []; }
-  const links = (result.documents || []).map(d => {
-    const isFixture = EXTRACTION_MODE === "fixture";
-    const src = isFixture ? "Onboarding fixture" : (source || "Onboarding import");
-    let entry = isFixture ? docs.find(x => x.source === src && x.title === d.source_name) : null;
-    if (!entry) {
-      entry = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        title: d.source_name,
-        category: "clinical",
-        addedAt: new Date().toISOString(),
-        source: src,
-        extractedText: isFixture ? fixtureDocLines(d).join("\n") : (extractedText || ""),
-        pageImages: isFixture
-          ? [renderFixtureDocImage(d.source_name, d.doc_date || "date not found", fixtureDocLines(d))]
-          : (pageImages || []),
-      };
-      docs.push(entry);
-    }
-    return { documentsModuleId: entry.id };
-  });
+  const hasPhysical = (pageImages && pageImages.length > 0) || !!extractedText;
+  let links;
+  if (hasPhysical) {
+    const entry = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      title: uploadTitle || result.documents?.[0]?.source_name || "Imported document",
+      category: "clinical",
+      addedAt: new Date().toISOString(),
+      source: source || "Onboarding import",
+      extractedText: extractedText || "",
+      pageImages: pageImages || [],
+    };
+    docs.push(entry);
+    links = (result.documents || []).map(() => ({ documentsModuleId: entry.id }));
+  } else {
+    links = (result.documents || []).map(d => {
+      let entry = docs.find(x => x.source === "Onboarding fixture" && x.title === d.source_name);
+      if (!entry) {
+        entry = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          title: d.source_name,
+          category: "clinical",
+          addedAt: new Date().toISOString(),
+          source: "Onboarding fixture",
+          extractedText: fixtureDocLines(d).join("\n"),
+          pageImages: [renderFixtureDocImage(d.source_name, d.doc_date || "date not found", fixtureDocLines(d))],
+        };
+        docs.push(entry);
+      }
+      return { documentsModuleId: entry.id };
+    });
+  }
   try { localStorage.setItem("mi_documents", JSON.stringify(docs)); } catch { /* quota */ }
   return links;
 }
@@ -111,7 +129,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
         if (!isScannedPdf(pageTexts)) {
           patchFile(id, { status: "extracting" });
           const result = await extractText({ sourceName: entry.name, pageTexts });
-          const links = upsertDocEntries(result, { extractedText: pageTexts.join("\n\n"), source: "Onboarding import" });
+          const links = upsertDocEntries(result, { extractedText: pageTexts.join("\n\n"), source: "Onboarding import", uploadTitle: entry.name });
           const { itemCount } = stageExtractionResult(result, links);
           patchFile(id, { status: "done", reason: `${itemCount} items staged for your review` });
         } else {
@@ -125,7 +143,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
           patchFile(id, { status: "extracting", reason: "Scanned document — reading pages as images" });
           const images = await renderPdfPagesToImages(doc, pages);
           const result = await extractVision({ sourceName: entry.name, images });
-          const links = upsertDocEntries(result, { pageImages: images, source: "Onboarding import" });
+          const links = upsertDocEntries(result, { pageImages: images, source: "Onboarding import", uploadTitle: entry.name });
           const { itemCount } = stageExtractionResult(result, links);
           patchFile(id, { status: "done", reason: `${itemCount} items staged for your review` });
         }
@@ -138,7 +156,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
       const dataUrl = await downscaleImage(entry);
       patchFile(id, { status: "extracting" });
       const result = await extractVision({ sourceName: entry.name, images: [dataUrl] });
-      const links = upsertDocEntries(result, { pageImages: [dataUrl], source: "Onboarding photo" });
+      const links = upsertDocEntries(result, { pageImages: [dataUrl], source: "Onboarding photo", uploadTitle: entry.name });
       const { itemCount } = stageExtractionResult(result, links);
       patchFile(id, { status: "done", reason: `${itemCount} items staged for your review` });
       refreshCounts();
@@ -169,7 +187,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
     setFiles(list => [...list, { id, name: "Pasted from portal", size: text.length, status: "extracting", reason: "" }]);
     try {
       const result = await extractText({ sourceName: "Pasted from portal", pageTexts: [text] });
-      const links = upsertDocEntries(result, { extractedText: text, source: "Onboarding paste" });
+      const links = upsertDocEntries(result, { extractedText: text, source: "Onboarding paste", uploadTitle: "Pasted from portal" });
       const { itemCount } = stageExtractionResult(result, links);
       patchFile(id, { status: "done", reason: `${itemCount} items staged for your review` });
       refreshCounts();
@@ -196,7 +214,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
     setFiles(list => [...list, { id, name: `Photo document (${images.length} page${images.length !== 1 ? "s" : ""})`, size: 0, status: "extracting", reason: "" }]);
     try {
       const result = await extractVision({ sourceName: "Photo document", images });
-      const links = upsertDocEntries(result, { pageImages: images, source: "Onboarding photo" });
+      const links = upsertDocEntries(result, { pageImages: images, source: "Onboarding photo", uploadTitle: `Photo document (${images.length} page${images.length !== 1 ? "s" : ""})` });
       const { itemCount } = stageExtractionResult(result, links);
       patchFile(id, { status: "done", reason: `${itemCount} items staged for your review` });
       refreshCounts();

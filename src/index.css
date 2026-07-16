@@ -51,6 +51,18 @@
   padding: 0;
 }
 
+/* ONBOARDING_SPEC v1.1 §8: visible focus rings on every onboarding surface.
+   .ob-focus is carried by the onboarding shell AND its post-onboarding
+   embeddings (Import Records queue, dashboard task cards) — §11.12. */
+.ob-focus button:focus-visible,
+.ob-focus input:focus-visible,
+.ob-focus select:focus-visible,
+.ob-focus textarea:focus-visible,
+.ob-focus [role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 html, body, #root {
   height: 100%;
   width: 100%;

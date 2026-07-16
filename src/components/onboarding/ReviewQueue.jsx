@@ -308,7 +308,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
   // ── Rejected recovery (§5.1 / §11.13) ──────────────────────────────────────
   if (view === "rejected") {
     return (
-      <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="ob-focus" style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
         <h2 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 400, color: "var(--text-bright)", textAlign: "center" }}>Recently rejected</h2>
         <p style={{ fontSize: 12, color: "var(--text-secondary)", textAlign: "center" }}>
           Rejected items stay recoverable for {REJECT_RETENTION_DAYS} days, then are removed for good.
@@ -358,7 +358,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
     }
 
     return (
-      <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="ob-focus" style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ textAlign: "center" }}>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 400, color: "var(--text-bright)" }}>{CAT_LABEL[cat]}</h2>
           <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginTop: 4 }}>
@@ -442,7 +442,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
 
   // ── Summary screen ──────────────────────────────────────────────────────────
   return (
-    <div style={{ maxWidth: 620, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+    <div className="ob-focus" style={{ maxWidth: 620, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
       {!embedded && (
         <div style={{ textAlign: "center" }}>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 26, fontWeight: 400, color: "var(--text-bright)", letterSpacing: "-0.5px" }}>Review &amp; confirm</h1>

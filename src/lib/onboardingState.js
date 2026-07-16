@@ -79,7 +79,10 @@ export function shouldOnboard() {
   if (IS_DEMO_BUILD) return false;
   const s = loadState();
   if (s) return s.phase < TOTAL_PHASES;
-  return !hadVaultAtBoot;
+  if (!hadVaultAtBoot) return true;
+  // Erase & Start Fresh followed by a new vault in the same page session is
+  // a new install even though a vault existed at boot (LockScreen sets this).
+  try { return sessionStorage.getItem("insina_fresh_vault") === "1"; } catch { return false; }
 }
 
 /** §2 resume banner condition: launch with phase < 5 and last_seen present. */

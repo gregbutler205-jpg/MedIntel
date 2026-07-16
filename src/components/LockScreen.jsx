@@ -38,6 +38,10 @@ export default function LockScreen({ onUnlock }) {
     try {
       downloadPreMigrationBackup();
       const result = await secureStorage.setupVaultAndMigrate(passphrase);
+      // ONBOARDING_SPEC v1.1 §2: a vault created in THIS session marks a new
+      // install even when the page booted with an old vault that was since
+      // erased (Erase & Start Fresh → set up again without a reload).
+      try { sessionStorage.setItem("insina_fresh_vault", "1"); } catch { /* non-fatal */ }
       setRecoveryKeyDisplay(result.recoveryKeyDisplay);
       setMode("show-recovery");
     } catch (err) {

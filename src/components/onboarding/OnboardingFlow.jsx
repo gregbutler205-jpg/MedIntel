@@ -63,14 +63,12 @@ export default function OnboardingFlow({ onExit }) {
   const railStep = Math.max(1, Math.min(state.phase === 0 ? 1 : state.phase, TOTAL_PHASES));
 
   return (
-    <div className="ob-root" style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+    <div className="ob-root ob-focus" style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
       <style>{`
         .ob-enter { animation: obFade .35s ease; }
         @media (prefers-reduced-motion: reduce) { .ob-enter { animation: none; } }
         @keyframes obFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-        .ob-root button:focus-visible, .ob-root input:focus-visible, .ob-root select:focus-visible {
-          outline: 2px solid var(--accent); outline-offset: 2px;
-        }
+        /* focus rings come from the shared .ob-focus rule in index.css (§11.12) */
       `}</style>
 
       {/* §2 resume banner */}

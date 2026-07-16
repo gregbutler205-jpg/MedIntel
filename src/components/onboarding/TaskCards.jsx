@@ -43,7 +43,7 @@ export default function TaskCards({ onNav }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+    <div className="ob-focus" style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
       <div style={{ fontSize: 10, letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--text-label)", fontFamily: "var(--font-mono)" }}>
         Next steps
       </div>
