@@ -517,5 +517,143 @@ check("confirm path: a confirmed allergy revokes an earlier NKDA assertion", () 
   assert.equal(engine.hasNkdaAssertion(), false, "NKDA cleared by a real allergy");
 });
 
+// ═══ WP5: ongoing task engine (§7) + storage prompt (§8) ═════════════════════
+
+const tasksMod = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/taskEngine.js");
+
+function seedForTasks(goal = "emergency_packet") {
+  localStorage.clear();
+  localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "T", dob: "1970-01-01" }));
+  state.saveState({ phase: 5, goal, tier0: { organ: "Liver", tx_date: "2023-01-01" } });
+}
+
+check("T1/T5: staged and deferred items produce their tasks with counts", () => {
+  seedForTasks();
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  const med = staging.getItems({ category: "medication" })[0];
+  staging.setItemStatus(med.id, "deferred");
+  const all = tasksMod.evaluateTasks(NOW);
+  const t1 = all.find(t => t.rule === "T1");
+  const t5 = all.find(t => t.key === "T5");
+  assert.ok(t1.reason.includes("37 items from your documents"));
+  assert.ok(t5.reason.includes("1 item you marked Not sure"));
+});
+
+check("T2: unmet goal minimum yields one task per missing element; artifact-generated suppresses them", () => {
+  seedForTasks("emergency_packet"); // tier0 + name/dob present; no meds, no allergies
+  let t2 = tasksMod.evaluateTasks(NOW).filter(t => t.rule === "T2");
+  assert.deepEqual(t2.map(t => t.key), ["T2-medication", "T2-allergies"]);
+  assert.ok(t2[0].reason.includes("needed for your Emergency Card"));
+  state.saveState({ artifact_generated: { artifact: "Emergency Card", goal: "emergency_packet", at: NOW.toISOString() } });
+  t2 = tasksMod.evaluateTasks(NOW).filter(t => t.rule === "T2");
+  assert.equal(t2.length, 0, "no T2 once the artifact exists");
+});
+
+check("T3: thin lab trends only for track/appointment goals; copy counts the gap", () => {
+  seedForTasks("track_meds_labs");
+  localStorage.setItem("mi_labs", JSON.stringify([
+    { name: "ALT", value: "28", date: "2026-05-18" },
+    { name: "ALT", value: "30", date: "2026-06-18" },
+    { name: "Creatinine", value: "1.2", date: "2026-05-18" },
+  ]));
+  const t3 = tasksMod.evaluateTasks(NOW).filter(t => t.rule === "T3");
+  const alt = t3.find(t => t.key === "T3-ALT");
+  const cr = t3.find(t => t.key === "T3-Creatinine");
+  assert.ok(alt.reason.includes("1 more unlocks trends"));
+  assert.ok(cr.reason.includes("2 more unlock trends"));
+  seedForTasks("emergency_packet");
+  localStorage.setItem("mi_labs", JSON.stringify([{ name: "ALT", value: "28", date: "2026-05-18" }]));
+  assert.equal(tasksMod.evaluateTasks(NOW).filter(t => t.rule === "T3").length, 0, "T3 gated on goal");
+});
+
+check("T3: the §6 labs_import_task_queued marker surfaces a first-import task when no labs exist", () => {
+  seedForTasks("track_meds_labs");
+  state.saveState({ labs_import_task_queued: true });
+  const t3 = tasksMod.evaluateTasks(NOW).find(t => t.key === "T3-first-labs");
+  assert.ok(t3, "generic labs-import task present");
+});
+
+check("T4: care team missing the next appointment's specialty", () => {
+  seedForTasks();
+  localStorage.setItem("mi_appointments", JSON.stringify([
+    { id: 1, status: "upcoming", date: "2026-09-01", provider: "Dr. K", specialty: "Nephrology" },
+  ]));
+  let t4 = tasksMod.evaluateTasks(new Date("2026-07-16T12:00:00")).find(t => t.rule === "T4");
+  assert.ok(t4.reason.includes("Add your Nephrology"));
+  localStorage.setItem("mi_care_team", JSON.stringify([{ id: 1, name: "Dr. K", specialty: "Nephrology" }]));
+  t4 = tasksMod.evaluateTasks(new Date("2026-07-16T12:00:00")).find(t => t.rule === "T4");
+  assert.equal(t4, undefined, "covered specialty produces no task");
+});
+
+check("T6/T7/T8: tier0 skipped, pharmacy gap at ≥3 active meds, unverified names", () => {
+  localStorage.clear();
+  localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "T", dob: "1970-01-01" }));
+  state.saveState({ phase: 5, goal: "organize_meds", tier0: {} });
+  localStorage.setItem("mi_meds_full", JSON.stringify([
+    { id: 1, name: "A", status: "active" },
+    { id: 2, name: "B", status: "active", unverifiedName: true },
+    { id: 3, name: "C", status: "active" },
+  ]));
+  const all = tasksMod.evaluateTasks(NOW);
+  assert.ok(all.find(t => t.rule === "T6").reason.includes("2 minutes, needed for your Emergency Card"));
+  assert.ok(all.find(t => t.rule === "T7").reason.includes("Add your pharmacy"));
+  assert.ok(all.find(t => t.rule === "T8").reason.includes("Verify 1 medication name"));
+  localStorage.setItem("mi_meds_full", JSON.stringify([{ id: 1, name: "A", status: "active", pharmacy: "CVS" }, { id: 2, name: "B", status: "active" }, { id: 3, name: "C", status: "active" }]));
+  assert.equal(tasksMod.evaluateTasks(NOW).find(t => t.rule === "T7"), undefined, "any pharmacy satisfies T7");
+});
+
+check("T9: session ≥2 AND no Drive AND ≥10 confirmed — §8 copy exact", () => {
+  seedForTasks();
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  staging.getItems({ category: "lab" }).slice(0, 12).forEach(l => staging.setItemStatus(l.id, "confirmed"));
+  // session 1 only → no prompt
+  tasksMod.recordAppOpen(new Date("2026-07-15T09:00:00"));
+  assert.equal(tasksMod.evaluateTasks(NOW).find(t => t.rule === "T9"), undefined, "session 1: no storage prompt");
+  tasksMod.recordAppOpen(new Date("2026-07-16T09:00:00")); // second calendar day
+  const t9 = tasksMod.evaluateTasks(NOW).find(t => t.rule === "T9");
+  assert.ok(t9, "session 2 prompt");
+  assert.equal(t9.benefit, "Your record lives only in this browser right now.");
+  assert.ok(t9.reason.startsWith("You've confirmed 12 items. Connect your own Google Drive so your record is backed up and available on other devices. Insina never sees your files — the connection uses your Google account, not ours."));
+  assert.equal(t9.ctaLabel, "Connect Google Drive");
+  assert.equal(t9.laterLabel, "Maybe later");
+  localStorage.setItem("mi_google_user", JSON.stringify({ email: "x@y.z" }));
+  assert.equal(tasksMod.evaluateTasks(NOW).find(t => t.rule === "T9"), undefined, "connected Drive silences T9");
+});
+
+check("§7: dismiss hides permanently, snooze hides for 7 days, cap is 4 visible, priority follows T-order", () => {
+  seedForTasks("track_meds_labs");
+  // Stack five rules: T1 (staged), T3 (thin lab), T4 (uncovered specialty),
+  // T7 (3 meds, no pharmacy), T8 (unverified name).
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  localStorage.setItem("mi_labs", JSON.stringify([{ name: "ALT", value: "28", date: "2026-05-18" }]));
+  localStorage.setItem("mi_appointments", JSON.stringify([{ id: 1, status: "upcoming", date: "2099-01-01", provider: "Dr. K", specialty: "Nephrology" }]));
+  localStorage.setItem("mi_meds_full", JSON.stringify([
+    { id: 1, name: "A", status: "active" },
+    { id: 2, name: "B", status: "active", unverifiedName: true },
+    { id: 3, name: "C", status: "active" },
+  ]));
+  const all = tasksMod.evaluateTasks(NOW);
+  assert.ok(all.length > 4, "more tasks than the cap");
+  const visible = tasksMod.visibleTasks(NOW);
+  assert.equal(visible.length, 4, "max 4 visible");
+  const ranks = visible.map(t => parseInt(t.rule.slice(1), 10));
+  assert.deepEqual([...ranks].sort((a, b) => a - b), ranks, "priority-ordered");
+  const first = visible[0];
+  tasksMod.dismissTask(first.key);
+  assert.equal(tasksMod.evaluateTasks(NOW).find(t => t.key === first.key), undefined, "dismissed stays hidden");
+  const second = tasksMod.evaluateTasks(NOW)[0];
+  tasksMod.snoozeTask(second.key, NOW);
+  assert.equal(tasksMod.evaluateTasks(NOW).find(t => t.key === second.key), undefined, "snoozed hidden now");
+  const day8 = new Date(NOW.getTime() + 8 * 86400000);
+  assert.ok(tasksMod.evaluateTasks(day8).find(t => t.key === second.key), "snooze expires after 7 days");
+});
+
+check("§7: no completion percentage in any task copy", () => {
+  seedForTasks("track_meds_labs");
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  const all = tasksMod.evaluateTasks(NOW);
+  all.forEach(t => assert.ok(!/%|percent/i.test(t.reason + t.benefit), `no percentage in ${t.key}`));
+});
+
 console.log(`\n${pass} passed, ${fail} failed (onboarding)`);
 if (fail > 0) process.exit(1);

@@ -4,7 +4,9 @@ import { mkReading, saveReading, defaultVitalFlag } from './lib/vitals.js';
 import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
 import LockScreen from './components/LockScreen.jsx';
 import OnboardingFlow from './components/onboarding/OnboardingFlow.jsx';
+import TaskCards from './components/onboarding/TaskCards.jsx';
 import { shouldOnboard } from './lib/onboardingState.js';
+import { recordAppOpen } from './lib/taskEngine.js';
 import AppSidebar from './components/AppSidebar.jsx';
 import { printEmergency } from './lib/printEmergency.js';
 import { FlaskIcon, PillIcon, CalendarIcon, ThermometerIcon, HeartIcon, DownloadIcon, RefreshIcon, AlertTriangleIcon, ClockIcon, SaveIcon } from './components/icons.jsx';
@@ -530,6 +532,14 @@ export default function App() {
     if (unlocked) setOnboarding(shouldOnboard());
   }, [unlocked]);
 
+  // §7 task CTAs (T6, T2-tier0) can re-enter onboarding at a specific phase —
+  // the task sets mi_onboarding_state.phase first, then raises this event.
+  useEffect(() => {
+    const h = () => setOnboarding(true);
+    window.addEventListener("insina-reopen-onboarding", h);
+    return () => window.removeEventListener("insina-reopen-onboarding", h);
+  }, []);
+
   if (!unlocked) {
     return <LockScreen onUnlock={() => setUnlocked(true)} />;
   }
@@ -552,6 +562,7 @@ function AppShell() {
   });
   useEffect(() => {
     try { sessionStorage.removeItem("insina_pending_nav"); } catch { /* non-fatal */ }
+    recordAppOpen(); // §7 T9: one session per calendar day the shell opens
   }, []);
   const [time, setTime]           = useState(new Date());
   const [readings, setReadings]   = useState(() => getStore('readings'));
@@ -1029,6 +1040,10 @@ function AppShell() {
                       meds={meds}
                       onLogVitals={() => { setQuickReading(q => ({ ...q, date: q.date || new Date().toISOString().slice(0, 10) })); setShowVitalsModal(true); }}
                     />
+
+                    {/* §7 ongoing task engine (ONBOARDING_SPEC v1.1): max 4,
+                        priority-ordered, benefit before ask, no percentages. */}
+                    <TaskCards onNav={setActiveNav} />
 
                     {/* ── Current Vitals panel ── */}
                     {(() => {
