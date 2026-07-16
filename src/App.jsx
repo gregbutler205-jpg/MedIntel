@@ -542,7 +542,17 @@ export default function App() {
 }
 
 function AppShell() {
-  const [activeNav, setActiveNav]     = useState("dashboard");
+  // Onboarding Phase 5 can hand off to a specific screen (ONBOARDING_SPEC v1.1
+  // §3.5/§6 — Patient Profile and Prep Brief goals route to the generator's
+  // owning module). Plain sessionStorage key: transient nav intent, no PHI.
+  // The initializer must stay PURE (StrictMode double-invokes it); the key is
+  // cleared in the mount effect below.
+  const [activeNav, setActiveNav]     = useState(() => {
+    try { return sessionStorage.getItem("insina_pending_nav") || "dashboard"; } catch { return "dashboard"; }
+  });
+  useEffect(() => {
+    try { sessionStorage.removeItem("insina_pending_nav"); } catch { /* non-fatal */ }
+  }, []);
   const [time, setTime]           = useState(new Date());
   const [readings, setReadings]   = useState(() => getStore('readings'));
   const [meds, setMeds]           = useState(() => getStore('meds_full'));

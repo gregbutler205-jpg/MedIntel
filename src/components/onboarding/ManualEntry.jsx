@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 import DRUGS from "../../data/drugList.js";
 import ALLERGENS from "../../data/allergenList.json";
 import { getMedsFull, setMedsFull } from "../../store.js";
+import { evaluateAndFire, clearNkdaAssertion, assertNoKnownAllergies, hasNkdaAssertion } from "../../lib/artifactEngine.js";
 
 const FREQUENCIES = [
   ["QD", "Once daily"], ["BID", "Twice daily"], ["TID", "Three times daily"],
@@ -34,6 +35,7 @@ export default function ManualEntry({ onDone, onCancel }) {
   const [allergyReaction, setAllergyReaction] = useState("");
   const [allergies, setAllergies] = useState([]);
   const [saved, setSaved] = useState(false);
+  const [, tick] = useState(0); // re-render after the NKDA assertion writes
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -98,8 +100,11 @@ export default function ManualEntry({ onDone, onCancel }) {
         const existing = JSON.parse(localStorage.getItem("mi_allergies") || "[]");
         const withIds = allergies.map((a, i) => ({ id: Date.now() + 1000 + i, name: a.name, reaction: a.reaction }));
         localStorage.setItem("mi_allergies", JSON.stringify([...existing, ...withIds]));
+        clearNkdaAssertion(); // a real allergy supersedes any NKDA assertion
       } catch { /* locked: unreachable post-unlock */ }
     }
+    // §6 (C5): pre-confirmed writes count toward the goal minimum immediately.
+    evaluateAndFire();
     setSaved(true);
     onDone({ medCount: meds.length, allergyCount: allergies.length });
   };
@@ -218,7 +223,19 @@ export default function ManualEntry({ onDone, onCancel }) {
 
       {/* Allergies (§3.7: same screen, after meds) */}
       <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 18 }}>
-        <div style={{ fontSize: 14, color: "var(--text-bright)", fontWeight: 600, marginBottom: 10 }}>Allergies</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 14, color: "var(--text-bright)", fontWeight: 600, flex: 1 }}>Allergies</div>
+          {/* §6: explicit positive assertion — absence of data is not NKDA */}
+          {allergies.length === 0 && !hasNkdaAssertion() && (
+            <button onClick={() => { assertNoKnownAllergies(); tick(t => t + 1); }}
+              style={{ ...ghostBtn, fontSize: 12 }}>
+              I have no known allergies
+            </button>
+          )}
+          {hasNkdaAssertion() && allergies.length === 0 && (
+            <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--green)" }}>✓ No known allergies recorded</span>
+          )}
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={{ position: "relative" }}>
             <label style={lbl} htmlFor="me-allergy">Substance</label>

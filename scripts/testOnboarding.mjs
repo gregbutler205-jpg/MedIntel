@@ -419,5 +419,103 @@ check("§5.3 resolutions: keep-current soft-rejects the staged item (recoverable
   }
 });
 
+// ═══ WP4: first-artifact engine (§6) ═════════════════════════════════════════
+
+const engine = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/artifactEngine.js");
+
+function seedBasics() {
+  localStorage.clear();
+  localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "Test Patient", dob: "1970-03-03" }));
+  state.saveState({ phase: 4, goal: "emergency_packet", tier0: { organ: "Liver", tx_date: "2023-08-12" } });
+}
+
+check("§6 emergency packet: minimum = Tier 0 + ≥1 med + allergies reviewed; name/DOB precede everything (§3.2)", () => {
+  localStorage.clear();
+  state.saveState({ phase: 4, goal: "emergency_packet" });
+  let e = engine.evaluateGoalMinimum("emergency_packet");
+  assert.deepEqual(e.missing.map(m => m.key), ["name_dob", "tier0", "medication", "allergies"]);
+  seedBasics();
+  localStorage.setItem("mi_meds_full", JSON.stringify([{ id: 1, name: "Tacrolimus", status: "active" }]));
+  e = engine.evaluateGoalMinimum("emergency_packet");
+  assert.deepEqual(e.missing.map(m => m.key), ["allergies"], "only allergies left");
+  assert.equal(e.artifact, "Emergency Card");
+});
+
+check("§6: NKDA is a positive assertion — it satisfies 'allergies reviewed'; a real allergy revokes it", () => {
+  assert.equal(engine.evaluateGoalMinimum("emergency_packet").satisfied, false);
+  engine.assertNoKnownAllergies(new Date("2026-07-16T12:00:00"));
+  assert.equal(engine.hasNkdaAssertion(), true);
+  assert.equal(engine.evaluateGoalMinimum("emergency_packet").satisfied, true);
+  engine.clearNkdaAssertion();
+  assert.equal(engine.evaluateGoalMinimum("emergency_packet").satisfied, false);
+});
+
+check("§6/C5: evaluateAndFire fires exactly once, stamps artifact_generated", () => {
+  engine.assertNoKnownAllergies(); // this call itself satisfies + fires
+  const s1 = state.loadState();
+  assert.equal(s1.artifact_generated.artifact, "Emergency Card");
+  const second = engine.evaluateAndFire();
+  assert.equal(second.fired, false, "never fires twice");
+});
+
+check("§6: medication-report goals need only one confirmed med; track goal queues the labs-import task", () => {
+  localStorage.clear();
+  localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "T", dob: "1970-01-01" }));
+  state.saveState({ phase: 4, goal: "track_meds_labs" });
+  assert.equal(engine.evaluateGoalMinimum("track_meds_labs").satisfied, false);
+  localStorage.setItem("mi_meds_full", JSON.stringify([{ id: 1, name: "Prednisone", status: "active" }]));
+  const r = engine.evaluateAndFire();
+  assert.equal(r.fired, true);
+  const s = state.loadState();
+  assert.equal(s.artifact_generated.artifact, "Medication Report");
+  assert.equal(s.labs_import_task_queued, true, "§6: labs-import task queued for the track goal");
+});
+
+check("§6 patient profile: conditions requirement accepts the explicit 'no active conditions' assertion", () => {
+  localStorage.clear();
+  localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "T", dob: "1970-01-01" }));
+  localStorage.setItem("mi_meds_full", JSON.stringify([{ id: 1, name: "X" }]));
+  localStorage.setItem("mi_allergies", JSON.stringify([{ id: 1, name: "Penicillin" }]));
+  state.saveState({ phase: 4, goal: "patient_profile", tier0: { organ: "Liver", tx_date: "2023-01-01" } });
+  assert.deepEqual(engine.evaluateGoalMinimum("patient_profile").missing.map(m => m.key), ["condition"]);
+  engine.assertNoActiveConditions();
+  assert.equal(engine.evaluateGoalMinimum("patient_profile").satisfied, true);
+});
+
+check("§6 appointment prep: needs an UPCOMING appointment with date+provider+specialty; the insert satisfies it", () => {
+  localStorage.clear();
+  localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "T", dob: "1970-01-01" }));
+  localStorage.setItem("mi_meds_full", JSON.stringify([{ id: 1, name: "X" }]));
+  localStorage.setItem("mi_allergies", JSON.stringify([{ id: 1, name: "Y" }]));
+  state.saveState({ phase: 4, goal: "appointment_prep" });
+  // a past appointment does not count
+  localStorage.setItem("mi_appointments", JSON.stringify([{ id: 1, status: "upcoming", date: "2020-01-01", provider: "Dr. A", specialty: "Hepatology" }]));
+  assert.deepEqual(engine.evaluateGoalMinimum("appointment_prep").missing.map(m => m.key), ["appointment"]);
+  const r = engine.addUpcomingAppointment({ provider: "Dr. Chen", specialty: "Transplant Hepatology", date: "2026-09-01" });
+  assert.equal(r.fired, true);
+  assert.equal(state.loadState().artifact_generated.artifact, "Consultation Prep Brief");
+  const appt = JSON.parse(localStorage.getItem("mi_appointments"))[0];
+  assert.equal(appt.source, "Entered manually");
+});
+
+check("§6/C5: a queue confirmation triggers the artifact the moment the minimum is met", () => {
+  seedBasics();
+  state.saveState({ goal: "organize_meds" });
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  const med = staging.getItems({ category: "medication" }).find(m => !m.default_historical);
+  confirm.confirmItemToRecord(med); // §6 hook inside the confirm path
+  assert.equal(state.loadState().artifact_generated?.artifact, "Medication Report", "fired from the confirm path with labs still unreviewed (C5)");
+});
+
+check("confirm path: a confirmed allergy revokes an earlier NKDA assertion", () => {
+  seedBasics();
+  engine.assertNoKnownAllergies();
+  assert.equal(engine.hasNkdaAssertion(), true);
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  const allergy = staging.getItems({ category: "allergy" })[0];
+  confirm.confirmItemToRecord(allergy);
+  assert.equal(engine.hasNkdaAssertion(), false, "NKDA cleared by a real allergy");
+});
+
 console.log(`\n${pass} passed, ${fail} failed (onboarding)`);
 if (fail > 0) process.exit(1);

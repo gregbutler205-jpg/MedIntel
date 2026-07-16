@@ -7,6 +7,7 @@
 
 import { getMedsFull, setMedsFull } from "../store.js";
 import { setItemStatus, getDocument } from "./onboardingStaging.js";
+import { evaluateAndFire, clearNkdaAssertion } from "./artifactEngine.js";
 
 const cap = s => (s ? s[0].toUpperCase() + s.slice(1) : s);
 const readArr = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
@@ -99,6 +100,10 @@ export function confirmItemToRecord(item, opts = {}) {
     writeArr(key, [...readArr(key), entry]);
   }
   setItemStatus(item.id, "confirmed");
+  // §6 (C5): every confirmation re-evaluates the goal minimum; a confirmed
+  // allergy also supersedes any earlier "no known allergies" assertion.
+  if (item.category === "allergy") clearNkdaAssertion();
+  evaluateAndFire();
   return entry;
 }
 
@@ -114,6 +119,7 @@ export function resolveReplaceWithNew(item, existing) {
   const fresh = recordShapeFor(item);
   patchRecordEntry(item.category, existing.id, { ...fresh, id: existing.id });
   setItemStatus(item.id, "confirmed");
+  evaluateAndFire();
 }
 
 /** Keep both: staged writes as new; BOTH entries flagged for review (§7 task feeds on this). */
@@ -132,6 +138,7 @@ export function resolveMerge(item, existing, picks) {
   });
   patchRecordEntry(item.category, existing.id, patch);
   setItemStatus(item.id, "confirmed");
+  evaluateAndFire();
 }
 
 function patchRecordEntry(category, id, patch) {

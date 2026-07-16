@@ -39,6 +39,7 @@ export function printEmergency() {
   const labRows  = keyLabs.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${l.name}</strong>: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` <span class="dim">(ref ${l.refRange})</span>` : ""}${l.date ? ` <span class="dim">${l.date}</span>` : ""}`);
 
   const win = window.open("", "_blank", "width=860,height=760");
+  if (!win) return; // popup blocked — same convention as printMedicationList
   win.document.write(`<!DOCTYPE html><html><head>
     <title>Emergency Info — ${profile.name || "Patient"}</title>
     <style>

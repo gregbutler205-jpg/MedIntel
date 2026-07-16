@@ -11,6 +11,7 @@ import { CONFIRMATION_MATRIX, CATEGORY_REVIEW_ORDER, CONFIDENCE_HIGH, CONFIDENCE
 import { getStagedStore, getDocument, setItemStatus, updateItem, stagedCounts } from "../../lib/onboardingStaging.js";
 import { findMatchCandidate, analyzeLabs } from "../../lib/onboardingDuplicates.js";
 import { confirmItemToRecord, recordShapeFor, recordEntriesFor, resolveKeepCurrent, resolveReplaceWithNew, resolveKeepBoth, resolveMerge } from "../../lib/onboardingConfirm.js";
+import { assertNoKnownAllergies, hasNkdaAssertion } from "../../lib/artifactEngine.js";
 
 const CAT_LABEL = {
   medication: "Medications", allergy: "Allergies", condition: "Conditions",
@@ -369,6 +370,24 @@ export default function ReviewQueue({ onDone, embedded = false }) {
             </div>
           )}
         </div>
+
+        {/* §6: "allergies reviewed" can also be the explicit NKDA assertion —
+            absence of data is not the same as no known allergies. */}
+        {cat === "allergy" && (() => {
+          let recorded = [];
+          try { recorded = JSON.parse(localStorage.getItem("mi_allergies") || "[]"); } catch { /* locked */ }
+          if (recorded.length > 0) return null;
+          return hasNkdaAssertion() ? (
+            <div role="status" style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--green)", textAlign: "center" }}>
+              ✓ “No known allergies” is recorded on your record.
+            </div>
+          ) : (
+            <button style={{ ...ghostBtn, alignSelf: "center" }}
+              onClick={() => { assertNoKnownAllergies(); refresh(); }}>
+              I have no known allergies
+            </button>
+          );
+        })()}
 
         {bulkGroups.map(g => (
           <button key={g.docId || "all"} style={{ ...primaryBtn, alignSelf: "flex-start" }}
