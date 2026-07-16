@@ -52,9 +52,9 @@ function monthsAgo(now, months) {
   return d;
 }
 
-/** §9.4 badge (exact copy for dated documents). */
+/** §9.4 badge (exact copy for dated documents; undated wording per Greg's WP2 review). */
 export function stalenessBadge(docDateIso) {
-  if (!docDateIso) return "From a document with no visible date — confirm this is still current.";
+  if (!docDateIso) return "No date. Confirm this is still current.";
   const d = new Date(docDateIso + "T12:00:00");
   const label = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
   return `From a document dated ${label} — confirm this is still current.`;
