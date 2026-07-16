@@ -12,6 +12,25 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## Unreleased — feature/onboarding-v1_1
+
+### Added
+- **Onboarding WP1–WP3 (ONBOARDING_SPEC v1.1):** new-user flow shell —
+  consent gate with hard extraction block, five-phase rail, resume state,
+  goal selection, Tier 0 basics; Add Data surface (upload with ZIP/password
+  handling and per-file status pipeline, photo multi-shot, portal paste,
+  guided manual medication entry with offline autocomplete); staging queue
+  review with the §5.2 confirmation matrix, §5.3 duplicate/conflict Compare
+  (keep current / replace / keep both / field-level merge), §4.5 document
+  staleness, mandatory source side-by-side panel, and 30-day rejected-item
+  recovery reachable from Import Records. Extraction runs behind a single
+  gated interface (fixture mode default; live proxy client built to the
+  §4.1 contract). 43 unit tests (`npm run test:onboarding`). User-facing
+  "passphrase" renamed to "password" app-wide (Greg's review direction).
+  Details and the session decision log: docs/ONBOARDING_SESSION_2026-07-16.md.
+
+---
+
 ## v1.26.0 — 2026-07-15 (Phase 1: UI production readiness)
 
 ### Changed
