@@ -3,6 +3,8 @@ import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, 
 import { mkReading, saveReading, defaultVitalFlag } from './lib/vitals.js';
 import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
 import LockScreen from './components/LockScreen.jsx';
+import OnboardingFlow from './components/onboarding/OnboardingFlow.jsx';
+import { shouldOnboard } from './lib/onboardingState.js';
 import AppSidebar from './components/AppSidebar.jsx';
 import { printEmergency } from './lib/printEmergency.js';
 import { FlaskIcon, PillIcon, CalendarIcon, ThermometerIcon, HeartIcon, DownloadIcon, RefreshIcon, AlertTriangleIcon, ClockIcon, SaveIcon } from './components/icons.jsx';
@@ -520,8 +522,20 @@ export default function App() {
     };
   }, [unlocked, lock, autoLockVersion]);
 
+  // Onboarding gate (ONBOARDING_SPEC v1.1 §2): new installs only — evaluated
+  // after unlock because mi_onboarding_state is vault-encrypted. Existing
+  // vaults and demo builds never see it; an incomplete flow resumes.
+  const [onboarding, setOnboarding] = useState(false);
+  useEffect(() => {
+    if (unlocked) setOnboarding(shouldOnboard());
+  }, [unlocked]);
+
   if (!unlocked) {
     return <LockScreen onUnlock={() => setUnlocked(true)} />;
+  }
+
+  if (onboarding) {
+    return <OnboardingFlow onExit={() => setOnboarding(false)} />;
   }
 
   return <AppShell />;

@@ -377,7 +377,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
     setPinError("");
     const { current, next, confirm } = pinForm;
     if (next.length < 12) { setPinError("Use at least 12 characters — this is the actual encryption key, not a screen lock."); return; }
-    if (next !== confirm) { setPinError("New passphrases don't match."); return; }
+    if (next !== confirm) { setPinError("New passwords don't match."); return; }
     try {
       // changePassphrase() requires the vault already unlocked in this session
       // (true here — the app is running) using the CURRENT passphrase for
@@ -389,7 +389,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       setPinSuccess(true);
       setTimeout(() => { setPinSuccess(false); setModal(null); }, 2000);
     } catch {
-      setPinError("Current passphrase is incorrect.");
+      setPinError("Current password is incorrect.");
     }
   }
 
@@ -639,7 +639,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           { q: "How do I import lab results?", a: "Go to Import Records in the sidebar. Select 'Lab Results' as the document type, then upload one or more PDF files. The AI will extract your results automatically and save them to the Labs tab." },
           { q: "How do I ask AI about a record or document?", a: "Open any record in the Records tab and tap '✦ Ask AI'. For lab analysis, open the Labs tab and use the AI Analysis panel. You can type follow-up questions in either view." },
           { q: "What is Standard vs. Advanced AI mode?", a: "Standard mode uses Claude Sonnet — fast and clear for everyday analysis. Advanced mode uses Claude Opus — deeper cross-referenced reasoning for complex cases. Advanced mode requires separate consent and is available as a subscription upgrade." },
-          { q: "Is my data private?", a: "Your health record is stored on your device, encrypted under your own passphrase — Insina Health has no server copy. When you use AI, the specific information your request needs is sent pseudonymously (identified by a random ID, never your name) through Insina's proxy to Anthropic to generate the response; the proxy does not store or log that content. See Privacy Policy for the complete picture, including what pseudonymous does and doesn't mean." },
+          { q: "Is my data private?", a: "Your health record is stored on your device, encrypted under your own password — Insina Health has no server copy. When you use AI, the specific information your request needs is sent pseudonymously (identified by a random ID, never your name) through Insina's proxy to Anthropic to generate the response; the proxy does not store or log that content. See Privacy Policy for the complete picture, including what pseudonymous does and doesn't mean." },
           { q: "What happens if I clear my browser?", a: "Clearing browser data will erase all locally stored records. Always export a Full Backup before clearing, or connect Google Drive in Settings & Backup to automatically protect against data loss." },
           { q: "How do I reorder lab categories?", a: "Go to Settings & Backup → Lab Category Order. Use the up/down arrows to set the order categories appear in the Labs tab." },
         ];
@@ -897,9 +897,9 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={sectionLbl}>Security</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>Passphrase</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>Password</div>
             <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
-              Your passphrase is the actual encryption key for your data (P-02). Changing it re-wraps
+              Your password is the actual encryption key for your data (P-02). Changing it re-wraps
               the key — your data is never re-encrypted or at risk during the change.
             </div>
           </div>
@@ -907,7 +907,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             onClick={() => { setPinForm({ current: "", next: "", confirm: "" }); setPinError(""); setPinSuccess(false); setModal("changepin"); }}
             style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
           >
-            Change Passphrase
+            Change Password
           </button>
         </div>
 
@@ -921,7 +921,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
-            Locks when idle and clears your encryption key from memory. Your data is unreadable until you re-enter your passphrase.
+            Locks when idle and clears your encryption key from memory. Your data is unreadable until you re-enter your password.
           </div>
         </div>
 
@@ -1014,11 +1014,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       {modal === "changepin" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
           <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: "28px 28px 24px", width: "100%", maxWidth: 340, fontFamily: "'Sora', sans-serif" }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>Change Passphrase</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>Change Password</div>
             <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>Re-wraps your encryption key. Your data is not re-encrypted or touched.</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current Passphrase</div>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current Password</div>
               <input
                 type="password" value={pinForm.current}
                 onChange={e => setPinForm(f => ({ ...f, current: e.target.value }))}
@@ -1027,7 +1027,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New Passphrase (12+ characters)</div>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New Password (12+ characters)</div>
               <input
                 type="password" value={pinForm.next}
                 onChange={e => setPinForm(f => ({ ...f, next: e.target.value }))}
@@ -1036,7 +1036,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New Passphrase</div>
+              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New Password</div>
               <input
                 type="password" value={pinForm.confirm}
                 onChange={e => setPinForm(f => ({ ...f, confirm: e.target.value }))}
@@ -1045,7 +1045,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
 
             {pinError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
-            {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Passphrase updated successfully.</div>}
+            {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Password updated successfully.</div>}
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setModal(null)} style={{ flex: 1, padding: "9px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#98afc4", fontSize: 12, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Cancel</button>
@@ -1073,7 +1073,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
             <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your data</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 16 }}>
-              Your health record is stored on your device, encrypted under your own passphrase —
+              Your health record is stored on your device, encrypted under your own password —
               there is no Insina Health server copy and no password reset. When you use AI,
               information your request needs is sent pseudonymously through Insina's proxy to
               Anthropic; the proxy does not store or log message content, though the hosting
@@ -1085,7 +1085,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
             <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your responsibility</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 20 }}>
-              You are responsible for your passphrase and recovery key — losing both means your
+              You are responsible for your password and recovery key — losing both means your
               data cannot be recovered by anyone. Use Insina Health only for your own health
               information (or that of someone you're legally authorized to manage it for).
             </div>

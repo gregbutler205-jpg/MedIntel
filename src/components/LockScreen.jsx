@@ -32,8 +32,8 @@ export default function LockScreen({ onUnlock }) {
 
   async function handleSetupSubmit(e) {
     e.preventDefault();
-    if (passphrase.length < 12) { setError("Use at least 12 characters — this passphrase is the actual encryption key, not just a screen lock."); return; }
-    if (passphrase !== confirmPassphrase) { setError("Passphrases don't match."); return; }
+    if (passphrase.length < 12) { setError("Use at least 12 characters — this password is the actual encryption key, not just a screen lock."); return; }
+    if (passphrase !== confirmPassphrase) { setError("Passwords don't match."); return; }
     setBusy(true); setError("");
     try {
       downloadPreMigrationBackup();
@@ -54,7 +54,7 @@ export default function LockScreen({ onUnlock }) {
       await secureStorage.setupVaultAndMigrate(passphrase); // same passphrase as the original attempt — re-derives the same DEK
       afterUnlock();
     } catch (err) {
-      setError("That passphrase didn't unlock the in-progress vault. Enter the exact passphrase you set the first time.");
+      setError("That password didn't unlock the in-progress vault. Enter the exact password you set the first time.");
     } finally {
       setBusy(false);
     }
@@ -67,7 +67,7 @@ export default function LockScreen({ onUnlock }) {
       await secureStorage.unlock(passphrase);
       afterUnlock();
     } catch {
-      setError("Incorrect passphrase.");
+      setError("Incorrect password.");
     } finally {
       setBusy(false);
       setPassphrase("");
@@ -125,7 +125,7 @@ export default function LockScreen({ onUnlock }) {
 
   function downloadRecoveryKey() {
     const blob = new Blob([
-      `Insina Health — Recovery Key\n\nGenerated: ${new Date().toLocaleString()}\n\n${recoveryKeyDisplay}\n\nThis is the ONLY way to recover your data if you forget your passphrase.\nThere is no password reset — Insina Health has no server and no copy of\nyour passphrase or this key. Store this somewhere safe and separate from\nyour passphrase (a password manager, a safe, or printed and filed).\n`
+      `Insina Health — Recovery Key\n\nGenerated: ${new Date().toLocaleString()}\n\n${recoveryKeyDisplay}\n\nThis is the ONLY way to recover your data if you forget your password.\nThere is no password reset — Insina Health has no server and no copy of\nyour password or this key. Store this somewhere safe and separate from\nyour password (a password manager, a safe, or printed and filed).\n`
     ], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -153,18 +153,18 @@ export default function LockScreen({ onUnlock }) {
           <>
             <Title>Encrypt your health record</Title>
             <Subtitle>
-              Choose a passphrase. It becomes the actual encryption key for your data —
+              Choose a password. It becomes the actual encryption key for your data —
               not just a screen lock. There is no password reset: if you forget it,
               the recovery key shown after setup is the only way back in.
             </Subtitle>
             <form onSubmit={handleSetupSubmit} style={styles.form}>
-              <input type="password" autoFocus placeholder="New passphrase (12+ characters)" value={passphrase}
+              <input type="password" autoFocus placeholder="New password (12+ characters)" value={passphrase}
                 onChange={e => setPassphrase(e.target.value)} style={styles.input} />
-              <input type="password" placeholder="Confirm passphrase" value={confirmPassphrase}
+              <input type="password" placeholder="Confirm password" value={confirmPassphrase}
                 onChange={e => setConfirmPassphrase(e.target.value)} style={styles.input} />
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>
-                {busy ? "Encrypting your record…" : "Create passphrase & encrypt"}
+                {busy ? "Encrypting your record…" : "Create password & encrypt"}
               </button>
             </form>
           </>
@@ -174,12 +174,12 @@ export default function LockScreen({ onUnlock }) {
           <>
             <Title>Finish encrypting</Title>
             <Subtitle>
-              A previous setup attempt didn't finish. Enter the exact passphrase you
+              A previous setup attempt didn't finish. Enter the exact password you
               set then to resume — nothing was lost, and your plaintext data was not
               touched until every value is verified.
             </Subtitle>
             <form onSubmit={handleResumeSubmit} style={styles.form}>
-              <input type="password" autoFocus placeholder="Your passphrase" value={passphrase}
+              <input type="password" autoFocus placeholder="Your password" value={passphrase}
                 onChange={e => setPassphrase(e.target.value)} style={styles.input} />
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>
@@ -194,7 +194,7 @@ export default function LockScreen({ onUnlock }) {
             <Title>Save your recovery key</Title>
             <Subtitle>
               Shown once. This is the only way to unlock your data if you forget your
-              passphrase — Insina Health cannot reset it for you.
+              password — Insina Health cannot reset it for you.
             </Subtitle>
             <div style={styles.recoveryBox}>{recoveryKeyDisplay}</div>
             <button type="button" onClick={downloadRecoveryKey} style={styles.secondaryBtn}>Download as file</button>
@@ -212,14 +212,14 @@ export default function LockScreen({ onUnlock }) {
         {mode === "enter" && (
           <>
             <Title>Insina Health is locked</Title>
-            <Subtitle>Enter your passphrase to unlock your record.</Subtitle>
+            <Subtitle>Enter your password to unlock your record.</Subtitle>
             <form onSubmit={handleUnlockSubmit} style={styles.form}>
-              <input type="password" autoFocus placeholder="Passphrase" value={passphrase}
+              <input type="password" autoFocus placeholder="Password" value={passphrase}
                 onChange={e => setPassphrase(e.target.value)} style={styles.input} />
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>{busy ? "Unlocking…" : "Unlock"}</button>
             </form>
-            <button type="button" onClick={() => setMode("recovery")} style={styles.linkBtn}>Forgot your passphrase?</button>
+            <button type="button" onClick={() => setMode("recovery")} style={styles.linkBtn}>Forgot your password?</button>
           </>
         )}
 
@@ -233,7 +233,7 @@ export default function LockScreen({ onUnlock }) {
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>{busy ? "Unlocking…" : "Unlock with recovery key"}</button>
             </form>
-            <button type="button" onClick={() => setMode("enter")} style={styles.linkBtn}>Back to passphrase</button>
+            <button type="button" onClick={() => setMode("enter")} style={styles.linkBtn}>Back to password</button>
             {!wipeConfirm ? (
               <button type="button" onClick={() => setWipeConfirm(true)} style={{ ...styles.linkBtn, color: "#6a8090", marginTop: 18 }}>
                 Lost the recovery key too?
@@ -241,7 +241,7 @@ export default function LockScreen({ onUnlock }) {
             ) : (
               <div style={styles.wipeBox}>
                 <div style={{ fontSize: 13, color: "#f87171", marginBottom: 12, lineHeight: 1.5 }}>
-                  Without your passphrase or recovery key, your encrypted data cannot be
+                  Without your password or recovery key, your encrypted data cannot be
                   decrypted by anyone — including Insina Health. The only remaining option
                   is to <strong>erase it and start fresh</strong>. This cannot be undone.
                 </div>
