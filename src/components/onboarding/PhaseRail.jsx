@@ -8,7 +8,7 @@ const PHASES = ["Goal", "Basics", "Add Data", "Review", "Result"];
 export default function PhaseRail({ current }) {
   // current: 1..5 (the welcome/consent screen precedes Phase 1 and passes 1)
   return (
-    <div aria-label={`Step ${current} of 5`} style={{ maxWidth: 560, margin: "0 auto 8px" }}>
+    <div aria-label={`Step ${current} of 5`} style={{ width: "100%", maxWidth: 560, margin: "0 auto 8px" }}>
       <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-secondary)", fontFamily: "var(--font-mono)", letterSpacing: "1px", marginBottom: 14 }}>
         Step {current} of 5
       </div>
@@ -34,7 +34,7 @@ export default function PhaseRail({ current }) {
               }}>
                 {done ? "✓" : n}
               </div>
-              <div style={{ marginTop: 8, fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.5px", textTransform: "uppercase", color: active ? "var(--accent-soft)" : "var(--text-dim)" }}>
+              <div style={{ marginTop: 8, fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.5px", textTransform: "uppercase", color: active ? "var(--accent-soft)" : "var(--text-dim)", textAlign: "center", padding: "0 6px", whiteSpace: "nowrap" }}>
                 {label}
               </div>
             </div>
