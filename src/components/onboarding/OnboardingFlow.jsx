@@ -9,13 +9,26 @@ import PhaseRail from "./PhaseRail.jsx";
 import WelcomeConsent from "./WelcomeConsent.jsx";
 import Phase1Goal from "./Phase1Goal.jsx";
 import Phase2Basics from "./Phase2Basics.jsx";
+import Phase3AddData from "./Phase3AddData.jsx";
+import ManualEntry from "./ManualEntry.jsx";
 import PrivacyFooter from "./PrivacyFooter.jsx";
-import { loadState, saveState, resetStateKeepConsent, shouldShowResumeBanner, TOTAL_PHASES } from "../../lib/onboardingState.js";
+import { loadState, saveState, resetStateKeepConsent, shouldShowResumeBanner, TOTAL_PHASES, GOALS } from "../../lib/onboardingState.js";
+
+// §3.5 empty-variant copy: the goal artifact's minimum needs, one sentence.
+const ARTIFACT_MINIMUM_SENTENCE = {
+  emergency_packet: "Your Emergency Card needs your transplant basics, at least one medication, and your allergies reviewed.",
+  organize_meds: "Your Medication Report needs at least one confirmed medication.",
+  track_meds_labs: "Your Medication Report needs at least one confirmed medication.",
+  patient_profile: "Your Patient Profile needs your basics, medications, allergies, and at least one condition.",
+  appointment_prep: "Your Consultation Prep Brief needs your medications, allergies, and one upcoming appointment.",
+};
 
 export default function OnboardingFlow({ onExit }) {
   const [state, setState] = useState(() => loadState() || saveState({}));
   const [resumeOffer, setResumeOffer] = useState(() => shouldShowResumeBanner());
   const [entered, setEntered] = useState(!shouldShowResumeBanner());
+  const [subview, setSubview] = useState(null);         // null | "manual" (inside Phase 3)
+  const [manualSummary, setManualSummary] = useState(null);
 
   const advance = (patch, nextPhase) => {
     const completed = [...new Set([...(state.completed_steps || []), state.phase])].filter(n => n > 0);
@@ -89,23 +102,53 @@ export default function OnboardingFlow({ onExit }) {
               />
             )}
 
-            {state.phase >= 3 && (
-              /* WP2–WP4 landing zone: Add Data (§3.3), Review (§3.4), Result (§3.5). */
+            {state.phase === 3 && subview === "manual" && (
+              <ManualEntry
+                onDone={({ medCount, allergyCount }) => {
+                  setSubview(null);
+                  const parts = [];
+                  if (medCount) parts.push(`${medCount} medication${medCount !== 1 ? "s" : ""}`);
+                  if (allergyCount) parts.push(`${allergyCount} allerg${allergyCount !== 1 ? "ies" : "y"}`);
+                  setManualSummary(parts.length ? `${parts.join(" and ")} added to your record.` : null);
+                }}
+                onCancel={() => setSubview(null)}
+              />
+            )}
+
+            {state.phase === 3 && subview !== "manual" && (
+              <Phase3AddData
+                onContinue={() => advance({}, 4)}
+                onManualEntry={() => setSubview("manual")}
+                onSkipEverything={() => advance({}, 5)}
+                manualSummary={manualSummary}
+              />
+            )}
+
+            {state.phase === 4 && (
+              /* WP3 landing zone: Review & Confirm (§3.4). */
               <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
                 <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 400, color: "var(--text-bright)" }}>
-                  Add Your Information
+                  Review &amp; Confirm
                 </h1>
+                {Object.keys(state.staged_counts || {}).length > 0 && (
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8 }}>
+                    Waiting for your review:{" "}
+                    {Object.entries(state.staged_counts).map(([k, n]) => `${n} ${k.replace("_", " ")}`).join(" · ")}
+                  </p>
+                )}
                 <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.7 }}>
-                  This step is being built (work package 2). Your progress so far is saved —
-                  you can continue to your dashboard and pick onboarding back up later.
+                  The review screens are being built (work package 3). Staged items are saved and
+                  never appear in your record or reports until you confirm them.
                 </p>
-                <button
-                  onClick={finish}
-                  style={{ alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 32px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}
-                >
-                  Go to my dashboard
+                <button onClick={() => advance({}, 5)}
+                  style={{ alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 32px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                  Continue
                 </button>
               </div>
+            )}
+
+            {state.phase >= 5 && (
+              <Phase5Interim state={state} onManualEntry={() => { setState(saveState({ phase: 3 })); setSubview("manual"); }} onFinish={finish} />
             )}
           </div>
         )}
@@ -114,6 +157,44 @@ export default function OnboardingFlow({ onExit }) {
       <footer style={{ padding: "16px 20px 22px", borderTop: "1px solid var(--divider)", textAlign: "center" }}>
         <PrivacyFooter />
       </footer>
+    </div>
+  );
+}
+
+// §3.5 Phase 5 — WP4 builds the real artifact screen; until then the
+// "not enough data yet" empty variant is fully implemented (it's a §2 skip
+// destination), and confirmed-data sessions get a clearly marked stub.
+function Phase5Interim({ state, onManualEntry, onFinish }) {
+  let hasMeds = false;
+  try { hasMeds = JSON.parse(localStorage.getItem("mi_meds_full") || "[]").length > 0; } catch { /* locked */ }
+  const goal = GOALS.find(g => g.id === state.goal) || GOALS[2];
+  const btn = { alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 32px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" };
+  const ghost = { alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 24px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 10, color: "var(--text-secondary)", fontSize: 13, cursor: "pointer", fontFamily: "var(--font-sans)" };
+
+  if (!hasMeds) {
+    return (
+      <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
+        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 400, color: "var(--text-bright)" }}>
+          Not enough data yet for your {goal.artifact}
+        </h1>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.7 }}>
+          {ARTIFACT_MINIMUM_SENTENCE[goal.id]}
+        </p>
+        <button onClick={onManualEntry} style={btn}>Enter medications directly</button>
+        <button onClick={onFinish} style={ghost}>Go to my dashboard</button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
+      <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 400, color: "var(--text-bright)" }}>
+        Your First Result
+      </h1>
+      <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.7 }}>
+        The first-artifact engine arrives in work package 4 — your confirmed data is in your
+        record now, and your {goal.artifact} will generate from it.
+      </p>
+      <button onClick={onFinish} style={btn}>Go to my dashboard</button>
     </div>
   );
 }

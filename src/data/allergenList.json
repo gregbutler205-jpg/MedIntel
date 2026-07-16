@@ -1,0 +1,15 @@
+[
+  "Penicillin", "Amoxicillin", "Ampicillin", "Cephalosporins", "Sulfa drugs (sulfonamides)",
+  "Sulfamethoxazole-trimethoprim (Bactrim)", "Erythromycin", "Azithromycin", "Clindamycin",
+  "Ciprofloxacin", "Levofloxacin", "Tetracycline", "Doxycycline", "Vancomycin",
+  "Aspirin", "Ibuprofen", "Naproxen", "NSAIDs", "Acetaminophen", "Codeine", "Morphine",
+  "Oxycodone", "Hydrocodone", "Tramadol", "Fentanyl",
+  "Iodinated contrast dye", "Gadolinium contrast", "Latex", "Adhesive tape", "Chlorhexidine",
+  "Lidocaine", "Novocaine (procaine)", "General anesthesia agents",
+  "Heparin", "Warfarin", "Statins", "ACE inhibitors (cough/angioedema)", "Insulin",
+  "Phenytoin", "Carbamazepine", "Lamotrigine", "Gabapentin",
+  "Eggs", "Peanuts", "Tree nuts", "Shellfish", "Fish", "Milk / dairy", "Soy", "Wheat / gluten",
+  "Sesame", "Strawberries", "Red dye (carmine)", "Food dye (tartrazine / Yellow 5)",
+  "Bee stings", "Wasp stings", "Fire ant stings",
+  "Dust mites", "Pollen", "Mold", "Pet dander", "Nickel"
+]
