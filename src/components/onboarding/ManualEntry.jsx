@@ -6,7 +6,7 @@
 // `unverifiedName` for the §7 task engine (T8).
 
 import { useMemo, useState } from "react";
-import DRUGS from "../../data/drugList.json";
+import DRUGS from "../../data/drugList.js";
 import ALLERGENS from "../../data/allergenList.json";
 import { getMedsFull, setMedsFull } from "../../store.js";
 

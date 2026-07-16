@@ -308,5 +308,116 @@ check("§4.3: scanned-PDF detection threshold and page ranges", () => {
   assert.equal(intake.parsePageRange("5-2", 10), null);
 });
 
+// ═══ WP3: duplicates, conflicts, confirmed record writes ═════════════════════
+
+const dup = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingDuplicates.js");
+const confirm = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingConfirm.js");
+
+// ── §5.3 normalization ────────────────────────────────────────────────────────
+check("§5.3: drug names resolve to ingredient level (brand, case, suffixes)", () => {
+  assert.equal(dup.normalizeDrugName("Prograf"), "tacrolimus");
+  assert.equal(dup.normalizeDrugName("TACROLIMUS"), "tacrolimus");
+  assert.equal(dup.normalizeDrugName("tacrolimus 1 mg"), "tacrolimus");
+  assert.equal(dup.normalizeDrugName("CellCept"), "mycophenolate mofetil");
+  assert.equal(dup.normalizeDrugName("Bactrim"), "sulfamethoxazole-trimethoprim");
+});
+check("§5.3: condition synonyms — HTN → hypertension", () => {
+  assert.equal(dup.normalizeConditionName("HTN"), "hypertension");
+  assert.equal(dup.normalizeConditionName("  Hypertension "), "hypertension");
+  assert.equal(dup.normalizeConditionName("PSC"), "primary sclerosing cholangitis");
+});
+
+// ── §5.3 match rule ───────────────────────────────────────────────────────────
+check("§5.3: same ingredient + strength + frequency → duplicate (brand vs generic, label vs code)", () => {
+  assert.equal(dup.medMatch(
+    { name: "Prograf", strength: "1 mg", frequency: "BID" },
+    { name: "Tacrolimus", dose: "1 mg", frequency: "Twice daily" }
+  ), "duplicate");
+});
+check("§5.3: same ingredient, different strength or frequency → conflict", () => {
+  assert.equal(dup.medMatch(
+    { name: "tacrolimus", strength: "5 mg", frequency: "BID" },
+    { name: "Tacrolimus", dose: "1 mg", frequency: "BID" }
+  ), "conflict");
+  assert.equal(dup.medMatch(
+    { name: "tacrolimus", strength: "1 mg", frequency: "QD" },
+    { name: "Tacrolimus", dose: "1 mg", frequency: "BID" }
+  ), "conflict");
+});
+check("§5.3: different ingredients never match", () => {
+  assert.equal(dup.medMatch(
+    { name: "prednisone", strength: "5 mg", frequency: "QD" },
+    { name: "tacrolimus", dose: "5 mg", frequency: "QD" }
+  ), null);
+});
+
+// ── §5.3 labs ─────────────────────────────────────────────────────────────────
+check("§5.3: exact duplicate labs auto-collapse; near-duplicates surface as conflicts", () => {
+  const staged = [
+    { id: "a", fields: { test: "ALT", value: "28", collected_date: "2026-05-18" } },
+    { id: "b", fields: { test: "AST", value: "99", collected_date: "2026-05-18" } },
+    { id: "c", fields: { test: "WBC", value: "5.8", collected_date: "2026-05-18" } },
+    { id: "d", fields: { test: "WBC", value: "5.8", collected_date: "2026-05-18" } }, // staged-vs-staged exact dup
+  ];
+  const existing = [
+    { name: "ALT", value: "28", date: "2026-05-18" },   // exact dup vs record
+    { name: "AST", value: "24", date: "2026-05-18" },   // same test/date, different value
+  ];
+  const { collapse, conflicts } = dup.analyzeLabs(staged, existing);
+  assert.deepEqual(collapse.sort(), ["a", "d"]);
+  assert.ok(conflicts.has("b"), "AST value mismatch is a conflict");
+  assert.ok(!conflicts.has("c"));
+});
+
+// ── Confirmed writes (§5.1: the only write path) ──────────────────────────────
+check("confirm: medication write carries §4.5 Historical default + source stamp; staged → confirmed", () => {
+  localStorage.clear();
+  state.saveState({ phase: 4 });
+  staging.stageExtractionResult(fixture.buildFixtureResult(), [], NOW);
+  const staleMed = staging.getItems({ category: "medication" }).find(m => m.default_historical);
+  const entry = confirm.confirmItemToRecord(staleMed);
+  assert.equal(entry.status, "inactive", "historical default");
+  assert.equal(entry.source, "Imported from document");
+  const meds = JSON.parse(localStorage.getItem("mi_meds_full"));
+  assert.equal(meds.length, 1);
+  assert.equal(staging.getItems({ status: "confirmed" }).length, 1);
+});
+check("confirm: fresh medication defaults Active; editor override wins", () => {
+  const freshMed = staging.getItems({ category: "medication", status: "staged" }).find(m => !m.default_historical);
+  const entry = confirm.confirmItemToRecord(freshMed, { statusOverride: "active" });
+  assert.equal(entry.status, "active");
+});
+check("confirm: lab maps to the app's mi_labs shape (name/value/refRange/date)", () => {
+  const lab = staging.getItems({ category: "lab", status: "staged" })[0];
+  const entry = confirm.confirmItemToRecord(lab);
+  assert.ok(entry.name && "value" in entry && "date" in entry);
+  assert.ok(entry.refRange.includes("-"));
+  assert.equal(JSON.parse(localStorage.getItem("mi_labs")).length, 1);
+});
+check("§5.3 resolutions: keep-both flags BOTH entries for review", () => {
+  const med = staging.getItems({ category: "medication", status: "staged" })[0];
+  const existing = JSON.parse(localStorage.getItem("mi_meds_full"))[0];
+  confirm.resolveKeepBoth(med, existing);
+  const meds = JSON.parse(localStorage.getItem("mi_meds_full"));
+  const flagged = meds.filter(m => m.reviewFlag === "kept-both-duplicate");
+  assert.equal(flagged.length, 2);
+});
+check("§5.3 resolutions: merge applies only the picked staged fields onto the existing entry", () => {
+  const med = staging.getItems({ category: "medication", status: "staged" })[0];
+  const existing = JSON.parse(localStorage.getItem("mi_meds_full"))[0];
+  const beforeName = existing.name;
+  confirm.resolveMerge(med, existing, { frequency: "staged", name: "current" });
+  const after = JSON.parse(localStorage.getItem("mi_meds_full")).find(m => m.id === existing.id);
+  assert.equal(after.name, beforeName, "unpicked field unchanged");
+  assert.ok(after.frequency, "picked field applied");
+});
+check("§5.3 resolutions: keep-current soft-rejects the staged item (recoverable)", () => {
+  const med = staging.getItems({ category: "medication", status: "staged" })[0];
+  if (med) {
+    confirm.resolveKeepCurrent(med);
+    assert.equal(staging.getStagedStore().items.find(i => i.id === med.id).status, "rejected");
+  }
+});
+
 console.log(`\n${pass} passed, ${fail} failed (onboarding)`);
 if (fail > 0) process.exit(1);

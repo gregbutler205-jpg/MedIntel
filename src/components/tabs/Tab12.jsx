@@ -4,6 +4,42 @@ import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
 import { PrintLabel } from "../icons.jsx";
+import ReviewQueue from "../onboarding/ReviewQueue.jsx";
+import { getStagedStore } from "../../lib/onboardingStaging.js";
+
+// ── Onboarding staging queue access (ONBOARDING_SPEC v1.1 §2, §11.13) ─────────
+// Unconfirmed items never enter the record; this card keeps the queue (and
+// the 30-day rejected-item recovery) reachable after onboarding ends.
+function OnboardingQueueCard() {
+  const [open, setOpen] = useState(false);
+  const [tick, setTick] = useState(0);
+  const store = getStagedStore();
+  const waiting = store.items.filter(i => i.status === "staged" || i.status === "deferred").length;
+  const rejected = store.items.filter(i => i.status === "rejected").length;
+  if (!waiting && !rejected) return null;
+  return (
+    <>
+      <div style={{ background:"#0b1220", border:"1px solid rgba(79,142,247,.3)", borderRadius:12, padding:"12px 18px", marginBottom:20, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+        <span style={{ flex:1, fontSize:13, color:"#c4d8ee" }}>
+          {waiting > 0
+            ? <>Your onboarding import has <strong>{waiting} item{waiting !== 1 ? "s" : ""}</strong> waiting for review — they stay out of your record until you confirm them.</>
+            : <>{rejected} rejected onboarding item{rejected !== 1 ? "s" : ""} still recoverable.</>}
+        </span>
+        <button className="imp-btn" onClick={() => setOpen(true)}
+          style={{ padding:"8px 18px", borderRadius:9, fontSize:12, fontWeight:600, cursor:"pointer", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.45)", color:"#7eb8d8", fontFamily:"'Sora',sans-serif" }}>
+          Review now
+        </button>
+      </div>
+      {open && (
+        <div style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(0,0,0,.75)", overflowY:"auto", padding:"40px 20px" }}>
+          <div style={{ maxWidth:800, margin:"0 auto", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:16, padding:"28px 24px" }}>
+            <ReviewQueue embedded onDone={() => { setOpen(false); setTick(tick + 1); }} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 // PG-08 / A-10: the local callAI() that used to live here fell back to a
 // direct api.anthropic.com call on a 429, using the BYO key from mi_ak. That
@@ -623,6 +659,11 @@ export default function ImportTab({ onImport, onNavChange }) {
             <button className="imp-btn btn-ghost" onClick={handlePrint}><PrintLabel /></button>
           </div>
         </div>
+
+        {/* Onboarding staging queue entry (ONBOARDING_SPEC v1.1 §2, §11.13):
+            staged/deferred items stay reviewable here after onboarding, and
+            rejected items are recoverable for 30 days. */}
+        <OnboardingQueueCard />
 
         {/* UI-20: mode selector — Upload / Manual Entry / Import History */}
         <div style={{ display:"flex", gap:8, marginBottom:20 }}>

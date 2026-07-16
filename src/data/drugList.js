@@ -1,4 +1,7 @@
-[
+// Bundled drug list (ONBOARDING_SPEC v1.1 §3.7) — RxNorm ingredient + common
+// brand + available strengths. JS module (not .json) so both Vite and the
+// Node test harness import it without JSON import-attribute divergence.
+export default [
   { "name": "tacrolimus", "brand": "Prograf / Envarsus XR / Astagraf XL", "strengths": ["0.5 mg", "1 mg", "5 mg", "0.75 mg XR", "1 mg XR", "4 mg XR"] },
   { "name": "cyclosporine", "brand": "Neoral / Gengraf / Sandimmune", "strengths": ["25 mg", "50 mg", "100 mg"] },
   { "name": "mycophenolate mofetil", "brand": "CellCept", "strengths": ["250 mg", "500 mg"] },
@@ -207,4 +210,4 @@
   { "name": "isosorbide mononitrate", "brand": "Imdur", "strengths": ["30 mg ER", "60 mg ER", "120 mg ER"] },
   { "name": "nitroglycerin", "brand": "Nitrostat (SL)", "strengths": ["0.3 mg", "0.4 mg", "0.6 mg"] },
   { "name": "ranolazine", "brand": "Ranexa", "strengths": ["500 mg ER", "1000 mg ER"] }
-]
+];

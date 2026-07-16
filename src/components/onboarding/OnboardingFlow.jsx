@@ -11,6 +11,7 @@ import Phase1Goal from "./Phase1Goal.jsx";
 import Phase2Basics from "./Phase2Basics.jsx";
 import Phase3AddData from "./Phase3AddData.jsx";
 import ManualEntry from "./ManualEntry.jsx";
+import ReviewQueue from "./ReviewQueue.jsx";
 import PrivacyFooter from "./PrivacyFooter.jsx";
 import { loadState, saveState, resetStateKeepConsent, shouldShowResumeBanner, TOTAL_PHASES, GOALS } from "../../lib/onboardingState.js";
 
@@ -125,26 +126,7 @@ export default function OnboardingFlow({ onExit }) {
             )}
 
             {state.phase === 4 && (
-              /* WP3 landing zone: Review & Confirm (§3.4). */
-              <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center", display: "flex", flexDirection: "column", gap: 16 }}>
-                <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 400, color: "var(--text-bright)" }}>
-                  Review &amp; Confirm
-                </h1>
-                {Object.keys(state.staged_counts || {}).length > 0 && (
-                  <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.8 }}>
-                    Waiting for your review:{" "}
-                    {Object.entries(state.staged_counts).map(([k, n]) => `${n} ${k.replace("_", " ")}`).join(" · ")}
-                  </p>
-                )}
-                <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.7 }}>
-                  The review screens are being built (work package 3). Staged items are saved and
-                  never appear in your record or reports until you confirm them.
-                </p>
-                <button onClick={() => advance({}, 5)}
-                  style={{ alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 32px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                  Continue
-                </button>
-              </div>
+              <ReviewQueue onDone={() => advance({}, 5)} />
             )}
 
             {state.phase >= 5 && (
