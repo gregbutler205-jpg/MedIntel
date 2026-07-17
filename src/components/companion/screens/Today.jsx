@@ -117,6 +117,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
         <QuickBtn icon="🤒" label="Log a symptom" onClick={() => openLog("symptoms")} />
         <QuickBtn icon="💊" label="Confirm meds" onClick={() => goTab("meds")} />
         <QuickBtn icon="💬" label="Talk to Insina" onClick={() => openLog("quick")} />
+        <QuickBtn icon="✦" label="AI chat" onClick={() => goTab("ai")} />
       </div>
 
       <div style={{ marginTop: 16 }}><SL>Health Record</SL></div>

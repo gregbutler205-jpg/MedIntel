@@ -9,7 +9,9 @@
 export const rls = (k, fb) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : fb; } catch { return fb; } };
 export const wls = (k, v)  => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 export const uid = () => Math.random().toString(36).slice(2, 9);
-export const toISO = (d = new Date()) => d.toISOString().slice(0, 10);
+// LOCAL calendar date, not UTC — toISOString() rolls to tomorrow after ~7 PM
+// in US timezones, which mis-dated evening vitals/symptoms entries.
+export const toISO = (d = new Date()) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
 // ── Date helpers (tolerant — appts may be ISO "2026-06-10" OR "Apr 22, 2026") ──
 export function parseDate(s) {

@@ -106,17 +106,21 @@ const askBtn = { background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,
 
 // ── Vitals ────────────────────────────────────────────────────────────────────
 const VITAL_FIELDS = [
-  { key: "bp_s",   label: "Systolic",  ph: "120", store: "bp_s" },
-  { key: "bp_d",   label: "Diastolic", ph: "80",  store: "bp_d" },
-  { key: "hr",     label: "Heart Rate", ph: "72", store: "hr" },
-  { key: "o2",     label: "Oxygen %",   ph: "97", store: "o2" },
-  { key: "weight", label: "Weight (lb)", ph: "192", store: "weight" },
-  { key: "temp",   label: "Temp (°F)",  ph: "98.6", store: "temp" },
+  { key: "bp_s",       label: "Systolic",    ph: "120",  store: "bp_s" },
+  { key: "bp_d",       label: "Diastolic",   ph: "80",   store: "bp_d" },
+  { key: "hr",         label: "Heart Rate",  ph: "72",   store: "hr" },
+  { key: "resting_hr", label: "Resting HR",  ph: "62",   store: "resting_hr" },
+  { key: "o2",         label: "Oxygen %",    ph: "97",   store: "o2" },
+  { key: "weight",     label: "Weight (lb)", ph: "192",  store: "weight" },
+  { key: "temp",       label: "Temp (°F)",   ph: "98.6", store: "temp" },
+  { key: "glucose",    label: "Glucose",     ph: "95",   store: "glucose" },
+  { key: "sleep",      label: "Sleep (hrs)", ph: "7.5",  store: "sleep" },
 ];
 const BLANK_V = Object.fromEntries(VITAL_FIELDS.map(f => [f.key, ""]));
 
 function Vitals({ queueSync }) {
   const [form, setForm] = useState(BLANK_V);
+  const [date, setDate] = useState(toISO());   // reading's own date — editable, defaults to today
   const [saved, setSaved] = useState(false);
   // A-12: pending plausibility gate — { reading, hardIssues, softFieldIssues, crossFieldIssues } | null.
   const [pending, setPending] = useState(null);
@@ -129,7 +133,7 @@ function Vitals({ queueSync }) {
 
   function commit(reading) {
     saveReading(reading);
-    setForm(BLANK_V); setSaved(true); setTimeout(() => setSaved(false), 2500);
+    setForm(BLANK_V); setDate(toISO()); setSaved(true); setTimeout(() => setSaved(false), 2500);
     queueSync?.();
   }
 
@@ -141,7 +145,7 @@ function Vitals({ queueSync }) {
 
   function save() {
     if (!Object.values(form).some(v => v !== "")) return;
-    attemptSave(mkReading({ source: "companion", ...form }));
+    attemptSave(mkReading({ date, source: "companion", ...form }));
   }
 
   function applySuggestion(field, value) {
@@ -174,6 +178,11 @@ function Vitals({ queueSync }) {
       {!pending && (
         <Card style={{ marginBottom: 16 }}>
           <SL>New Reading</SL>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>Date</div>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, padding: "9px 10px", color: C.p, fontSize: 14, fontFamily: mono, outline: "none", boxSizing: "border-box" }} />
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
             {VITAL_FIELDS.map(f => (
               <div key={f.key}>
@@ -199,7 +208,10 @@ function Vitals({ queueSync }) {
             {r.weight != null && <Stat label="Wt" val={`${r.weight} lb`} color={C.green} />}
             {r.spo2 != null && <Stat label="SpO₂" val={`${r.spo2}%`} color={C.purple} />}
             {r.hr != null && <Stat label="HR" val={`${r.hr}`} color={C.amber} />}
+            {r.resting_hr != null && <Stat label="RHR" val={`${r.resting_hr}`} color={C.amber} />}
             {r.temp != null && <Stat label="Temp" val={`${r.temp}°`} color={C.dim} />}
+            {r.glucose != null && <Stat label="Glu" val={`${r.glucose}`} color={C.green} />}
+            {r.sleep != null && <Stat label="Sleep" val={`${r.sleep}h`} color={C.blue} />}
           </div>
         </div>
       ))}
@@ -315,7 +327,7 @@ function QuickLog({ queueSync, onDone }) {
       const meds = activeMeds().map(m => m.name).join(", ") || "none on file";
       const data = await askInsinaJSON({
         system: `You convert a patient's plain-language health note into ONE structured entry. Decide the kind and return a JSON object of this shape:
-{"kind":"vital"|"symptom"|"medication","summary":"one short human sentence of what will be filed","vital":{"bp_s":number,"bp_d":number,"hr":number,"o2":number,"weight":number,"temp":number},"symptom":{"name":string,"severity":"Mild"|"Moderate"|"Severe","notes":string},"medication":{"name":string,"type":"skipped"|"late"|"reaction"|"prn","note":string}}
+{"kind":"vital"|"symptom"|"medication","summary":"one short human sentence of what will be filed","vital":{"bp_s":number,"bp_d":number,"hr":number,"resting_hr":number,"o2":number,"weight":number,"temp":number,"glucose":number,"sleep":number},"symptom":{"name":string,"severity":"Mild"|"Moderate"|"Severe","notes":string},"medication":{"name":string,"type":"skipped"|"late"|"reaction"|"prn","note":string}}
 Include only the sub-object matching "kind"; omit any numeric field you don't know. For medication entries, match the name to the patient's current medications when possible: ${meds}.`,
         messages: [{ role: "user", content: t }],
       });

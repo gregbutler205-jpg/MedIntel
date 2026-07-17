@@ -713,6 +713,17 @@ function AppShell() {
     };
   }, [refreshFromDrive]);
 
+  // Periodic pull while the tab stays open — phone-logged vitals appear without
+  // pressing Sync Now. Skips when hidden (the visibility handler covers return).
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      const token = getAccessToken();
+      if (token) refreshFromDrive(token);
+    }, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [refreshFromDrive]);
+
   // ── Global search keyboard shortcut (Cmd+K / Ctrl+K) ──────────────────────
   useEffect(() => {
     const h = (e) => {

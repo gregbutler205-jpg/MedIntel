@@ -13,6 +13,7 @@ import { enqueue, flush } from "../../lib/outbox.js";
 import { cleanupOldAudio } from "../../lib/visitCapture.js";
 import { scheduleMedReminders, runOpenNotifications } from "../../lib/notify.js";
 import { computePatternFlags } from "../../lib/patternFlags.js";
+import { nextAppointment, daysUntil } from "../../lib/companionData.js";
 import { C, mono, sans } from "./companionUI.jsx";
 
 import SignIn     from "./screens/SignIn.jsx";
@@ -28,12 +29,16 @@ import Surgeries  from "./screens/Surgeries.jsx";
 import Cards      from "./screens/Cards.jsx";
 import VisitFlow  from "./screens/visit/VisitFlow.jsx";
 
-const TABS = [
+// Visit recording gets the center slot (camera-app pattern) — always one tap
+// away. AI chat moves off the bar; it stays reachable from Today's quick
+// actions and every "Ask Insina" handoff (tab key "ai" still routes).
+const TABS_LEFT = [
   { key: "today", label: "Today", icon: "🏠" },
   { key: "meds",  label: "Meds",  icon: "💊" },
+];
+const TABS_RIGHT = [
   { key: "log",   label: "Log",   icon: "➕" },
   { key: "care",  label: "Care",  icon: "📅" },
-  { key: "ai",    label: "AI",    icon: "✦"  },
 ];
 
 function fmtTime(ts) {
@@ -80,19 +85,36 @@ function SyncBar({ syncState, lastSynced, onSync }) {
 }
 
 // ── Bottom tab bar ─────────────────────────────────────────────────────────────
-function BottomNav({ tab, onTab }) {
+function NavTab({ t, active, onTab }) {
   return (
-    <nav style={{ display: "flex", borderTop: `1px solid ${C.b2}`, background: C.card, flexShrink: 0, paddingBottom: "env(safe-area-inset-bottom)" }}>
-      {TABS.map(t => {
-        const active = tab === t.key;
-        return (
-          <button key={t.key} onClick={() => onTab(t.key)}
-            style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "9px 0 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-            <span style={{ fontSize: 18, lineHeight: 1, opacity: active ? 1 : 0.55, filter: active ? "none" : "grayscale(0.4)" }}>{t.icon}</span>
-            <span style={{ fontSize: 9, fontFamily: mono, letterSpacing: "0.5px", color: active ? C.blue : C.ghost }}>{t.label}</span>
-          </button>
-        );
-      })}
+    <button key={t.key} onClick={() => onTab(t.key)}
+      style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "9px 0 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+      <span style={{ fontSize: 18, lineHeight: 1, opacity: active ? 1 : 0.55, filter: active ? "none" : "grayscale(0.4)" }}>{t.icon}</span>
+      <span style={{ fontSize: 9, fontFamily: mono, letterSpacing: "0.5px", color: active ? C.blue : C.ghost }}>{t.label}</span>
+    </button>
+  );
+}
+
+function BottomNav({ tab, onTab, onRecord }) {
+  return (
+    <nav style={{ display: "flex", alignItems: "stretch", borderTop: `1px solid ${C.b2}`, background: C.card, flexShrink: 0, paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {TABS_LEFT.map(t => <NavTab key={t.key} t={t} active={tab === t.key} onTab={onTab} />)}
+
+      {/* Center Record button — Doctor Visit Capture, one tap from anywhere */}
+      <button onClick={onRecord} aria-label="Record a doctor visit"
+        style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "4px 0 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+        <span style={{
+          width: 40, height: 40, borderRadius: "50%", marginTop: -14,
+          background: "linear-gradient(135deg, #ef4444, #b91c1c)", border: `3px solid ${C.card}`,
+          boxShadow: "0 2px 12px rgba(239,68,68,.45)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#fff" }} />
+        </span>
+        <span style={{ fontSize: 9, fontFamily: mono, letterSpacing: "0.5px", color: "#f87171", fontWeight: 700 }}>Record</span>
+      </button>
+
+      {TABS_RIGHT.map(t => <NavTab key={t.key} t={t} active={tab === t.key} onTab={onTab} />)}
     </nav>
   );
 }
@@ -169,6 +191,12 @@ function CompanionInner() {
   const openEmergency = () => setOverlay({ name: "emergency" });
   const openSettings  = () => setOverlay({ name: "settings" });
   const startVisit    = (appt) => setOverlay({ name: "visit", appt, visitId: null });
+  // Center nav Record button: attach today's appointment automatically when one
+  // exists; otherwise start an unattached visit ("Doctor visit", today's date).
+  const recordVisit   = () => {
+    const appt = nextAppointment();
+    startVisit(appt && daysUntil(appt.date) === 0 ? appt : null);
+  };
   const openVisit     = (visitId) => setOverlay({ name: "visit", appt: null, visitId });
   const openMedList   = () => setOverlay({ name: "medlist" });
   const openSurgeries = () => setOverlay({ name: "surgeries" });
@@ -223,7 +251,7 @@ function CompanionInner() {
         {!overlay && tab === "ai"    && <AILite initialPrompt={aiPrompt?.prompt} initialSurface={aiPrompt?.surface} onPromptConsumed={() => setAiPrompt(null)} />}
       </div>
 
-      {!overlay && <BottomNav tab={tab} onTab={goTab} />}
+      {!overlay && <BottomNav tab={tab} onTab={goTab} onRecord={recordVisit} />}
     </div>
   );
 }

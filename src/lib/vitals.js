@@ -48,9 +48,12 @@ export function defaultVitalFlag(reading) {
  * null (never carried forward from a prior reading).
  */
 export function mkReading({ date, time = "", source = "manual", flag: explicitFlag, ...fields } = {}) {
+  const now = new Date();
   const reading = {
     id: genId(),
-    date: date || new Date().toISOString().slice(0, 10),
+    // Default to the LOCAL calendar date — toISOString() alone is UTC and
+    // rolls evening entries (after ~7 PM US) onto tomorrow's date.
+    date: date || new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10),
     time: time || "",
     enteredAt: new Date().toISOString(),
     source,
