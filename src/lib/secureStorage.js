@@ -22,12 +22,14 @@ const MIGRATION_INTERRUPTED_KEY = "mi_vault_migration_interrupted";
 
 // Operational metadata, not patient health data — never encrypted, never
 // routed through the in-memory cache.
+const PIN_WRAP_KEY = "mi_pin_wrap"; // companion PIN quick-unlock: PIN-KEK-wrapped DEK envelope
 const EXEMPT_KEYS = new Set([
   VAULT_KEY,
   MIGRATION_INTERRUPTED_KEY,
   "mi_schema_version",
   "mi_migration_interrupted",
   "mi_auth_hash", // PIN quick-unlock hash (point 6) — not vault security material
+  PIN_WRAP_KEY,   // wrapped-key envelope, same storage class as mi_vault itself
 ]);
 
 let dek = null;                    // in-memory only
@@ -185,6 +187,70 @@ export async function unlockWithRecovery(recoveryKeyDisplay) {
 export function lock() {
   dek = null;
   plaintextCache.clear();
+}
+
+// ── PIN quick-unlock (companion) ──────────────────────────────────────────
+// Phone-appropriate friction: the full passphrase is entered once on the
+// device, then a short PIN wraps the SAME DEK under a PIN-derived KEK
+// (PBKDF2, same 600k iterations as the passphrase path). The passphrase
+// remains the root secret; the PIN envelope is a per-device convenience.
+//
+// Honest threat model: a 4-6 digit PIN cannot resist an offline brute force
+// by someone who copies the device's storage — that protection comes from
+// the passphrase envelope plus the phone's own device lock. What the PIN
+// path adds ONLINE is a hard attempt limit: 5 wrong PINs deletes the PIN
+// envelope entirely, forcing the full passphrase. (Same tradeoff every
+// banking app makes; logged as a decision, not buried here.)
+
+const PIN_MAX_ATTEMPTS = 5;
+const b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
+const unb64 = (str) => { const bin = atob(str); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; };
+
+export function hasPinQuickUnlock() { return nativeGet(PIN_WRAP_KEY) !== null; }
+
+export function clearPinQuickUnlock() { nativeRemove(PIN_WRAP_KEY); }
+
+/** Attempts left before the PIN envelope self-destructs (null if no PIN set). */
+export function pinAttemptsRemaining() {
+  const raw = nativeGet(PIN_WRAP_KEY);
+  if (!raw) return null;
+  try { return Math.max(0, PIN_MAX_ATTEMPTS - (JSON.parse(raw).attempts || 0)); } catch { return null; }
+}
+
+/** Create (or replace) the PIN envelope. Vault must already be unlocked — the live DEK is what gets wrapped. */
+export async function setupPinQuickUnlock(pin) {
+  if (dek === null) throw new Error("Unlock with the passphrase before setting up a PIN.");
+  const salt = vault.generateSalt();
+  const kek = await vault.deriveKEK(String(pin), salt);
+  const wrap = await vault.wrapDEK(dek, kek);
+  nativeSet(PIN_WRAP_KEY, JSON.stringify({ v: 1, salt: b64(salt), wrap, attempts: 0 }));
+}
+
+/**
+ * Unlock with the device PIN. Wrong PIN increments the attempt counter;
+ * hitting the limit deletes the PIN envelope (passphrase required, then a
+ * new PIN can be created). Throws with a patient-readable message.
+ */
+export async function unlockWithPin(pin) {
+  const raw = nativeGet(PIN_WRAP_KEY);
+  if (!raw) throw new Error("No PIN is set on this device.");
+  const blob = JSON.parse(raw);
+  const kek = await vault.deriveKEK(String(pin), unb64(blob.salt));
+  try {
+    dek = await vault.unwrapDEK(blob.wrap, kek);
+  } catch {
+    blob.attempts = (blob.attempts || 0) + 1;
+    if (blob.attempts >= PIN_MAX_ATTEMPTS) {
+      nativeRemove(PIN_WRAP_KEY);
+      throw new Error("Too many wrong PINs — PIN unlock is disabled. Unlock with your passphrase to set a new PIN.");
+    }
+    nativeSet(PIN_WRAP_KEY, JSON.stringify(blob));
+    throw new Error(`Wrong PIN — ${PIN_MAX_ATTEMPTS - blob.attempts} attempt${PIN_MAX_ATTEMPTS - blob.attempts === 1 ? "" : "s"} left.`);
+  }
+  blob.attempts = 0;
+  nativeSet(PIN_WRAP_KEY, JSON.stringify(blob));
+  await loadCacheFromCiphertext();
+  installInterception();
 }
 
 // ── First-time setup + migration ─────────────────────────────────────────

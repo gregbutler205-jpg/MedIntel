@@ -15,6 +15,32 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## Unreleased — feature/onboarding-v1_1
 
 ### Added
+- **Companion vault gate with PIN quick-unlock (DEC-034):** the phone
+  companion now unlocks the P-02 encrypted record before anything renders —
+  previously it ran locked, reading an empty record and silently dropping
+  every capture. Password once per device, then a 4–8 digit PIN (PIN-derived
+  KEK wraps the same DEK; 5 wrong tries deletes the PIN envelope and falls
+  back to password). Fresh devices get on-phone vault setup with the
+  one-time recovery key. After unlock: data migrations + an immediate Drive
+  re-sync.
+- **Companion vitals — full 10-field capture:** the phone's New Reading form
+  now matches the web modal (Date, BP sys/dia, Heart Rate, Resting HR,
+  O2 %, Weight, Temp, Glucose, Sleep), all covered by the A-12 plausibility
+  guard; recent-readings rows show the new fields. Quick Log's voice path
+  files resting HR, glucose, and sleep too.
+- **Center Record button:** Doctor Visit Capture moved to a prominent
+  center bottom-nav button (Today · Meds · ●Record · Log · Care), one tap
+  from anywhere; today's appointment attaches automatically. AI chat moved
+  to Today's quick actions.
+- **Web auto-refresh:** the web app now re-syncs from Drive every 5 minutes
+  while visible (in addition to the existing load/focus pulls), so
+  phone-logged vitals appear without pressing Sync Now.
+
+### Fixed
+- **Evening entries dated tomorrow:** companion date defaults (`toISO`,
+  `mkReading`) used UTC, so vitals/symptoms logged after ~7 PM US time
+  landed on the next day's date. Now local calendar date.
+
 - **Onboarding WP1–WP3 (ONBOARDING_SPEC v1.1):** new-user flow shell —
   consent gate with hard extraction block, five-phase rail, resume state,
   goal selection, Tier 0 basics; Add Data surface (upload with ZIP/password

@@ -995,6 +995,46 @@ judgment calls, each the minimal reading of its spec item:
 
 ---
 
+## DEC-034: Companion vault gate — PIN quick-unlock ships; passphrase stays the root secret
+
+**Status:** Settled (Greg picked PIN quick-unlock, 2026-07-16)
+
+**Problem.** P-02's storage interception is installed unconditionally (main.jsx), but only the
+web app had an unlock surface (LockScreen). The companion rendered with the vault locked:
+every mi_* read returned null and every capture was silently dropped by the interception —
+while the UI showed "✓ Reading saved." Silent data loss on the exact surface meant to be the
+primary capture point. APP_CHANGES_SPEC P-02 never mentioned the companion; DEC-027 had
+explicitly deferred PIN quick-unlock.
+
+**Decision.** The companion gates behind `screens/Lock.jsx` before anything renders or syncs:
+
+1. **PIN quick-unlock** (Greg's pick over passphrase-every-open): the full password is entered
+   once on the device, then a 4–8 digit PIN wraps the SAME DEK under a PIN-derived KEK
+   (PBKDF2-SHA256, same 600k iterations, fresh salt — all reused from vault.js; no new crypto).
+   The envelope lives in `mi_pin_wrap` (EXEMPT key, same storage class as mi_vault).
+2. **Attempt limit as the online defense:** 5 wrong PINs deletes the PIN envelope entirely —
+   password required, then a new PIN can be set. Honest threat model: a short PIN cannot resist
+   an offline brute force by someone who copies device storage; that protection remains the
+   password envelope plus the phone's own device lock. The PIN adds convenience without
+   becoming a second root secret.
+3. **Fresh-device setup on the phone:** no vault → create password (8+ chars) → one-time
+   recovery-key display with explicit "I've saved it" gate → optional PIN. Runs the same
+   `setupVaultAndMigrate()` as the web, so legacy plaintext on the device migrates, not orphans.
+4. **Post-unlock:** `runMigrations()` (mirrors LockScreen.afterUnlock), then an immediate Drive
+   re-sync — the mount-time sync ran against a locked store and its merge writes were dropped.
+
+**Verified live** (throwaway vault, dev preview): setup → recovery key → PIN → capture persists
+as `{v:1,iv,data}` ciphertext at rest; reload → PIN gate; wrong PIN decrements ("4 attempts
+left"); correct PIN restores the record intact.
+
+**Deferred:** inactivity auto-lock on the companion (web has autoLock; phone relies on the
+device lock screen for now), and Face ID/biometric unlock (WebAuthn) as a later convenience
+layer on the same envelope pattern.
+
+**Related:** P-02, DEC-027, PG-10.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
