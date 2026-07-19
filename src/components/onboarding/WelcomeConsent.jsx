@@ -6,14 +6,16 @@
 import { useState } from "react";
 import PrivacyFooter, { MedicalDisclaimer } from "./PrivacyFooter.jsx";
 
-const LOGO = import.meta.env.BASE_URL + "logo-white.png";
+// Light header carries the color shield mark (INSINA_UI_FORMAT_SPEC §2) —
+// the white lockup would vanish on the light ground.
+const LOGO = import.meta.env.BASE_URL + "shield_logo.png";
 
 export default function WelcomeConsent({ onContinue }) {
   const [checked, setChecked] = useState(false);
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", display: "flex", flexDirection: "column", gap: 22 }}>
-      <img src={LOGO} alt="Insina Health" style={{ height: 32, alignSelf: "center", width: "auto" }} />
+      <img src={LOGO} alt="Insina Health" style={{ height: 46, alignSelf: "center", width: "auto" }} />
 
       <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 30, fontWeight: 400, color: "var(--text-bright)", letterSpacing: "-0.5px", lineHeight: 1.3 }}>
         Get a useful result in 10–15 minutes. Build your record at your pace.
@@ -22,8 +24,8 @@ export default function WelcomeConsent({ onContinue }) {
       <PrivacyFooter />
       <MedicalDisclaimer />
 
-      {/* §9.2 AI-processing consent, above the checkbox */}
-      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "18px 20px", textAlign: "left" }}>
+      {/* §9.2 AI-processing consent, above the checkbox — banner treatment */}
+      <div style={{ background: "var(--banner-bg)", border: "1px solid var(--banner-bd)", borderRadius: 14, padding: "18px 20px", textAlign: "left" }}>
         <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 14 }}>
           Insina uses AI to read the documents and photos you add and to help you prepare for
           appointments. When you use these features, the relevant content is transmitted securely
@@ -46,9 +48,9 @@ export default function WelcomeConsent({ onContinue }) {
         disabled={!checked}
         style={{
           alignSelf: "center", minHeight: "var(--touch-target)", padding: "12px 44px",
-          background: checked ? "rgba(79,142,247,.18)" : "var(--card)",
-          border: `1px solid ${checked ? "rgba(79,142,247,.45)" : "var(--border-strong)"}`,
-          borderRadius: 10, color: checked ? "var(--accent-soft)" : "var(--text-dim)",
+          background: checked ? "var(--btn-p-bg)" : "var(--card)",
+          border: `1px solid ${checked ? "var(--btn-p-bd)" : "var(--border-strong)"}`,
+          borderRadius: 10, color: checked ? "var(--btn-p-fg)" : "var(--text-dim)",
           fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 600,
           cursor: checked ? "pointer" : "not-allowed",
         }}

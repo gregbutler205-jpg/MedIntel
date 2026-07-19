@@ -19,18 +19,18 @@ const CAT_LABEL = {
 };
 
 const card = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: 16 };
-const primaryBtn = { minHeight: 40, padding: "8px 20px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 9, color: "var(--accent-soft)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const primaryBtn = { minHeight: 40, padding: "8px 20px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 9, color: "var(--btn-p-fg)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, cursor: "pointer" };
 const ghostBtn = { minHeight: 40, padding: "8px 14px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 9, color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 12.5, cursor: "pointer" };
 const dangerBtn = { ...ghostBtn, color: "var(--red)", borderColor: "rgba(239,68,68,.3)" };
-const inp = { width: "100%", minHeight: 38, background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 8, padding: "7px 10px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 13, outline: "none", colorScheme: "dark" };
+const inp = { width: "100%", minHeight: 38, background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 8, padding: "7px 10px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 13, outline: "none", colorScheme: "var(--scheme)" };
 const lbl = { display: "block", fontSize: 10, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 4 };
 const modalWrap = { position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 };
 
 // §8 confidence chips; §4.4 duplicate detection overrides the badge.
 function Chip({ item, match }) {
-  if (match) return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "#111e30", border: "1px solid #1a2f4a", color: "var(--accent-soft)" }}>{match.type === "duplicate" ? "Possible duplicate" : "Possible conflict"}</span>;
-  if (item.confidence >= CONFIDENCE_HIGH) return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "rgba(79,142,247,.12)", color: "var(--accent-soft)" }}>High confidence</span>;
-  return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "rgba(245,158,11,.12)", color: "var(--amber)" }}>Needs review</span>;
+  if (match) return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-dup-bg)", border: "1px solid var(--chip-dup-bd)", color: "var(--chip-dup-fg)" }}>{match.type === "duplicate" ? "Possible duplicate" : "Possible conflict"}</span>;
+  if (item.confidence >= CONFIDENCE_HIGH) return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-hi-bg)", color: "var(--chip-hi-fg)" }}>High confidence</span>;
+  return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-warn-bg)", color: "var(--chip-warn-fg)" }}>Needs review</span>;
 }
 
 function fieldSummary(item) {
@@ -111,7 +111,7 @@ function ItemCard({ item, match, conflict, onAction, onZoom, onCompare }) {
         </div>
 
         {item.staleness_badge && (
-          <div style={{ marginTop: 8, padding: "7px 12px", borderRadius: 8, fontSize: 12, background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.3)", color: "var(--amber)" }}>
+          <div style={{ marginTop: 8, padding: "7px 12px", borderRadius: 8, fontSize: 12, background: "var(--stale-bg)", border: "1px solid var(--stale-bd)", color: "var(--stale-fg)" }}>
             {item.staleness_badge}
           </div>
         )}
@@ -217,11 +217,11 @@ function FragmentRow({ k, differs, mergeMode, pick, current, staged, onPick }) {
   return (
     <>
       <div style={{ ...cellBase, fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--text-label)" }}>{k.replace(/_/g, " ")}</div>
-      <div style={{ ...cellBase, ...hl, cursor: mergeMode && differs ? "pointer" : "default", background: mergeMode && pick === "current" ? "rgba(79,142,247,.1)" : "transparent" }}
+      <div style={{ ...cellBase, ...hl, cursor: mergeMode && differs ? "pointer" : "default", background: mergeMode && pick === "current" ? "var(--accent-tint)" : "transparent" }}
         onClick={() => mergeMode && differs && onPick("current")}>
         {mergeMode && differs && <input type="radio" readOnly checked={pick === "current"} style={{ marginRight: 6 }} />}{current}
       </div>
-      <div style={{ ...cellBase, ...hl, cursor: mergeMode && differs ? "pointer" : "default", background: mergeMode && pick === "staged" ? "rgba(79,142,247,.1)" : "transparent" }}
+      <div style={{ ...cellBase, ...hl, cursor: mergeMode && differs ? "pointer" : "default", background: mergeMode && pick === "staged" ? "var(--accent-tint)" : "transparent" }}
         onClick={() => mergeMode && differs && onPick("staged")}>
         {mergeMode && differs && <input type="radio" readOnly checked={pick === "staged"} style={{ marginRight: 6 }} />}{staged}
       </div>
@@ -429,7 +429,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
               <div style={{ position: "relative" }}>
                 <img src={zoom.img} alt={zoom.title || "Source document"} style={{ display: "block", maxWidth: "86vw" }} />
                 {zoom.region && (
-                  <span aria-hidden="true" style={{ position: "absolute", left: `${zoom.region[0] * 100}%`, top: `${zoom.region[1] * 100}%`, width: `${zoom.region[2] * 100}%`, height: `${zoom.region[3] * 100}%`, border: "3px solid var(--amber)", background: "rgba(245,158,11,.12)", borderRadius: 3 }} />
+                  <span aria-hidden="true" style={{ position: "absolute", left: `${zoom.region[0] * 100}%`, top: `${zoom.region[1] * 100}%`, width: `${zoom.region[2] * 100}%`, height: `${zoom.region[3] * 100}%`, border: "3px solid var(--amber)", background: "var(--chip-warn-bg)", borderRadius: 3 }} />
                 )}
               </div>
             </div>
@@ -464,7 +464,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
             style={{ ...card, display: "flex", alignItems: "center", gap: 12, cursor: "pointer", textAlign: "left" }}>
             <span style={{ flex: 1 }}>
               <span style={{ fontSize: 14, color: "var(--text-bright)", fontWeight: 600 }}>{CAT_LABEL[cat]}</span>
-              {perItem && <span style={{ marginLeft: 10, fontSize: 9.5, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "rgba(245,158,11,.1)", padding: "2px 8px", borderRadius: 8 }}>ITEM-BY-ITEM</span>}
+              {perItem && <span style={{ marginLeft: 10, fontSize: 9.5, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "var(--chip-warn-bg)", padding: "2px 8px", borderRadius: 8 }}>ITEM-BY-ITEM</span>}
             </span>
             <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--accent-soft)" }}>
               {staged.length} to review{deferred.length ? ` · ${deferred.length} not sure` : ""}

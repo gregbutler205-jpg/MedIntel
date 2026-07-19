@@ -17,8 +17,8 @@ const FREQUENCIES = [
 ];
 
 const lbl = { display: "block", fontSize: 11, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 6 };
-const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "10px 14px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 14, outline: "none", colorScheme: "dark" };
-const primaryBtn = { minHeight: "var(--touch-target)", padding: "10px 28px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" };
+const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "10px 14px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 14, outline: "none", colorScheme: "var(--scheme)" };
+const primaryBtn = { minHeight: "var(--touch-target)", padding: "10px 28px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 10, color: "var(--btn-p-fg)", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" };
 const ghostBtn = { minHeight: "var(--touch-target)", padding: "10px 20px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 10, color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 13, cursor: "pointer" };
 
 const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
@@ -133,7 +133,7 @@ export default function ManualEntry({ onDone, onCancel }) {
                   <div key={d.name} role="option" aria-selected="false"
                     onMouseDown={() => startDraft(d)}
                     style={{ padding: "11px 14px", cursor: "pointer", borderBottom: "1px solid var(--divider)", fontSize: 14, color: "var(--text-primary)", minHeight: "var(--touch-target)" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--accent-tint)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     {cap(d.name)} <span style={{ color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--font-mono)" }}>· {d.brand}</span>
                   </div>
@@ -154,7 +154,7 @@ export default function ManualEntry({ onDone, onCancel }) {
             <div style={{ gridColumn: "1/-1", fontSize: 15, color: "var(--text-bright)", fontWeight: 600 }}>
               {cap(draft.name)}
               {draft.brand && <span style={{ color: "var(--text-dim)", fontWeight: 400, fontSize: 12, fontFamily: "var(--font-mono)" }}> · {draft.brand}</span>}
-              {draft.unverified && <span style={{ marginLeft: 8, fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "rgba(245,158,11,.12)", padding: "2px 8px", borderRadius: 8 }}>name to verify later</span>}
+              {draft.unverified && <span style={{ marginLeft: 8, fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "var(--chip-warn-bg)", padding: "2px 8px", borderRadius: 8 }}>name to verify later</span>}
             </div>
             <div>
               <label style={lbl}>Strength</label>
@@ -245,7 +245,7 @@ export default function ManualEntry({ onDone, onCancel }) {
                 {allergenMatches.map(a => (
                   <div key={a} role="option" aria-selected="false" onMouseDown={() => setAllergyQuery(a)}
                     style={{ padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid var(--divider)", fontSize: 13, color: "var(--text-primary)" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--accent-tint)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     {a}
                   </div>

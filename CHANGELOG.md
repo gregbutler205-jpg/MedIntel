@@ -14,6 +14,18 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ## Unreleased — feature/onboarding-v1_1
 
+### Changed
+- **Onboarding re-themed to the light system (INSINA_UI_FORMAT_SPEC v1.0
+  §1/§3/§8):** the five-step wizard now renders on the light palette — white
+  ground, navy serif headlines, solid-blue primary buttons, tinted selection
+  cards, warm staleness banners, and the color shield mark — via a scoped
+  `.theme-light` token override on the wizard subtree. The five-node phase
+  rail is replaced by the spec's DM Mono "STEP N OF 5" eyebrow + slim
+  progress bar (supersedes ONBOARDING_SPEC C9's dark-workspace styling).
+  The dark record workspace begins at the first Dashboard load: the
+  Import Records review queue and dashboard task cards keep their dark
+  skin unchanged.
+
 ### Added
 - **UI fixes WO-1..WO-5 (2026-07-18 work order):** Log Out in the sidebar
   (session-only — clears the in-memory Drive token without revoking the

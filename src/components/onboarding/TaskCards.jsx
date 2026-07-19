@@ -9,7 +9,7 @@ import { visibleTasks, dismissTask, snoozeTask } from "../../lib/taskEngine.js";
 import { saveState } from "../../lib/onboardingState.js";
 
 const card = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 };
-const ctaBtn = { minHeight: 36, padding: "7px 16px", background: "rgba(79,142,247,.16)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "var(--accent-soft)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
+const ctaBtn = { minHeight: 36, padding: "7px 16px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 8, color: "var(--btn-p-fg)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
 const quietBtn = { background: "none", border: "none", color: "var(--text-dim)", fontSize: 11, cursor: "pointer", fontFamily: "var(--font-sans)", padding: "4px 8px", minHeight: 30 };
 
 export default function TaskCards({ onNav }) {

@@ -45,8 +45,8 @@ export default function Phase1Goal({ initialGoal, onContinue, onSkip }) {
               style={{
                 display: "flex", alignItems: "center", gap: 14, textAlign: "left",
                 minHeight: "var(--touch-target)", padding: "14px 18px",
-                background: active ? "rgba(79,142,247,.10)" : "var(--card)",
-                border: `1px solid ${active ? "rgba(79,142,247,.45)" : "var(--border)"}`,
+                background: active ? "var(--accent-tint)" : "var(--card)",
+                border: `1px solid ${active ? "var(--btn-p-bd)" : "var(--border)"}`,
                 borderRadius: 12, cursor: "pointer", transition: "border-color .15s, background .15s",
               }}
             >
@@ -74,9 +74,9 @@ export default function Phase1Goal({ initialGoal, onContinue, onSkip }) {
           disabled={!selected}
           style={{
             minHeight: "var(--touch-target)", padding: "10px 36px",
-            background: selected ? "rgba(79,142,247,.18)" : "var(--card)",
-            border: `1px solid ${selected ? "rgba(79,142,247,.45)" : "var(--border-strong)"}`,
-            borderRadius: 10, color: selected ? "var(--accent-soft)" : "var(--text-dim)",
+            background: selected ? "var(--btn-p-bg)" : "var(--card)",
+            border: `1px solid ${selected ? "var(--btn-p-bd)" : "var(--border-strong)"}`,
+            borderRadius: 10, color: selected ? "var(--btn-p-fg)" : "var(--text-dim)",
             fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600,
             cursor: selected ? "pointer" : "not-allowed",
           }}

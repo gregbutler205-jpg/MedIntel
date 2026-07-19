@@ -51,6 +51,64 @@
   padding: 0;
 }
 
+/* ── Onboarding component color variables (INSINA_UI_FORMAT_SPEC v1.0) ──────
+   Dark values here are the defaults, so ReviewQueue/TaskCards keep the
+   workspace skin wherever they render WITHOUT .theme-light. The onboarding
+   wizard wraps itself in .theme-light, which re-maps every token by role
+   (§3/§4 accent mapping: #4f8ef7 ↔ #1d4fd7 etc.). One deliberate theme
+   handoff at first Dashboard load; no mixed screens. */
+:root {
+  --scheme: dark;
+  --btn-p-bg: rgba(79,142,247,.18);
+  --btn-p-bd: rgba(79,142,247,.45);
+  --btn-p-fg: #7eb8d8;
+  --btn-o-bg: transparent;
+  --btn-o-bd: #1a2f4a;
+  --btn-o-fg: #98afc4;
+  --accent-tint: rgba(79,142,247,.10);
+  --chip-hi-bg: rgba(79,142,247,.12);   --chip-hi-fg: #7eb8d8;
+  --chip-warn-bg: rgba(245,158,11,.12); --chip-warn-fg: #f59e0b;
+  --chip-dup-bg: #111e30; --chip-dup-bd: #1a2f4a; --chip-dup-fg: #7eb8d8;
+  --stale-bg: rgba(245,158,11,.08); --stale-bd: rgba(245,158,11,.3); --stale-fg: #f59e0b;
+  --banner-bg: #0b1220; --banner-bd: #111e30;
+  --ob-shadow-card: none;
+}
+
+.theme-light {
+  --bg: #ffffff;
+  --bg-deep: #ffffff;
+  --card: #ffffff;
+  --border: #dfe7f2;
+  --border-strong: #d9e5f4;
+  --divider: #eef2f8;
+  --text-bright: #101d35;
+  --text-primary: #101d35;
+  --text-body: #42526b;
+  --text-secondary: #42526b;
+  --text-label: #64748b;
+  --text-dim: #64748b;
+  --accent: #1d4fd7;
+  --accent-soft: #1d4fd7;
+  --green: #0f9d6c;
+  --amber: #d97a06;
+  --red: #b0403c;
+  --scheme: light;
+  --btn-p-bg: #1d4fd7;
+  --btn-p-bd: #1d4fd7;
+  --btn-p-fg: #ffffff;
+  --btn-o-bg: #ffffff;
+  --btn-o-bd: #dfe7f2;
+  --btn-o-fg: #42526b;
+  --accent-tint: #eef3fe;
+  --chip-hi-bg: #eef3fe;   --chip-hi-fg: #1d4fd7;
+  --chip-warn-bg: #fdf6ec; --chip-warn-fg: #d97a06;
+  --chip-dup-bg: #ffffff; --chip-dup-bd: #dfe7f2; --chip-dup-fg: #64748b;
+  --stale-bg: #fdf6ec; --stale-bd: #f0dcc0; --stale-fg: #d97a06;
+  --banner-bg: #e9f1fc; --banner-bd: #cddcf2;
+  --ob-shadow-card: 0 6px 24px rgba(16,29,53,0.05);
+  color: var(--text-body);
+}
+
 /* ONBOARDING_SPEC v1.1 §8: visible focus rings on every onboarding surface.
    .ob-focus is carried by the onboarding shell AND its post-onboarding
    embeddings (Import Records queue, dashboard task cards) — §11.12. */

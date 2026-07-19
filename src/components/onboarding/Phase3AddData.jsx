@@ -15,19 +15,19 @@ import { saveState, loadState } from "../../lib/onboardingState.js";
 
 const tileStyle = (hover) => ({
   display: "flex", flexDirection: "column", gap: 8, textAlign: "left",
-  background: hover ? "rgba(79,142,247,.08)" : "var(--card)",
-  border: `1px solid ${hover ? "rgba(79,142,247,.4)" : "var(--border)"}`,
+  background: hover ? "var(--accent-tint)" : "var(--card)",
+  border: `1px solid ${hover ? "var(--btn-p-bd)" : "var(--border)"}`,
   borderRadius: 12, padding: "18px 20px", cursor: "pointer", minHeight: 110,
   transition: "border-color .15s, background .15s",
 });
 const tileTitle = { fontSize: 15, fontWeight: 600, color: "var(--text-bright)" };
 const tileSub = { fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 };
-const primaryBtn = { minHeight: "var(--touch-target)", padding: "10px 32px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" };
+const primaryBtn = { minHeight: "var(--touch-target)", padding: "10px 32px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 10, color: "var(--btn-p-fg)", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" };
 const ghostBtn = { minHeight: "var(--touch-target)", padding: "10px 20px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 10, color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 13, cursor: "pointer" };
 const linkBtn = { background: "none", border: "none", color: "var(--text-dim)", fontSize: 12, cursor: "pointer", textDecoration: "underline", fontFamily: "var(--font-sans)", minHeight: 32 };
 const modalWrap = { position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 };
 const modalCard = { background: "var(--card)", border: "1px solid var(--border-strong)", borderRadius: 14, padding: 24, width: "100%", maxWidth: 520 };
-const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "10px 14px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 14, outline: "none", colorScheme: "dark" };
+const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "10px 14px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 14, outline: "none", colorScheme: "var(--scheme)" };
 
 let fileSeq = 1;
 
@@ -273,7 +273,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
         onClick={() => uploadRef.current?.click()}
         role="button" tabIndex={0} aria-label="Drop files here or browse"
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") uploadRef.current?.click(); }}
-        style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border-strong)"}`, borderRadius: 12, padding: "26px 20px", textAlign: "center", cursor: "pointer", background: dragOver ? "rgba(79,142,247,.06)" : "transparent" }}
+        style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border-strong)"}`, borderRadius: 12, padding: "26px 20px", textAlign: "center", cursor: "pointer", background: dragOver ? "var(--accent-tint)" : "transparent" }}
       >
         <div style={{ fontSize: 13, color: "var(--text-primary)" }}>Drag &amp; drop files here, or click to browse</div>
         <div style={{ fontSize: 11.5, color: "var(--text-dim)", marginTop: 6, lineHeight: 1.6 }}>
@@ -302,7 +302,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
       )}
 
       {totalStaged > 0 && (
-        <div role="status" style={{ padding: "8px 14px", borderRadius: 9, fontSize: 12, fontFamily: "var(--font-mono)", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", color: "var(--accent-soft)" }}>
+        <div role="status" style={{ padding: "8px 14px", borderRadius: 9, fontSize: 12, fontFamily: "var(--font-mono)", background: "var(--accent-tint)", border: "1px solid var(--banner-bd)", color: "var(--accent-soft)" }}>
           {totalStaged} item{totalStaged !== 1 ? "s" : ""} staged and waiting for your review in the next step.
         </div>
       )}

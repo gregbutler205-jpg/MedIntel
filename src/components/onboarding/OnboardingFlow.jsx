@@ -63,7 +63,7 @@ export default function OnboardingFlow({ onExit }) {
   const railStep = Math.max(1, Math.min(state.phase === 0 ? 1 : state.phase, TOTAL_PHASES));
 
   return (
-    <div className="ob-root ob-focus" style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+    <div className="ob-root ob-focus theme-light" style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
       <style>{`
         .ob-enter { animation: obFade .35s ease; }
         @media (prefers-reduced-motion: reduce) { .ob-enter { animation: none; } }
@@ -79,7 +79,7 @@ export default function OnboardingFlow({ onExit }) {
           </span>
           <button
             onClick={() => { setResumeOffer(false); setEntered(true); }}
-            style={{ minHeight: 36, padding: "7px 18px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 8, color: "var(--accent-soft)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}
+            style={{ minHeight: 36, padding: "7px 18px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 8, color: "var(--btn-p-fg)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}
           >
             Continue
           </button>
@@ -163,11 +163,11 @@ export default function OnboardingFlow({ onExit }) {
 
       {/* §6 early-fire toast — non-blocking, auto-dismisses */}
       {toast && (
-        <div role="status" aria-live="polite" style={{ position: "fixed", left: "50%", bottom: 26, transform: "translateX(-50%)", zIndex: 600, display: "flex", alignItems: "center", gap: 14, background: "var(--card)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 12, padding: "12px 18px", boxShadow: "0 12px 40px rgba(0,0,0,.55)" }}>
+        <div role="status" aria-live="polite" style={{ position: "fixed", left: "50%", bottom: 26, transform: "translateX(-50%)", zIndex: 600, display: "flex", alignItems: "center", gap: 14, background: "var(--card)", border: "1px solid var(--btn-p-bd)", borderRadius: 12, padding: "12px 18px", boxShadow: "0 12px 40px rgba(0,0,0,.55)" }}>
           <span style={{ fontSize: 13, color: "var(--text-bright)" }}>Your {toast.artifact} is ready</span>
           <button
             onClick={() => { setToast(null); setState(saveState({ phase: TOTAL_PHASES })); }}
-            style={{ minHeight: 34, padding: "6px 16px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 8, color: "var(--accent-soft)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+            style={{ minHeight: 34, padding: "6px 16px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 8, color: "var(--btn-p-fg)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
             View
           </button>
           <button aria-label="Dismiss" onClick={() => setToast(null)}
@@ -184,7 +184,7 @@ export default function OnboardingFlow({ onExit }) {
 // Prep Brief goals hand off to the generator's owning screen (Greg's WP4
 // review choice). View / Download PDF / Print all open the report window —
 // the print dialog's "Save as PDF" is the app's file mechanism.
-const btn = { alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 32px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 10, color: "var(--accent-soft)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" };
+const btn = { alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 32px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 10, color: "var(--btn-p-fg)", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" };
 const ghost = { alignSelf: "center", minHeight: "var(--touch-target)", padding: "10px 24px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 10, color: "var(--text-secondary)", fontSize: 13, cursor: "pointer", fontFamily: "var(--font-sans)" };
 const linkStyle = { background: "none", border: "none", color: "var(--accent-soft)", fontSize: 12.5, cursor: "pointer", textDecoration: "underline", fontFamily: "var(--font-sans)", minHeight: 32 };
 
@@ -320,7 +320,7 @@ function AppointmentInsert({ onAdded }) {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ date: "", provider: "", specialty: "" });
   const [err, setErr] = useState("");
-  const inp = { width: "100%", minHeight: 40, background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 8, padding: "8px 12px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 13, outline: "none", colorScheme: "dark" };
+  const inp = { width: "100%", minHeight: 40, background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 8, padding: "8px 12px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 13, outline: "none", colorScheme: "var(--scheme)" };
   if (!open) return <button onClick={() => setOpen(true)} style={{ ...ghost, alignSelf: "auto" }}>Add appointment</button>;
   const save = () => {
     if (!f.date || !f.provider.trim() || !f.specialty.trim()) { setErr("Date, provider, and specialty are all needed for the brief."); return; }
