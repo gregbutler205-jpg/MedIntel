@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { C, mono, serif, Card } from "../companionUI.jsx";
 import { getNotifPrefs, setNotifPrefs, requestNotifPermission } from "../../../lib/notify.js";
+import { signInWithRedirect } from "../../../lib/googleAuth.js";
+
+function startDriveRestore() {
+  try { sessionStorage.setItem("insina_companion_restore", "1"); } catch { /* private mode */ }
+  signInWithRedirect();
+}
 
 const TYPES = [
   { key: "appts",  label: "Appointment reminders", blurb: "Ahead of upcoming visits, with a prompt to review the brief." },
@@ -28,6 +34,20 @@ export default function Settings({ onBack }) {
       </div>
 
       <div style={{ overflowY: "auto", padding: 16 }}>
+        {/* Sync/restore: adopt the web app's vault so this phone shows the same
+            record and syncs both ways. Needed once, if this device set up its
+            own vault instead of restoring. */}
+        <Card style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>Sync with the web app</div>
+          <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 4, marginBottom: 10, lineHeight: 1.5 }}>
+            Pull your record from Google Drive and share the web app's vault, so this phone shows your data and syncs both ways. You'll unlock with your existing password.
+          </div>
+          <button onClick={startDriveRestore}
+            style={{ width: "100%", background: "rgba(79,142,247,.12)", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "11px", color: C.blue, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+            Restore from Google Drive
+          </button>
+        </Card>
+
         {perm === "denied" && (
           <div style={{ background: "#1c1200", border: `1px solid ${C.amber}40`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 11, color: "#fcd34d", fontFamily: mono, lineHeight: 1.5 }}>
             Notifications are blocked in your browser settings — enable them there to use these.

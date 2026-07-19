@@ -50,7 +50,7 @@ export function fmtShort(dateLike) {
 
 // ── Profile ─────────────────────────────────────────────────────────────────
 export function profile() { return rls("mi_profile_personal", {}); }
-export function firstName() { return (profile().name || "").split(" ")[0] || "there"; }
+export function firstName() { return (profile().name || "").split(" ")[0] || ""; }
 
 // ── Appointments (normalized: provider/doctor, facility, address) ─────────────
 export function appointments() {

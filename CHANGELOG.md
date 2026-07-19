@@ -12,6 +12,15 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.29.1 — 2026-07-19
+
+### Fixed
+- **Companion: reachable "Restore from Google Drive" + salutation.** The restore
+  option was only on the setup screen; it is now also in the companion Settings
+  ("Sync with the web app"), so a phone that already made its own vault can adopt
+  the web app's vault without wiping. Empty-profile greeting no longer says
+  "there" — it shows just the time-of-day greeting until a name syncs in.
+
 ## v1.29.0 — 2026-07-19
 
 ### Added

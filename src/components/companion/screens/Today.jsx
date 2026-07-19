@@ -41,8 +41,8 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>{greeting},</div>
-          <div style={{ fontFamily: serif, fontSize: 26, color: C.p, lineHeight: 1.15 }}>{firstName()}</div>
+          <div style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>{greeting}{firstName() ? "," : ""}</div>
+          {firstName() && <div style={{ fontFamily: serif, fontSize: 26, color: C.p, lineHeight: 1.15 }}>{firstName()}</div>}
           <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
             {lastSynced ? `Synced ${lastSynced}` : "Not synced yet"}
           </div>
