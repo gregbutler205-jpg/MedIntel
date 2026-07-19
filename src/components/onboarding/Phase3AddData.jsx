@@ -253,7 +253,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
         <button style={tileStyle(hoverTile === 2)} onMouseEnter={() => setHoverTile(2)} onMouseLeave={() => setHoverTile(null)} onClick={() => setPhotoOpen(true)}>
           <span style={tileTitle}>📷 Take a photo</span>
           <span style={tileSub}>Snap your med list or a lab printout. Up to {VISION_MAX_IMAGES_PER_DOC} pages as one document.</span>
-          <span style={{ ...tileSub, color: "var(--text-dim)" }}>Photo on your phone but working here? Email or text it to yourself, then add it under Upload documents.</span>
+          <span style={{ ...tileSub, color: "var(--text-dim)" }}>Photo on your phone but working here? Email it to yourself, open the email on this computer, and add the photo under Upload documents.</span>
         </button>
         <button style={tileStyle(hoverTile === 3)} onMouseEnter={() => setHoverTile(3)} onMouseLeave={() => setHoverTile(null)} onClick={() => setPasteOpen(true)}>
           <span style={tileTitle}>📋 Paste from your portal</span>
