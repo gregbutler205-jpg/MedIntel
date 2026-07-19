@@ -15,6 +15,14 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 ## Unreleased — feature/onboarding-v1_1
 
 ### Added
+- **UI fixes WO-1..WO-5 (2026-07-18 work order):** Log Out in the sidebar
+  (session-only — clears the in-memory Drive token without revoking the
+  grant, locks the vault, never touches record data); surgery entry now
+  codes with **CPT** via a bundled ~150-procedure offline type-ahead
+  (legacy ICD-10 entries preserved and labeled; NIH network lookup
+  removed); AI Analysis send row cleared of the floating Record Integrity
+  button; dashboard hot button renamed "Lab Results"; show/hide password
+  toggle on every sign-in and change-password field.
 - **Companion vault gate with PIN quick-unlock (DEC-034):** the phone
   companion now unlocks the P-02 encrypted record before anything renders —
   previously it ran locked, reading an empty record and silently dropping
