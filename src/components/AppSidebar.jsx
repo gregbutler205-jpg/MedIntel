@@ -90,6 +90,7 @@ function NavItem({ id, icon, label, active, onNav }) {
  */
 export default function AppSidebar({ activeNav, onNav }) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [logoutConfirm, setLogoutConfirm] = useState(false); // WO-1
 
   const toggleGroup = (key) => {
     // Collapsing the group that holds the active screen is a visual no-op
@@ -168,12 +169,55 @@ export default function AppSidebar({ activeNav, onNav }) {
         </div>
       </div>
 
+      {/* WO-1: Log Out — ends the session only. The record stays on this
+          device, encrypted and locked; deletion lives in Data & Backup. */}
+      <div style={{ borderTop: "1px solid var(--divider)", padding: "8px 0" }}>
+        <div
+          className="nav-item"
+          role="button"
+          onClick={() => setLogoutConfirm(true)}
+          title="Log out — your record stays on this device, locked"
+          style={{ color: "var(--text-dim)" }}
+        >
+          <span className="nav-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "-2px" }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </span>
+          <span>Log Out</span>
+        </div>
+      </div>
+
       <div style={{ padding: "12px 16px", borderTop: "1px solid var(--divider)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#2e5a44", fontFamily: "var(--font-mono)" }}>
           <div className="live-dot" />
           All systems nominal
         </div>
       </div>
+
+      {logoutConfirm && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div role="alertdialog" aria-modal="true" aria-label="Log out of Insina Health?" style={{ background: "var(--card)", border: "1px solid var(--border-strong)", borderRadius: 14, padding: 28, maxWidth: 380, textAlign: "center" }}>
+            <div style={{ fontSize: 17, color: "var(--text-bright)", marginBottom: 10 }}>Log out of Insina Health?</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-secondary)", marginBottom: 22, lineHeight: 1.6 }}>
+              Your record stays on this device, encrypted and locked. Log back in with your password.
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                onClick={() => setLogoutConfirm(false)}
+                style={{ minHeight: 40, padding: "9px 20px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 9, color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 13, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button
+                onClick={() => { setLogoutConfirm(false); window.dispatchEvent(new Event("insina-logout")); }}
+                style={{ minHeight: 40, padding: "9px 24px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.45)", borderRadius: 9, color: "var(--accent-soft)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

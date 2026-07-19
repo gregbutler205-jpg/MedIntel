@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PrintLabel } from "../icons.jsx";
+import CPT_COMMON from "../../data/cpt_common.json";
 
 const ANESTHESIA = ["General", "Regional", "Local", "Spinal", "Epidural", "Sedation", "None / N/A"];
 const OUTCOMES   = ["Successful", "Successful with complications", "Incomplete", "Cancelled", "Unknown"];
 
 const BLANK = {
-  id: null, procedure: "", icd10: "", date: "", surgeon: "", facility: "",
+  id: null, procedure: "", cpt: "", icd10: "", date: "", surgeon: "", facility: "",
   anesthesia: "General", outcome: "Successful", duration: "", notes: "",
 };
 function genId() { return Math.random().toString(36).slice(2); }
@@ -32,11 +33,28 @@ function outcomeColor(o) {
   return "#ef4444";
 }
 
-// ── ICD-10 Lookup (shared pattern) ─────────────────────────────────────────────
-function Icd10Lookup({ value, onChange, inp }) {
+// ── CPT Lookup (WO-2) ─────────────────────────────────────────────────────────
+// Surgeries are procedures, coded with CPT, not ICD-10. Local bundled subset
+// (~150 common procedures, lay descriptions) — no network call; the previous
+// NIH ICD-10 API lookup is removed. Debounced 250ms type-ahead matching BOTH
+// code prefix and description substring; code-prefix matches rank first.
+export const CPT_RE = /^\d{4}[0-9A-Z]$/;
+
+function searchCpt(term) {
+  const t = term.trim().toLowerCase();
+  if (t.length < 2) return [];
+  const codeHits = [];
+  const descHits = [];
+  for (const item of CPT_COMMON) {
+    if (item.code.startsWith(t.toUpperCase()) || item.code.toLowerCase().startsWith(t)) codeHits.push(item);
+    else if (item.desc.toLowerCase().includes(t)) descHits.push(item);
+  }
+  return [...codeHits, ...descHits].slice(0, 8);
+}
+
+function CptLookup({ value, onChange, onPick, inp }) {
   const [query, setQuery]     = useState(value || "");
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen]       = useState(false);
   const timerRef = useRef(null);
   const wrapRef  = useRef(null);
@@ -48,41 +66,29 @@ function Icd10Lookup({ value, onChange, inp }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const search = useCallback((term) => {
-    if (!term || term.length < 2) { setResults([]); setOpen(false); return; }
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res  = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(term)}&maxList=8`);
-        const data = await res.json();
-        const items = (data[3] || []).map(([code, name]) => ({ code, name }));
-        setResults(items);
-        setOpen(items.length > 0);
-      } catch { setResults([]); }
-      finally { setLoading(false); }
-    }, 300);
-  }, []);
-
   function handleInput(e) {
-    const v = e.target.value;
+    const v = e.target.value.toUpperCase(); // uppercase-normalize on entry
     setQuery(v);
     onChange(v);
-    search(v);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const items = searchCpt(v);
+      setResults(items);
+      setOpen(items.length > 0);
+    }, 250);
   }
 
   function pick(item) {
-    const combined = `${item.code} — ${item.name}`;
-    setQuery(combined);
-    onChange(combined);
+    setQuery(item.code);
+    onPick(item); // fills both code and procedure name
     setResults([]);
     setOpen(false);
   }
 
   return (
     <div ref={wrapRef} style={{ position:"relative" }}>
-      <input style={inp} value={query} onChange={handleInput} onFocus={() => results.length > 0 && setOpen(true)} placeholder="Type code or procedure name to search…" />
-      {loading && <div style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", fontSize:10, color:"#6a8090" }}>…</div>}
+      <input style={inp} value={query} onChange={handleInput} onFocus={() => results.length > 0 && setOpen(true)}
+        placeholder="Type a code or procedure name to search…" maxLength={40} />
       {open && results.length > 0 && (
         <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, right:0, background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:8, zIndex:400, maxHeight:240, overflowY:"auto", boxShadow:"0 8px 24px rgba(0,0,0,.5)" }}>
           {results.map(item => (
@@ -91,7 +97,7 @@ function Icd10Lookup({ value, onChange, inp }) {
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#4f8ef7", flexShrink:0, minWidth:52 }}>{item.code}</span>
-              <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.name}</span>
+              <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.desc}</span>
             </div>
           ))}
         </div>
@@ -103,6 +109,7 @@ function Icd10Lookup({ value, onChange, inp }) {
 // ── Modal ──────────────────────────────────────────────────────────────────────
 function SurgeryModal({ surgery, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK, ...surgery });
+  const [cptError, setCptError] = useState("");
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   return (
@@ -118,10 +125,21 @@ function SurgeryModal({ surgery, onSave, onClose }) {
             <label style={lbl}>Procedure Name *</label>
             <input style={inp} value={form.procedure} onChange={e => set("procedure", e.target.value)} placeholder="e.g. Kidney Transplant (Living Donor)" />
           </div>
-          {/* ICD-10 */}
+          {/* WO-2: CPT (procedures are CPT-coded; optional — uncoded allowed) */}
           <div style={{ gridColumn:"1/-1" }}>
-            <label style={lbl}>ICD-10 Code — type code or procedure/diagnosis to search</label>
-            <Icd10Lookup value={form.icd10 || ""} onChange={v => set("icd10", v)} inp={inp} />
+            <label style={lbl}>CPT Code</label>
+            <CptLookup
+              value={form.cpt || ""}
+              onChange={v => { set("cpt", v); setCptError(""); }}
+              onPick={item => { set("cpt", item.code); set("procedure", form.procedure || item.desc); setCptError(""); }}
+              inp={inp}
+            />
+            {cptError && <div style={{ fontSize:11, color:"#ef4444", marginTop:5 }}>{cptError}</div>}
+            {form.icd10 && !form.cpt && (
+              <div style={{ fontSize:11, color:"#98afc4", marginTop:6, fontFamily:"'DM Mono',monospace" }}>
+                Legacy ICD-10 on this entry: {form.icd10}
+              </div>
+            )}
           </div>
           {/* Date */}
           <div>
@@ -166,7 +184,12 @@ function SurgeryModal({ surgery, onSave, onClose }) {
 
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
           <button onClick={onClose} style={btnGhost}>Cancel</button>
-          <button onClick={() => { if (!form.procedure) return; onSave({ ...form, id: form.id || genId() }); }} style={btnPrimary}>
+          <button onClick={() => {
+            if (!form.procedure) return;
+            const cpt = (form.cpt || "").trim().toUpperCase();
+            if (cpt && !CPT_RE.test(cpt)) { setCptError("CPT codes are 5 characters: four digits then a digit or letter (e.g. 47135). Leave blank to save uncoded."); return; }
+            onSave({ ...form, cpt, id: form.id || genId() });
+          }} style={btnPrimary}>
             {form.id ? "Save Changes" : "Add Surgery"}
           </button>
         </div>
@@ -256,6 +279,9 @@ export default function SurgeriesTab() {
                   </div>
                   {/* Details row */}
                   <div style={{ display:"flex", flexWrap:"wrap", gap:18, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:s.notes?8:0 }}>
+                    {/* WO-2: CPT going forward; legacy entries keep their stored code labeled ICD-10 */}
+                    {s.cpt      && <span style={{ color:"#7eb8d8" }}>CPT {s.cpt}</span>}
+                    {!s.cpt && s.icd10 && <span>ICD-10 {s.icd10}</span>}
                     {s.date     && <span>📅 {fmtDate(s.date)}</span>}
                     {s.surgeon  && <span>👨‍⚕️ {s.surgeon}</span>}
                     {s.facility && <span>🏥 {s.facility}</span>}

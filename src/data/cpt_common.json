@@ -1,0 +1,630 @@
+[
+  {
+    "code": "47135",
+    "desc": "Liver transplant — placing a donor liver"
+  },
+  {
+    "code": "47140",
+    "desc": "Living-donor liver removal, left segment"
+  },
+  {
+    "code": "50360",
+    "desc": "Kidney transplant — placing a donor kidney"
+  },
+  {
+    "code": "50365",
+    "desc": "Kidney transplant with removal of the failed kidney"
+  },
+  {
+    "code": "50547",
+    "desc": "Laparoscopic living-donor kidney removal (donor nephrectomy)"
+  },
+  {
+    "code": "50300",
+    "desc": "Deceased-donor kidney removal (donor nephrectomy)"
+  },
+  {
+    "code": "33945",
+    "desc": "Heart transplant"
+  },
+  {
+    "code": "32851",
+    "desc": "Single lung transplant"
+  },
+  {
+    "code": "32853",
+    "desc": "Double lung transplant"
+  },
+  {
+    "code": "48554",
+    "desc": "Pancreas transplant"
+  },
+  {
+    "code": "38240",
+    "desc": "Stem cell / bone marrow transplant from a donor"
+  },
+  {
+    "code": "38241",
+    "desc": "Stem cell transplant using the patient's own cells"
+  },
+  {
+    "code": "50200",
+    "desc": "Kidney biopsy through the skin (incl. transplant kidney)"
+  },
+  {
+    "code": "47000",
+    "desc": "Liver biopsy through the skin (incl. transplant liver)"
+  },
+  {
+    "code": "47100",
+    "desc": "Liver biopsy taken during open surgery"
+  },
+  {
+    "code": "47562",
+    "desc": "Gallbladder removal (cholecystectomy), laparoscopic"
+  },
+  {
+    "code": "47563",
+    "desc": "Gallbladder removal (cholecystectomy), laparoscopic, with bile-duct X-ray"
+  },
+  {
+    "code": "47600",
+    "desc": "Gallbladder removal (cholecystectomy), open"
+  },
+  {
+    "code": "47120",
+    "desc": "Partial liver removal (hepatectomy), one lobe or section"
+  },
+  {
+    "code": "47370",
+    "desc": "Laparoscopic heat ablation of a liver tumor"
+  },
+  {
+    "code": "48150",
+    "desc": "Whipple operation (pancreaticoduodenectomy) — removing the head of the pancreas"
+  },
+  {
+    "code": "48140",
+    "desc": "Removal of the tail of the pancreas (distal pancreatectomy)"
+  },
+  {
+    "code": "43260",
+    "desc": "ERCP — scope exam of the bile and pancreas ducts"
+  },
+  {
+    "code": "43262",
+    "desc": "ERCP with cutting the bile-duct opening (sphincterotomy)"
+  },
+  {
+    "code": "43264",
+    "desc": "ERCP with removal of bile-duct stones"
+  },
+  {
+    "code": "43235",
+    "desc": "Upper endoscopy (EGD), diagnostic"
+  },
+  {
+    "code": "43239",
+    "desc": "Upper endoscopy (EGD) with biopsy"
+  },
+  {
+    "code": "43248",
+    "desc": "Upper endoscopy with stretching of the esophagus"
+  },
+  {
+    "code": "43246",
+    "desc": "Upper endoscopy with feeding-tube (PEG) placement"
+  },
+  {
+    "code": "45378",
+    "desc": "Colonoscopy, diagnostic"
+  },
+  {
+    "code": "45380",
+    "desc": "Colonoscopy with biopsy"
+  },
+  {
+    "code": "45385",
+    "desc": "Colonoscopy with polyp removal (snare)"
+  },
+  {
+    "code": "45330",
+    "desc": "Flexible sigmoidoscopy — scope exam of the lower colon"
+  },
+  {
+    "code": "91110",
+    "desc": "Capsule endoscopy — swallowed camera small-bowel study"
+  },
+  {
+    "code": "43280",
+    "desc": "Laparoscopic reflux wrap (Nissen fundoplication)"
+  },
+  {
+    "code": "43775",
+    "desc": "Laparoscopic sleeve gastrectomy (weight-loss)"
+  },
+  {
+    "code": "43644",
+    "desc": "Laparoscopic gastric bypass (weight-loss)"
+  },
+  {
+    "code": "44970",
+    "desc": "Appendix removal (appendectomy), laparoscopic"
+  },
+  {
+    "code": "44950",
+    "desc": "Appendix removal (appendectomy), open"
+  },
+  {
+    "code": "44140",
+    "desc": "Partial colon removal (colectomy) with reconnection"
+  },
+  {
+    "code": "44204",
+    "desc": "Partial colon removal (colectomy), laparoscopic"
+  },
+  {
+    "code": "44160",
+    "desc": "Right colon removal (colectomy) with reconnection to small bowel"
+  },
+  {
+    "code": "44120",
+    "desc": "Small-bowel segment removal"
+  },
+  {
+    "code": "44005",
+    "desc": "Freeing of abdominal scar-tissue adhesions"
+  },
+  {
+    "code": "46255",
+    "desc": "Hemorrhoid removal (hemorrhoidectomy)"
+  },
+  {
+    "code": "49505",
+    "desc": "Groin (inguinal) hernia repair, open"
+  },
+  {
+    "code": "49650",
+    "desc": "Groin (inguinal) hernia repair, laparoscopic"
+  },
+  {
+    "code": "49560",
+    "desc": "Abdominal-wall (ventral) hernia repair"
+  },
+  {
+    "code": "49585",
+    "desc": "Belly-button (umbilical) hernia repair"
+  },
+  {
+    "code": "49082",
+    "desc": "Draining fluid from the abdomen (paracentesis)"
+  },
+  {
+    "code": "49083",
+    "desc": "Draining abdominal fluid with imaging guidance"
+  },
+  {
+    "code": "27447",
+    "desc": "Total knee replacement (knee arthroplasty)"
+  },
+  {
+    "code": "27130",
+    "desc": "Total hip replacement (hip arthroplasty)"
+  },
+  {
+    "code": "23472",
+    "desc": "Total shoulder replacement (shoulder arthroplasty)"
+  },
+  {
+    "code": "29881",
+    "desc": "Knee arthroscopy with trimming of torn meniscus (meniscectomy)"
+  },
+  {
+    "code": "29888",
+    "desc": "ACL reconstruction, arthroscopic"
+  },
+  {
+    "code": "29827",
+    "desc": "Shoulder arthroscopy with rotator cuff repair"
+  },
+  {
+    "code": "27245",
+    "desc": "Hip fracture repair with rod or plate"
+  },
+  {
+    "code": "27236",
+    "desc": "Hip fracture repair with partial hip replacement"
+  },
+  {
+    "code": "27506",
+    "desc": "Thigh-bone (femur) fracture repair with rod"
+  },
+  {
+    "code": "27814",
+    "desc": "Ankle fracture repair, both sides, with plates/screws"
+  },
+  {
+    "code": "25607",
+    "desc": "Wrist (distal radius) fracture repair with plate"
+  },
+  {
+    "code": "25600",
+    "desc": "Wrist fracture set without surgery (closed reduction)"
+  },
+  {
+    "code": "22551",
+    "desc": "Neck spine fusion from the front (ACDF)"
+  },
+  {
+    "code": "22612",
+    "desc": "Lower-back spine fusion"
+  },
+  {
+    "code": "63030",
+    "desc": "Removal of herniated lower-back disc fragment (discectomy)"
+  },
+  {
+    "code": "63047",
+    "desc": "Lower-back decompression (laminectomy)"
+  },
+  {
+    "code": "64721",
+    "desc": "Carpal tunnel release"
+  },
+  {
+    "code": "26055",
+    "desc": "Trigger finger release"
+  },
+  {
+    "code": "20680",
+    "desc": "Removal of orthopedic hardware (plates, screws)"
+  },
+  {
+    "code": "28296",
+    "desc": "Bunion correction"
+  },
+  {
+    "code": "28285",
+    "desc": "Hammertoe correction"
+  },
+  {
+    "code": "20610",
+    "desc": "Joint injection or fluid drainage, large joint"
+  },
+  {
+    "code": "20552",
+    "desc": "Trigger-point muscle injections"
+  },
+  {
+    "code": "62323",
+    "desc": "Epidural steroid injection, lower back, with imaging"
+  },
+  {
+    "code": "64483",
+    "desc": "Nerve-root steroid injection, lower back, with imaging"
+  },
+  {
+    "code": "27096",
+    "desc": "Sacroiliac (SI) joint injection"
+  },
+  {
+    "code": "33533",
+    "desc": "Heart bypass (CABG) using an artery graft"
+  },
+  {
+    "code": "33510",
+    "desc": "Heart bypass (CABG) using one vein graft"
+  },
+  {
+    "code": "33512",
+    "desc": "Heart bypass (CABG) using three vein grafts"
+  },
+  {
+    "code": "92920",
+    "desc": "Balloon angioplasty of a heart artery"
+  },
+  {
+    "code": "92928",
+    "desc": "Heart artery stent placement"
+  },
+  {
+    "code": "93458",
+    "desc": "Heart catheterization with artery imaging"
+  },
+  {
+    "code": "33208",
+    "desc": "Pacemaker implant, two leads"
+  },
+  {
+    "code": "33207",
+    "desc": "Pacemaker implant, one lead"
+  },
+  {
+    "code": "33249",
+    "desc": "Defibrillator (ICD) implant"
+  },
+  {
+    "code": "92960",
+    "desc": "Electrical reset of heart rhythm (cardioversion)"
+  },
+  {
+    "code": "93656",
+    "desc": "Ablation for atrial fibrillation"
+  },
+  {
+    "code": "33405",
+    "desc": "Aortic valve replacement, open surgery"
+  },
+  {
+    "code": "33361",
+    "desc": "Aortic valve replacement through an artery (TAVR)"
+  },
+  {
+    "code": "33430",
+    "desc": "Mitral valve replacement"
+  },
+  {
+    "code": "35301",
+    "desc": "Clearing of a blocked neck artery (carotid endarterectomy)"
+  },
+  {
+    "code": "34705",
+    "desc": "Stent-graft repair of abdominal aortic aneurysm"
+  },
+  {
+    "code": "36478",
+    "desc": "Laser closure of varicose veins"
+  },
+  {
+    "code": "36561",
+    "desc": "Implanted chest port for IV access"
+  },
+  {
+    "code": "36556",
+    "desc": "Central IV line placement"
+  },
+  {
+    "code": "36558",
+    "desc": "Tunneled central line (incl. dialysis catheter)"
+  },
+  {
+    "code": "36821",
+    "desc": "Creating an arm fistula for dialysis access"
+  },
+  {
+    "code": "90935",
+    "desc": "Hemodialysis treatment, single evaluation"
+  },
+  {
+    "code": "32663",
+    "desc": "Lung lobe removal (lobectomy) by video-assisted surgery (VATS)"
+  },
+  {
+    "code": "32551",
+    "desc": "Chest tube placement"
+  },
+  {
+    "code": "32554",
+    "desc": "Draining fluid around the lung (thoracentesis)"
+  },
+  {
+    "code": "32555",
+    "desc": "Thoracentesis with imaging guidance"
+  },
+  {
+    "code": "31600",
+    "desc": "Tracheostomy — breathing opening in the windpipe"
+  },
+  {
+    "code": "31575",
+    "desc": "Flexible scope exam of the voice box"
+  },
+  {
+    "code": "52000",
+    "desc": "Cystoscopy — scope exam of the bladder"
+  },
+  {
+    "code": "52332",
+    "desc": "Ureteral stent placement"
+  },
+  {
+    "code": "52356",
+    "desc": "Scope removal of kidney/ureter stone with laser and stent"
+  },
+  {
+    "code": "50590",
+    "desc": "Shock-wave treatment of kidney stone (ESWL)"
+  },
+  {
+    "code": "50080",
+    "desc": "Kidney stone removal through the back (PCNL)"
+  },
+  {
+    "code": "55700",
+    "desc": "Prostate biopsy"
+  },
+  {
+    "code": "52601",
+    "desc": "Prostate trimming through the urethra (TURP)"
+  },
+  {
+    "code": "55866",
+    "desc": "Laparoscopic/robotic prostate removal (prostatectomy)"
+  },
+  {
+    "code": "52234",
+    "desc": "Bladder tumor removal through the urethra, small"
+  },
+  {
+    "code": "52240",
+    "desc": "Bladder tumor removal through the urethra, large"
+  },
+  {
+    "code": "50543",
+    "desc": "Laparoscopic partial kidney removal (partial nephrectomy)"
+  },
+  {
+    "code": "50545",
+    "desc": "Laparoscopic kidney removal for tumor (radical nephrectomy)"
+  },
+  {
+    "code": "55040",
+    "desc": "Hydrocele removal"
+  },
+  {
+    "code": "55250",
+    "desc": "Vasectomy"
+  },
+  {
+    "code": "54150",
+    "desc": "Circumcision"
+  },
+  {
+    "code": "57288",
+    "desc": "Bladder-support sling for urinary leakage"
+  },
+  {
+    "code": "11102",
+    "desc": "Skin biopsy, shave technique"
+  },
+  {
+    "code": "11104",
+    "desc": "Skin biopsy, punch technique"
+  },
+  {
+    "code": "11106",
+    "desc": "Skin biopsy, deep (incisional)"
+  },
+  {
+    "code": "17311",
+    "desc": "Mohs surgery for skin cancer, first stage"
+  },
+  {
+    "code": "17000",
+    "desc": "Freezing/destruction of a precancerous skin spot"
+  },
+  {
+    "code": "17110",
+    "desc": "Destruction of warts or similar growths (up to 14)"
+  },
+  {
+    "code": "11403",
+    "desc": "Removal of a benign skin growth, medium"
+  },
+  {
+    "code": "11603",
+    "desc": "Removal of a skin cancer, trunk/arm/leg, medium"
+  },
+  {
+    "code": "11642",
+    "desc": "Removal of a skin cancer on the face, medium"
+  },
+  {
+    "code": "12031",
+    "desc": "Layered stitch repair of a wound, medium depth"
+  },
+  {
+    "code": "13101",
+    "desc": "Complex wound repair, trunk"
+  },
+  {
+    "code": "15100",
+    "desc": "Split-thickness skin graft"
+  },
+  {
+    "code": "11730",
+    "desc": "Removal of part or all of a nail"
+  },
+  {
+    "code": "10060",
+    "desc": "Draining of a skin abscess"
+  },
+  {
+    "code": "10120",
+    "desc": "Removal of a foreign object under the skin"
+  },
+  {
+    "code": "19083",
+    "desc": "Breast biopsy with ultrasound guidance"
+  },
+  {
+    "code": "19120",
+    "desc": "Removal of a breast lump"
+  },
+  {
+    "code": "19301",
+    "desc": "Lumpectomy — partial breast removal"
+  },
+  {
+    "code": "19303",
+    "desc": "Simple mastectomy — breast removal"
+  },
+  {
+    "code": "60240",
+    "desc": "Complete thyroid removal (total thyroidectomy)"
+  },
+  {
+    "code": "60220",
+    "desc": "Removal of one thyroid lobe (thyroid lobectomy)"
+  },
+  {
+    "code": "38221",
+    "desc": "Bone marrow biopsy"
+  },
+  {
+    "code": "62270",
+    "desc": "Spinal tap (lumbar puncture)"
+  },
+  {
+    "code": "62223",
+    "desc": "Brain fluid shunt placement (VP shunt)"
+  },
+  {
+    "code": "66984",
+    "desc": "Cataract removal (phacoemulsification) with lens implant"
+  },
+  {
+    "code": "65855",
+    "desc": "Laser treatment for glaucoma (trabeculoplasty)"
+  },
+  {
+    "code": "67028",
+    "desc": "Medication injection into the eye"
+  },
+  {
+    "code": "30520",
+    "desc": "Straightening of the nasal septum"
+  },
+  {
+    "code": "42820",
+    "desc": "Tonsil and adenoid removal (tonsillectomy), under age 12"
+  },
+  {
+    "code": "69436",
+    "desc": "Ear tube placement"
+  },
+  {
+    "code": "58150",
+    "desc": "Hysterectomy (uterus removal), open abdominal"
+  },
+  {
+    "code": "58571",
+    "desc": "Laparoscopic hysterectomy with tube/ovary removal"
+  },
+  {
+    "code": "58661",
+    "desc": "Laparoscopic removal of ovary and/or fallopian tube"
+  },
+  {
+    "code": "59400",
+    "desc": "Vaginal delivery with pregnancy care"
+  },
+  {
+    "code": "59510",
+    "desc": "Cesarean delivery with pregnancy care"
+  },
+  {
+    "code": "36415",
+    "desc": "Blood draw from a vein"
+  }
+]

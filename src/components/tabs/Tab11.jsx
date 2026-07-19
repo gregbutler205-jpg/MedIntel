@@ -974,7 +974,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         .send-btn:disabled { opacity:.4; cursor:not-allowed; }
         .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#ef4444; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
         .stop-btn:hover { background:rgba(239,68,68,.15); }
-        .chat-input { flex:1; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
+        .chat-input { flex:1; min-width:0; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
         .chat-input::placeholder { color:#98afc4; }
         .chat-input:focus { border-color:#1a2f4a; }
         .icon-btn { background:transparent; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; font-size:13px; flex-shrink:0; }
@@ -1294,7 +1294,11 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 </span>
               </div>
             )}
-            <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+            {/* WO-3: paddingRight keeps Send clear of the floating Record
+                Integrity button (fixed at right:18, 48px wide). That button is
+                functional — pointer-events:none would break it — so the input
+                row yields the corner instead. */}
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end", paddingRight: 64 }}>
               <textarea
                 ref={textareaRef}
                 className="chat-input"
@@ -1314,7 +1318,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 : <button className="send-btn" onClick={() => sendMessage(input)} disabled={!input.trim() || staleConsent}>Send ↑</button>
               }
             </div>
-            <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between" }}>
+            <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between", paddingRight: 64 }}>
               <span>Shift+Enter for new line · Enter to send</span>
               <span>{isAdvanced ? "Advanced Mode" : "Standard Mode"} · sent pseudonymously per message</span>
             </div>

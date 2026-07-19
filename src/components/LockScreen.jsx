@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as secureStorage from "../lib/secureStorage.js";
+import PasswordInput from "./PasswordInput.jsx"; // WO-5: show/hide toggle
 import { runMigrations } from "../lib/migrations.js";
 
 const LOGO = import.meta.env.BASE_URL + "logo-white.png";
@@ -162,9 +163,9 @@ export default function LockScreen({ onUnlock }) {
               the recovery key shown after setup is the only way back in.
             </Subtitle>
             <form onSubmit={handleSetupSubmit} style={styles.form}>
-              <input type="password" autoFocus placeholder="New password (12+ characters)" value={passphrase}
+              <PasswordInput autoFocus placeholder="New password (12+ characters)" value={passphrase}
                 onChange={e => setPassphrase(e.target.value)} style={styles.input} />
-              <input type="password" placeholder="Confirm password" value={confirmPassphrase}
+              <PasswordInput placeholder="Confirm password" value={confirmPassphrase}
                 onChange={e => setConfirmPassphrase(e.target.value)} style={styles.input} />
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>
@@ -183,7 +184,7 @@ export default function LockScreen({ onUnlock }) {
               touched until every value is verified.
             </Subtitle>
             <form onSubmit={handleResumeSubmit} style={styles.form}>
-              <input type="password" autoFocus placeholder="Your password" value={passphrase}
+              <PasswordInput autoFocus placeholder="Your password" value={passphrase}
                 onChange={e => setPassphrase(e.target.value)} style={styles.input} />
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>
@@ -218,7 +219,7 @@ export default function LockScreen({ onUnlock }) {
             <Title>Insina Health is locked</Title>
             <Subtitle>Enter your password to unlock your record.</Subtitle>
             <form onSubmit={handleUnlockSubmit} style={styles.form}>
-              <input type="password" autoFocus placeholder="Password" value={passphrase}
+              <PasswordInput autoFocus placeholder="Password" value={passphrase}
                 onChange={e => setPassphrase(e.target.value)} style={styles.input} />
               {error && <div style={styles.error}>{error}</div>}
               <button type="submit" disabled={busy} style={styles.primaryBtn}>{busy ? "Unlocking…" : "Unlock"}</button>

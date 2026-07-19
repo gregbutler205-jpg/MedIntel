@@ -15,7 +15,7 @@ import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
 import PreflightHost from './rie/PreflightHost.jsx';
 import SearchPopup from './components/SearchPopup.jsx';
-import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken } from './lib/googleAuth.js';
+import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken, clearSessionToken } from './lib/googleAuth.js';
 import { getAutoLockMinutes } from './lib/autoLock.js';
 import { fullSync, uploadToDrive, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
 
@@ -291,7 +291,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
       <style>{`.hbrow::-webkit-scrollbar{display:none}`}</style>
 
       {/* UI-14: SVG icon family (one stroke style, no emoji in routine controls) */}
-      {btn(<FlaskIcon style={{ color: "var(--green)" }} />,       "Test Results",    () => setActiveNav("labs"))}
+      {btn(<FlaskIcon style={{ color: "var(--green)" }} />,       "Lab Results",     () => setActiveNav("labs"))}
       {btn(<PillIcon style={{ color: "var(--amber)" }} />,        "Medications",     () => setActiveNav("medications"))}
       {btn(<CalendarIcon style={{ color: "var(--accent)" }} />,   "Appointments",    () => setActiveNav("appointments"))}
       {btn(<ThermometerIcon style={{ color: "var(--purple)" }} />,"Symptoms",        () => setActiveNav("symptoms"))}
@@ -505,6 +505,15 @@ export default function App() {
     window.addEventListener("mi-autolock-changed", h);
     return () => window.removeEventListener("mi-autolock-changed", h);
   }, []);
+
+  // WO-1: Log Out from the sidebar — session only. Clears the in-memory Drive
+  // token (grant not revoked) and locks the vault; the record stays on disk,
+  // encrypted. Data deletion lives exclusively in Data & Backup.
+  useEffect(() => {
+    const h = () => { clearSessionToken(); lock(); };
+    window.addEventListener("insina-logout", h);
+    return () => window.removeEventListener("insina-logout", h);
+  }, [lock]);
 
   // Inactivity auto-lock: after the configured idle time, return to the lock
   // screen. AppShell unmounts when locked, so no data remains on screen.

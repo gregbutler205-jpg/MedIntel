@@ -6,6 +6,7 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup } from "../../lib/driveSync.js";
 import { unlock, changePassphrase, isUnlocked } from "../../lib/secureStorage.js";
+import PasswordInput from "../PasswordInput.jsx"; // WO-5: show/hide toggle
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { APP_VERSION } from "../../version.js";
 import { getAutoLockMinutes, setAutoLockMinutes, AUTOLOCK_OPTIONS } from "../../lib/autoLock.js";
@@ -1019,8 +1020,8 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current Password</div>
-              <input
-                type="password" value={pinForm.current}
+              <PasswordInput
+                value={pinForm.current}
                 onChange={e => setPinForm(f => ({ ...f, current: e.target.value }))}
                 style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora', sans-serif", boxSizing: "border-box" }}
               />
@@ -1028,8 +1029,8 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New Password (12+ characters)</div>
-              <input
-                type="password" value={pinForm.next}
+              <PasswordInput
+                value={pinForm.next}
                 onChange={e => setPinForm(f => ({ ...f, next: e.target.value }))}
                 style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora', sans-serif", boxSizing: "border-box" }}
               />
@@ -1037,8 +1038,8 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New Password</div>
-              <input
-                type="password" value={pinForm.confirm}
+              <PasswordInput
+                value={pinForm.confirm}
                 onChange={e => setPinForm(f => ({ ...f, confirm: e.target.value }))}
                 style={{ width: "100%", padding: "9px 12px", background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 8, color: "#dde8f5", fontSize: 14, fontFamily: "'Sora', sans-serif", boxSizing: "border-box" }}
               />

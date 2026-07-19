@@ -171,6 +171,17 @@ export function signOut() {
 }
 
 /**
+ * WO-1 logout: drop the in-session access token ONLY. The OAuth grant is NOT
+ * revoked and the stored user profile stays — the next Drive use after
+ * logging back in re-acquires a token silently. signOut() (which revokes)
+ * remains the explicit Drive-disconnect path in Settings.
+ */
+export function clearSessionToken() {
+  _accessToken = null;
+  _tokenExpiry = 0;
+}
+
+/**
  * Returns the access token if still valid, or null if expired / not signed in.
  * Used by background upload jobs — they skip silently when null.
  */
