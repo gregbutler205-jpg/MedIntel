@@ -403,9 +403,14 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   }
 
   function handleReset() {
-    loadDemoData();
-    setBackups(INITIAL_BACKUPS);
     setModal(null);
+    try {
+      loadDemoData(); // guarded: throws rather than wipe a real record
+    } catch (e) {
+      showToast(e.message || "Demo not loaded — a real record exists on this device.");
+      return;
+    }
+    setBackups(INITIAL_BACKUPS);
     showToast("Demo data loaded — reloading…");
     setTimeout(() => window.location.reload(), 1500);
   }

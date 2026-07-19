@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.27.1 — 2026-07-19
+
+### Fixed
+- **Critical: the demo can no longer wipe a real record.** All demo loaders —
+  the standalone `/demo/` and `/demo-review/` launchers and the in-app
+  `loadDemoData()` (Data & Backup "Reset") — previously called
+  `localStorage.clear()` unconditionally, which could erase a live encrypted
+  record when a public "Open Demo" link (or a stale cached demo) ran. They now
+  **never call `localStorage.clear()`** and **refuse to load whenever a real
+  record is present** — an encrypted vault, a non-demo PIN, or any real health
+  data. The demo runs only on an empty device or one already holding the demo
+  dataset. (Incident: a cached pre-guard demo wiped a real record on 2026-07-19;
+  recovered from a local pre-encryption backup.) Deeper isolation of the demo
+  and closing the Drive-restore gap are tracked as follow-ups.
+
 ## v1.27.0 — 2026-07-19
 
 ### Changed

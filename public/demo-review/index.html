@@ -186,15 +186,16 @@ mi_lab_custom_ranges: {
 // ── Write to localStorage, bypass PIN, redirect to dashboard ─────────────────
 (function() {
   try {
-    // Data-loss guard: don't wipe a real encrypted record (mi_vault) on this device.
-    if (localStorage.getItem("mi_vault")) {
-      const msg = document.querySelector(".msg"); if (msg) msg.innerHTML = "You already have a private record on this device. The demo isn't loaded.";
+    // Data-loss guard (hardened): NEVER clear storage, NEVER overwrite a real
+    // record. Run only on an empty device or one already holding this demo.
+    const isDemoDevice = localStorage.getItem("mi_auth_hash") === DEMO_PIN_HASH;
+    const HEALTH_KEYS = ["mi_meds_full", "mi_labs", "mi_conditions", "mi_profile_personal", "mi_documents", "mi_records"];
+    const hasHealthData = HEALTH_KEYS.some(k => localStorage.getItem(k) !== null);
+    if (localStorage.getItem("mi_vault") !== null || (hasHealthData && !isDemoDevice)) {
+      const msg = document.querySelector(".msg"); if (msg) msg.innerHTML = "You already have a record on this device. The demo won't load, so your data is untouched.";
       const sp = document.querySelector(".spinner"); if (sp) sp.style.display = "none";
       return;
     }
-    const apiKey = localStorage.getItem("mi_ak");
-    localStorage.clear();
-    if (apiKey) localStorage.setItem("mi_ak", apiKey);
     localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
     Object.entries(DEMO).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
     window.location.href = "../"; // /app/demo-review/ → /app/ (dev: /demo-review/ → /)
