@@ -29,6 +29,29 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   skin unchanged.
 
 ### Added
+- **Public landing page at the site root; app moved to `/app/` (DEC-PNN
+  pending: landing at root / app path move / root SW kill-switch).**
+  insinahealth.com/ now serves the static marketing landing; the record
+  workspace lives at `/app/` and the mobile companion is unchanged at
+  `/companion/`. Because the app and companion share one source tree but need
+  different base paths, the production build (`scripts/build.mjs`, wired as
+  `npm run build`) runs two Vite builds into `dist/app` and `dist/companion`,
+  then drops the landing at the published root with the CNAME. Service workers
+  are now per-surface: `register-sw.js` self-locates its scope (`/app/` or
+  `/companion/`) from its own URL, and a self-unregistering **kill-switch** ships
+  at the old root `/sw.js` so previously-cached clients retire the stale
+  root worker (no blind cache purge — Cache Storage is origin-wide). PWA
+  manifests rescoped (`/app/`, `/companion/`) with corrected icon paths.
+  Landing wiring: **Open Demo / Doctor / Investor** buttons launch the existing
+  fictional-patient demo (`/app/demo/`); **Join the Waiting List** uses the
+  `mailto:` flow (the only mechanism that respects the landing's no-backend /
+  no-third-party-script constraints). The demo launchers now **refuse to run if
+  a real encrypted record exists on the device** (they clear localStorage) —
+  a data-loss guard that matters now that a public page links to the demo.
+  Vault presence lights the landing's "record on this device" banner
+  (presence only, never reads contents). OAuth is unaffected: the app uses the
+  origin-only GIS token client, and the companion's redirect URI stays
+  `/companion/` — no Google Cloud Console change needed.
 - **Tripwire emergency/urgent advisory — core + manual-entry hooks (v1.27.0;
   DEC-PNN pending: tripwire advisory).** A deterministic, client-side advisory
   that flags an entered or extracted value crossing an EMERGENCY or TODAY

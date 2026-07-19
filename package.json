@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "npm run test:thresholds",
-    "build": "vite build",
+    "build": "node scripts/build.mjs",
     "preview": "vite preview",
     "test:thresholds": "node scripts/testThresholds.mjs",
     "test:onboarding": "node scripts/testOnboarding.mjs",
