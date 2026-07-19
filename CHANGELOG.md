@@ -12,7 +12,7 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## Unreleased — feature/onboarding-v1_1
+## v1.27.0 — 2026-07-19
 
 ### Changed
 - **Onboarding re-themed to the light system (INSINA_UI_FORMAT_SPEC v1.0
