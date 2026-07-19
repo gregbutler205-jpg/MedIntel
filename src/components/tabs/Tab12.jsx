@@ -6,6 +6,8 @@ import { formatDocumentBlock } from "../../prompts/documents.js";
 import { PrintLabel } from "../icons.jsx";
 import ReviewQueue from "../onboarding/ReviewQueue.jsx";
 import { getStagedStore } from "../../lib/onboardingStaging.js";
+import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
+import { canonicalLabId } from "../../lib/labCanonical.js";
 
 // ── Onboarding staging queue access (ONBOARDING_SPEC v1.1 §2, §11.13) ─────────
 // Unconfirmed items never enter the record; this card keeps the queue (and
@@ -329,6 +331,12 @@ export default function ImportTab({ onImport, onNavChange }) {
           if (!Array.isArray(extracted) || extracted.length === 0)
             throw new Error("No lab results found in PDF. If this is an imaging report or clinical note, select that type before uploading.");
           setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
+          // §2 tripwire advisory: evaluate each extracted lab before the user
+          // confirms it into the record. Flag-gated (no-op until enabled); a
+          // recent critical fires the takeover, older ones are inert here.
+          extracted.forEach(l => {
+            try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null }); } catch { /* never blocks import */ }
+          });
           setPdfInitialCount(extracted.length); // UI-20: for the excluded-in-review count
           setPdfStatus("done");
           showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);

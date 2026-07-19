@@ -6,6 +6,8 @@
 
 import { STALE_WARN_MONTHS, STALE_HISTORICAL_MONTHS, REJECT_RETENTION_DAYS } from "../config/onboardingConfig.js";
 import { saveState, loadState } from "./onboardingState.js";
+import { evaluateAndFire } from "./advisoryRuntime.js";
+import { canonicalLabId } from "./labCanonical.js";
 
 const KEY = "mi_onboarding_staged";
 
@@ -99,6 +101,22 @@ export function stageExtractionResult(result, docLinks = [], now = new Date()) {
       const stale = (item.category === "medication" || item.category === "condition")
         ? stalenessFor(doc.doc_date || null, now)
         : { level: "fresh", badge: null, defaultHistorical: false };
+      // §2 tripwire advisory: evaluate each extracted lab BEFORE per-item
+      // confirmation. Flag-gated — evaluateAndFire returns null while
+      // TRIPWIRE_ADVISORY_ENABLED is false. A recent critical fires the takeover;
+      // one older than 14 days comes back takeover:false, which surfaces as the
+      // "historical critical value" badge on the review row (ReviewQueue).
+      let advisory_hit = null;
+      if (item.category === "lab") {
+        try {
+          const f = item.fields || {};
+          advisory_hit = evaluateAndFire(canonicalLabId(f.name), f.value, {
+            source: "staged",
+            resultDate: doc.doc_date || f.date || null,
+            now: now.getTime(),
+          });
+        } catch { advisory_hit = null; }
+      }
       store.items.push({
         id: genId(),
         docId,
@@ -110,6 +128,7 @@ export function stageExtractionResult(result, docLinks = [], now = new Date()) {
         staleness: stale.level,
         staleness_badge: stale.badge,
         default_historical: stale.defaultHistorical,
+        advisory_hit, // null | { tier, takeover, withinWindow, ... }
         status: "staged", // staged | deferred | rejected | confirmed
         status_changed_at: now.toISOString(),
       });

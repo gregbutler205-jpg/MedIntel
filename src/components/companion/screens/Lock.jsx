@@ -16,6 +16,7 @@ import { useState } from "react";
 import { C, mono, serif, sans, Btn, Card, SL } from "../companionUI.jsx";
 import * as secureStorage from "../../../lib/secureStorage.js";
 import { runMigrations } from "../../../lib/migrations.js";
+import { signInWithRedirect } from "../../../lib/googleAuth.js";
 
 const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -186,6 +187,18 @@ function VaultSetup({ onUnlocked }) {
       {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
       <div style={{ marginTop: 12 }}>
         <Btn onClick={submit} disabled={busy || !pass || !confirm}>{busy ? "Setting up…" : "Encrypt my record"}</Btn>
+      </div>
+      {/* #50/sync: adopt the SAME vault as the web app so the phone and desktop
+          share one key and sync both ways. Sets an intent flag, then the mobile
+          OAuth redirect returns into CompanionApp, which runs the restore. */}
+      <div style={{ borderTop: `1px solid ${C.b1}`, margin: "16px 0 10px" }} />
+      <button
+        onClick={() => { try { sessionStorage.setItem("insina_companion_restore", "1"); } catch { /* ignore */ } signInWithRedirect(); }}
+        style={{ width: "100%", background: "none", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "11px", color: C.p, fontSize: 12.5, fontFamily: sans, fontWeight: 600, cursor: "pointer" }}>
+        Already use Insina? Restore from Google Drive
+      </button>
+      <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 8 }}>
+        Pulls your record from Drive and shares the web app's vault — then unlock with your existing password.
       </div>
     </Card>
   );

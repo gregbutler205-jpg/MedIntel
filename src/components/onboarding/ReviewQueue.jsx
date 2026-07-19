@@ -116,6 +116,14 @@ function ItemCard({ item, match, conflict, onAction, onZoom, onCompare }) {
           </div>
         )}
 
+        {/* §2 tripwire advisory: a critical value older than 14 days — flagged,
+            not taken over. (advisory_hit is only set when the flag is enabled.) */}
+        {item.advisory_hit && !item.advisory_hit.takeover && (
+          <div style={{ marginTop: 8, padding: "7px 12px", borderRadius: 8, fontSize: 12, background: "var(--stale-bg)", border: "1px solid var(--stale-bd)", color: "var(--stale-fg)" }}>
+            ⚠ Historical critical value ({item.advisory_hit.tier === "EMERGENCY" ? "emergency" : "urgent"} range) — from an older document. Verify it against the original report and discuss with your care team.
+          </div>
+        )}
+
         {editing && (
           <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {EDITABLE_FIELDS[item.category].map(fld => (

@@ -19,6 +19,7 @@ import { getStagedStore } from "../../lib/onboardingStaging.js";
 import { printEmergency } from "../../lib/printEmergency.js";
 import { printMedicationList } from "../../lib/printMedicationList.js";
 import { getMedsFull } from "../../store.js";
+import AdvisoryModal from "../advisory/AdvisoryModal.jsx";
 
 // §3.5 empty-variant copy: the goal artifact's minimum needs, one sentence.
 const ARTIFACT_MINIMUM_SENTENCE = {
@@ -164,6 +165,10 @@ export default function OnboardingFlow({ onExit }) {
       <footer style={{ padding: "16px 20px 22px", borderTop: "1px solid var(--divider)", textAlign: "center" }}>
         <PrivacyFooter />
       </footer>
+
+      {/* §2/§4 advisory takeover — mounted here too so a recent critical staged
+          during onboarding import can surface (AppShell isn't mounted yet). */}
+      <AdvisoryModal />
 
       {/* §6 early-fire toast — non-blocking, auto-dismisses */}
       {toast && (

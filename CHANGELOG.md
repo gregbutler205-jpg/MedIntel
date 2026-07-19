@@ -12,6 +12,24 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.29.0 — 2026-07-19
+
+### Added
+- **Phone ↔ web app now actually sync (companion Drive-restore).** Bidirectional
+  Drive sync was already wired on both surfaces, but a fresh phone generated its
+  own vault key and so couldn't decrypt the desktop's synced data. The companion
+  setup screen now has **"Already use Insina? Restore from Google Drive"**, which
+  rebuilds the phone from the Drive backup (envelope + ciphertext, via #50) so it
+  shares the web app's vault/key — after which the existing auto-sync flows data
+  both ways.
+- **Tripwire advisory — staging-queue hooks + historical badge (#48).** Extracted
+  labs are now evaluated against the advisory *before* per-item confirmation, in
+  both staging paths (onboarding `stageExtractionResult` and the Tab12 importer).
+  A recent critical fires the takeover (the modal is now also mounted in
+  onboarding); a critical older than 14 days shows a **"historical critical
+  value"** badge on the review row instead. Flag-gated — inert until
+  `TRIPWIRE_ADVISORY_ENABLED` is turned on.
+
 ## v1.28.0 — 2026-07-19
 
 ### Added

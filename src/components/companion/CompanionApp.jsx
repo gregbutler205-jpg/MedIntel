@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback, Component } from "react";
 import { initGoogleAuth, signInWithRedirect, extractTokenFromHash, getAccessToken, getStoredUser } from "../../lib/googleAuth.js";
-import { fullSync } from "../../lib/driveSync.js";
+import { fullSync, restoreFromDrive } from "../../lib/driveSync.js";
 import { enqueue, flush } from "../../lib/outbox.js";
 import { cleanupOldAudio } from "../../lib/visitCapture.js";
 import { scheduleMedReminders, runOpenNotifications } from "../../lib/notify.js";
@@ -145,15 +145,28 @@ function CompanionInner() {
     initGoogleAuth({ onSignIn: ({ accessToken }) => { setUser(getStoredUser()); runSync(accessToken); } });
     const token = extractTokenFromHash();
     if (token) {
-      fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json())
-        .then(u => {
-          const profile = { name: u.name, email: u.email, picture: u.picture };
-          localStorage.setItem("mi_google_user", JSON.stringify(profile));
-          setUser(profile);
-        })
-        .catch(() => {});
-      runSync(token);
+      // #50 companion restore: if the user chose "Restore from Google Drive" on
+      // the setup screen, rebuild THIS phone's vault from Drive (envelope +
+      // ciphertext) and reload into the unlock screen — so it shares the same
+      // vault/key as the web app and can actually sync both ways.
+      let restoring = false;
+      try { restoring = sessionStorage.getItem("insina_companion_restore") === "1"; } catch { /* private mode */ }
+      if (restoring) {
+        try { sessionStorage.removeItem("insina_companion_restore"); } catch { /* ignore */ }
+        restoreFromDrive(token)
+          .then(result => { if (result && result.hasEnvelope) window.location.reload(); })
+          .catch(() => {});
+      } else {
+        fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json())
+          .then(u => {
+            const profile = { name: u.name, email: u.email, picture: u.picture };
+            localStorage.setItem("mi_google_user", JSON.stringify(profile));
+            setUser(profile);
+          })
+          .catch(() => {});
+        runSync(token);
+      }
     }
     // Housekeeping + best-effort local notifications on open
     cleanupOldAudio().catch(() => {});
