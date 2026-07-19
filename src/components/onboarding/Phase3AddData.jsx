@@ -346,6 +346,10 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
               Fill the frame with the page · avoid glare · one page per shot.
               Up to {VISION_MAX_IMAGES_PER_DOC} pages are treated as one document.
             </p>
+            <p style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.7, marginBottom: 12 }}>
+              Photo on your phone but working here? Email it to yourself, open the email on this
+              computer, and add the photo under Upload documents.
+            </p>
             {shots.length > 0 && (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                 {shots.map((s, i) => (
