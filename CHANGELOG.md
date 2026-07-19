@@ -22,6 +22,8 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   `.theme-light` token override on the wizard subtree. The five-node phase
   rail is replaced by the spec's DM Mono "STEP N OF 5" eyebrow + slim
   progress bar (supersedes ONBOARDING_SPEC C9's dark-workspace styling).
+  Every wizard page sits on the §3 tint band (#eef4fc) with its content in
+  a white paper-shadow frame, matching the approved preview.
   The dark record workspace begins at the first Dashboard load: the
   Import Records review queue and dashboard task cards keep their dark
   skin unchanged.

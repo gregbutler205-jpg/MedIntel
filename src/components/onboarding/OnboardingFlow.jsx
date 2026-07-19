@@ -92,11 +92,14 @@ export default function OnboardingFlow({ onExit }) {
         </div>
       )}
 
-      <div style={{ flex: 1, padding: "36px 20px 24px", overflowY: "auto" }}>
+      {/* §3 tint band behind every wizard page (Greg's preview direction) */}
+      <div style={{ flex: 1, padding: "36px 20px 24px", overflowY: "auto", background: "var(--band-bg)", borderTop: "1px solid var(--band-bd)", borderBottom: "1px solid var(--band-bd)" }}>
         {entered && (
           <div className="ob-enter" key={state.phase} style={{ display: "flex", flexDirection: "column", gap: 30 }}>
             {state.phase > 0 && <PhaseRail current={railStep} />}
 
+            {/* White frame floating on the band (preview's .frame treatment) */}
+            <div style={{ width: "100%", maxWidth: 820, margin: "0 auto", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: "36px 28px 32px", boxShadow: "var(--ob-shadow-frame)" }}>
             {state.phase === 0 && (
               <WelcomeConsent
                 onContinue={() => advance({ consents: { ai_processing: true, accepted_at: new Date().toISOString() } }, 1)}
@@ -153,6 +156,7 @@ export default function OnboardingFlow({ onExit }) {
                 onFinish={finish}
               />
             )}
+            </div>
           </div>
         )}
       </div>

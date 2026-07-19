@@ -71,7 +71,8 @@
   --chip-dup-bg: #111e30; --chip-dup-bd: #1a2f4a; --chip-dup-fg: #7eb8d8;
   --stale-bg: rgba(245,158,11,.08); --stale-bd: rgba(245,158,11,.3); --stale-fg: #f59e0b;
   --banner-bg: #0b1220; --banner-bd: #111e30;
-  --ob-shadow-card: none;
+  --band-bg: transparent; --band-bd: var(--divider);
+  --ob-shadow-card: none; --ob-shadow-frame: none;
 }
 
 .theme-light {
@@ -105,7 +106,9 @@
   --chip-dup-bg: #ffffff; --chip-dup-bd: #dfe7f2; --chip-dup-fg: #64748b;
   --stale-bg: #fdf6ec; --stale-bd: #f0dcc0; --stale-fg: #d97a06;
   --banner-bg: #e9f1fc; --banner-bd: #cddcf2;
+  --band-bg: #eef4fc; --band-bd: #d9e5f4; /* §3 tint band — every wizard page */
   --ob-shadow-card: 0 6px 24px rgba(16,29,53,0.05);
+  --ob-shadow-frame: 0 26px 60px rgba(16,29,53,0.14); /* paper shadow on the band */
   color: var(--text-body);
 }
 
