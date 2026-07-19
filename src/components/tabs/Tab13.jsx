@@ -264,11 +264,12 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       appointments: safeRead("mi_appointments"),
       symptoms:     safeRead("mi_symptoms"),
       milestones:   safeRead("mi_milestones"),
+      advisoryEvents: safeRead("mi_advisory_events"), // §6: tripwire advisory audit log
     };
 
     // Trim irrelevant sections for specific export types
     if (type === "Medication List") {
-      delete exportData.labs; delete exportData.readings;
+      delete exportData.labs; delete exportData.readings; delete exportData.advisoryEvents;
       delete exportData.notes; delete exportData.appointments; delete exportData.symptoms;
     } else if (type === "Health Summary") {
       delete exportData.notes; delete exportData.symptoms;

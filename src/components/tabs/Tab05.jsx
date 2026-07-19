@@ -9,6 +9,7 @@ import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName, dismi
 import { checkLabReading } from "../../lib/plausibility.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLabGroup, getConfirmedGroups } from "../../lib/labCanonical.js";
+import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
 import { PrintLabel } from "../icons.jsx";
 import { getLastImportLabel } from "../../store.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
@@ -663,6 +664,8 @@ export default function App({ onNavChange }) {
     setImportedLabs(updated);
     try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
     window.dispatchEvent(new Event("mi-data-synced")); // A-01: manual-entry hook for the tripwire engine
+    // tripwire advisory §2: manual-lab hook (flag-gated; never blocks the save)
+    try { evaluateAndFire(canonicalLabId(entry.name), entry.value, { source: "manual" }); } catch { /* advisory never blocks a save */ }
     setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
     setShowAddLab(false);
     setSelectedImportedLab(entry);

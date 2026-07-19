@@ -29,6 +29,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
   skin unchanged.
 
 ### Added
+- **Tripwire emergency/urgent advisory — core + manual-entry hooks (v1.27.0;
+  DEC-PNN pending: tripwire advisory).** A deterministic, client-side advisory
+  that flags an entered or extracted value crossing an EMERGENCY or TODAY
+  threshold — never the AI. Labs draw their bounds from the existing A-01
+  threshold library (single source, extended with a TODAY band; glucose
+  critical-low reconciled 40→50); vitals (systolic/diastolic BP, HR, SpO2,
+  temperature) are seeded fresh. Verbatim, versioned advisory templates
+  (EMERGENCY/TODAY × coordinator/no-coordinator, with a staged-document
+  appendix); a full-screen EMERGENCY takeover / warning-styled TODAY modal with
+  911 (primary), directions to the nearest ED (platform maps deep link, no
+  geolocation from Insina), and a coordinator call button; a persistent, always-
+  enabled **Emergency Info** button in both the sidebar and the topbar (opens
+  the same screen plus the Emergency Card). Every fire is written to a
+  vault-encrypted event log included in the Data & Backup export. Hooks are
+  wired at manual vitals save and manual lab save. **All threshold numbers are
+  DRAFT/REVIEW-REQUIRED and advisory FIRING is gated behind
+  `TRIPWIRE_ADVISORY_ENABLED = false`** until Greg signs the thresholds off; the
+  Emergency Info button and templates ship regardless. 42-check suite
+  (`npm run test:advisory`): verbatim template snapshots, boundary logic, the
+  staged 14-day rule, a single-source drift guard, and a no-AI-import assertion.
 - **UI fixes WO-1..WO-5 (2026-07-18 work order):** Log Out in the sidebar
   (session-only — clears the in-memory Drive token without revoking the
   grant, locks the vault, never touches record data); surgery entry now

@@ -44,7 +44,11 @@ export const DEFAULT_LIBRARY = {
       canonicalId: "glucose",
       name: "Glucose",
       unit: "mg/dL",
-      urgentLow: 40,
+      // urgentLow reconciled 40 -> 50 to keep ONE critical bound shared with
+      // the advisory EMERGENCY band below (DEC-PNN pending: tripwire advisory).
+      // FLAG (threshold-review): raising it makes more low-glucose values urgent
+      // — conservative, but a change to A-01's shipped glucose threshold.
+      urgentLow: 50,
       urgentHigh: 500,
       guidanceLow: "A blood sugar this low is a medical emergency. Treat it per your care team's instructions and seek emergency care now if you cannot safely raise it or you lose consciousness.",
       guidanceHigh: "A blood sugar this high can indicate a serious complication. Contact your care team today, or seek emergency care now if you have vomiting, difficulty breathing, or confusion.",
@@ -73,4 +77,28 @@ export const DEFAULT_LIBRARY = {
       guidanceHigh: "A white blood cell count this high can indicate a serious underlying process. Contact your care team today.",
     },
   ],
+};
+
+// ── DEC-PNN pending: tripwire advisory — EMERGENCY/TODAY lab bands (v1.0.0-draft)
+// The user-facing advisory (src/data/tripwireTable.js + src/lib/advisoryEngine.js)
+// reads its LAB thresholds from here, so labs keep ONE threshold source. The
+// EMERGENCY bound for each analyte is the SAME critical value as that analyte's
+// urgent tier in DEFAULT_LIBRARY above — testAdvisory.mjs asserts
+// emLow === urgentLow and emHigh === urgentHigh to prevent drift. The advisory
+// only ADDS the intermediate TODAY band.
+//
+// ALL DRAFT / REVIEW-REQUIRED. Firing is gated behind TRIPWIRE_ADVISORY_ENABLED
+// (default false) until Greg signs off these numbers.
+//
+// Convention (labs): EMERGENCY = value < emLow OR value > emHigh (exclusive).
+//                    TODAY     = emLow <= value <= tLowMax
+//                                OR tHiMin <= value <= emHigh (inclusive).
+// A null side carries no band. WBC is intentionally advisory-excluded in v1
+// (not in the work order's seed list) — it stays AI-context-only.
+export const ADVISORY_LAB_BANDS = {
+  potassium:  { emLow: 2.5, tLowMax: 2.9, tHiMin: 6.0,  emHigh: 6.5 },
+  sodium:     { emLow: 120, tLowMax: 129, tHiMin: 150,  emHigh: 160 },
+  glucose:    { emLow: 50,  tLowMax: 69,  tHiMin: 400,  emHigh: 500 },
+  hemoglobin: { emLow: 7,   tLowMax: 7.9, tHiMin: null, emHigh: null },
+  platelets:  { emLow: 20,  tLowMax: 49,  tHiMin: null, emHigh: null },
 };

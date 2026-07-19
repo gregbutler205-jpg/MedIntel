@@ -8,6 +8,8 @@ import TaskCards from './components/onboarding/TaskCards.jsx';
 import { shouldOnboard } from './lib/onboardingState.js';
 import { recordAppOpen } from './lib/taskEngine.js';
 import AppSidebar from './components/AppSidebar.jsx';
+import AdvisoryModal from './components/advisory/AdvisoryModal.jsx';
+import EmergencyInfoButton from './components/advisory/EmergencyInfoButton.jsx';
 import { printEmergency } from './lib/printEmergency.js';
 import { FlaskIcon, PillIcon, CalendarIcon, ThermometerIcon, HeartIcon, DownloadIcon, RefreshIcon, AlertTriangleIcon, ClockIcon, SaveIcon } from './components/icons.jsx';
 import { daysAgoLabel } from './lib/displaySafe.js';
@@ -902,6 +904,10 @@ function AppShell() {
       <RIEWidget onNavChange={setActiveNav} />
       <PreflightHost onNavChange={setActiveNav} />
 
+      {/* DEC-PNN pending: tripwire advisory — root-mounted takeover/Emergency Info
+          overlay (position:fixed, covers standalone tabs too). */}
+      <AdvisoryModal />
+
       {/* ── Group A: standalone apps (medications, labs, vitals, symptoms) ── */}
       {/* These components have their own sidebar + topbar + height:100vh.     */}
       {/* We hand full-page control to them and pass navigation callback.       */}
@@ -949,6 +955,8 @@ function AppShell() {
                     </button>
                   )}
                   {/* UI-26: Search sits beside Home, same visual weight */}
+                  {/* tripwire advisory §5: persistent Emergency Info (topbar) */}
+                  <EmergencyInfoButton variant="topbar" />
                   <button
                     onClick={() => setShowSearch(true)}
                     title="Search"

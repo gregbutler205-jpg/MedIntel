@@ -20,6 +20,8 @@
 // flag-don't-fix: an unmeasured field reads as unmeasured, not as a stale
 // copy of the last known value).
 
+import { evaluateReadingAndFire } from "./advisoryRuntime.js";
+
 export const VITAL_FIELDS = ["bp_s", "bp_d", "hr", "resting_hr", "o2", "weight", "temp", "glucose", "sleep"];
 
 const READINGS_KEY = "mi_readings";
@@ -109,6 +111,9 @@ export function saveReading(reading) {
   const merged = sortReadingsByRecency(Array.from(map.values()));
   localStorage.setItem(READINGS_KEY, JSON.stringify(merged));
   window.dispatchEvent(new Event("mi-data-synced"));
+  // tripwire advisory §2: vitals-save hook (flag-gated; wrapped so the advisory
+  // can never block the reading from being saved).
+  try { evaluateReadingAndFire(reading, { source: "manual" }); } catch { /* non-fatal */ }
   return merged;
 }
 

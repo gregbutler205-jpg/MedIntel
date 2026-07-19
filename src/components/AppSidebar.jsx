@@ -12,6 +12,7 @@
 // Information is pinned below the groups, always visible on every screen.
 import { useState } from "react";
 import { printEmergency } from "../lib/printEmergency.js";
+import { openEmergencyInfo } from "../lib/advisoryRuntime.js";
 
 // UI-11: standardized nav labels. "Export & Backup" / "App Settings" both map
 // onto the single Settings & Backup tab today; splitting is a new tab, not a
@@ -148,15 +149,17 @@ export default function AppSidebar({ activeNav, onNav }) {
         })}
       </nav>
 
-      {/* UI-9: Emergency Information — pinned, always visible, never inside a
-          collapsible group. Opens the printable emergency packet (DEC-023's
-          exportable-packet model — not a nav destination). */}
+      {/* UI-9 + tripwire advisory §5: Emergency Info — pinned, always visible,
+          never inside a collapsible group. Opens the Emergency Info screen
+          (911 · directions to nearest ED · call coordinator · View Emergency
+          Card). The printable packet is reachable from that screen, preserving
+          UI-9's export path (DEC-PNN pending: ED locator handoff). */}
       <div style={{ borderTop: "1px solid var(--divider)", padding: "8px 0" }}>
         <div
           className="nav-item"
-          onClick={printEmergency}
+          onClick={openEmergencyInfo}
           role="button"
-          title="Open a printable emergency information sheet"
+          title="Emergency Info — call 911, directions to the nearest ED, your emergency card"
           style={{ color: "var(--red)" }}
         >
           <span className="nav-icon" aria-hidden="true">
