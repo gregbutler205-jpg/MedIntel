@@ -195,7 +195,9 @@ mi_lab_custom_ranges: {
     // Any sign of a real record — an encrypted vault, a non-demo PIN, or real
     // health data — and the demo refuses outright. This is the fix for the
     // incident where a cached older demo wiped a live record.
-    const isDemoDevice = localStorage.getItem("mi_auth_hash") === DEMO_PIN_HASH;
+    // "mi_is_demo" is the unambiguous demo marker — safer than the PIN hash,
+    // which a real user could legitimately share (e.g. a real PIN of 1234).
+    const isDemoDevice = localStorage.getItem("mi_is_demo") === "1";
     const HEALTH_KEYS = ["mi_meds_full", "mi_labs", "mi_conditions", "mi_profile_personal", "mi_documents", "mi_records"];
     const hasHealthData = HEALTH_KEYS.some(k => localStorage.getItem(k) !== null);
     if (localStorage.getItem("mi_vault") !== null || (hasHealthData && !isDemoDevice)) {
@@ -207,6 +209,7 @@ mi_lab_custom_ranges: {
     }
     // Safe: empty device or an existing demo. Write demo data WITHOUT clearing —
     // there is nothing here to protect, and clear() is never used again.
+    localStorage.setItem("mi_is_demo", "1");
     localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
     Object.entries(DEMO).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
     // Relative redirect: from /app/demo/ (production) → /app/; from /demo/ (dev) → /.

@@ -188,7 +188,7 @@ mi_lab_custom_ranges: {
   try {
     // Data-loss guard (hardened): NEVER clear storage, NEVER overwrite a real
     // record. Run only on an empty device or one already holding this demo.
-    const isDemoDevice = localStorage.getItem("mi_auth_hash") === DEMO_PIN_HASH;
+    const isDemoDevice = localStorage.getItem("mi_is_demo") === "1";
     const HEALTH_KEYS = ["mi_meds_full", "mi_labs", "mi_conditions", "mi_profile_personal", "mi_documents", "mi_records"];
     const hasHealthData = HEALTH_KEYS.some(k => localStorage.getItem(k) !== null);
     if (localStorage.getItem("mi_vault") !== null || (hasHealthData && !isDemoDevice)) {
@@ -196,6 +196,7 @@ mi_lab_custom_ranges: {
       const sp = document.querySelector(".spinner"); if (sp) sp.style.display = "none";
       return;
     }
+    localStorage.setItem("mi_is_demo", "1");
     localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
     Object.entries(DEMO).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
     window.location.href = "../"; // /app/demo-review/ → /app/ (dev: /demo-review/ → /)

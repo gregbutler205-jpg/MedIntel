@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import * as secureStorage from "../lib/secureStorage.js";
 import PasswordInput from "./PasswordInput.jsx"; // WO-5: show/hide toggle
 import { runMigrations } from "../lib/migrations.js";
+import { initGoogleAuth, ensureAccessToken } from "../lib/googleAuth.js";
+import { restoreFromDrive } from "../lib/driveSync.js";
 
 const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -28,8 +30,30 @@ export default function LockScreen({ onUnlock }) {
   const [recoveryKeyDisplay, setRecoveryKeyDisplay] = useState(null);
   const [recoverySaved, setRecoverySaved] = useState(false);
   const [wipeConfirm, setWipeConfirm] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   useEffect(() => { setError(""); }, [mode]);
+  // Init Google sign-in early so "Restore from Google Drive" is ready on a fresh device.
+  useEffect(() => { try { initGoogleAuth(); } catch { /* GIS not loaded yet — button retries */ } }, []);
+
+  // #50 — new/wiped-device recovery: pull the Drive backup (envelope + ciphertext),
+  // land it locally, then reload into the normal unlock screen. Never destructive.
+  async function handleDriveRestore() {
+    setRestoring(true); setError("");
+    try {
+      const token = await ensureAccessToken();
+      const result = await restoreFromDrive(token);
+      if (!result) { setError("No Google Drive backup was found for this account."); setRestoring(false); return; }
+      if (!result.hasEnvelope) {
+        setError("This Drive backup predates recoverable restore (no key envelope). Restore from a downloaded backup file instead.");
+        setRestoring(false); return;
+      }
+      window.location.reload(); // vault now present → unlock with your password or recovery key
+    } catch (err) {
+      setError("Drive restore failed: " + (err?.message || "try again") + ".");
+      setRestoring(false);
+    }
+  }
 
   async function handleSetupSubmit(e) {
     e.preventDefault();
@@ -37,6 +61,11 @@ export default function LockScreen({ onUnlock }) {
     if (passphrase !== confirmPassphrase) { setError("Passwords don't match."); return; }
     setBusy(true); setError("");
     try {
+      // #49: never carry demo data into a real vault. If the device is running
+      // the demo (unambiguous marker), clear it so the new vault starts clean.
+      if (localStorage.getItem("mi_is_demo") === "1") {
+        Object.keys(localStorage).filter(k => k.startsWith("mi_")).forEach(k => localStorage.removeItem(k));
+      }
       downloadPreMigrationBackup();
       const result = await secureStorage.setupVaultAndMigrate(passphrase);
       // ONBOARDING_SPEC v1.1 §2: a vault created in THIS session marks a new
@@ -172,6 +201,13 @@ export default function LockScreen({ onUnlock }) {
                 {busy ? "Encrypting your record…" : "Create password & encrypt"}
               </button>
             </form>
+            <div style={styles.divider}><span style={styles.dividerText}>already have a record?</span></div>
+            <button type="button" onClick={handleDriveRestore} disabled={restoring} style={styles.secondaryBtn}>
+              {restoring ? "Restoring from Google Drive…" : "Restore from Google Drive"}
+            </button>
+            <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 6, lineHeight: 1.6 }}>
+              Rebuilds this device from your Drive backup. You'll unlock with your existing password or recovery key.
+            </div>
           </>
         )}
 
@@ -282,6 +318,8 @@ const styles = {
   recoveryBox: { width: "100%", padding: "16px", background: "rgba(79,142,247,.06)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 10, color: "#dde8f5", fontFamily: "'DM Mono',monospace", fontSize: 13, textAlign: "center", letterSpacing: 1, lineHeight: 1.8, marginBottom: 14, wordBreak: "break-all" },
   checkboxRow: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#b0c4d8", marginBottom: 16, cursor: "pointer" },
   wipeBox: { marginTop: 16, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 12, padding: "16px 18px", textAlign: "center" },
+  divider: { display: "flex", alignItems: "center", justifyContent: "center", width: "100%", margin: "20px 0 12px", borderTop: "1px solid rgba(255,255,255,.08)", position: "relative" },
+  dividerText: { position: "absolute", top: -8, background: "#07090f", padding: "0 10px", fontSize: 10, letterSpacing: "1.5px", textTransform: "uppercase", color: "#4a5c6a", fontFamily: "'DM Mono',monospace" },
 };
 
 const css = `

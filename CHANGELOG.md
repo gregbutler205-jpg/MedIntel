@@ -12,6 +12,30 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.28.0 — 2026-07-19
+
+### Added
+- **Google Drive is now actually recoverable (#50).** The Drive backup now
+  includes the vault's key-envelope (`_vaultEnvelope`), not just the encrypted
+  data. The envelope only *wraps* the random data-key and is useless without the
+  password or recovery key, so it's safe in the user's own hidden Drive folder —
+  but it's the piece that lets a **wiped or new device rebuild the vault**. A
+  new **"Restore from Google Drive"** button on the setup screen pulls the
+  backup, lands the envelope + ciphertext, and reloads into the normal unlock,
+  where the password or recovery key rebuilds the data-key and decrypts. New
+  `test:vault-restore` proves the round-trip (passphrase and recovery key both
+  recover on a fresh device; a backup without the envelope is correctly
+  unrecoverable — the pre-fix state). Closes the gap that made the 2026-07-19
+  incident unrecoverable from Drive alone.
+
+### Fixed
+- **Demo can no longer pollute a real record (#49).** The demo now sets an
+  unambiguous `mi_is_demo` marker (safer than the old PIN-hash heuristic, which
+  a real user with PIN 1234 could trip). Creating a real vault on a device that
+  was running the demo now clears the demo data first, so Alex-Rivera demo
+  content is never encrypted into a real record. (Full origin-level demo
+  isolation still recommended — needs a demo subdomain.)
+
 ## v1.27.1 — 2026-07-19
 
 ### Fixed

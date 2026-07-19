@@ -506,12 +506,13 @@ const DEMO_PIN_HASH = "fc72e05e2a2c820e5cd0aa1c610ebb093bd5e1f86dc3b485d30d17dc4
 // wiping data. (An earlier unconditional localStorage.clear() here — and in the
 // standalone /demo/ launchers — could erase a live record.)
 export function loadDemoData() {
-  const isDemoDevice = localStorage.getItem("mi_auth_hash") === DEMO_PIN_HASH;
+  const isDemoDevice = localStorage.getItem("mi_is_demo") === "1";
   const HEALTH_KEYS = ["mi_meds_full", "mi_labs", "mi_conditions", "mi_profile_personal", "mi_documents", "mi_records"];
   const hasHealthData = HEALTH_KEYS.some(k => localStorage.getItem(k) !== null);
   if (localStorage.getItem("mi_vault") !== null || (hasHealthData && !isDemoDevice)) {
     throw new Error("A real record exists on this device — demo data was not loaded. Use “Clear all data” first if you intend to erase it.");
   }
+  localStorage.setItem("mi_is_demo", "1");
   localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
   Object.entries(DEMO_DATA).forEach(([key, value]) => {
     localStorage.setItem(key, JSON.stringify(value));

@@ -30,6 +30,7 @@ const EXEMPT_KEYS = new Set([
   "mi_migration_interrupted",
   "mi_auth_hash", // PIN quick-unlock hash (point 6) — not vault security material
   PIN_WRAP_KEY,   // wrapped-key envelope, same storage class as mi_vault itself
+  "mi_is_demo",   // demo marker — must be readable while locked to gate demo/real transitions
 ]);
 
 let dek = null;                    // in-memory only
@@ -126,6 +127,15 @@ export async function flushPendingWrites(timeoutMs = 2000) {
 // decrypted view getItem() returns — these bypass interception entirely.
 export function isManagedKey(key) { return isManaged(key); }
 export function getRawCiphertext(key) { return nativeGet(key); }
+/**
+ * Write a raw ciphertext blob (or the vault envelope) directly to storage WITHOUT
+ * the DEK — the restore-before-unlock primitive. A wiped/new device restoring from
+ * Drive or a backup file lands the envelope + already-encrypted blobs here while
+ * still locked; the blobs stay under their ORIGINAL DEK and are decrypted on the
+ * next unlock (which unwraps that DEK from the restored envelope). Bypasses the
+ * interception's "ignore managed writes while locked" guard on purpose.
+ */
+export function importRawCiphertext(key, raw) { nativeSet(key, raw); }
 export function allManagedKeys() { return allManagedKeyNames(); }
 /** Decrypt a raw ciphertext blob string (as returned by getRawCiphertext) with the live DEK. */
 export async function decryptRaw(raw) {

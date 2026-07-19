@@ -40,6 +40,17 @@ export function collectLocalData() {
 /** Snapshot all managed mi_* keys as raw ciphertext blobs. Used for every Drive upload — P-02 point 7. */
 function collectLocalCiphertext() {
   const data = { _exportedAt: new Date().toISOString() };
+  // Include the vault key-envelope so a wiped/new device can rebuild the vault
+  // and unlock with the passphrase OR recovery key. The envelope only WRAPS the
+  // random data-key (it's not the key itself and carries no plaintext), so it is
+  // useless without those secrets — safe to keep in the user's own Drive. Stored
+  // under a non-mi_ key so the merge path skips it; restoreFromDrive handles it.
+  // (Without this, a Drive backup was NOT recoverable on a new device — the gap
+  // exposed by the 2026-07-19 incident.)
+  const envelope = secureStorage.getRawCiphertext(secureStorage.VAULT_KEY);
+  if (envelope != null) {
+    try { data._vaultEnvelope = JSON.parse(envelope); } catch { data._vaultEnvelope = envelope; }
+  }
   for (const key of secureStorage.allManagedKeys()) {
     if (EXCLUDE_KEYS.has(key)) continue;
     const raw = secureStorage.getRawCiphertext(key);
@@ -47,6 +58,36 @@ function collectLocalCiphertext() {
     try { data[key] = JSON.parse(raw); } catch { /* not yet migrated to ciphertext — skip rather than upload plaintext */ }
   }
   return data;
+}
+
+/**
+ * Rebuild a wiped/new device from the Drive backup, WITHOUT the DEK. Writes the
+ * vault envelope + every ciphertext blob to localStorage raw; the caller then
+ * reloads and unlocks with the passphrase or recovery key (which unwraps the DEK
+ * from the restored envelope and decrypts the blobs). Returns
+ * { count, hasEnvelope } or null if no Drive backup exists.
+ */
+export async function restoreFromDrive(token) {
+  const driveData = await downloadFromDrive(token);
+  if (!driveData) return null;
+
+  // No envelope → the blobs can't be decrypted on this device (old backup from
+  // before the fix). Restore NOTHING rather than strand orphaned ciphertext.
+  const hasEnvelope = driveData._vaultEnvelope != null;
+  if (!hasEnvelope) return { count: 0, hasEnvelope: false };
+
+  const env = typeof driveData._vaultEnvelope === "string"
+    ? driveData._vaultEnvelope : JSON.stringify(driveData._vaultEnvelope);
+  secureStorage.importRawCiphertext(secureStorage.VAULT_KEY, env);
+
+  let count = 0;
+  for (const [key, blob] of Object.entries(driveData)) {
+    if (!key.startsWith("mi_") || EXCLUDE_KEYS.has(key)) continue;
+    const raw = typeof blob === "string" ? blob : JSON.stringify(blob);
+    secureStorage.importRawCiphertext(key, raw);
+    count++;
+  }
+  return { count, hasEnvelope };
 }
 
 // ── Drive file helpers ────────────────────────────────────────────────────────
