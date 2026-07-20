@@ -33,8 +33,18 @@ await build({
 });
 
 // Root of the demo origin = the demo seeder, which loads the fictional dataset
-// and forwards to ../ (i.e. /app/). Its guards are harmless here but retained.
-cpSync("public/demo/index.html", "dist-demo/index.html");
+// then forwards to the app. Its guards are harmless here but retained.
+//
+// The seeder normally lives at /app/demo/ and redirects to "../" (→ /app/). Here
+// it sits at the ORIGIN ROOT, where "../" resolves back to itself — an endless
+// "Loading demo patient data…". Rewrite the hop to the app's absolute path.
+const SEEDER_FROM = 'window.location.href = "../"';
+const SEEDER_TO   = 'window.location.href = "/app/"';
+const seeder = readFileSync("public/demo/index.html", "utf-8");
+if (!seeder.includes(SEEDER_FROM)) {
+  throw new Error(`demo build: expected ${SEEDER_FROM} in public/demo/index.html — redirect rewrite would silently no-op`);
+}
+writeFileSync("dist-demo/index.html", seeder.replace(SEEDER_FROM, SEEDER_TO));
 
 // public/CNAME rides along in the app build and names the PRODUCTION domain.
 // Pages only honours the repo-root CNAME, but drop it so the demo origin never
@@ -43,6 +53,14 @@ rmSync("dist-demo/app/CNAME", { force: true });
 
 // Optional custom-domain file (GitHub Pages). Skipped for hosts that don't use it.
 if (DEMO_DOMAIN) writeFileSync("dist-demo/CNAME", DEMO_DOMAIN + "\n");
+
+// Branch-based GitHub Pages runs Jekyll by default, which silently drops some
+// asset paths. Ship .nojekyll from the build so a deploy can never forget it.
+writeFileSync("dist-demo/.nojekyll", "");
+
+// NOTE: this directory is deleted and recreated on every build — never keep a
+// git clone (or anything else you care about) inside it. Deploy by copying
+// dist-demo/ into a checkout of the demo repo held elsewhere.
 
 if (!existsSync("dist-demo/index.html")) throw new Error("demo build: root seeder missing");
 console.log(`Demo build complete → dist-demo/  (root = demo seeder, app at /app/)${DEMO_DOMAIN ? `  CNAME=${DEMO_DOMAIN}` : ""}`);

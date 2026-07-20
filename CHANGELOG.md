@@ -12,6 +12,28 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.32.1 — 2026-07-20
+
+### Fixed
+- **The demo was unusable since P-02 shipped.** A demo install carries the
+  fictional dataset in plaintext with no vault, but the app installed the
+  storage interception unconditionally (so every `mi_*` read returned `null`)
+  and started locked (so the visitor met "Encrypt your health record" instead of
+  the demo). Adds `secureStorage.isDemoMode()` — true only when the demo marker
+  is present **and no vault exists** — which skips the interception, the lock
+  screen, the inactivity auto-lock, and the onboarding gate.
+  **`hasVault()` always wins**, so a real record can never be served unlocked or
+  unencrypted; verified both ways (a vault plus a forged demo marker still
+  locks). The marker itself is only written by the demo loaders, which refuse to
+  run when any real record is present.
+- **Demo site redirect loop.** `build-demo.mjs` places the seeder at the origin
+  root, where its relative `"../"` hop resolved back to itself — the demo hung on
+  "Loading demo patient data…". The root seeder is now rewritten to target
+  `/app/`, guarded so the rewrite throws rather than silently no-op if the source
+  string changes. The build also ships `.nojekyll` (previously added by hand, easy
+  to forget) and documents that `dist-demo/` is wiped each build, so a deploy
+  checkout must live elsewhere.
+
 ## v1.32.0 — 2026-07-20
 
 ### Added

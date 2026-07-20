@@ -4,14 +4,17 @@ import App from './App.jsx'
 import CompanionApp from './components/companion/CompanionApp.jsx'
 import { runMigrations } from './lib/migrations.js'
 import { runTripwireEvaluation } from './lib/tripwire.js'
-import { installInterception, hasVault } from './lib/secureStorage.js'
+import { installInterception, hasVault, isDemoMode } from './lib/secureStorage.js'
 import './index.css'
 
 // P-02: install the localStorage interception before anything else touches
 // mi_* keys. Locked reads of managed keys fail safe (return null) from the
 // very first line, rather than only once LockScreen's unlock() runs — no
 // stray boot-time code can see raw ciphertext.
-installInterception()
+// Demo installs (fictional dataset, no vault) keep plaintext storage: with the
+// interception active and no DEK, every mi_* read returns null and the demo
+// renders an empty record. isDemoMode() is false whenever a real vault exists.
+if (!isDemoMode()) installInterception()
 
 // A-08: run schema migrations once, synchronously, before either entry point
 // renders — both the full app and the companion read/write the same mi_*

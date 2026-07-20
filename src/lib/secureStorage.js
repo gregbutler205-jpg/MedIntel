@@ -60,6 +60,22 @@ function isCiphertextShape(raw) {
 export function hasVault() { return nativeGet(VAULT_KEY) !== null; }
 export function isUnlocked() { return dek !== null; }
 
+/**
+ * Demo mode: the fictional dataset loaded with NO vault (public demo origin).
+ * Such an install has nothing to protect — the record is fictional and, on
+ * demo.insinahealth.com, lives in a separate origin's storage entirely. Callers
+ * use this to skip the encryption interception and the lock screen so a visitor
+ * lands straight in the app instead of being asked to create a password.
+ *
+ * Safety: hasVault() ALWAYS wins. The moment a real vault exists this returns
+ * false, so a real record can never be served unlocked or unencrypted. The
+ * marker itself is only written by the demo loaders, which refuse to run when
+ * any real record is present.
+ */
+export function isDemoMode() {
+  return !hasVault() && nativeGet("mi_is_demo") === "1";
+}
+
 /** Every mi_* key name currently present, managed or not — for migration/enumeration only. */
 function allManagedKeyNames() {
   const names = [];

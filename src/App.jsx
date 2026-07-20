@@ -502,7 +502,10 @@ export default function App() {
   // false until LockScreen's unlock()/setupVaultAndMigrate() runs), same as
   // real disk-at-rest encryption. sessionStorage.mi_unlocked no longer gates
   // anything security-relevant; LockScreen calling onUnlock() is the only path in.
-  const [unlocked, setUnlocked] = useState(() => secureStorage.isUnlocked());
+  // Demo installs have no vault and nothing to protect, so they open directly
+  // instead of being asked to create a password (isDemoMode() is false the
+  // moment a real vault exists).
+  const [unlocked, setUnlocked] = useState(() => secureStorage.isUnlocked() || secureStorage.isDemoMode());
   const [autoLockVersion, setAutoLockVersion] = useState(0);
 
   const lock = useCallback(() => {
@@ -531,6 +534,7 @@ export default function App() {
   // screen. AppShell unmounts when locked, so no data remains on screen.
   useEffect(() => {
     if (!unlocked) return;
+    if (secureStorage.isDemoMode()) return; // nothing to lock; would strand the demo on a setup screen
     const minutes = getAutoLockMinutes();
     if (!minutes) return; // 0 = disabled
     const ms = minutes * 60 * 1000;
@@ -550,7 +554,7 @@ export default function App() {
   // vaults and demo builds never see it; an incomplete flow resumes.
   const [onboarding, setOnboarding] = useState(false);
   useEffect(() => {
-    if (unlocked) setOnboarding(shouldOnboard());
+    if (unlocked && !secureStorage.isDemoMode()) setOnboarding(shouldOnboard());
   }, [unlocked]);
 
   // §7 task CTAs (T6, T2-tier0) can re-enter onboarding at a specific phase —
