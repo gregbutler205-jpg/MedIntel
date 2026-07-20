@@ -36,6 +36,11 @@ await build({
 // and forwards to ../ (i.e. /app/). Its guards are harmless here but retained.
 cpSync("public/demo/index.html", "dist-demo/index.html");
 
+// public/CNAME rides along in the app build and names the PRODUCTION domain.
+// Pages only honours the repo-root CNAME, but drop it so the demo origin never
+// carries a file claiming insinahealth.com.
+rmSync("dist-demo/app/CNAME", { force: true });
+
 // Optional custom-domain file (GitHub Pages). Skipped for hosts that don't use it.
 if (DEMO_DOMAIN) writeFileSync("dist-demo/CNAME", DEMO_DOMAIN + "\n");
 
