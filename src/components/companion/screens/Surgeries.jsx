@@ -8,7 +8,7 @@ export default function Surgeries({ onBack }) {
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: C.card, borderBottom: `1px solid ${C.b2}`, position: "sticky", top: 0, zIndex: 10 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: C.blue, fontSize: 20, cursor: "pointer", lineHeight: 1 }}>←</button>
-        <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: C.p, flex: 1 }}>Surgeries & Procedures</div>
+        <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: C.p, flex: 1 }}>Procedures</div>
       </div>
       <div style={{ overflowY: "auto", overflowX: "hidden", padding: 16, flex: 1 }}>
         {list.length === 0 ? <Empty>No surgeries or procedures on file.</Empty> : list.map((s, i) => (

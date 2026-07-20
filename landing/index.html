@@ -48,8 +48,8 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 .site-head .container{height:72px;display:flex;align-items:center;gap:20px}
 .brand{display:flex;align-items:center;gap:11px}
 .brand img{height:42px}
-.brand .b1{font-weight:700;font-size:21px;color:var(--navy);letter-spacing:-.3px;line-height:1}
-.brand .b2{font-weight:600;font-size:9.5px;color:var(--blue);letter-spacing:3.5px;margin-top:3px;line-height:1}
+/* Full lockup (shield + wordmark) replaces the shield + styled-text brand */
+.brand img.brand-lockup{height:52px;width:auto}
 .navlinks{display:flex;gap:22px;margin-left:auto}
 .navlink{font-size:12.5px;font-weight:500;color:var(--body);transition:color .15s}
 .navlink:hover{color:var(--blue)}
@@ -360,8 +360,7 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 <header class="site-head">
   <div class="container">
     <a class="brand" href="#top" aria-label="Insina Health home">
-      <img src="/assets/shield.png" alt="" />
-      <span><span class="b1">Insina</span><br /><span class="b2">HEALTH</span></span>
+      <img class="brand-lockup" src="/assets/logo.png" alt="Insina Health" />
     </a>
     <nav class="navlinks" aria-label="Primary">
       <a class="navlink" href="#patients">For Patients</a>

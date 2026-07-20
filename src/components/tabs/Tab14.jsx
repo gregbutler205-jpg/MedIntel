@@ -6,7 +6,7 @@ import { PrintLabel } from "../icons.jsx";
 import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { compressImage } from "../../lib/cards.js";
-import { getImaging, setImaging, getMedsFull, setMedsFull } from "../../store.js";
+import { getDiagnostics, setDiagnostics, getMedsFull, setMedsFull } from "../../store.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
@@ -475,7 +475,7 @@ function buildDocContext(searchText) {
 // ── Appointment attachments (documents, imaging, notes, prep) ────────────────
 const ATT_META = {
   document: { icon: "▣", label: "Document",  color: "#4f8ef7", nav: "documents" },
-  imaging:  { icon: "◍", label: "Imaging",   color: "#a78bfa", nav: "profile"   },
+  imaging:  { icon: "◍", label: "Diagnostic", color: "#a78bfa", nav: "diagnostics" },
   note:     { icon: "◻", label: "Note",      color: "#10b981", nav: "notes"     },
   record:   { icon: "▤", label: "Record",    color: "#b0c4d8", nav: "records"   },
   prep:     { icon: "✦", label: "Consultation Prep", color: "#f59e0b", nav: null },
@@ -485,7 +485,7 @@ const ATT_META = {
 function loadAttachables() {
   const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
   const docs    = safe("mi_documents").map(d => ({ type: "document", refId: d.id, title: d.title || "Untitled document", date: d.date || d.studyDate || "" }));
-  const imaging = safe("mi_imaging").map(i => ({ type: "imaging", refId: i.id, title: [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: i.date || "" }));
+  const imaging = safe("mi_diagnostics").map(i => ({ type: "imaging", refId: i.id, title: i.name || [i.type, i.bodyPart].filter(Boolean).join(" — ") || "Diagnostic study", date: i.date || "" }));
   const notes   = safe("mi_notes").map(n => ({ type: "note", refId: n.id, title: n.title || "Note", date: n.date || "" }));
   const records = safe("mi_records").map(r => ({ type: "record", refId: r.id, title: r.title || "Untitled record", date: r.date || "" }));
   return [...docs, ...imaging, ...notes, ...records];
@@ -667,17 +667,20 @@ async function captureDocument({ file, title, category, apptDate }) {
   return { type: "document", refId: doc.id, title: doc.title, date: doc.date };
 }
 
-// Imaging → mi_imaging (matches Tab02's BLANK_IMAGING shape). An uploaded image is
-// compressed onto the record; the metadata is what Profile lists.
+// Imaging → mi_diagnostics (the Diagnostics tab's shape — observational studies
+// live there now). An uploaded image is compressed onto the record; the
+// metadata is what Profile and the Diagnostics tab list.
 async function captureImaging({ imgType, bodyPart, facility, apptDate, file }) {
   let image = "";
   if (file?.type?.startsWith("image/")) image = await compressImage(file);
   const rec = {
-    id: Date.now(), type: imgType, bodyPart: (bodyPart || "").trim(),
-    facility: facility || "", date: apptDate || "", ...(image ? { image } : {}),
+    id: Date.now(),
+    name: [imgType, (bodyPart || "").trim()].filter(Boolean).join(" — ") || "Imaging study",
+    date: apptDate || "", orderedBy: "", readingProvider: "", impression: "",
+    relatedCondition: "", facility: facility || "", ...(image ? { image } : {}),
   };
-  setImaging([rec, ...getImaging()]);   // may throw QuotaExceededError
-  return { type: "imaging", refId: rec.id, title: [rec.type, rec.bodyPart].filter(Boolean).join(" — ") || "Imaging study", date: rec.date };
+  setDiagnostics([rec, ...getDiagnostics()]);   // may throw QuotaExceededError
+  return { type: "imaging", refId: rec.id, title: rec.name, date: rec.date };
 }
 
 // Condition → mi_conditions (matches Tab15's BLANK). Also refreshes the

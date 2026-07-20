@@ -22,7 +22,8 @@ export const NAV = [
   { id: "dashboard",   icon: "⬡", label: "Dashboard" },
   { id: "profile",     icon: "◯", label: "Health Profile" },
   { id: "conditions",  icon: "◎", label: "Conditions" },
-  { id: "surgeries",   icon: "✦", label: "Surgeries" },
+  { id: "surgeries",   icon: "✦", label: "Procedures" },   // renamed from "Surgeries"; id/store keys unchanged
+  { id: "diagnostics", icon: "◫", label: "Diagnostics" },
   { id: "medications", icon: "⬡", label: "Medications" },
   { id: "labs",        icon: "◈", label: "Labs & Trends" },
   { id: "vitals",      icon: "♡", label: "Vitals" },
@@ -43,7 +44,7 @@ export const NAV = [
 // import/export, and system screens. Every module stays reachable.
 export const NAV_GROUPS = [
   { key: "today",  label: "Today",           ids: ["dashboard", "appointments"] },
-  { key: "health", label: "My Health",       ids: ["profile", "conditions", "surgeries", "medications", "labs", "vitals", "symptoms", "careplan"] },
+  { key: "health", label: "My Health",       ids: ["profile", "conditions", "surgeries", "diagnostics", "medications", "labs", "vitals", "symptoms", "careplan"] },
   { key: "tools",  label: "Records & Tools", ids: ["records", "documents", "notes", "ai", "import", "backup"] },
 ];
 

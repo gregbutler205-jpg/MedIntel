@@ -116,7 +116,7 @@ function SurgeryModal({ surgery, onSave, onClose }) {
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
       <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:28, width:540, maxHeight:"90vh", overflowY:"auto" }}>
         <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, color:"#dde8f5", marginBottom:20 }}>
-          {form.id ? "Edit Surgery / Procedure" : "Add Surgery / Procedure"}
+          {form.id ? "Edit Procedure" : "Add Procedure"}
         </div>
 
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
@@ -190,7 +190,7 @@ function SurgeryModal({ surgery, onSave, onClose }) {
             if (cpt && !CPT_RE.test(cpt)) { setCptError("CPT codes are 5 characters: four digits then a digit or letter (e.g. 47135). Leave blank to save uncoded."); return; }
             onSave({ ...form, cpt, id: form.id || genId() });
           }} style={btnPrimary}>
-            {form.id ? "Save Changes" : "Add Surgery"}
+            {form.id ? "Save Changes" : "Add Procedure"}
           </button>
         </div>
       </div>
@@ -240,27 +240,27 @@ export default function SurgeriesTab() {
         {/* Header */}
         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:22 }} className="no-print">
           <div>
-            <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px" }}>Surgeries & Procedures</h1>
+            <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px" }}>Procedures</h1>
             <p style={{ fontSize:12, color:"#98afc4", marginTop:4, fontFamily:"'DM Mono',monospace" }}>
               {surgeries.length} procedure{surgeries.length !== 1 ? "s" : ""} on record · sorted most recent first
             </p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
             <button onClick={() => window.print()} style={btnGhost}><PrintLabel /></button>
-            <button onClick={() => setModal(BLANK)} style={btnPrimary}>+ Add Surgery</button>
+            <button onClick={() => setModal(BLANK)} style={btnPrimary}>+ Add Procedure</button>
           </div>
         </div>
 
         {/* Print header */}
         <div style={{ display:"none" }}>
-          <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, marginBottom:4 }}>Surgical History</h2>
+          <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, marginBottom:4 }}>Procedure History</h2>
           <p style={{ fontSize:11, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
         </div>
 
         {/* List */}
         {surgeries.length === 0 ? (
           <div style={{ textAlign:"center", padding:"60px 0", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontSize:12 }}>
-            No surgeries or procedures added yet — click Add Surgery to get started.
+            No procedures added yet — click Add Procedure to get started.
           </div>
         ) : (
           // UI-24: reverse-chronological at render time too — restored/legacy
@@ -305,7 +305,7 @@ export default function SurgeriesTab() {
       {deleteId && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
           <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:14, padding:28, width:380 }}>
-            <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", marginBottom:10 }}>Delete Surgery?</div>
+            <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", marginBottom:10 }}>Delete Procedure?</div>
             <div style={{ fontSize:13, color:"#98afc4", marginBottom:22 }}>This cannot be undone.</div>
             <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
               <button onClick={() => setDeleteId(null)} style={btnGhost}>Cancel</button>

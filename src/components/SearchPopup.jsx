@@ -29,7 +29,8 @@ const CATEGORIES = {
   conditions:   { label: "Conditions",      color: "#a78bfa", tab: "conditions"   },
   appointments: { label: "Appointments",    color: "#4f8ef7", tab: "appointments" },
   symptoms:     { label: "Symptoms",        color: "#ef4444", tab: "symptoms"     },
-  surgeries:    { label: "Surgeries",       color: "#7eb8d8", tab: "surgeries"    },
+  surgeries:    { label: "Procedures",      color: "#7eb8d8", tab: "surgeries"    },
+  diagnostics:  { label: "Diagnostics",     color: "#7eb8d8", tab: "diagnostics"  },
   documents:    { label: "Source Documents", color: "#f59e0b", tab: "documents"    },
   aiHistory:    { label: "AI History",      color: "#a78bfa", tab: "ai"           },
 };
@@ -140,14 +141,26 @@ function searchAll(query) {
     }
   });
 
-  // Surgeries
+  // Procedures (store keeps the legacy mi_surgeries key)
   safeRead("mi_surgeries", []).forEach(s => {
     if ([s.procedure, s.surgeon, s.facility, s.notes, s.outcome].some(f => includes(f, q))) {
       results.push({
         category: "surgeries",
-        title:    s.procedure || "Surgery",
+        title:    s.procedure || "Procedure",
         subtitle: [s.surgeon, s.facility, s.date].filter(Boolean).join(" · "),
         date: s.date || "",
+      });
+    }
+  });
+
+  // Diagnostics (observational studies — imaging, EKG, EMG, …)
+  safeRead("mi_diagnostics", []).forEach(d => {
+    if ([d.name, d.orderedBy, d.readingProvider, d.impression, d.relatedCondition, d.facility].some(f => includes(f, q))) {
+      results.push({
+        category: "diagnostics",
+        title:    d.name || "Diagnostic study",
+        subtitle: [d.readingProvider, d.facility, d.date].filter(Boolean).join(" · "),
+        date: d.date || "",
       });
     }
   });

@@ -37,7 +37,8 @@ import TabImport       from './components/tabs/Tab12.jsx';
 import TabBackup       from './components/tabs/Tab13.jsx';
 import TabAppointments from './components/tabs/Tab14.jsx';
 import TabConditions   from './components/tabs/Tab15.jsx';
-import TabSurgeries    from './components/tabs/Tab16.jsx';
+import TabSurgeries    from './components/tabs/Tab16.jsx'; // "Procedures" in the UI; ids/keys keep the legacy name
+import TabDiagnostics  from './components/tabs/Tab17.jsx';
 
 // ── Routing maps ─────────────────────────────────────────────────────────────
 // These 4 tabs are full standalone apps (own sidebar + own topbar + height:100vh).
@@ -61,6 +62,7 @@ const TAB_COMPONENTS = {
   appointments: TabAppointments,
   conditions:   TabConditions,
   surgeries:    TabSurgeries,
+  diagnostics:  TabDiagnostics,
 };
 
 // ── Featured labs helper ──────────────────────────────────────────────────────

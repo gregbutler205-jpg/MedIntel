@@ -12,6 +12,32 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.33.0 — 2026-07-20
+
+### Added
+- **Diagnostics tab** (sidebar, My Health, after Procedures): observational
+  studies — imaging, EKG, EMG, EEG, echo, and the like. Fields per study: name,
+  date, ordered by, reading provider, impression, related condition (picks from
+  your Conditions list), plus facility. The dividing line is intent: Procedures
+  is anything done to intervene, biopsy, or treat; Diagnostics is anything
+  recorded to observe. Searchable from the global search; visit-capture imaging
+  from Appointments now lands here.
+- **Migration v3**: existing Imaging History entries move into Diagnostics
+  (name from type + body part, e.g. "MRI — Liver"); ordered-by / reading
+  provider / impression start blank to fill in. Major migration — a safety
+  backup auto-downloads before it runs.
+
+### Changed
+- **Surgeries renamed to Procedures** everywhere user-facing: sidebar, tab,
+  global search, companion. Storage keys and internal ids unchanged.
+- **Patient Profile (screen + printed report)**: "Surgical & Procedure History"
+  is now **Procedures** and also includes Procedure-type records from Medical
+  Records (previously those were misfiled under Imaging History on the report);
+  "Imaging History" is now **Diagnostics**, showing the Diagnostics tab's
+  studies plus Imaging-type records. Both profile cards are read-only mirrors —
+  add/edit lives on the tabs.
+- **Landing page** header now uses the full Insina Health logo lockup.
+
 ## v1.32.1 — 2026-07-20
 
 ### Fixed

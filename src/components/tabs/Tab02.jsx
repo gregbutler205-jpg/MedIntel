@@ -7,7 +7,7 @@ import {
   getCareTeam, setCareTeam,
   getAllergies, setAllergies,
   getEmergencyContacts, setEmergencyContacts,
-  getImaging, setImaging,
+  getDiagnostics,
   getConditions, getSurgeries, getMedsFull, getLatestReading,
 } from "../../store.js";
 import { getCards, setCards, blankCard, compressImage, shareImageDataUrl } from "../../lib/cards.js";
@@ -224,56 +224,10 @@ function ECModal({ contact, onSave, onClose }) {
   );
 }
 
-// ── Imaging Modal ──────────────────────────────────────────────────────────────
-const IMAGE_TYPES = ["MRI","CT Scan","X-ray","PET Scan","Ultrasound","Mammogram","DEXA Scan","Echocardiogram","Fluoroscopy","Other"];
-const IMAGE_COLORS = {
-  "MRI":"#a78bfa","CT Scan":"#4f8ef7","X-ray":"#06b6d4",
-  "PET Scan":"#f97316","Ultrasound":"#10b981","Mammogram":"#ec4899",
-  "DEXA Scan":"#f59e0b","Echocardiogram":"#ef4444",
-  "Fluoroscopy":"#6b7280","Other":"#6b7a8d",
-};
-const BLANK_IMAGING = { id:null, type:"MRI", bodyPart:"", facility:"", date:"" };
-
-function ImagingModal({ entry, onSave, onClose }) {
-  const [form, setForm] = useState({ ...BLANK_IMAGING, ...entry });
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
-      <div style={{ background:T.card, border:`1px solid ${T.borderActive}`, borderRadius:16, padding:28, width:460 }}>
-        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:T.p, marginBottom:20 }}>
-          {form.id ? "Edit Imaging Study" : "Add Imaging Study"}
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:20 }}>
-          <div>
-            <label style={lbl}>Image Type *</label>
-            <select style={inp} value={form.type} onChange={e => set("type", e.target.value)}>
-              {IMAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={lbl}>Date</label>
-            <input type="date" style={inp} value={form.date} onChange={e => set("date", e.target.value)} />
-          </div>
-          <div style={{ gridColumn:"1/-1" }}>
-            <label style={lbl}>Body Part / Region *</label>
-            <input style={inp} value={form.bodyPart} onChange={e => set("bodyPart", e.target.value)} placeholder="e.g. Right Knee, Abdomen, Chest" />
-          </div>
-          <div style={{ gridColumn:"1/-1" }}>
-            <label style={lbl}>Facility / Location</label>
-            <input style={inp} value={form.facility} onChange={e => set("facility", e.target.value)} placeholder="e.g. Ochsner Medical Center" />
-          </div>
-        </div>
-        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
-          <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
-          <button
-            onClick={() => { if (!form.bodyPart.trim()) return; onSave({ ...form, id: form.id ?? Date.now() }); }}
-            style={{ padding:"8px 18px", background:"rgba(167,139,250,.12)", border:"1px solid rgba(167,139,250,.35)", borderRadius:8, color:"#a78bfa", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}
-          >Save Study</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ── Diagnostics ────────────────────────────────────────────────────────────────
+// The old in-profile Imaging modal is gone: diagnostic studies (imaging, EKG,
+// EMG, …) are owned by the Diagnostics tab (Tab17); this screen and the printed
+// report render a read-only mirror. Migration v3 moved mi_imaging entries there.
 
 // ── ID / Insurance Card Modal ───────────────────────────────────────────────────
 // SideUploader is defined at module level (stable identity) so React never
@@ -443,8 +397,8 @@ export default function ProfileTab() {
   const [surgeries, setSurgeries]   = useState([]);
   const [latestVitals, setLatestVitals] = useState(null);
 
-  // Imaging history
-  const [imaging, setImagingState] = useState(() => getImaging());
+  // Diagnostics — read-only mirror of the Diagnostics tab's store
+  const [diagnostics] = useState(() => getDiagnostics());
 
   // Insurance / ID cards (photos)
   const [cards, setCardsState] = useState(() => getCards());
@@ -459,7 +413,6 @@ export default function ProfileTab() {
   const [providerModal, setProviderModal]   = useState(null); // null | BLANK | existing
   const [allergyModal, setAllergyModal]     = useState(null);
   const [ecModal, setEcModal]               = useState(null);
-  const [imagingModal, setImagingModal]     = useState(null);
   const [cardModal, setCardModal]           = useState(null); // null | blank | existing card
   const [cardViewer, setCardViewer]         = useState(null); // { card, side }
   const [cardSelectOpen, setCardSelectOpen] = useState(false); // print-card picker
@@ -536,22 +489,6 @@ export default function ProfileTab() {
     setDeleteTarget(null);
   }
 
-  // Imaging studies
-  function saveImagingEntry(entry) {
-    const updated = entry.id && imaging.find(x => x.id === entry.id)
-      ? imaging.map(x => x.id === entry.id ? entry : x)
-      : [...imaging, entry];
-    setImagingState(updated);
-    setImaging(updated);
-    setImagingModal(null);
-  }
-  function deleteImagingEntry(id) {
-    const updated = imaging.filter(x => x.id !== id);
-    setImagingState(updated);
-    setImaging(updated);
-    setDeleteTarget(null);
-  }
-
   // Insurance / ID cards
   function saveCardEntry(entry) {
     const updated = entry.id && cards.find(x => x.id === entry.id)
@@ -573,22 +510,27 @@ export default function ProfileTab() {
     if (deleteTarget.type === "provider") deleteProvider(deleteTarget.id);
     else if (deleteTarget.type === "allergy") deleteAllergy(deleteTarget.id);
     else if (deleteTarget.type === "contact") deleteContact(deleteTarget.id);
-    else if (deleteTarget.type === "imaging") deleteImagingEntry(deleteTarget.id);
     else if (deleteTarget.type === "card") deleteCardEntry(deleteTarget.id);
   }
 
-  // All surgeries sorted newest first
-  const allSurgeries = [...surgeries].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  // All imaging sorted newest first; supplement with Procedure/Imaging records from mi_records
-  const recordProcedures = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("mi_records") || "[]")
-        .filter(r => r.type === "Imaging" || r.type === "Procedure")
-        .map(r => ({ id: `rec-${r.id}`, type: r.type, bodyPart: r.title, facility: r.facility || "", date: r.date || "", fromRecords: true }));
-    } catch { return []; }
+  // mi_records supplements, split by intent: Procedure records are things done
+  // to intervene/biopsy/treat and belong with Procedures; Imaging records are
+  // observational and belong with Diagnostics. (Previously both were funneled
+  // into Imaging History — procedures showed up under imaging on the report.)
+  const recordEntries = (() => {
+    try { return JSON.parse(localStorage.getItem("mi_records") || "[]"); } catch { return []; }
   })();
-  const allImaging = [...imaging, ...recordProcedures].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  const recordProcedures = recordEntries
+    .filter(r => r.type === "Procedure")
+    .map(r => ({ id: `rec-${r.id}`, procedure: r.title, facility: r.facility || "", date: r.date || "", fromRecords: true }));
+  const recordDiagnostics = recordEntries
+    .filter(r => r.type === "Imaging")
+    .map(r => ({ id: `rec-${r.id}`, name: r.title, facility: r.facility || "", date: r.date || "", fromRecords: true }));
+
+  // All procedures (Procedures tab + Procedure-type records), newest first
+  const allSurgeries = [...surgeries, ...recordProcedures].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  // All diagnostics (Diagnostics tab + Imaging-type records), newest first
+  const allDiagnostics = [...diagnostics, ...recordDiagnostics].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
   // Active meds
   const activeMeds = meds.filter(m => m.status !== "inactive");
@@ -906,14 +848,14 @@ export default function ProfileTab() {
             }
           </div>
 
-          {/* ── Recent Surgeries (last 12 months) ── */}
+          {/* ── Procedures (read-only mirror of the Procedures tab + Procedure records) ── */}
           <div style={{ ...card, gridColumn:"1/-1" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Surgical &amp; Procedure History</span>
-              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Surgeries tab ↗</span>
+              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Procedures</span>
+              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Procedures tab ↗</span>
             </div>
             {allSurgeries.length === 0
-              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No surgeries recorded</div>
+              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No procedures recorded</div>
               : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
                   {allSurgeries.map((s, i) => (
                     <div key={s.id || i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < allSurgeries.length - 1 ? `1px solid ${T.border}` : "none" }}>
@@ -932,36 +874,31 @@ export default function ProfileTab() {
             }
           </div>
 
-          {/* ── Imaging History ── */}
+          {/* ── Diagnostics (read-only mirror of the Diagnostics tab + Imaging records) ── */}
           <div style={{ ...card, gridColumn:"1/-1" }}>
-            <CardHeader title="Imaging History" onAdd={() => setImagingModal({ ...BLANK_IMAGING })} />
-            {allImaging.length === 0
-              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No imaging studies recorded. Click + Add to log an MRI, CT scan, X-ray, or other study.</div>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Diagnostics</span>
+              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Diagnostics tab ↗</span>
+            </div>
+            {allDiagnostics.length === 0
+              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No diagnostic studies recorded — add imaging, EKGs, EMGs, and other studies on the Diagnostics tab.</div>
               : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
-                  {allImaging.map((img, i) => {
-                    const color = IMAGE_COLORS[img.type] || "#6b7a8d";
-                    const dateStr = img.date
-                      ? new Date(img.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
+                  {allDiagnostics.map((d, i) => {
+                    const dateStr = d.date
+                      ? new Date(d.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
                       : "—";
                     return (
-                      <div key={img.id} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < allImaging.length - 1 ? `1px solid ${T.border}` : "none" }}>
-                        {/* Type badge */}
-                        <div style={{ flexShrink:0, marginTop:2, background:`${color}18`, border:`1px solid ${color}30`, borderRadius:6, padding:"2px 8px", fontSize:9, fontFamily:"'DM Mono',monospace", color, textTransform:"uppercase", letterSpacing:"0.5px", whiteSpace:"nowrap" }}>
-                          {img.type}
-                        </div>
-                        {/* Info */}
+                      <div key={d.id || i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < allDiagnostics.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                        <div style={{ width:8, height:8, borderRadius:"50%", background:"#a78bfa", marginTop:4, flexShrink:0 }} />
                         <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{img.bodyPart || "—"}</div>
-                          {img.facility && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{img.facility}</div>}
+                          <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{d.name || "—"}</div>
+                          <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>
+                            {[d.readingProvider && `Read by ${d.readingProvider}`, d.facility, d.relatedCondition].filter(Boolean).join(" · ")}
+                          </div>
                         </div>
-                        {/* Date + actions */}
                         <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
                           <span style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace" }}>{dateStr}</span>
-                          {!img.fromRecords && <>
-                            <button className="icon-btn" onClick={() => setImagingModal(img)}>✎</button>
-                            <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"imaging", id:img.id, label:`${img.type} — ${img.bodyPart}` })}>✕</button>
-                          </>}
-                          {img.fromRecords && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>Records ↗</span>}
+                          {d.fromRecords && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>Records ↗</span>}
                         </div>
                       </div>
                     );
@@ -1044,7 +981,6 @@ export default function ProfileTab() {
       {providerModal && <ProviderModal provider={providerModal} onSave={saveProvider}       onClose={() => setProviderModal(null)} />}
       {allergyModal  && <AllergyModal  allergy={allergyModal}  onSave={saveAllergy}        onClose={() => setAllergyModal(null)}  />}
       {ecModal       && <ECModal       contact={ecModal}       onSave={saveContact}        onClose={() => setEcModal(null)}       />}
-      {imagingModal  && <ImagingModal  entry={imagingModal}    onSave={saveImagingEntry}   onClose={() => setImagingModal(null)}  />}
       {cardModal     && <CardModal     card={cardModal}        onSave={saveCardEntry}      onClose={() => setCardModal(null)}     />}
       {cardViewer    && <CardViewer    card={cardViewer.card}  side={cardViewer.side}      onClose={() => setCardViewer(null)}    />}
       {cardSelectOpen && <CardSelectModal cards={cards} onClose={() => setCardSelectOpen(false)} onConfirm={(ids) => { setCardSelectOpen(false); setTimeout(() => requestReport("profile", () => handlePrint(ids)), 30); }} />}
@@ -1184,9 +1120,9 @@ export default function ProfileTab() {
           </div>
         </>}
 
-        {/* Surgical History */}
+        {/* Procedures (interventions, biopsies, treatments — incl. Procedure-type records) */}
         {allSurgeries.length > 0 && <>
-          <h2>Surgical &amp; Procedure History</h2>
+          <h2>Procedures</h2>
           {allSurgeries.map((s,i)=>(
             <div key={i} className="pr" style={{alignItems:"flex-start", paddingTop:5, paddingBottom:5}}>
               <span className="pr-lbl" style={{paddingTop:1}}>
@@ -1202,22 +1138,26 @@ export default function ProfileTab() {
           ))}
         </>}
 
-        {/* Imaging History */}
-        {allImaging.length > 0 && <>
-          <h2>Imaging History</h2>
-          <div className="grid2">
-            {allImaging.map((img, i) => (
-              <div key={i} className="pr">
-                <span className="pr-lbl">
-                  {img.date ? new Date(img.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "—"}
-                </span>
-                <span className="pr-val">
-                  <strong>{img.type}</strong>{img.bodyPart ? ` — ${img.bodyPart}` : ""}
-                  {img.facility ? <span style={{ fontSize:"9pt", color:"#555" }}> · {img.facility}</span> : null}
-                </span>
-              </div>
-            ))}
-          </div>
+        {/* Diagnostics (observational studies — imaging, EKG, EMG, … incl. Imaging-type records) */}
+        {allDiagnostics.length > 0 && <>
+          <h2>Diagnostics</h2>
+          {allDiagnostics.map((d, i) => (
+            <div key={i} className="pr" style={{ alignItems:"flex-start", paddingTop:5, paddingBottom:5 }}>
+              <span className="pr-lbl" style={{ paddingTop:1 }}>
+                {d.date ? new Date(d.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }) : "—"}
+              </span>
+              <span className="pr-val">
+                <strong>{d.name}</strong>
+                {d.relatedCondition ? <span style={{ fontSize:"9pt" }}> · {d.relatedCondition}</span> : null}
+                {(d.orderedBy || d.readingProvider || d.facility) && (
+                  <span style={{ fontSize:"9pt", color:"#555", display:"block" }}>
+                    {[d.orderedBy && `Ordered by ${d.orderedBy}`, d.readingProvider && `Read by ${d.readingProvider}`, d.facility].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+                {d.impression ? <span style={{ fontSize:"8.5pt", color:"#444", display:"block", marginTop:1 }}>{d.impression}</span> : null}
+              </span>
+            </div>
+          ))}
         </>}
 
         {/* Insurance & ID Cards (filtered by selection in handlePrint) */}

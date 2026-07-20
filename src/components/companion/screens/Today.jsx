@@ -122,7 +122,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
 
       <div style={{ marginTop: 16 }}><SL>Health Record</SL></div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <QuickBtn icon="🩺" label="Surgeries" onClick={openSurgeries} />
+        <QuickBtn icon="🩺" label="Procedures" onClick={openSurgeries} />
         <QuickBtn icon="💊" label="My med list" onClick={() => goTab("meds")} />
         <QuickBtn icon="🪪" label="Insurance cards" onClick={openCards} />
       </div>

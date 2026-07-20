@@ -102,8 +102,12 @@ export function setAllergies(v) { setStore('allergies', v); }
 export function getEmergencyContacts() { return getStore('emergency_contacts') ?? []; }
 export function setEmergencyContacts(v) { setStore('emergency_contacts', v); }
 
-export function getImaging() { return getStore('imaging') ?? []; }
-export function setImaging(v) { setStore('imaging', v); }
+// Diagnostics (observational studies: imaging, EKG, EMG, …). Supersedes the
+// old 'imaging' store — migration v3 moves mi_imaging entries here. The
+// dividing line is intent: Procedures (mi_surgeries) is anything done to
+// intervene, biopsy, or treat; Diagnostics is anything recorded to observe.
+export function getDiagnostics() { return getStore('diagnostics') ?? []; }
+export function setDiagnostics(v) { setStore('diagnostics', v); }
 
 // Cross-section reads used by Profile
 export function getConditions() {
