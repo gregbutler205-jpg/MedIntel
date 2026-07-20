@@ -13,14 +13,35 @@ export function printEmergency() {
   const labs      = safe("mi_labs");
   const logoUrl   = (import.meta.env.BASE_URL || "/") + "logo.png";
 
-  // Key labs: most recent per test, flagged first
-  const latestLabs = {};
-  labs.forEach(l => {
-    const k = (l.name || "").toLowerCase().trim();
-    if (!k) return;
-    if (!latestLabs[k] || new Date(l.date || 0) > new Date(latestLabs[k].date || 0)) latestLabs[k] = l;
-  });
-  const keyLabs = Object.values(latestLabs).sort((a, b) => (b.flag ? 1 : 0) - (a.flag ? 1 : 0)).slice(0, 16);
+  // ── Labs on the card: ONLY the most recent CMP and CBC draws ───────────────
+  // A clinician wants one coherent snapshot per panel — every value from the
+  // same draw — not a mix of dates. So for each panel we take its latest date
+  // and show that whole draw. Panels are ordered by the patient's own
+  // Settings → Lab Category Order (mi_lab_category_order).
+  // `aliases` covers the legacy/demo category names for the same panel so the
+  // card still populates on records that predate the current categories.
+  const CARD_PANELS = [
+    { key: "Metabolic Panel", aliases: ["Metabolic Panel", "Chemistry", "Electrolytes"] },
+    { key: "CBC",             aliases: ["CBC", "CBC / Hematology"] },
+  ];
+  const catOrder = (() => {
+    try { const o = JSON.parse(localStorage.getItem("mi_lab_category_order") || "null"); return Array.isArray(o) ? o : []; }
+    catch { return []; }
+  })();
+  const labPanels = CARD_PANELS.map(p => {
+    const rows = labs.filter(l => p.aliases.includes(l.category));
+    if (!rows.length) return null;
+    const latest = rows.reduce((max, l) => ((l.date || "") > max ? (l.date || "") : max), "");
+    const seen = new Set();
+    const onDay = rows.filter(l => (l.date || "") === latest).filter(l => {
+      const k = (l.name || "").toLowerCase().trim();
+      if (!k || seen.has(k)) return false;      // collapse repeat imports of the same analyte
+      seen.add(k); return true;
+    });
+    if (!onDay.length) return null;
+    const idx = catOrder.indexOf(p.key);
+    return { key: p.key, latest, rows: onDay, sort: idx === -1 ? 999 : idx };
+  }).filter(Boolean).sort((a, b) => a.sort - b.sort);
 
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const dob  = profile.dob  ? `  ·  DOB: ${profile.dob}` : "";
@@ -36,7 +57,13 @@ export function printEmergency() {
   const medRows  = meds.map(m => `<strong>${m.name}</strong>${m.dose ? ` ${m.dose}` : ""}${m.frequency ? ` — ${m.frequency}` : ""}${m.prescriber ? ` <span class="dim">(${m.prescriber})</span>` : ""}`);
   const algRows  = allergies.map(a => `<span class="badge allergy">${a.allergen || a.name}</span>${a.reaction ? ` <span class="dim">→ ${a.reaction}</span>` : ""}`);
   const ctRows   = contacts.map(c => `<strong>${c.name}</strong>${c.relationship ? ` (${c.relationship})` : ""} — <a href="tel:${c.phone}">${c.phone}</a>`);
-  const labRows  = keyLabs.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${l.name}</strong>: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` <span class="dim">(ref ${l.refRange})</span>` : ""}${l.date ? ` <span class="dim">${l.date}</span>` : ""}`);
+  // One section per panel; the draw date lives in the heading since every value
+  // in the section comes from that same draw.
+  const fmtDay = iso => { try { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }); } catch { return iso; } };
+  const labSections = labPanels.map(p => section(
+    `${p.key} — ${p.latest ? fmtDay(p.latest) : "date unknown"}`,
+    p.rows.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${l.name}</strong>: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` <span class="dim">(ref ${l.refRange})</span>` : ""}`)
+  )).join("");
 
   const win = window.open("", "_blank", "width=860,height=760");
   if (!win) return; // popup blocked — same convention as printMedicationList
@@ -71,7 +98,7 @@ export function printEmergency() {
     ${section("Allergies", algRows)}
     ${section("Active Conditions", condRows)}
     ${section("Active Medications", medRows)}
-    ${section("Recent Lab Results (Key Values)", labRows)}
+    ${labSections}
     <div class="footer">
       <span>Insina Health &mdash; Emergency Information</span>
       <span>Printed ${date}</span>

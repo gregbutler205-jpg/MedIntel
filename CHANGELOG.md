@@ -12,6 +12,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.30.0 — 2026-07-20
+
+### Changed
+- **Emergency Card labs are now the latest CMP and CBC only.** The card
+  previously listed the most recent value per test across every panel (capped at
+  16, flagged first), which mixed draw dates and buried the panels a clinician
+  actually wants. It now shows **one coherent draw per panel** — the most recent
+  Metabolic Panel and the most recent CBC, every value from that same date — with
+  the draw date in each section heading. Panels are ordered by the patient's own
+  **Settings → Lab Category Order** (`mi_lab_category_order`). Repeat imports of
+  the same analyte on a draw collapse to one row. Legacy/demo category names
+  (`Chemistry`/`Electrolytes`, `CBC / Hematology`) are accepted as aliases so
+  older records still populate the card.
+
 ## v1.29.1 — 2026-07-19
 
 ### Fixed
