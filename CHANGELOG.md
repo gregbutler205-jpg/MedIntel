@@ -12,6 +12,14 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.35.1 — 2026-07-20
+
+### Changed
+- **Landing page:** header nav links centered between the logo and the action
+  buttons; Sign In button restyled blue (text + border); the laptop mockup now
+  shows a real dashboard screenshot (with the actual logo) instead of the
+  CSS-built replica. The phone mockup is unchanged.
+
 ## v1.35.0 — 2026-07-20
 
 ### Added

@@ -50,7 +50,7 @@ section[id],div[id],footer[id]{scroll-margin-top:140px}
 .brand img{height:42px}
 /* Full lockup (shield + wordmark) replaces the shield + styled-text brand */
 .brand img.brand-lockup{height:104px;width:auto}
-.navlinks{display:flex;gap:22px;margin-left:auto}
+.navlinks{display:flex;gap:22px;flex:1;justify-content:center;text-align:center}
 .navlink{font-size:14.5px;font-weight:500;color:var(--body);transition:color .15s}
 .navlink:hover{color:var(--blue)}
 .head-actions{display:flex;gap:10px;margin-left:6px}
@@ -64,7 +64,7 @@ section[id],div[id],footer[id]{scroll-margin-top:140px}
 .btn-o.sm{padding:8px 15px;font-size:14.5px}
 /* Sign In — app entry point, far right. Deliberately neutral so it doesn't
    compete with the blue primary CTA next to it. */
-.btn-si{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--navy);border:1px solid var(--border);font-family:var(--sans);font-weight:600;font-size:14.5px;padding:8px 16px;border-radius:10px;transition:background .2s,border-color .2s,color .2s}
+.btn-si{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--blue);border:1.5px solid var(--blue);font-family:var(--sans);font-weight:600;font-size:14.5px;padding:8px 16px;border-radius:10px;transition:background .2s,border-color .2s,color .2s}
 .btn-si:hover{background:var(--tint);border-color:var(--blue);color:var(--blue)}
 .btn-o .ic,.btn-p .ic{width:15px;height:15px}
 
@@ -95,6 +95,7 @@ section[id],div[id],footer[id]{scroll-margin-top:140px}
 .lap{position:absolute;top:0;left:0}
 .lap-bezel{background:#10151f;border:1px solid #29334a;border-radius:16px;padding:9px;box-shadow:0 30px 70px rgba(16,29,53,.35)}
 .lap-screen{width:600px;height:375px;border-radius:9px;overflow:hidden;background:var(--d-bg)}
+.lap-shot{width:100%;height:100%;object-fit:cover;object-position:left top;display:block}
 .lap-inner{width:1200px;height:750px;transform:scale(.5);transform-origin:top left;display:flex;font-family:var(--sans);color:var(--d-text2)}
 .lap-base{width:700px;height:13px;margin-left:-41px;background:linear-gradient(#dfe4ec,#aeb6c4);border-radius:0 0 14px 14px;position:relative}
 .lap-base::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:92px;height:5px;background:#98a1b1;border-radius:0 0 8px 8px}
@@ -407,87 +408,7 @@ section[id],div[id],footer[id]{scroll-margin-top:140px}
           <!-- laptop: actual dashboard, dark navy -->
           <div class="lap">
             <div class="lap-bezel">
-              <div class="lap-screen">
-                <div class="lap-inner">
-                  <aside class="side">
-                    <div class="side-logo">
-                      <div class="row"><img src="/assets/shield.png" alt="" /><span class="nm">Insina <b>Health</b></span></div>
-                      <div class="tag">PERSONAL HEALTH RECORD</div>
-                    </div>
-                    <div class="side-patient">
-                      <div class="lb">PATIENT</div>
-                      <div class="nm">Alex Rivera</div>
-                      <div class="st">Liver transplant · Immunosuppressed</div>
-                    </div>
-                    <nav class="snav">
-                      <div class="sgroup">CORE</div>
-                      <div class="sni active"><span class="gi">⬡</span>Dashboard</div>
-                      <div class="sni"><span class="gi">◯</span>Profile</div>
-                      <div class="sni"><span class="gi">▤</span>Records</div>
-                      <div class="sni"><span class="gi">⬡</span>Medications</div>
-                      <div class="sni"><span class="gi">◈</span>Labs &amp; Trends</div>
-                      <div class="sni"><span class="gi">♡</span>Vitals</div>
-                      <div class="sni"><span class="gi">◎</span>Symptoms</div>
-                      <div class="sni"><span class="gi">◷</span>Care Plan</div>
-                      <div class="sgroup g2">SYSTEM</div>
-                      <div class="sni"><span class="gi">▣</span>Documents</div>
-                      <div class="sni"><span class="gi">◻</span>Notes</div>
-                      <div class="sni"><span class="gi">✦</span>AI Analysis<span class="aitag">AI</span></div>
-                      <div class="sni"><span class="gi">↓</span>Import Records</div>
-                      <div class="sni"><span class="gi">◈</span>Data &amp; Backup</div>
-                    </nav>
-                    <div class="sfoot"><span class="pulse"></span>All systems nominal</div>
-                  </aside>
-                  <div class="lmain">
-                    <div class="topbar">
-                      <span class="pulse"></span>
-                      <span class="dt">Friday, July 17, 2026 · 9:41 AM</span>
-                      <span class="tb-pill">Last import: Jul 15, 2026</span>
-                      <span class="avatar">A</span>
-                    </div>
-                    <div class="lcontent">
-                      <div class="greet">Good morning, Alex.</div>
-                      <div class="gsub">3 upcoming events · 2 alerts need attention</div>
-                      <div class="stats">
-                        <div class="stat"><div class="bar" style="background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.4)"></div><div class="v">14</div><div class="l">Active Meds</div><div class="s">3 flagged for review</div></div>
-                        <div class="stat"><div class="bar" style="background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.4)"></div><div class="v">128/74</div><div class="l">Last BP</div><div class="s">Jul 12 · normal</div></div>
-                        <div class="stat"><div class="bar" style="background:#4f8ef7;box-shadow:0 0 8px rgba(79,142,247,.4)"></div><div class="v">2,996</div><div class="l">Lab Entries</div><div class="s">last import Jul 15</div></div>
-                        <div class="stat"><div class="bar" style="background:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.4)"></div><div class="v">48</div><div class="l">Vitals Logged</div><div class="s">since Jan 2026</div></div>
-                      </div>
-                      <div class="mid">
-                        <div>
-                          <div class="mlabel">UPCOMING CARE</div>
-                          <div class="urow"><span class="ud" style="background:#ef4444;box-shadow:0 0 7px rgba(239,68,68,.5)"></span><span><span class="un">Hepatology Follow-up</span><br /><span class="up">M. Chen MD</span></span><span class="ut" style="color:#ef4444">Jul 22</span></div>
-                          <div class="urow"><span class="ud" style="background:#f59e0b;box-shadow:0 0 7px rgba(245,158,11,.5)"></span><span><span class="un">Transplant Labs</span><br /><span class="up">Quest Diagnostics</span></span><span class="ut" style="color:#7eb8d8">Jul 25</span></div>
-                          <div class="urow"><span class="ud" style="background:#10b981;box-shadow:0 0 7px rgba(16,185,129,.5)"></span><span><span class="un">Primary Care</span><br /><span class="up">R. Patel MD</span></span><span class="ut" style="color:#7eb8d8">Aug 3</span></div>
-                        </div>
-                        <div>
-                          <div class="mlabel">ACTIVE ALERTS</div>
-                          <div class="arow" style="border-left:3px solid #f59e0b"><span class="at">Hepatology appt in 5 days, prepare questions</span><span class="am">Jul 22</span></div>
-                          <div class="arow" style="border-left:3px solid #4f8ef7"><span class="at">Tacrolimus level due, last drawn Jun 18</span><span class="am">Due</span></div>
-                          <div class="arow" style="border-left:3px solid #10b981"><span class="at">Tacrolimus refill confirmed at pharmacy</span><span class="am">Today</span></div>
-                        </div>
-                        <div>
-                          <div class="mlabel">AI ANALYSIS</div>
-                          <div class="aipanel">
-                            <div class="hint">Cross-references your whole record.</div>
-                            <div class="aibtn"><b>✦</b> Summarize my recent labs</div>
-                            <div class="aibtn"><b>✦</b> Prep questions for hepatology</div>
-                            <div class="aibtn dash">Custom question...</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="vitals">
-                        <div class="vh"><span class="mlabel" style="margin:0">RECENT VITALS</span><span class="va">View all →</span></div>
-                        <div class="vgrid vhead"><span>DATE</span><span>BP</span><span>HR</span><span>O2</span></div>
-                        <div class="vgrid vrow"><span class="vd">Jul 12</span><span class="vb">128/74</span><span class="vhr">66</span><span class="vo">99%</span></div>
-                        <div class="vgrid vrow"><span class="vd">Jul 5</span><span class="vb">131/71</span><span class="vhr">64</span><span class="vo">99%</span></div>
-                        <div class="vgrid vrow"><span class="vd">Jun 28</span><span class="vb flag">148/78 ▲</span><span class="vhr">74</span><span class="vo">96%</span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div class="lap-screen"><img class="lap-shot" src="/assets/app-dashboard.jpg" alt="Insina Health dashboard" /></div>
             </div>
             <div class="lap-base"></div>
           </div>
