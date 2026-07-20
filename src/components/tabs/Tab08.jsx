@@ -352,7 +352,7 @@ function Goals() {
 }
 
 // ── Team Member Modal ──────────────────────────────────────────────────────────
-const BLANK_MEMBER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", email:"", pcp:false, color:"#4f8ef7" };
+const BLANK_MEMBER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", phone24:"", email:"", pcp:false, color:"#4f8ef7" };
 
 const lbl8 = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:mono, letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
 
@@ -391,6 +391,10 @@ function TeamMemberModal({ member, onSave, onClose }) {
             <input className="modal-input" value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="(601) 555-0000" />
           </div>
           <div>
+            <label style={lbl8}>24-Hour Line</label>
+            <input className="modal-input" value={form.phone24 || ""} onChange={e => set("phone24", e.target.value)} placeholder="24/7 emergency line (optional)" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
             <label style={lbl8}>Email / Portal</label>
             <input className="modal-input" value={form.email} onChange={e => set("email", e.target.value)} placeholder="optional" />
           </div>
@@ -514,6 +518,7 @@ function CareTeam() {
               {/* Contact */}
               <div style={{ textAlign:"right", flexShrink:0, marginRight:6 }}>
                 {t.phone && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{t.phone}</div>}
+                {t.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {t.phone24}</div>}
                 {t.next  && <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>}
               </div>
               {/* Edit / Delete */}

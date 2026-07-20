@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.35.0 — 2026-07-20
+
+### Added
+- **24-Hour Line on care-team members.** New optional phone field ("24-Hour
+  Line") in both care-team editors (Health Profile and Care Team tab). The app
+  picks it up everywhere it matters: the Emergency Info screen's coordinator
+  call button and the tripwire advisory dial the 24-hour line when one exists
+  (office number otherwise); the Emergency Card lists members with a 24-hour
+  line first, showing it bold red ("24 hr: …") with the office number
+  alongside; screen cards and the Patient Profile report show it too.
+
+### Changed
+- **Landing page:** logo lockup doubled (52 → 104px, header sized to fit) and
+  header text +2px (nav links and header buttons).
+
 ## v1.34.0 — 2026-07-20
 
 ### Fixed

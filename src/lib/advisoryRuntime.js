@@ -25,8 +25,10 @@ export function getCoordinator() {
   try { team = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return null; }
   if (!Array.isArray(team)) return null;
   const isCoord = (m) => /coordinator/i.test(String(m.role || "")) || /coordinator/i.test(String(m.specialty || ""));
-  const m = team.find(x => isCoord(x) && x.name && x.phone);
-  return m ? { name: m.name, phone: m.phone } : null;
+  const m = team.find(x => isCoord(x) && x.name && (x.phone24 || x.phone));
+  // The 24-hour line (phone24, entered on the care-team member) beats the
+  // office number — in an emergency the after-hours line is the one that answers.
+  return m ? { name: m.name, phone: m.phone24 || m.phone } : null;
 }
 
 const SEVERITY = { EMERGENCY: 2, TODAY: 1 };

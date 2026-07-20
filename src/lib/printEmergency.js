@@ -90,13 +90,16 @@ export function buildEmergencyHtml() {
   const algRows  = allergies.map(a => `<span class="badge allergy">${a.allergen || a.name}</span>${a.reaction ? ` <span class="dim">→ ${a.reaction}</span>` : ""}`);
   const ctRows   = contacts.map(c => `<strong>${c.name}</strong>${c.relationship ? ` (${c.relationship})` : ""} — <a href="tel:${c.phone}">${c.phone}</a>`);
 
-  // Care team, transplant coordinator first — the number an ED calls.
+  // Care team — anyone with a 24-hour line first (that's the number an ED
+  // calls at 2 AM), then the transplant coordinator, then the rest.
   const teamSorted = [...careTeam].sort((a, b) => {
-    const co = p => /coordinator/i.test(`${p.role || ""} ${p.specialty || ""}`) ? 0 : 1;
-    return co(a) - co(b);
+    const rank = p => p.phone24 ? 0 : /coordinator/i.test(`${p.role || ""} ${p.specialty || ""}`) ? 1 : 2;
+    return rank(a) - rank(b);
   });
   const teamRows = teamSorted.map(p =>
-    `<strong>${p.name}</strong>${p.role || p.specialty ? ` <span class="dim">(${p.role || p.specialty})</span>` : ""}${p.phone ? ` — <a href="tel:${p.phone}">${p.phone}</a>` : ""}`
+    `<strong>${p.name}</strong>${p.role || p.specialty ? ` <span class="dim">(${p.role || p.specialty})</span>` : ""}` +
+    (p.phone24 ? ` — <strong style="color:#dc2626">24 hr: <a href="tel:${p.phone24}" style="color:#dc2626">${p.phone24}</a></strong>` : "") +
+    (p.phone ? ` ${p.phone24 ? '<span class="dim">· office:</span>' : "—"} <a href="tel:${p.phone}">${p.phone}</a>` : "")
   );
 
   const fmtDay = iso => { try { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }); } catch { return iso; } };

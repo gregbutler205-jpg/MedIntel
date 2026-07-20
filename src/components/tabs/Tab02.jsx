@@ -102,7 +102,7 @@ function formatPhone(val) {
 }
 
 // ── Care Team Modal ────────────────────────────────────────────────────────────
-const BLANK_PROVIDER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", email:"", pcp:false };
+const BLANK_PROVIDER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", phone24:"", email:"", pcp:false };
 function ProviderModal({ provider, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK_PROVIDER, ...provider });
   const set = (k,v) => setForm(f => ({ ...f, [k]:v }));
@@ -136,6 +136,10 @@ function ProviderModal({ provider, onSave, onClose }) {
             <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601) 555-0000" />
           </div>
           <div>
+            <label style={lbl}>24-Hour Line</label>
+            <input style={inp} value={form.phone24 || ""} onChange={e => set("phone24", formatPhone(e.target.value))} placeholder="24/7 emergency line (optional)" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
             <label style={lbl}>Email / Portal</label>
             <input style={inp} value={form.email} onChange={e => set("email", e.target.value)} placeholder="optional" />
           </div>
@@ -738,6 +742,7 @@ export default function ProfileTab() {
                       <div style={{ fontSize:11, color:T.m, marginTop:2 }}>{doc.role}{doc.specialty ? ` · ${doc.specialty}` : ""}</div>
                       <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{doc.facility}</div>
                       {doc.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:3 }}>{doc.phone}</div>}
+                      {doc.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {doc.phone24}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4, flexShrink:0 }}>
                       <button className="icon-btn" onClick={() => setProviderModal(doc)}>✎</button>
@@ -1117,7 +1122,7 @@ export default function ProfileTab() {
             {selectedCareTeam.map((d,i)=>(
               <div key={i} className="pr">
                 <span className="pr-lbl">{d.name}{d.pcp?" (PCP)":""}</span>
-                <span className="pr-val">{d.role}{d.facility?` · ${d.facility}`:""}{d.phone?` · ${d.phone}`:""}</span>
+                <span className="pr-val">{d.role}{d.facility?` · ${d.facility}`:""}{d.phone?` · ${d.phone}`:""}{d.phone24?<strong> · 24 hr: {d.phone24}</strong>:null}</span>
               </div>
             ))}
           </div>

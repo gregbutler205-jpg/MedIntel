@@ -35,7 +35,7 @@ body{background:var(--bg);color:var(--navy);font-family:var(--sans);overflow-x:h
 img{display:block}
 a{text-decoration:none;color:inherit}
 ::selection{background:rgba(29,79,215,.18)}
-section[id],div[id],footer[id]{scroll-margin-top:92px}
+section[id],div[id],footer[id]{scroll-margin-top:140px}
 .container{max-width:1120px;margin:0 auto;padding:0 28px}
 .ic{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
@@ -45,13 +45,13 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 
 /* header */
 .site-head{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-.site-head .container{height:72px;display:flex;align-items:center;gap:20px}
+.site-head .container{height:120px;display:flex;align-items:center;gap:20px}
 .brand{display:flex;align-items:center;gap:11px}
 .brand img{height:42px}
 /* Full lockup (shield + wordmark) replaces the shield + styled-text brand */
-.brand img.brand-lockup{height:52px;width:auto}
+.brand img.brand-lockup{height:104px;width:auto}
 .navlinks{display:flex;gap:22px;margin-left:auto}
-.navlink{font-size:12.5px;font-weight:500;color:var(--body);transition:color .15s}
+.navlink{font-size:14.5px;font-weight:500;color:var(--body);transition:color .15s}
 .navlink:hover{color:var(--blue)}
 .head-actions{display:flex;gap:10px;margin-left:6px}
 
@@ -60,16 +60,16 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 .btn-p:hover{background:var(--blue-hover);transform:translateY(-1px)}
 .btn-o{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);font-family:var(--sans);font-weight:600;font-size:13.5px;padding:11px 21px;border-radius:10px;transition:background .2s}
 .btn-o:hover{background:var(--blue-tint)}
-.btn-p.sm{padding:9px 16px;font-size:12.5px}
-.btn-o.sm{padding:8px 15px;font-size:12.5px}
+.btn-p.sm{padding:9px 16px;font-size:14.5px}
+.btn-o.sm{padding:8px 15px;font-size:14.5px}
 /* Sign In — app entry point, far right. Deliberately neutral so it doesn't
    compete with the blue primary CTA next to it. */
-.btn-si{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--navy);border:1px solid var(--border);font-family:var(--sans);font-weight:600;font-size:12.5px;padding:8px 16px;border-radius:10px;transition:background .2s,border-color .2s,color .2s}
+.btn-si{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--navy);border:1px solid var(--border);font-family:var(--sans);font-weight:600;font-size:14.5px;padding:8px 16px;border-radius:10px;transition:background .2s,border-color .2s,color .2s}
 .btn-si:hover{background:var(--tint);border-color:var(--blue);color:var(--blue)}
 .btn-o .ic,.btn-p .ic{width:15px;height:15px}
 
 /* vault banner */
-.vault-banner{display:none;position:fixed;top:72px;left:0;right:0;z-index:49;background:var(--banner-bg);border-bottom:1px solid var(--banner-border)}
+.vault-banner{display:none;position:fixed;top:120px;left:0;right:0;z-index:49;background:var(--banner-bg);border-bottom:1px solid var(--banner-border)}
 .has-vault .vault-banner{display:block}
 .vault-banner .container{height:40px;display:flex;align-items:center;gap:10px}
 .vault-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0}
@@ -78,8 +78,8 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 
 /* hero */
 .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#f2f7fe 0%,#ffffff 78%);border-bottom:1px solid var(--border)}
-.hero .container{padding-top:128px;padding-bottom:84px}
-.has-vault .hero .container{padding-top:168px}
+.hero .container{padding-top:176px;padding-bottom:84px}
+.has-vault .hero .container{padding-top:216px}
 .hero-grid{display:grid;grid-template-columns:1fr 700px;gap:40px;align-items:center}
 .h1{font-family:var(--serif);font-weight:400;font-size:52px;color:var(--navy);letter-spacing:-1px;line-height:1.12}
 .hero-sub{font-family:var(--serif);font-style:italic;font-size:21px;color:var(--blue);line-height:1.4;margin-top:18px}
