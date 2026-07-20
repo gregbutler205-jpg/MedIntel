@@ -1,8 +1,15 @@
 // ── Emergency Information print (UI-9: directly accessible from the shared
-// sidebar on every screen, not only the Dashboard hot button). Extracted
-// verbatim from App.jsx.
+// sidebar on every screen, not only the Dashboard hot button).
+//
+// Layout goals (Greg, 2026-07-20): a visible Print button (auto-print alone
+// strands the card if the dialog is cancelled), two-column sections, patient
+// demographics + contact info, blood type unmissable, and the ED essentials:
+// code status / advance directive / implanted devices (new Health Profile
+// fields), care team with phones (coordinator first), and the stored
+// insurance / ID card images.
 
-export function printEmergency() {
+/** Pure HTML builder — exported so the card's content is testable without a window. */
+export function buildEmergencyHtml() {
   const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
   const safeObj = k => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
   const profile   = safeObj("mi_profile_personal");
@@ -10,16 +17,21 @@ export function printEmergency() {
   const meds      = safe("mi_meds_full").filter(m => m.status !== "inactive");
   const allergies = safe("mi_allergies");
   const contacts  = safe("mi_emergency_contacts");
+  const careTeam  = safe("mi_care_team");
+  const cards     = safe("mi_cards");
   const labs      = safe("mi_labs");
   const logoUrl   = (import.meta.env.BASE_URL || "/") + "logo.png";
 
-  // ── Labs on the card: ONLY the most recent CMP and CBC draws ───────────────
+  // The profile has carried blood type under two keys across schema versions
+  // ("blood" is what the Health Profile edits today; "bloodType" is legacy).
+  const bloodType = profile.blood || profile.bloodType || "";
+  const sex       = profile.sex || profile.gender || "";
+
+  // ── Labs on the card: ONLY the most recent draw per panel ──────────────────
   // A clinician wants one coherent snapshot per panel — every value from the
-  // same draw — not a mix of dates. So for each panel we take its latest date
-  // and show that whole draw. Panels are ordered by the patient's own
-  // Settings → Lab Category Order (mi_lab_category_order).
-  // `aliases` covers the legacy/demo category names for the same panel so the
-  // card still populates on records that predate the current categories.
+  // same draw — not a mix of dates. Panels are ordered by the patient's own
+  // Settings → Lab Category Order (mi_lab_category_order). `aliases` covers
+  // legacy/demo category names so the card still populates on old records.
   const CARD_PANELS = [
     { key: "Liver Function",          aliases: ["Liver Function", "Liver Panel"] },
     { key: "Kidney Function",         aliases: ["Kidney Function", "Renal Function"] },
@@ -31,13 +43,10 @@ export function printEmergency() {
     try { const o = JSON.parse(localStorage.getItem("mi_lab_category_order") || "null"); return Array.isArray(o) ? o : []; }
     catch { return []; }
   })();
-  // Panel order comes from Settings; anything Settings doesn't list falls back
-  // to the declaration order above (liver → kidney → tacrolimus → CMP → CBC).
   const ordered = CARD_PANELS
     .map((p, i) => { const idx = catOrder.indexOf(p.key); return { ...p, sort: idx === -1 ? 900 + i : idx }; })
     .sort((a, b) => a.sort - b.sort);
-  // Walk in render order so an analyte printed in an earlier panel is not
-  // repeated later — "then the remaining Metabolic Panel and CBC labs".
+  // Walk in render order so an analyte printed in an earlier panel never repeats.
   const shown = new Set();
   const labPanels = [];
   for (const p of ordered) {
@@ -46,73 +55,127 @@ export function printEmergency() {
     const latest = rows.reduce((max, l) => ((l.date || "") > max ? (l.date || "") : max), "");
     const onDay = rows.filter(l => (l.date || "") === latest).filter(l => {
       const k = (l.name || "").toLowerCase().trim();
-      if (!k || shown.has(k)) return false;     // repeat imports + cross-panel duplicates
+      if (!k || shown.has(k)) return false;
       shown.add(k); return true;
     });
     if (onDay.length) labPanels.push({ key: p.key, latest, rows: onDay });
   }
 
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
-  const dob  = profile.dob  ? `  ·  DOB: ${profile.dob}` : "";
-  const blood = profile.bloodType ? `  ·  Blood Type: ${profile.bloodType}` : "";
 
+  // Two-column section: rows lay out in a 2-col grid; whole section resists page breaks.
   const section = (title, rows) => rows.length === 0 ? "" : `
     <div class="section">
       <div class="section-title">${title}</div>
-      ${rows.map(r => `<div class="row">${r}</div>`).join("")}
+      <div class="cols">${rows.map(r => `<div class="row">${r}</div>`).join("")}</div>
     </div>`;
+
+  const kv = (label, value) => value ? `<span class="dim">${label}:</span> ${value}` : "";
+
+  const demoRows = [
+    kv("DOB", profile.dob), kv("Age", profile.age), kv("Sex", sex),
+    kv("Height", profile.height), kv("Weight", profile.weight),
+    kv("Phone", profile.phone), kv("Email", profile.email), kv("Address", profile.address),
+  ].filter(Boolean);
+
+  // ED-critical status: only rows that are actually filled in print.
+  const statusRows = [
+    profile.codeStatus        ? `<strong>Code Status:</strong> ${profile.codeStatus}` : "",
+    profile.advanceDirective  ? `<strong>Advance Directive:</strong> ${profile.advanceDirective}` : "",
+    profile.implantedDevices  ? `<strong>Implanted Devices:</strong> ${profile.implantedDevices}` : "",
+  ].filter(Boolean);
 
   const condRows = conditions.map(c => `<span class="badge cond">${c.name}</span>${c.severity ? ` <span class="dim">${c.severity}</span>` : ""}`);
   const medRows  = meds.map(m => `<strong>${m.name}</strong>${m.dose ? ` ${m.dose}` : ""}${m.frequency ? ` — ${m.frequency}` : ""}${m.prescriber ? ` <span class="dim">(${m.prescriber})</span>` : ""}`);
   const algRows  = allergies.map(a => `<span class="badge allergy">${a.allergen || a.name}</span>${a.reaction ? ` <span class="dim">→ ${a.reaction}</span>` : ""}`);
   const ctRows   = contacts.map(c => `<strong>${c.name}</strong>${c.relationship ? ` (${c.relationship})` : ""} — <a href="tel:${c.phone}">${c.phone}</a>`);
-  // One section per panel; the draw date lives in the heading since every value
-  // in the section comes from that same draw.
+
+  // Care team, transplant coordinator first — the number an ED calls.
+  const teamSorted = [...careTeam].sort((a, b) => {
+    const co = p => /coordinator/i.test(`${p.role || ""} ${p.specialty || ""}`) ? 0 : 1;
+    return co(a) - co(b);
+  });
+  const teamRows = teamSorted.map(p =>
+    `<strong>${p.name}</strong>${p.role || p.specialty ? ` <span class="dim">(${p.role || p.specialty})</span>` : ""}${p.phone ? ` — <a href="tel:${p.phone}">${p.phone}</a>` : ""}`
+  );
+
   const fmtDay = iso => { try { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }); } catch { return iso; } };
   const labSections = labPanels.map(p => section(
     `${p.key} — ${p.latest ? fmtDay(p.latest) : "date unknown"}`,
     p.rows.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${l.name}</strong>: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` <span class="dim">(ref ${l.refRange})</span>` : ""}`)
   )).join("");
 
-  const win = window.open("", "_blank", "width=860,height=760");
-  if (!win) return; // popup blocked — same convention as printMedicationList
-  win.document.write(`<!DOCTYPE html><html><head>
+  // Insurance / ID card images (front + back where present), full width.
+  const cardImgs = cards.flatMap(c => [
+    c.front ? `<div class="idcard"><div class="idcard-lbl">${c.label || "Card"} — front</div><img src="${c.front}" /></div>` : "",
+    c.back  ? `<div class="idcard"><div class="idcard-lbl">${c.label || "Card"} — back</div><img src="${c.back}" /></div>` : "",
+  ].filter(Boolean));
+  const cardSection = cardImgs.length === 0 ? "" : `
+    <div class="section">
+      <div class="section-title">Insurance &amp; ID Cards</div>
+      <div class="cardgrid">${cardImgs.join("")}</div>
+    </div>`;
+
+  return `<!DOCTYPE html><html><head>
     <title>Emergency Info — ${profile.name || "Patient"}</title>
     <style>
       * { box-sizing:border-box; margin:0; padding:0; }
-      body { font-family:Arial,sans-serif; max-width:780px; margin:36px auto; color:#1a1a1a; font-size:13px; line-height:1.6; padding:0 20px; }
+      body { font-family:Arial,sans-serif; max-width:820px; margin:36px auto; color:#1a1a1a; font-size:13px; line-height:1.6; padding:0 20px; }
       .logo { height:44px; margin-bottom:14px; }
-      h1 { font-size:26px; font-weight:700; text-align:center; margin-bottom:4px; }
-      .subtitle { font-size:12px; color:#555; text-align:center; margin-bottom:6px; font-family:monospace; }
+      h1 { font-size:26px; font-weight:700; text-align:center; margin-bottom:6px; }
+      .idline { font-size:12px; color:#555; text-align:center; margin-bottom:8px; font-family:monospace; }
+      .bloodbadge { display:block; width:max-content; margin:0 auto 6px; border:2.5px solid #dc2626; color:#dc2626; border-radius:8px; padding:3px 16px; font-size:16px; font-weight:800; letter-spacing:1px; }
       .rule { border:none; border-top:3px solid #dc2626; margin:14px 0; }
-      .section { margin-bottom:18px; }
+      .section { margin-bottom:16px; break-inside:avoid; }
       .section-title { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#dc2626; margin-bottom:6px; border-bottom:1px solid #f5c6c6; padding-bottom:4px; }
-      .row { padding:4px 0; border-bottom:1px solid #f0f0f0; font-size:12.5px; }
-      .row:last-child { border-bottom:none; }
+      .cols { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; }
+      .row { padding:3.5px 0; border-bottom:1px solid #f0f0f0; font-size:12.5px; break-inside:avoid; }
       .badge { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; }
       .badge.cond { background:#dbeafe; color:#1d4ed8; }
       .badge.allergy { background:#fef3c7; color:#92400e; }
       .badge.flag { background:#fee2e2; color:#dc2626; border-radius:4px; padding:0 5px; }
       .dim { color:#777; font-size:11px; }
       a { color:#1d4ed8; text-decoration:none; }
-      .footer { margin-top:32px; border-top:1px solid #ddd; padding-top:10px; font-size:10px; color:#999; display:flex; justify-content:space-between; }
-      @media print { body { margin:20px; } }
+      .cardgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+      .idcard { break-inside:avoid; }
+      .idcard img { width:100%; max-height:230px; object-fit:contain; border:1px solid #ddd; border-radius:6px; }
+      .idcard-lbl { font-size:10px; font-weight:700; color:#555; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px; }
+      .printbtn { position:fixed; top:14px; right:14px; padding:9px 22px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+      .footer { margin-top:28px; border-top:1px solid #ddd; padding-top:10px; font-size:10px; color:#999; display:flex; justify-content:space-between; }
+      @media print { body { margin:20px; } .printbtn { display:none; } }
+      @media (max-width:560px) { .cols, .cardgrid { grid-template-columns:1fr; } }
     </style>
   </head><body>
+    <button class="printbtn" onclick="window.print()">🖨 Print</button>
     <img src="${logoUrl}" class="logo" />
     <h1>${profile.name || "Patient Emergency Information"}</h1>
-    <div class="subtitle">${profile.dob ? `DOB: ${profile.dob}` : ""}${blood}${profile.bloodType ? "" : ""}</div>
+    ${bloodType ? `<div class="bloodbadge">BLOOD TYPE ${bloodType}</div>` : ""}
+    <div class="idline">${[profile.dob && `DOB: ${profile.dob}`, profile.age && `Age: ${profile.age}`, sex].filter(Boolean).join("  ·  ")}</div>
     <hr class="rule" />
+    ${section("Patient Demographics &amp; Contact", demoRows)}
     ${section("Emergency Contacts", ctRows)}
+    ${statusRows.length ? `
+    <div class="section">
+      <div class="section-title">Code Status, Directives &amp; Devices</div>
+      ${statusRows.map(r => `<div class="row">${r}</div>`).join("")}
+    </div>` : ""}
     ${section("Allergies", algRows)}
     ${section("Active Conditions", condRows)}
     ${section("Active Medications", medRows)}
+    ${section("Care Team", teamRows)}
     ${labSections}
+    ${cardSection}
     <div class="footer">
       <span>Insina Health &mdash; Emergency Information</span>
       <span>Printed ${date}</span>
     </div>
     <script>window.onload = function(){ window.print(); }<\/script>
-  </body></html>`);
+  </body></html>`;
+}
+
+export function printEmergency() {
+  const win = window.open("", "_blank", "width=880,height=780");
+  if (!win) return; // popup blocked — same convention as printMedicationList
+  win.document.write(buildEmergencyHtml());
   win.document.close();
 }

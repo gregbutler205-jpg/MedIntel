@@ -12,6 +12,30 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.34.0 — 2026-07-20
+
+### Fixed
+- **Diagnostics and Procedures tabs now include Medical Records-derived
+  entries** (read-only, marked "from Medical Records ↗"). Records of type
+  Imaging list under Diagnostics; type Procedure under Procedures — the same
+  merge the Health Profile and printed report already used, so a record whose
+  studies live in Medical Records no longer sees an empty tab.
+
+### Changed
+- **Emergency Card overhaul (ED-focused):** visible Print button (auto-print
+  alone stranded the card if the dialog was cancelled); sections lay out in two
+  columns; new Patient Demographics & Contact section (DOB, age, sex, height,
+  weight, phone, email, address); blood type as a prominent badge under the
+  patient name (reads either profile field spelling); new Code Status,
+  Directives & Devices section; Care Team with phone numbers, transplant
+  coordinator first; stored insurance / ID card images print on the card.
+- **Health Profile: three new ED-critical fields** — Code Status, Advance
+  Directive, Implanted Devices — under Personal & Demographics; they print on
+  the Emergency Card and the Patient Profile report when filled.
+- **Patient Profile report**: blood type in the header now falls back to the
+  legacy field spelling; Code Status / Advance Directive / Implanted Devices
+  print under Demographics & Contact when filled.
+
 ## v1.33.0 — 2026-07-20
 
 ### Added

@@ -91,6 +91,17 @@ export default function DiagnosticsTab() {
   const [deleteId, setDeleteId] = useState(null);
   const conditionNames = getConditions().map(c => c.name).filter(Boolean);
 
+  // Imaging-type entries from Medical Records also belong here (observational
+  // by definition) — shown read-only; they're owned and edited in Records.
+  // Same merge the Health Profile and the printed report use.
+  const recordStudies = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("mi_records") || "[]")
+        .filter(r => r.type === "Imaging")
+        .map(r => ({ id: `rec-${r.id}`, name: r.title || "Imaging study", date: r.date || "", facility: r.facility || "", fromRecords: true }));
+    } catch { return []; }
+  })();
+
   function save(list) {
     setStudies(list);
     persistDiagnostics(list);
@@ -108,7 +119,8 @@ export default function DiagnosticsTab() {
     setDeleteId(null);
   }
 
-  const sorted = [...studies].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  const sorted = [...studies, ...recordStudies].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  const total = sorted.length;
 
   return (
     <div style={{ display:"flex", flexDirection:"column", flex:1 }}>
@@ -131,7 +143,7 @@ export default function DiagnosticsTab() {
           <div>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px" }}>Diagnostics</h1>
             <p style={{ fontSize:12, color:"#98afc4", marginTop:4, fontFamily:"'DM Mono',monospace" }}>
-              {studies.length} stud{studies.length !== 1 ? "ies" : "y"} on record · imaging, EKG, EMG, and other observational studies
+              {total} stud{total !== 1 ? "ies" : "y"} on record · imaging, EKG, EMG, and other observational studies
             </p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
@@ -177,9 +189,13 @@ export default function DiagnosticsTab() {
                     </div>
                   )}
                 </div>
-                <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16 }} className="no-print">
-                  <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
-                  <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16, alignItems:"center" }} className="no-print">
+                  {s.fromRecords
+                    ? <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
+                    : <>
+                        <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
+                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                      </>}
                 </div>
               </div>
             </div>

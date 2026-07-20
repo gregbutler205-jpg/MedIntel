@@ -204,6 +204,18 @@ export default function SurgeriesTab() {
   const [modal, setModal]         = useState(null);
   const [deleteId, setDeleteId]   = useState(null);
 
+  // Procedure-type entries from Medical Records belong here too (things done to
+  // intervene/biopsy/treat) — shown read-only; owned and edited in Records.
+  // Same merge the Health Profile and the printed report use.
+  const recordProcedures = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("mi_records") || "[]")
+        .filter(r => r.type === "Procedure")
+        .map(r => ({ id: `rec-${r.id}`, procedure: r.title || "Procedure", date: r.date || "", facility: r.facility || "", fromRecords: true }));
+    } catch { return []; }
+  })();
+  const allProcedures = [...surgeries, ...recordProcedures];
+
   function handleSave(s) {
     const updated = s.id && surgeries.some(x => x.id === s.id)
       ? surgeries.map(x => x.id === s.id ? s : x)
@@ -242,7 +254,7 @@ export default function SurgeriesTab() {
           <div>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.5px" }}>Procedures</h1>
             <p style={{ fontSize:12, color:"#98afc4", marginTop:4, fontFamily:"'DM Mono',monospace" }}>
-              {surgeries.length} procedure{surgeries.length !== 1 ? "s" : ""} on record · sorted most recent first
+              {allProcedures.length} procedure{allProcedures.length !== 1 ? "s" : ""} on record · sorted most recent first
             </p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
@@ -258,24 +270,26 @@ export default function SurgeriesTab() {
         </div>
 
         {/* List */}
-        {surgeries.length === 0 ? (
+        {allProcedures.length === 0 ? (
           <div style={{ textAlign:"center", padding:"60px 0", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontSize:12 }}>
             No procedures added yet — click Add Procedure to get started.
           </div>
         ) : (
           // UI-24: reverse-chronological at render time too — restored/legacy
           // data isn't guaranteed to arrive pre-sorted.
-          [...surgeries].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).map((s, i) => (
+          [...allProcedures].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).map((s, i) => (
             <div key={s.id} className="surg-card">
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between" }}>
                 <div style={{ flex:1 }}>
                   {/* Top row */}
                   <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
-                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#a0b4c8", background:"#07090f", border:"1px solid #111e30", borderRadius:20, padding:"2px 10px" }}>#{surgeries.length - i}</span>
+                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#a0b4c8", background:"#07090f", border:"1px solid #111e30", borderRadius:20, padding:"2px 10px" }}>#{allProcedures.length - i}</span>
                     <span style={{ fontSize:16, fontWeight:600, color:"#c4d8ee" }}>{s.procedure}</span>
-                    <span style={{ fontSize:10, color:outcomeColor(s.outcome), fontFamily:"'DM Mono',monospace", background:"rgba(0,0,0,.3)", borderRadius:10, padding:"2px 8px" }}>
-                      {s.outcome}
-                    </span>
+                    {s.outcome && (
+                      <span style={{ fontSize:10, color:outcomeColor(s.outcome), fontFamily:"'DM Mono',monospace", background:"rgba(0,0,0,.3)", borderRadius:10, padding:"2px 8px" }}>
+                        {s.outcome}
+                      </span>
+                    )}
                   </div>
                   {/* Details row */}
                   <div style={{ display:"flex", flexWrap:"wrap", gap:18, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:s.notes?8:0 }}>
@@ -290,9 +304,13 @@ export default function SurgeriesTab() {
                   </div>
                   {s.notes && <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.55 }}>{s.notes}</div>}
                 </div>
-                <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16 }} className="no-print">
-                  <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
-                  <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16, alignItems:"center" }} className="no-print">
+                  {s.fromRecords
+                    ? <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
+                    : <>
+                        <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
+                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                      </>}
                 </div>
               </div>
             </div>

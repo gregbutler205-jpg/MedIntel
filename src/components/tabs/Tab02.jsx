@@ -605,6 +605,8 @@ export default function ProfileTab() {
     ["Full Name","name"],["Date of Birth","dob"],["Age","age"],["Sex","sex"],
     ["Blood Type","blood"],["Height","height"],["Weight","weight"],
     ["Phone","phone"],["Email","email"],["Address","address"],
+    // ED-critical fields (2026-07-20): print on the Emergency Card + report when filled.
+    ["Code Status","codeStatus"],["Advance Directive","advanceDirective"],["Implanted Devices","implantedDevices"],
   ];
   const INSURANCE_FIELDS = [
     ["Primary Insurer","ins1"],["Plan","plan1"],["Member ID","mid1"],["Group #","grp1"],
@@ -995,7 +997,7 @@ export default function ProfileTab() {
             {/* UI-23: only fields that have values print — no "—" placeholders
                 flagging optional blanks on the report */}
             <div style={{ fontSize:"9pt", color:"#555", fontFamily:"Arial, sans-serif" }}>
-              {[["DOB", P.dob], ["Age", P.age], ["Sex", P.sex], ["Blood Type", P.blood]]
+              {[["DOB", P.dob], ["Age", P.age], ["Sex", P.sex], ["Blood Type", P.blood || P.bloodType]]
                 .filter(([, v]) => v)
                 .map(([l, v]) => `${l}: ${v}`)
                 .join("  ·  ") || "Demographics not recorded"}
@@ -1013,7 +1015,8 @@ export default function ProfileTab() {
         {/* Demographics */}
         <h2>Demographics &amp; Contact</h2>
         <div className="grid2">
-          {[["Height",P.height],["Weight",P.weight],["Phone",P.phone],["Email",P.email],["Address",P.address]].map(([l,v])=>v?(
+          {[["Height",P.height],["Weight",P.weight],["Phone",P.phone],["Email",P.email],["Address",P.address],
+            ["Code Status",P.codeStatus],["Advance Directive",P.advanceDirective],["Implanted Devices",P.implantedDevices]].map(([l,v])=>v?(
             <div key={l} className="pr"><span className="pr-lbl">{l}</span><span className="pr-val">{v}</span></div>
           ):null)}
         </div>
