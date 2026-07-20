@@ -62,6 +62,10 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 .btn-o:hover{background:var(--blue-tint)}
 .btn-p.sm{padding:9px 16px;font-size:12.5px}
 .btn-o.sm{padding:8px 15px;font-size:12.5px}
+/* Sign In — app entry point, far right. Deliberately neutral so it doesn't
+   compete with the blue primary CTA next to it. */
+.btn-si{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--navy);border:1px solid var(--border);font-family:var(--sans);font-weight:600;font-size:12.5px;padding:8px 16px;border-radius:10px;transition:background .2s,border-color .2s,color .2s}
+.btn-si:hover{background:var(--tint);border-color:var(--blue);color:var(--blue)}
 .btn-o .ic,.btn-p .ic{width:15px;height:15px}
 
 /* vault banner */
@@ -326,6 +330,9 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
 @media (max-width:620px){
   .grid-4{grid-template-columns:1fr}
   .paper{transform:none}
+  /* Three header buttons overflow a phone. Sign In and the waitlist CTA stay;
+     the demo is still reachable from the For Patients section below. */
+  .head-actions .js-demo{display:none}
 }
 </style>
 </head>
@@ -367,6 +374,7 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
     <div class="head-actions">
       <a class="btn-o sm js-demo" href="#">Open Demo</a>
       <a class="btn-p sm" href="mailto:hello@insinahealth.com?subject=Waitlist">Join Waiting List</a>
+      <a class="btn-si" href="/app/">Sign In</a>
     </div>
   </div>
 </header>
@@ -718,9 +726,11 @@ section[id],div[id],footer[id]{scroll-margin-top:92px}
     }).catch(function () {});
   }
 
-  /* Demo buttons → the fictional-patient demo (public/demo, served at /app/demo/). */
+  /* Demo buttons → the ISOLATED demo origin (#49). Its own subdomain means its
+     own localStorage, so the demo can never see or touch a real record here. */
+  var DEMO_ORIGIN = 'https://demo.insinahealth.com/';
   document.querySelectorAll('.js-demo').forEach(function (a) {
-    a.addEventListener('click', function (e) { e.preventDefault(); window.location.href = '/app/demo/'; });
+    a.addEventListener('click', function (e) { e.preventDefault(); window.location.href = DEMO_ORIGIN; });
   });
 })();
 </script>

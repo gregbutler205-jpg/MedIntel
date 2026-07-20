@@ -12,6 +12,23 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.32.0 — 2026-07-20
+
+### Added
+- **Sign In button on the landing page**, far right of the header, linking to
+  the app at `/app/`. Styled neutrally so it doesn't compete with the blue
+  waitlist CTA beside it. Hidden-demo rule: below 620px the header's "Open Demo"
+  collapses so the three buttons don't overflow a phone (the demo is still
+  reachable from the For Patients section).
+
+### Changed
+- **#49 complete — the demo now runs on its own origin.** The landing's "Open
+  Demo" buttons point at `https://demo.insinahealth.com/` instead of the
+  same-origin `/app/demo/`. Because browser storage is per-origin, the demo can
+  no longer see, overwrite, or clear a real record under any circumstance —
+  the structural fix for the 2026-07-19 incident. The in-app guards
+  (v1.27.1/v1.28.0) remain as defence in depth.
+
 ## v1.31.0 — 2026-07-20
 
 ### Added
