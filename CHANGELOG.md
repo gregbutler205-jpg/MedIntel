@@ -12,6 +12,16 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.31.0 — 2026-07-20
+
+### Added
+- **Last Backup date on the dashboard's Last Updated button.** The freshness
+  popup already listed Labs, Meds, Vitals, Appointments, Conditions and
+  Documents alongside Last Sync; it now also shows the date of the most recent
+  Google Drive backup (`mi_last_weekly_backup`), so "am I actually backed up?"
+  is answerable without opening Data & Backup. Rendered as a date rather than a
+  clock time, since backups are weekly.
+
 ## v1.30.1 — 2026-07-20
 
 ### Changed

@@ -348,10 +348,20 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
               </div>
             ))}
             <div style={{ borderTop: "1px solid #0d1a28", marginTop: 10, paddingTop: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
                 <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
                 <span style={{ fontSize: 11, color: lastSyncTs ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                   {lastSyncTs ? new Date(lastSyncTs).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "—"}
+                </span>
+              </div>
+              {/* Last Drive backup — a date, not a time: backups are weekly, so
+                  "Jul 9, 2026" answers "am I protected?" better than a clock time. */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Backup</span>
+                <span style={{ fontSize: 11, color: lastWeeklyBackup ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+                  {lastWeeklyBackup
+                    ? new Date(lastWeeklyBackup).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                    : "—"}
                 </span>
               </div>
               <button
