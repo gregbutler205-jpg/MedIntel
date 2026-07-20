@@ -12,6 +12,18 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.30.1 — 2026-07-20
+
+### Changed
+- **Emergency Card labs extended to five panels.** Liver Function, Kidney
+  Function and Immunosuppressant Level (tacrolimus) now print ahead of the
+  Metabolic Panel and CBC — the transplant-relevant values a clinician reads
+  first. Each panel still shows one coherent draw (its own latest date, in the
+  heading). An analyte printed in an earlier panel is not repeated in a later
+  one, so the CMP/CBC sections carry only the *remaining* values. Panel order
+  continues to follow Settings → Lab Category Order; panels absent from that
+  list fall back to liver → kidney → tacrolimus → CMP → CBC.
+
 ## v1.30.0 — 2026-07-20
 
 ### Changed

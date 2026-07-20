@@ -21,27 +21,36 @@ export function printEmergency() {
   // `aliases` covers the legacy/demo category names for the same panel so the
   // card still populates on records that predate the current categories.
   const CARD_PANELS = [
-    { key: "Metabolic Panel", aliases: ["Metabolic Panel", "Chemistry", "Electrolytes"] },
-    { key: "CBC",             aliases: ["CBC", "CBC / Hematology"] },
+    { key: "Liver Function",          aliases: ["Liver Function", "Liver Panel"] },
+    { key: "Kidney Function",         aliases: ["Kidney Function", "Renal Function"] },
+    { key: "Immunosuppressant Level", aliases: ["Immunosuppressant Level", "Immunosuppression"] },
+    { key: "Metabolic Panel",         aliases: ["Metabolic Panel", "Chemistry", "Electrolytes"] },
+    { key: "CBC",                     aliases: ["CBC", "CBC / Hematology"] },
   ];
   const catOrder = (() => {
     try { const o = JSON.parse(localStorage.getItem("mi_lab_category_order") || "null"); return Array.isArray(o) ? o : []; }
     catch { return []; }
   })();
-  const labPanels = CARD_PANELS.map(p => {
+  // Panel order comes from Settings; anything Settings doesn't list falls back
+  // to the declaration order above (liver → kidney → tacrolimus → CMP → CBC).
+  const ordered = CARD_PANELS
+    .map((p, i) => { const idx = catOrder.indexOf(p.key); return { ...p, sort: idx === -1 ? 900 + i : idx }; })
+    .sort((a, b) => a.sort - b.sort);
+  // Walk in render order so an analyte printed in an earlier panel is not
+  // repeated later — "then the remaining Metabolic Panel and CBC labs".
+  const shown = new Set();
+  const labPanels = [];
+  for (const p of ordered) {
     const rows = labs.filter(l => p.aliases.includes(l.category));
-    if (!rows.length) return null;
+    if (!rows.length) continue;
     const latest = rows.reduce((max, l) => ((l.date || "") > max ? (l.date || "") : max), "");
-    const seen = new Set();
     const onDay = rows.filter(l => (l.date || "") === latest).filter(l => {
       const k = (l.name || "").toLowerCase().trim();
-      if (!k || seen.has(k)) return false;      // collapse repeat imports of the same analyte
-      seen.add(k); return true;
+      if (!k || shown.has(k)) return false;     // repeat imports + cross-panel duplicates
+      shown.add(k); return true;
     });
-    if (!onDay.length) return null;
-    const idx = catOrder.indexOf(p.key);
-    return { key: p.key, latest, rows: onDay, sort: idx === -1 ? 999 : idx };
-  }).filter(Boolean).sort((a, b) => a.sort - b.sort);
+    if (onDay.length) labPanels.push({ key: p.key, latest, rows: onDay });
+  }
 
   const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   const dob  = profile.dob  ? `  ·  DOB: ${profile.dob}` : "";
