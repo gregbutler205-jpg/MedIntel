@@ -20,13 +20,28 @@ on a separate subdomain has a completely separate store from the real app at
 2. **DNS:** add a `CNAME` record `demo` → your Pages host
    (`gregbutler205-jpg.github.io`, or the Netlify target). Wait for it to resolve
    and for the host to issue TLS.
-3. **Deploy the same site build to it.** The demo host serves the *exact same*
-   `dist/` this repo produces (`npm run build`) — no separate app build needed.
-   The isolation comes from the origin, not the code. Its `CNAME` must say
-   `demo.insinahealth.com` (not `insinahealth.com`).
+3. **Deploy a build to it.** Two options:
 
-That's it — `https://demo.insinahealth.com/app/demo/` now loads the demo in a store
-that is completely separate from real user data.
+   **(a) Recommended — the dedicated demo build:**
+   ```bash
+   INSINA_DEMO_DOMAIN=demo.insinahealth.com npm run build:demo   # → dist-demo/
+   ```
+   Produces `dist-demo/` with the demo seeder **at the root** and the app at
+   `/app/`, so `https://demo.insinahealth.com/` goes straight into the demo.
+   It deliberately omits the marketing landing and the companion, so the demo
+   origin doesn't serve a duplicate copy of either (cleaner, and no
+   duplicate-content indexing of the landing).
+
+   **(b) Simplest — reuse the main build:** serve the same `dist/`
+   (`npm run build`) from the demo host with its `CNAME` set to
+   `demo.insinahealth.com`. Works fine; the demo then lives at
+   `/app/demo/` and the subdomain also carries a copy of the landing/companion.
+
+   Either way the isolation comes from the **origin**, not the code.
+
+That's it — the demo now runs in a store completely separate from real user data:
+option (a) at `https://demo.insinahealth.com/`, option (b) at
+`https://demo.insinahealth.com/app/demo/`.
 
 ## What Claude does (the one-line flip — after the subdomain resolves)
 

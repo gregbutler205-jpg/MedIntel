@@ -7,3 +7,4 @@ dist
 *.docx
 .claude/
 .env*
+dist-demo/
