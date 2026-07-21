@@ -104,15 +104,76 @@ that specialist first. If no listed member fits, or the care team list
 is empty, say "your care team." Include the phone number when one is
 listed.`;
 
+// Appended on every surface that produces care-team questions (A, B1, B2, C,
+// G, H, and Tab14's Consultation Prep) — the 2026-07-21 work order's question
+// rules. Principle: questions open the door; education equips the patient to
+// walk through it. The AI never proposes a test, dose change, timing change,
+// or medication adjustment through the patient's mouth. Prompt-layer, NOT
+// Clinical Safety Core: CSC rule 11's example phrasing ("Should we...?") now
+// diverges from these rules; aligning it is a gated CSC version bump recorded
+// in DECISIONS.md, deliberately not made here.
+export const QUESTION_RULES = `QUESTION GENERATION
+Applies whenever you produce suggested questions for the care team.
+1. One umbrella question per topic, not one per concern. A topic is a
+   clinical change or discrepancy (a new medication, a new symptom, a
+   med-list mismatch), not each downstream implication of it.
+2. Questions are open-ended and physician-directed: describe what
+   changed and ask whether anything needs attention. Never name a
+   specific test to order, a level to recheck, a dose to adjust, or a
+   timing to change.
+   Prohibited shapes: "Should we recheck my [drug] level?" / "Do we
+   need to adjust timing or dose?" / "Should we retest [lab]?" /
+   "Can we switch to [drug]?"
+   Permitted shape: "[What changed] since my last visit. Is there
+   anything we need to do differently?"
+3. Reconciliation questions are permitted as-is: asking "Which of
+   these am I supposed to be taking?" is clarification, not direction.
+4. Settled education topics for the patient's long-term conditions
+   (for example, post-transplant acetaminophen limits or
+   medication-spacing basics) stay out of the question list unless the
+   record shows an active problem with that topic. When such a topic
+   is relevant to the current analysis, state it in the WHY YOU'RE
+   ASKING section instead, per its rules.
+Title the question list exactly "Questions for your care team:".
+
+WHY YOU'RE ASKING
+Required companion section whenever you output care-team questions,
+titled exactly "Why you're asking:". Its purpose — stated to the
+patient — is so they can press further if the physician's answer
+doesn't cover the concern.
+- One short plain-language item per question topic stating the
+  clinical fact only, without mechanism. Example: "Omeprazole can
+  raise your tacrolimus levels." Not how or why it raises them, and
+  not what the doctor may do about it.
+- Never predict or suggest physician actions ("your doctor may want
+  to recheck..." is prohibited here).
+- A settled education topic relevant to this analysis may appear here
+  as a stated fact ending with: "Ask your physician if you'd like
+  more information."
+- End the section with: "If your doctor's answer doesn't cover any of
+  these, ask about that one directly."
+
+NUMERIC LIMITS AND DOSING VALUES
+When the patient asks for a numeric dosing or limit value (for
+example, a daily acetaminophen limit):
+- If a documented limit exists in the patient's record, cite it with
+  its source and date, and tell the patient to confirm it is still
+  current with their care team.
+- If none exists: state that the value is set individually by the
+  patient's team (where true, that general label limits do not apply
+  to them), direct the patient to their physician or transplant
+  pharmacist, and offer to save the confirmed value once obtained.`;
+
 /**
  * Assemble the CSC + optional shared blocks + a surface-specific delta into
  * one system-prompt string. Builders call this rather than concatenating by
  * hand, so every surface stays structurally consistent.
  */
-export function assembleSystem({ userId, age, sex, includeDisplayRules = false, includeRouting = false, delta = "" }) {
+export function assembleSystem({ userId, age, sex, includeDisplayRules = false, includeRouting = false, includeQuestionRules = false, delta = "" }) {
   const parts = [buildCSC({ userId, age, sex })];
   if (includeDisplayRules) parts.push(DISPLAY_RULES);
   if (includeRouting) parts.push(ROUTING_RULE);
+  if (includeQuestionRules) parts.push(QUESTION_RULES);
   if (delta) parts.push(delta);
   return parts.join("\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
 }

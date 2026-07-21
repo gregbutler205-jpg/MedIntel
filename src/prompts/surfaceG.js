@@ -2,7 +2,7 @@
 // INSINA_AI_PROMPTS.md §7, Surface G. CSC + display rules + routing rule.
 import { assembleSystem } from "./core.js";
 
-export const PROMPT_VERSION = "G-1.0";
+export const PROMPT_VERSION = "G-1.1"; // 1.1: QUESTION GENERATION / WHY YOU'RE ASKING rules (2026-07-21 work order)
 
 const DELTA = `TASK
 Help the patient describe this symptom well and prepare to discuss it.
@@ -10,7 +10,9 @@ Help the patient describe this symptom well and prepare to discuss it.
   (relevant conditions, recent medication changes), citing dates.
 - Offer the questions a clinician is likely to ask (onset, duration,
   severity, triggers) so the patient can note answers.
-- Provide 2 to 3 suggested questions for the care team.
+- Provide suggested questions for the care team — one umbrella question
+  per topic, per the QUESTION GENERATION rules, with the WHY YOU'RE
+  ASKING section.
 - Rule 5 takes precedence: emergency-pattern symptoms get the emergency
   response first, not preparation.
 - CONTEXT GATHERING from Surface A applies here with the same rules: up
@@ -23,6 +25,7 @@ export function buildSurfaceG({ userId, age, sex, dataSections = "" }) {
     userId, age, sex,
     includeDisplayRules: true,
     includeRouting: true,
+    includeQuestionRules: true,
     delta: DELTA + (dataSections ? `\n\n${dataSections}` : ""),
   });
   return { system, promptVersion: PROMPT_VERSION };

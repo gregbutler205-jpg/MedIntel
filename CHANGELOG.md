@@ -12,6 +12,31 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.39.0 — 2026-07-21
+
+### Changed
+- **Care-team question generation rules + required "Why you're asking" section
+  (2026-07-21 work order Part 1, DEC-041).** New shared prompt block in
+  `src/prompts/core.js` (QUESTION GENERATION / WHY YOU'RE ASKING / NUMERIC
+  LIMITS), composed onto every surface that produces care-team questions —
+  Surface A (AI Analysis), B1/B2 (Labs), C (Notes), G (companion symptom prep),
+  H (report annotation), and Tab14's Consultation Prep. Questions become one
+  open-ended umbrella question per topic that never names a test, dose, or
+  timing change; reconciliation questions stay exempt; settled education topics
+  move out of the question list and into the new education section as stated
+  facts ("Ask your physician if you'd like more information"), which itself
+  states facts without mechanism and never predicts physician actions. Numeric
+  limit queries follow the record-cite-or-defer pattern. Surface A's response
+  structure gains the fifth section; the fixed "2 to 3 questions" counts on
+  C/G are replaced by one-per-topic. PROMPT_VERSION → X-1.1 on A/B/C/G/H;
+  INSINA_AI_PROMPTS.md → v2.5 with the worked omeprazole example. The CSC is
+  **unchanged** (v1.1) — rule 11's "Should we...?" example now diverges and is
+  flagged for a future gated CSC bump, and the new test suite asserts the CSC
+  is byte-identical. New `scripts/testQuestionRules.mjs`
+  (`npm run test:question-rules`, 49 cases): block present on every surface,
+  omeprazole prohibited/permitted shapes, Tylenol record-cite-or-defer
+  regression, doc↔code parity.
+
 ## v1.38.0 — 2026-07-21
 
 ### Added

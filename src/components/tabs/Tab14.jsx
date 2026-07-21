@@ -9,6 +9,7 @@ import { compressImage } from "../../lib/cards.js";
 import { getDiagnostics, setDiagnostics, getMedsFull, setMedsFull } from "../../store.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
+import { QUESTION_RULES } from "../../prompts/core.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
@@ -956,7 +957,11 @@ Please provide:
       const res = await callAI({
         surface: "appointments.prep",
         mode: "standard",
-        system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best guidance possible with available information.", cache_control:{ type:"ephemeral" } }],
+        // 2026-07-21 work order Part 1: Consultation Prep question output follows
+        // the shared QUESTION GENERATION / WHY YOU'RE ASKING rules. This surface
+        // still predates the A-09 builder architecture (no CSC — see surfaceH.js
+        // scope note); migrating it fully is tracked in DECISIONS.md, not done here.
+        system:[{ type:"text", text:"You are a personal health assistant helping prepare a patient for a medical appointment. Be direct, specific, and clinically relevant. No emojis. Bold section headers on their own line. Use bullet points for lists. Use ----- as section dividers. Only ask a clarifying question if the answer genuinely cannot be given without it — this should be rare; provide the best guidance possible with available information.\n\n" + QUESTION_RULES, cache_control:{ type:"ephemeral" } }],
         messages:[{ role:"user", content:buildPrompt() }],
       });
       if (!res.ok) {

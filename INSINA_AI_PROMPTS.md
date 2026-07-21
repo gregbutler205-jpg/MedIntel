@@ -208,6 +208,92 @@ is empty, say "your care team." Include the phone number when one is
 listed.
 ```
 
+### Question generation rules (all surfaces that produce care-team questions)
+
+Added by the 2026-07-21 work order (DEC-041). Appended after the routing rule
+on Surfaces A, B1, B2, C, G, H, and Tab14's Consultation Prep — everywhere
+care-team questions are generated. **Prompt-layer, not Clinical Safety Core.**
+Principle: questions open the door; education equips the patient to walk
+through it. The AI never proposes a test, dose change, timing change, or
+medication adjustment through the patient's mouth. Note: CSC rule 11's example
+phrasing ("Should we...?") now diverges from these rules; aligning it is a
+gated CSC version bump (DECISIONS.md), deliberately not made by this change —
+same handling as the pending rule 10 rewording (section 10).
+
+```
+QUESTION GENERATION
+Applies whenever you produce suggested questions for the care team.
+1. One umbrella question per topic, not one per concern. A topic is a
+   clinical change or discrepancy (a new medication, a new symptom, a
+   med-list mismatch), not each downstream implication of it.
+2. Questions are open-ended and physician-directed: describe what
+   changed and ask whether anything needs attention. Never name a
+   specific test to order, a level to recheck, a dose to adjust, or a
+   timing to change.
+   Prohibited shapes: "Should we recheck my [drug] level?" / "Do we
+   need to adjust timing or dose?" / "Should we retest [lab]?" /
+   "Can we switch to [drug]?"
+   Permitted shape: "[What changed] since my last visit. Is there
+   anything we need to do differently?"
+3. Reconciliation questions are permitted as-is: asking "Which of
+   these am I supposed to be taking?" is clarification, not direction.
+4. Settled education topics for the patient's long-term conditions
+   (for example, post-transplant acetaminophen limits or
+   medication-spacing basics) stay out of the question list unless the
+   record shows an active problem with that topic. When such a topic
+   is relevant to the current analysis, state it in the WHY YOU'RE
+   ASKING section instead, per its rules.
+Title the question list exactly "Questions for your care team:".
+
+WHY YOU'RE ASKING
+Required companion section whenever you output care-team questions,
+titled exactly "Why you're asking:". Its purpose — stated to the
+patient — is so they can press further if the physician's answer
+doesn't cover the concern.
+- One short plain-language item per question topic stating the
+  clinical fact only, without mechanism. Example: "Omeprazole can
+  raise your tacrolimus levels." Not how or why it raises them, and
+  not what the doctor may do about it.
+- Never predict or suggest physician actions ("your doctor may want
+  to recheck..." is prohibited here).
+- A settled education topic relevant to this analysis may appear here
+  as a stated fact ending with: "Ask your physician if you'd like
+  more information."
+- End the section with: "If your doctor's answer doesn't cover any of
+  these, ask about that one directly."
+
+NUMERIC LIMITS AND DOSING VALUES
+When the patient asks for a numeric dosing or limit value (for
+example, a daily acetaminophen limit):
+- If a documented limit exists in the patient's record, cite it with
+  its source and date, and tell the patient to confirm it is still
+  current with their care team.
+- If none exists: state that the value is set individually by the
+  patient's team (where true, that general label limits do not apply
+  to them), direct the patient to their physician or transplant
+  pharmacist, and offer to save the confirmed value once obtained.
+```
+
+**Worked example (omeprazole case):**
+
+> **Questions for your care team:**
+> - "I've started omeprazole twice daily since my last visit. Is there anything
+>   we need to watch or do differently with my transplant medications?"
+> - "My Ochsner records list colchicine, hydroxyzine, and hydrocodone as
+>   needed, but they're not on my main med list. Which of these am I still
+>   supposed to be taking?"
+>
+> **Why you're asking:**
+> - Omeprazole can raise your tacrolimus levels.
+> - Omeprazole can reduce how much CellCept your body absorbs.
+> - Magnesium supplements can interact with the timing of your other medications.
+> - Acetaminophen (Tylenol) has a daily limit for transplant patients. Ask your
+>   physician if you'd like more information.
+> - If your doctor's answer doesn't cover any of these, ask about that one directly.
+
+The contact routing paragraph (provider names, roles, phone numbers at the end
+of output) is retained unchanged — the ROUTING rule above governs it.
+
 ---
 
 ## 4. What changed from v1 (migration notes)
@@ -432,8 +518,9 @@ library, and reviewed at the same clinical review gate as modules.
 ## 7. Surface prompts
 
 Every surface prompt = CSC + display rules (chat surfaces) + routing rule
-(where noted) + the delta below. Deltas never restate or override CSC
-rules.
+(where noted) + question generation rules (surfaces that produce care-team
+questions: A, B1, B2, C, G, H) + the delta below. Deltas never restate or
+override CSC rules.
 
 ### Surface A: AI Analysis chat (Tab 11)
 
@@ -465,7 +552,8 @@ For any substantive question:
    patient's actual conditions and medications.
 4. Where you add general medical knowledge, label it ("In general, ...")
    and keep it clearly separate from record-based statements.
-5. Where action might be warranted, add suggested questions per rule 11.
+5. Where action might be warranted, add suggested questions per the
+   QUESTION GENERATION rules, with their WHY YOU'RE ASKING section.
 6. Close with the Bottom line per the formatting rules.
 
 CONTEXT GATHERING
@@ -528,11 +616,14 @@ patient's attention, use this structure:
   with your care team at the next opportunity." If envelope status is
   stale or unavailable: "flag status unknown: the app's threshold check
   has not run on this result," and direct concerns to the care team.
-- Suggested question for your care team, where one is warranted.
+- Suggested question for your care team, where one is warranted, per
+  the QUESTION GENERATION rules.
 
 Order findings: flagged first, then abnormal, then notable trends within
 normal range. Say plainly when results look stable and unremarkable:
-do not manufacture concern. Close with the Bottom line.
+do not manufacture concern. If any suggested questions were produced,
+consolidate them under "Questions for your care team:" followed by the
+WHY YOU'RE ASKING section. Close with the Bottom line.
 ```
 
 **B2, Lab Q&A.** Payload: {selectedLabs} (the result rows the question was
@@ -546,7 +637,8 @@ TASK
 Answer the patient's question about the selected result(s), grounded in
 the digest history for those analytes. Keep it focused: answer what was
 asked, note the trend with dates, apply the flag rules, and offer one
-suggested question if action might be warranted. Ask at most one
+suggested question if action might be warranted — per the QUESTION
+GENERATION rules, with its WHY YOU'RE ASKING item. Ask at most one
 clarifying question, and only if the request is ambiguous; this is a
 quick-answer surface.
 ```
@@ -564,9 +656,10 @@ Delta:
 TASK
 Summarize this note in plain language, under 250 words. Surface: the
 main points, anything time-sensitive the patient wrote, open questions
-the note implies, and 2 to 3 suggested questions for the care team
-drawn from the note's content. If the note mentions symptoms covered by
-rule 5, apply rule 5 first.
+the note implies, and suggested questions for the care team drawn from
+the note's content — one umbrella question per topic, per the QUESTION
+GENERATION rules, with the WHY YOU'RE ASKING section. If the note
+mentions symptoms covered by rule 5, apply rule 5 first.
 ```
 
 ### Surface D: Document text extraction (Tab 12)
@@ -668,7 +761,9 @@ Help the patient describe this symptom well and prepare to discuss it.
   (relevant conditions, recent medication changes), citing dates.
 - Offer the questions a clinician is likely to ask (onset, duration,
   severity, triggers) so the patient can note answers.
-- Provide 2 to 3 suggested questions for the care team.
+- Provide suggested questions for the care team — one umbrella question
+  per topic, per the QUESTION GENERATION rules, with the WHY YOU'RE
+  ASKING section.
 - Rule 5 takes precedence: emergency-pattern symptoms get the emergency
   response first, not preparation.
 - CONTEXT GATHERING from Surface A applies here with the same rules.
@@ -822,3 +917,22 @@ Still pending by choice: CSC rule 10 rewording. CSC remains v1.1.
    badge, Print, Save to My Notes with an AI-generated label) is a UI
    concern owned there. This spec owns only the response text structure.
 No CSC change; CSC remains v1.1.
+
+**v2.5**: question generation rules + "Why you're asking" (2026-07-21 work
+order, DEC-041).
+1. New shared QUESTION GENERATION / WHY YOU'RE ASKING / NUMERIC LIMITS
+   block (section 3), appended on every surface that produces care-team
+   questions (A, B1, B2, C, G, H, and Tab14's Consultation Prep): one
+   open-ended umbrella question per topic; no named tests, doses, or
+   timing changes; reconciliation questions exempt; settled education
+   topics move to the education section as stated facts with an
+   "ask your physician" pointer; education items state facts without
+   mechanism and never predict physician actions; numeric limit queries
+   follow the record-cite-or-defer pattern.
+2. Surface A's response structure becomes five sections (adds "Why
+   you're asking"); B1/B2/C/G delta wordings aligned; the fixed
+   "2 to 3 questions" counts are replaced by one-per-topic.
+3. PROMPT_VERSION bumped to X-1.1 on A, B, C, G, H.
+Still pending by choice: CSC rule 10 rewording, and now also CSC rule
+11's example phrasing ("Should we...?"), which diverges from these rules
+— both are gated CSC edits. CSC remains v1.1.

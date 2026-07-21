@@ -19,7 +19,7 @@
 // when the deterministic-template rendering exists to call it.
 import { assembleSystem } from "./core.js";
 
-export const PROMPT_VERSION = "H-1.0";
+export const PROMPT_VERSION = "H-1.1"; // 1.1: QUESTION GENERATION / WHY YOU'RE ASKING rules (2026-07-21 work order)
 
 const DELTA = `TASK
 Write the annotation fields for this {reportType}. For each item marked
@@ -45,6 +45,7 @@ export function buildSurfaceH({ userId, age, sex, reportType, providerSpecialty 
   const system = assembleSystem({
     userId, age, sex,
     includeRouting: true,
+    includeQuestionRules: true, // any care-team questions in a report follow the shared rules
     delta: filledDelta + (dataSections ? `\n\n${dataSections}` : ""),
   });
   return { system, promptVersion: PROMPT_VERSION };

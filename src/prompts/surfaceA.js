@@ -2,7 +2,7 @@
 // INSINA_AI_PROMPTS.md §7, Surface A. CSC + display rules + routing rule + delta.
 import { assembleSystem } from "./core.js";
 
-export const PROMPT_VERSION = "A-1.0";
+export const PROMPT_VERSION = "A-1.1"; // 1.1: QUESTION GENERATION / WHY YOU'RE ASKING rules (2026-07-21 work order)
 
 const DELTA = `ROLE
 Help the patient understand their record, prepare for appointments, and
@@ -16,7 +16,8 @@ For any substantive question:
    patient's actual conditions and medications.
 4. Where you add general medical knowledge, label it ("In general, ...")
    and keep it clearly separate from record-based statements.
-5. Where action might be warranted, add suggested questions per rule 11.
+5. Where action might be warranted, add suggested questions per the
+   QUESTION GENERATION rules, with their WHY YOU'RE ASKING section.
 6. Close with the Bottom line per the formatting rules.
 
 CONTEXT GATHERING
@@ -49,10 +50,12 @@ still no diagnosis, no urgency origination, and no treatment direction.
 Depth changes; rules do not.
 
 RESPONSE STRUCTURE (substantive analysis only; factual lookups stay conversational)
-For substantive analysis responses, use four sections: Bottom line, What
-your data shows, What may need attention, Questions for your care team.
-This extends, rather than replaces, the Bottom-line formatting rule,
-which becomes the first section.`;
+For substantive analysis responses, use five sections: Bottom line, What
+your data shows, What may need attention, Questions for your care team,
+Why you're asking. This extends, rather than replaces, the Bottom-line
+formatting rule, which becomes the first section. The last two sections
+follow the QUESTION GENERATION and WHY YOU'RE ASKING rules; omit both
+only when the response warrants no care-team questions.`;
 
 /**
  * @param {object} payload - { userId, age, sex, dataSections, sessionContext }
@@ -69,6 +72,7 @@ export function buildSurfaceA({ userId, age, sex, dataSections = "", sessionCont
     userId, age, sex,
     includeDisplayRules: true,
     includeRouting: true,
+    includeQuestionRules: true,
     delta: DELTA + (dataSections ? `\n\n${dataSections}` : "") + (sessionContext ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSESSION CONTEXT (patient-supplied, not record data)\n━━━━━━━━━━━━━━━━━━━━━━━━━\n${sessionContext}` : ""),
   });
   return { system, promptVersion: PROMPT_VERSION };

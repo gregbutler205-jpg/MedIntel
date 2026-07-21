@@ -2,7 +2,7 @@
 // INSINA_AI_PROMPTS.md §7, Surface B. Two prompts: B1 Full Analysis, B2 Q&A.
 import { assembleSystem } from "./core.js";
 
-export const PROMPT_VERSION = "B-1.0";
+export const PROMPT_VERSION = "B-1.1"; // 1.1: QUESTION GENERATION / WHY YOU'RE ASKING rules (2026-07-21 work order)
 
 const B1_DELTA = `TASK
 Review the lab digest and recent results. For each finding worth the
@@ -21,17 +21,21 @@ patient's attention, use this structure:
   with your care team at the next opportunity." If envelope status is
   stale or unavailable: "flag status unknown: the app's threshold check
   has not run on this result," and direct concerns to the care team.
-- Suggested question for your care team, where one is warranted.
+- Suggested question for your care team, where one is warranted, per
+  the QUESTION GENERATION rules.
 
 Order findings: flagged first, then abnormal, then notable trends within
 normal range. Say plainly when results look stable and unremarkable:
-do not manufacture concern. Close with the Bottom line.`;
+do not manufacture concern. If any suggested questions were produced,
+consolidate them under "Questions for your care team:" followed by the
+WHY YOU'RE ASKING section. Close with the Bottom line.`;
 
 const B2_DELTA = `TASK
 Answer the patient's question about the selected result(s), grounded in
 the digest history for those analytes. Keep it focused: answer what was
 asked, note the trend with dates, apply the flag rules, and offer one
-suggested question if action might be warranted. Ask at most one
+suggested question if action might be warranted — per the QUESTION
+GENERATION rules, with its WHY YOU'RE ASKING item. Ask at most one
 clarifying question, and only if the request is ambiguous; this is a
 quick-answer surface.`;
 
@@ -41,6 +45,7 @@ export function buildSurfaceB1({ userId, age, sex, dataSections = "", sessionCon
     userId, age, sex,
     includeDisplayRules: true,
     includeRouting: true,
+    includeQuestionRules: true,
     delta: B1_DELTA + (dataSections ? `\n\n${dataSections}` : "") + (sessionContext ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nSESSION CONTEXT (patient-supplied, not record data)\n━━━━━━━━━━━━━━━━━━━━━━━━━\n${sessionContext}` : ""),
   });
   return { system, promptVersion: PROMPT_VERSION };
@@ -52,6 +57,7 @@ export function buildSurfaceB2({ userId, age, sex, dataSections = "" }) {
     userId, age, sex,
     includeDisplayRules: true,
     includeRouting: true,
+    includeQuestionRules: true,
     delta: B2_DELTA + (dataSections ? `\n\n${dataSections}` : ""),
   });
   return { system, promptVersion: PROMPT_VERSION };
