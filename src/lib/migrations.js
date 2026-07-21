@@ -180,7 +180,11 @@ export function runMigrations() {
       // Leave INTERRUPTED_KEY set (major) / version un-bumped (either case) so
       // the next boot retries this migration instead of silently skipping it.
       console.error(`[migrations] migration v${m.version} failed:`, e);
-      appendAudit({ action: "migration_failed", version: m.version, major: m.major, description: m.description, error: String(e?.message || e) });
+      // F-14: record the error TYPE only in the persisted audit, never the
+      // message — a thrown error could theoretically embed record content, and
+      // the audit is stored at rest. The full message still goes to the
+      // ephemeral console above for debugging.
+      appendAudit({ action: "migration_failed", version: m.version, major: m.major, description: m.description, error: e?.name || "Error" });
       break; // stop; never apply later migrations out of order over a failure
     }
   }

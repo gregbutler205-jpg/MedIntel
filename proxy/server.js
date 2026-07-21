@@ -167,9 +167,10 @@ app.post("/api/chat", express.json({ limit: "1mb" }), limiter, pilotAuth, async 
     });
 
     if (!anthropicRes.ok) {
-      // Forward the error status and body without logging content
-      const errBody = await anthropicRes.text().catch(() => "{}");
-      return res.status(anthropicRes.status).send(errBody);
+      // F-13: preserve the status (clients key their 429/503/413 copy on it) but
+      // do NOT echo the upstream error body — an Anthropic invalid_request_error
+      // can carry a fragment of the request back to the client. Send a generic body.
+      return res.status(anthropicRes.status).json({ error: "The AI service returned an error." });
     }
 
     if (stream === true) {
@@ -272,8 +273,8 @@ app.post("/api/extract-pdf", express.json({ limit: "30mb" }), extractLimiter, pi
     });
 
     if (!anthropicRes.ok) {
-      const errBody = await anthropicRes.text().catch(() => "{}");
-      return res.status(anthropicRes.status).send(errBody);
+      // F-13: status preserved, upstream body not echoed (see /api/chat above).
+      return res.status(anthropicRes.status).json({ error: "The AI service returned an error." });
     }
 
     const result = await anthropicRes.json();

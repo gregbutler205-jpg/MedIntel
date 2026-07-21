@@ -12,6 +12,31 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.7 — 2026-07-21
+
+### Security
+- **Proxy no longer echoes the upstream AI error body (AUDIT_SEC_02 F-13,
+  Low/Info).** On a non-2xx from Anthropic, `proxy/server.js` (both `/api/chat`
+  and `/api/extract-pdf`) forwarded the raw upstream error body to the
+  originating browser — an `invalid_request_error` can carry a fragment of the
+  request. Now the proxy preserves the status code (clients still key their
+  429/503/413 copy on it) but replaces the body with a generic
+  `{ error: "The AI service returned an error." }`.
+- **Migration failure audit records the error type, not the message
+  (AUDIT_SEC_02 F-14, Low/Info).** `migrations.js` logged
+  `error: String(e?.message || e)` into the persisted (encrypted-at-rest) audit;
+  a thrown error could theoretically embed record content. It now stores
+  `e?.name` (e.g. `"TypeError"`) only; the full message still goes to the
+  ephemeral dev console.
+
+### Notes
+- **Accepted-risk audit dispositions documented (F-11, F-12, F-15)** in
+  DECISIONS.md OPEN-16 — the Drive key-envelope offline-brute-force tradeoff
+  (gated by PBKDF2 600k + 256-bit recovery key), the deliberate exclusion of the
+  demo origin from proxy CORS (so the public demo can't spend the AI budget),
+  and the RIE audit intentionally storing changed values (encrypted at rest).
+  No code change; recorded so the tradeoffs are auditable.
+
 ## v1.37.6 — 2026-07-21
 
 ### Security

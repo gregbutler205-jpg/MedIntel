@@ -1301,3 +1301,25 @@ stays behind `TRIPWIRE_ADVISORY_ENABLED = false` regardless.
   transmitted to any third party" disclosure language is inaccurate as written — the egress trace
   found the ICD-10 lookup puts the typed condition string in a URL to NLM, and Maps/MedlinePlus
   links leak a med/facility name on click (see OPEN-1/OPEN-2's disclosure-accuracy thread).
+  **Remediation (2026-07-21, v1.36.0–v1.37.7, "fix all of them"):** all code-touchable findings
+  fixed and committed — F-01 Emergency Card escaping, F-02 proxy `trust proxy`, F-03 AI output
+  filter (AI-09), F-04 onboarding bulk-accept write-layer guard, F-05 de-brand generated docs,
+  F-06 test-fixture real name, F-07 stale CSP origin, F-08 landing CSP + externalized scripts,
+  F-09 dormant `/extract` fetch removed, F-10 `.env.production` made explicitly-tracked, F-13
+  proxy no longer echoes the upstream error body, F-14 migration audit records the error type not
+  the message. **Accepted-risk / documented, no code change:** **F-11** — the #50 Drive backup
+  now carries the wrapped key-envelope, so an attacker holding the Drive backup can attempt an
+  *offline* passphrase brute-force (previously they had only undecryptable ciphertext); accepted
+  as the standard "encrypted vault in the cloud" tradeoff, gated by PBKDF2-SHA256 @600k + a
+  256-bit random recovery key — the "never leaves in a usable form" story now depends on
+  passphrase strength, not envelope absence (see DEC-037). **F-12** — `demo.insinahealth.com` is
+  deliberately excluded from the proxy CORS allowlist so the public demo cannot spend the AI
+  budget; security-positive. Consequence: the demo's AI buttons error rather than degrade
+  gracefully — accepted (the demo is a static showcase); graceful "AI disabled in demo" copy is
+  optional future polish. **F-15** — the RIE audit log intentionally stores actual flagged values
+  (not field-names-only) because the audit's purpose is to show exactly what changed; N-05's
+  "values not stored" expectation is consciously not met, mitigated by `mi_rie_audit` being a
+  managed key encrypted at rest (P-02), never logged, never sent to the proxy. **F-09 open
+  decision (deferred to Greg):** when a real onboarding-extraction proxy route is designed, wire
+  it through `aiClient` (single auth point), not a per-surface fetch. **F-05 open decision:** the
+  disclosure-language accuracy thread (OPEN-1/OPEN-2) is unchanged by this pass.
