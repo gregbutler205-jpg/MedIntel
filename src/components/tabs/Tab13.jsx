@@ -12,8 +12,6 @@ import { APP_VERSION } from "../../version.js";
 import { getAutoLockMinutes, setAutoLockMinutes, AUTOLOCK_OPTIONS } from "../../lib/autoLock.js";
 import { getPilotToken, setPilotToken } from "../../lib/pilotAuth.js";
 
-const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
-
 const INITIAL_BACKUPS = [];
 
 function Toast({ msg, onDone }) {
@@ -242,7 +240,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       const csvBlob = new Blob([rows.join("\n")], { type: "text/csv" });
       const csvUrl = URL.createObjectURL(csvBlob);
       const a = document.createElement("a"); a.href = csvUrl;
-      a.download = `intellitrax_labs_${new Date().toISOString().split("T")[0]}.csv`;
+      a.download = `insina_labs_${new Date().toISOString().split("T")[0]}.csv`;
       a.click(); URL.revokeObjectURL(csvUrl);
       showToast("Labs CSV downloaded");
       return;
@@ -280,7 +278,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `intellitrax_${type.toLowerCase().replace(/\s+/g,"_")}_${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `insina_${type.toLowerCase().replace(/\s+/g,"_")}_${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast(`${type} downloaded`);

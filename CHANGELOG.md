@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.2 — 2026-07-21
+
+### Fixed
+- **Rebrand residue in patient-facing generated documents (AUDIT_SEC_02 F-05,
+  Med).** Exported artifacts still carried the pre-rebrand name "IntelliTrax".
+  The medication-reminder `.ics` a patient adds to their calendar now reads
+  "Insina Health reminder…", with `PRODID:-//Insina Health//Insina Health//EN`
+  and an `@insinahealth` event-UID domain (`Tab04.jsx`). Lab/record export
+  filenames are now `insina_labs_<date>.csv` and `insina_<type>_<date>.json`
+  instead of `intellitrax_*` (`Tab13.jsx`). Also removed four unused
+  `INTELLITRAX_LOGO` declarations (dead code carrying the old brand) from
+  Tab08/Tab10/Tab11/Tab13 — no behavior change (Tab11 prints via `PRINT_LOGO`).
+  Left intentionally unchanged: the `intellitrax-salt-2026` PIN salt (baked into
+  existing companion PIN hashes — changing it breaks unlock) and internal
+  provenance comments.
+
 ## v1.37.1 — 2026-07-21
 
 ### Fixed

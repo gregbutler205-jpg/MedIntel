@@ -16,7 +16,6 @@ import { selectConditionModules, formatConditionModules } from "../../lib/condit
 import { formatDocumentBlock, stripControlChars } from "../../prompts/documents.js";
 import { sortReadingsByRecency } from "../../lib/vitals.js";
 
-const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
 const STORAGE_KEY    = "insina_ai_messages";

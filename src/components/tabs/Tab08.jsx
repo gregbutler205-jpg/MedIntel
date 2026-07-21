@@ -2,8 +2,6 @@ import { useState } from "react";
 import { uploadToDrive } from "../../lib/driveSync.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
 
-const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
-
 // UI-18: MVP keeps Care Team, Emergency, Reference. Timeline, Goals,
 // Preventive, and Milestones are removed from the interface only — their
 // components remain below and their mi_* data is untouched, so they can

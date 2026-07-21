@@ -456,14 +456,14 @@ export default function App({ onNavChange }) {
         const [ey, em, ed] = reminder.endDate.split("-");
         rrule += `;UNTIL=${ey}${em}${ed}T235959`;
       }
-      const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}@intellitrax`;
+      const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}@insinahealth`;
       const label = `${med.name}${med.dose ? " " + med.dose : ""}`;
       return [
         "BEGIN:VEVENT",
         `DTSTART:${dtStart}`,
         rrule,
         `SUMMARY:💊 Take ${label}`,
-        `DESCRIPTION:IntelliTrax reminder — time to take your ${label}`,
+        `DESCRIPTION:Insina Health reminder — time to take your ${label}`,
         "BEGIN:VALARM",
         "TRIGGER:PT0S",
         "ACTION:DISPLAY",
@@ -477,7 +477,7 @@ export default function App({ onNavChange }) {
     return [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//Insina Health//IntelliTrax//EN",
+      "PRODID:-//Insina Health//Insina Health//EN",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
       ...events,

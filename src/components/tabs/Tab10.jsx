@@ -9,8 +9,6 @@ import { PrintLabel, PinIcon } from "../icons.jsx";
 // passes through renderAiText.js's shared filter. Applied explicitly here.
 import { scanForProhibitedDirectives } from "../../lib/aiOutputFilter.js";
 
-const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
-
 const TAG_STYLES = {
   Appt:     { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
   Labs:     { bg: "rgba(245,158,11,.1)",   color: "#f59e0b", border: "rgba(245,158,11,.25)" },
