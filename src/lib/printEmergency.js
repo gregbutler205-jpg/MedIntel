@@ -7,6 +7,20 @@
 // code status / advance directive / implanted devices (new Health Profile
 // fields), care team with phones (coordinator first), and the stored
 // insurance / ID card images.
+//
+// AUDIT_SEC_02 F-01: every interpolated value below is patient-entered or
+// AI/OCR-derived (imported-document extraction can populate condition/med/
+// allergy/lab names, and the free-text profile fields). This builder feeds
+// window.document.write() at same-origin while the vault is unlocked, so an
+// unescaped value here is a full-record XSS, not a cosmetic bug — the same
+// class S-02/PG-02 closed for the AI-analysis renderer. escapeHtml wraps
+// EVERY interpolation, including inside tel: href attributes (quotes must be
+// escaped there too, not just text nodes) — printMedicationList.js's local
+// `esc()` only escapes & < > because it never populates an attribute; this
+// file does, so it uses the fuller shared escapeHtml instead. Card front/back
+// images are base64 data URIs (compressImage output) — that alphabet cannot
+// contain < > " ' so they're left as-is.
+import { escapeHtml } from "./renderAiText.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
 export function buildEmergencyHtml() {
@@ -20,7 +34,9 @@ export function buildEmergencyHtml() {
   const careTeam  = safe("mi_care_team");
   const cards     = safe("mi_cards");
   const labs      = safe("mi_labs");
-  const logoUrl   = (import.meta.env.BASE_URL || "/") + "logo.png";
+  // Optional chaining: import.meta.env is a Vite-time global, absent when this
+  // pure function is imported under plain Node (scripts/testEmergencyCardEscaping.mjs).
+  const logoUrl   = (import.meta.env?.BASE_URL || "/") + "logo.png";
 
   // The profile has carried blood type under two keys across schema versions
   // ("blood" is what the Health Profile edits today; "bloodType" is legacy).
@@ -70,7 +86,7 @@ export function buildEmergencyHtml() {
       <div class="cols">${rows.map(r => `<div class="row">${r}</div>`).join("")}</div>
     </div>`;
 
-  const kv = (label, value) => value ? `<span class="dim">${label}:</span> ${value}` : "";
+  const kv = (label, value) => value ? `<span class="dim">${escapeHtml(label)}:</span> ${escapeHtml(value)}` : "";
 
   const demoRows = [
     kv("DOB", profile.dob), kv("Age", profile.age), kv("Sex", sex),
@@ -80,15 +96,15 @@ export function buildEmergencyHtml() {
 
   // ED-critical status: only rows that are actually filled in print.
   const statusRows = [
-    profile.codeStatus        ? `<strong>Code Status:</strong> ${profile.codeStatus}` : "",
-    profile.advanceDirective  ? `<strong>Advance Directive:</strong> ${profile.advanceDirective}` : "",
-    profile.implantedDevices  ? `<strong>Implanted Devices:</strong> ${profile.implantedDevices}` : "",
+    profile.codeStatus        ? `<strong>Code Status:</strong> ${escapeHtml(profile.codeStatus)}` : "",
+    profile.advanceDirective  ? `<strong>Advance Directive:</strong> ${escapeHtml(profile.advanceDirective)}` : "",
+    profile.implantedDevices  ? `<strong>Implanted Devices:</strong> ${escapeHtml(profile.implantedDevices)}` : "",
   ].filter(Boolean);
 
-  const condRows = conditions.map(c => `<span class="badge cond">${c.name}</span>${c.severity ? ` <span class="dim">${c.severity}</span>` : ""}`);
-  const medRows  = meds.map(m => `<strong>${m.name}</strong>${m.dose ? ` ${m.dose}` : ""}${m.frequency ? ` — ${m.frequency}` : ""}${m.prescriber ? ` <span class="dim">(${m.prescriber})</span>` : ""}`);
-  const algRows  = allergies.map(a => `<span class="badge allergy">${a.allergen || a.name}</span>${a.reaction ? ` <span class="dim">→ ${a.reaction}</span>` : ""}`);
-  const ctRows   = contacts.map(c => `<strong>${c.name}</strong>${c.relationship ? ` (${c.relationship})` : ""} — <a href="tel:${c.phone}">${c.phone}</a>`);
+  const condRows = conditions.map(c => `<span class="badge cond">${escapeHtml(c.name)}</span>${c.severity ? ` <span class="dim">${escapeHtml(c.severity)}</span>` : ""}`);
+  const medRows  = meds.map(m => `<strong>${escapeHtml(m.name)}</strong>${m.dose ? ` ${escapeHtml(m.dose)}` : ""}${m.frequency ? ` — ${escapeHtml(m.frequency)}` : ""}${m.prescriber ? ` <span class="dim">(${escapeHtml(m.prescriber)})</span>` : ""}`);
+  const algRows  = allergies.map(a => `<span class="badge allergy">${escapeHtml(a.allergen || a.name)}</span>${a.reaction ? ` <span class="dim">→ ${escapeHtml(a.reaction)}</span>` : ""}`);
+  const ctRows   = contacts.map(c => `<strong>${escapeHtml(c.name)}</strong>${c.relationship ? ` (${escapeHtml(c.relationship)})` : ""} — <a href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a>`);
 
   // Care team — anyone with a 24-hour line first (that's the number an ED
   // calls at 2 AM), then the transplant coordinator, then the rest.
@@ -97,21 +113,24 @@ export function buildEmergencyHtml() {
     return rank(a) - rank(b);
   });
   const teamRows = teamSorted.map(p =>
-    `<strong>${p.name}</strong>${p.role || p.specialty ? ` <span class="dim">(${p.role || p.specialty})</span>` : ""}` +
-    (p.phone24 ? ` — <strong style="color:#dc2626">24 hr: <a href="tel:${p.phone24}" style="color:#dc2626">${p.phone24}</a></strong>` : "") +
-    (p.phone ? ` ${p.phone24 ? '<span class="dim">· office:</span>' : "—"} <a href="tel:${p.phone}">${p.phone}</a>` : "")
+    `<strong>${escapeHtml(p.name)}</strong>${p.role || p.specialty ? ` <span class="dim">(${escapeHtml(p.role || p.specialty)})</span>` : ""}` +
+    (p.phone24 ? ` — <strong style="color:#dc2626">24 hr: <a href="tel:${escapeHtml(p.phone24)}" style="color:#dc2626">${escapeHtml(p.phone24)}</a></strong>` : "") +
+    (p.phone ? ` ${p.phone24 ? '<span class="dim">· office:</span>' : "—"} <a href="tel:${escapeHtml(p.phone)}">${escapeHtml(p.phone)}</a>` : "")
   );
 
   const fmtDay = iso => { try { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }); } catch { return iso; } };
   const labSections = labPanels.map(p => section(
-    `${p.key} — ${p.latest ? fmtDay(p.latest) : "date unknown"}`,
-    p.rows.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${l.name}</strong>: ${l.value}${l.unit ? " " + l.unit : ""}${l.refRange ? ` <span class="dim">(ref ${l.refRange})</span>` : ""}`)
+    `${p.key} — ${p.latest ? fmtDay(p.latest) : "date unknown"}`, // p.key is a literal from CARD_PANELS, not user data
+    p.rows.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${escapeHtml(l.name)}</strong>: ${escapeHtml(l.value)}${l.unit ? " " + escapeHtml(l.unit) : ""}${l.refRange ? ` <span class="dim">(ref ${escapeHtml(l.refRange)})</span>` : ""}`)
   )).join("");
 
   // Insurance / ID card images (front + back where present), full width.
+  // front/back are base64 data URIs (compressImage output) — that alphabet
+  // cannot contain < > " ' so the src attribute is safe unescaped; the label
+  // is free-text the patient typed, so it is escaped.
   const cardImgs = cards.flatMap(c => [
-    c.front ? `<div class="idcard"><div class="idcard-lbl">${c.label || "Card"} — front</div><img src="${c.front}" /></div>` : "",
-    c.back  ? `<div class="idcard"><div class="idcard-lbl">${c.label || "Card"} — back</div><img src="${c.back}" /></div>` : "",
+    c.front ? `<div class="idcard"><div class="idcard-lbl">${escapeHtml(c.label || "Card")} — front</div><img src="${c.front}" /></div>` : "",
+    c.back  ? `<div class="idcard"><div class="idcard-lbl">${escapeHtml(c.label || "Card")} — back</div><img src="${c.back}" /></div>` : "",
   ].filter(Boolean));
   const cardSection = cardImgs.length === 0 ? "" : `
     <div class="section">
@@ -120,7 +139,7 @@ export function buildEmergencyHtml() {
     </div>`;
 
   return `<!DOCTYPE html><html><head>
-    <title>Emergency Info — ${profile.name || "Patient"}</title>
+    <title>Emergency Info — ${escapeHtml(profile.name || "Patient")}</title>
     <style>
       * { box-sizing:border-box; margin:0; padding:0; }
       body { font-family:Arial,sans-serif; max-width:820px; margin:36px auto; color:#1a1a1a; font-size:13px; line-height:1.6; padding:0 20px; }
@@ -151,9 +170,9 @@ export function buildEmergencyHtml() {
   </head><body>
     <button class="printbtn" onclick="window.print()">🖨 Print</button>
     <img src="${logoUrl}" class="logo" />
-    <h1>${profile.name || "Patient Emergency Information"}</h1>
-    ${bloodType ? `<div class="bloodbadge">BLOOD TYPE ${bloodType}</div>` : ""}
-    <div class="idline">${[profile.dob && `DOB: ${profile.dob}`, profile.age && `Age: ${profile.age}`, sex].filter(Boolean).join("  ·  ")}</div>
+    <h1>${escapeHtml(profile.name || "Patient Emergency Information")}</h1>
+    ${bloodType ? `<div class="bloodbadge">BLOOD TYPE ${escapeHtml(bloodType)}</div>` : ""}
+    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(profile.dob)}`, profile.age && `Age: ${escapeHtml(profile.age)}`, sex && escapeHtml(sex)].filter(Boolean).join("  ·  ")}</div>
     <hr class="rule" />
     ${section("Patient Demographics &amp; Contact", demoRows)}
     ${section("Emergency Contacts", ctRows)}

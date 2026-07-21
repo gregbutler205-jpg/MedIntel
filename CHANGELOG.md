@@ -12,6 +12,24 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.36.0 — 2026-07-21
+
+### Fixed
+- **Security: Emergency Card XSS (AUDIT_SEC_02 F-01, High).** `printEmergency.js`
+  built the card via `document.write` interpolating patient- and AI/OCR-derived
+  fields — including this weekend's new `codeStatus`/`advanceDirective`/
+  `implantedDevices` free-text fields — with no HTML escaping. A crafted value
+  in an imported document (condition/med/allergy/lab name, care-team field, or
+  a profile free-text field) could execute script in the print window, which
+  is same-origin and runs while the vault is unlocked. Every interpolation now
+  routes through the shared `escapeHtml` (including inside `tel:` href
+  attributes, which need quote-escaping too, not just text nodes). Card image
+  data URIs are left unescaped deliberately — base64 cannot carry HTML
+  metacharacters. New regression test `scripts/testEmergencyCardEscaping.mjs`
+  (`npm run test:emergency-card`) plants the classic `<img onerror>` payload in
+  every affected field and asserts it never appears unescaped; confirmed the
+  test fails 6/7 against the pre-fix code and passes 7/7 against the fix.
+
 ## v1.35.2 — 2026-07-20
 
 ### Changed
