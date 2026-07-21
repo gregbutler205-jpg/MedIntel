@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.36.1 — 2026-07-21
+
+### Fixed
+- **Security: proxy rate limiter now keys on the real client IP (AUDIT_SEC_02
+  F-02, Med).** `proxy/server.js` never set Express's `trust proxy`, so behind
+  Render's load balancer, `express-rate-limit`'s 60/hr (`/api/chat`) and 20/hr
+  (`/api/extract-pdf`) caps keyed on the LB's own address — one shared bucket
+  for every user combined, not a real per-client limit. Now `app.set("trust
+  proxy", 1)`: trusts exactly the one hop Render's LB appends, so the real
+  client IP is used, while a value a client tries to prepend into
+  `X-Forwarded-For` itself is still ignored (the difference between `1` and
+  the unsafe `true`, which would trust the whole header as supplied). Verified
+  locally: the proxy starts and serves normally, and a standalone IP-resolution
+  check confirmed Express resolves to the correct hop in both a plain header
+  and a spoofed-prefix attempt.
+
 ## v1.36.0 — 2026-07-21
 
 ### Fixed

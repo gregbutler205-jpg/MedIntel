@@ -27,6 +27,19 @@ import { createServer }  from "http";
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+// ── Trust exactly one reverse-proxy hop (AUDIT_SEC_02 F-02) ──────────────────
+// Render terminates TLS at its own load balancer and forwards to this
+// container over HTTP, so every request arrives with Render's LB as
+// req.socket.remoteAddress — without this, express-rate-limit keys its 60/hr
+// and 20/hr caps on that single shared LB address (one bucket for every user
+// combined) rather than the real client IP in X-Forwarded-For.
+// `1` (not `true`): trust exactly the outermost hop. Express then reads the
+// real client IP as the entry ONE STEP IN from the right of X-Forwarded-For —
+// a value a client tries to prepend itself is still ignored, only what
+// Render's own LB appended is trusted. `true` would trust the entire header
+// as supplied, letting any client spoof its rate-limit identity outright.
+app.set("trust proxy", 1);
+
 // ── Health check — before CORS so monitoring tools always reach it ─────────────
 app.get("/health", (_req, res) => res.json({ status: "ok", ts: new Date().toISOString() }));
 
