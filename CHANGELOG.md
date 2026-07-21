@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.4 — 2026-07-21
+
+### Security
+- **CSP on the landing page; inline scripts externalized (AUDIT_SEC_02 F-08,
+  Low).** The apex document (`insinahealth.com/`) shipped no CSP and two inline
+  `<script>` blocks, so — unlike `/app/` — the root origin had no XSS
+  containment. Added a strict CSP meta tag (`script-src 'self'`, no inline) and
+  moved all JavaScript into `landing/assets/landing.js`, loaded synchronously
+  from `<head>` so the `js` class is still set before first paint (no
+  reveal-flash); the DOM-dependent logic now runs on `DOMContentLoaded`.
+  `style-src 'unsafe-inline'` remains accepted debt (inline `<style>` + style
+  attributes), matching the app. Verified against a static build: the external
+  script and all assets load with no CSP violations, and the script executes
+  (js class, scroll-reveal observers, and demo-button wiring all initialize).
+  Behavior is unchanged from the previous inline version.
+
 ## v1.37.3 — 2026-07-21
 
 ### Security

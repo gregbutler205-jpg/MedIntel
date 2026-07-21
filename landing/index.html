@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<!-- Content-Security-Policy (AUDIT_SEC_02 F-08). GitHub Pages can't set response
+     headers, so this meta tag is the enforcement point — same model as /app/.
+     script-src 'self' only (all JS is external in /assets/landing.js; no inline
+     scripts). style-src 'unsafe-inline' is accepted debt: the page uses an inline
+     <style> block and inline style="" attributes. fonts.googleapis.com (CSS) and
+     fonts.gstatic.com (font files) are the only third-party origins; the page
+     makes no script-driven network calls. No frames, no plugins. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Insina Health · Your health, organized</title>
 <meta name="description" content="Insina Health brings your medical history from every provider together in one secure place that only you control. An informational tool for patients managing complex care. Not a medical device." />
@@ -14,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0,1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script>document.documentElement.classList.add('js');</script>
+<script src="/assets/landing.js"></script>
 <style>
 :root{
   --bg:#ffffff; --tint:#eef4fc; --tint-border:#d9e5f4;
@@ -610,49 +618,5 @@ section[id],div[id],footer[id]{scroll-margin-top:140px}
   </div>
 </footer>
 
-<script>
-(function () {
-  /* Vault detection: presence-only, never read contents.
-     REPO-TODO: replace with the actual localStorage key(s) from the storage module. */
-  var VAULT_KEYS = ['mi_vault']; // secureStorage.js VAULT_KEY — presence only, never read
-  try {
-    var hasVault = VAULT_KEYS.some(function (k) { return localStorage.getItem(k) !== null; });
-    if (hasVault) document.body.classList.add('has-vault');
-  } catch (e) { /* storage blocked; treat as no vault */ }
-
-  /* Reveal on scroll */
-  var reveals = document.querySelectorAll('.reveal');
-  reveals.forEach(function (el) {
-    var d = el.getAttribute('data-d');
-    if (d) el.style.transitionDelay = d + 'ms';
-  });
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add('vis'); io.unobserve(en.target); }
-      });
-    }, { threshold: 0.1 });
-    reveals.forEach(function (el) { io.observe(el); });
-  } else {
-    reveals.forEach(function (el) { el.classList.add('vis'); });
-  }
-
-  /* Retire any root-scope service worker (old app shell). /app/ and /companion/ scopes untouched. */
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (regs) {
-      regs.forEach(function (r) {
-        if (r.scope === location.origin + '/') r.unregister();
-      });
-    }).catch(function () {});
-  }
-
-  /* Demo buttons → the ISOLATED demo origin (#49). Its own subdomain means its
-     own localStorage, so the demo can never see or touch a real record here. */
-  var DEMO_ORIGIN = 'https://demo.insinahealth.com/';
-  document.querySelectorAll('.js-demo').forEach(function (a) {
-    a.addEventListener('click', function (e) { e.preventDefault(); window.location.href = DEMO_ORIGIN; });
-  });
-})();
-</script>
 </body>
 </html>
