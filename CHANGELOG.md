@@ -12,6 +12,30 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.0 — 2026-07-21
+
+### Added
+- **Safety: deterministic AI output filter (AUDIT_SEC_02 F-03, AI-09).** The
+  Clinical Safety Core instructs the model never to give specific
+  medication/dose directives, but that lived only in the system prompt with no
+  backstop if the model ignored or was jailbroken past it. New
+  `src/lib/aiOutputFilter.js` scans AI text *after* generation for prohibited
+  second-person/first-person dose or start/stop directives and redacts them
+  with a visible note — deterministic and pure, the same "not the model"
+  principle as the tripwire engine. Crucially, it is negation-aware: it does
+  **not** flag the safe caution sentences the safety rules want ("don't stop
+  your meds without asking your doctor", "only increase if your doctor tells
+  you to"). Applied at every AI-render surface: the shared renderer
+  (`applyBoldSafe` / `renderAiMarkdownToHtml`, covering Tab05/Tab11/Tab14/
+  AnalysisOverlay), plus the three surfaces that render AI text as plain
+  children and so bypass the shared renderer — Tab10 Notes summary, companion
+  AILite chat, and companion Visit prep. AnalysisOverlay now filters once and
+  uses that single value for on-screen render, Save-to-Notes, and
+  Download-as-markdown, so the saved/exported copy can never carry a directive
+  the on-screen copy already redacted. New test suite
+  `scripts/testAiOutputFilter.mjs` (`npm run test:ai-filter`, 21 cases) pins
+  both directions — violations caught, safe guardrail sentences left intact.
+
 ## v1.36.1 — 2026-07-21
 
 ### Fixed

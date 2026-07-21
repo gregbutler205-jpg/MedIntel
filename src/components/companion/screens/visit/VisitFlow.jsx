@@ -7,6 +7,10 @@ import { safetyFlags, flagsForSpecialty, flaggedLabs, relDate, fmtShort, conditi
 import { selectRelevantFlags, generateVisitPrep } from "../../../../lib/companionAI.js";
 import { newVisit, getVisit, saveVisit } from "../../../../lib/visitCapture.js";
 import { enqueue } from "../../../../lib/outbox.js";
+// AUDIT_SEC_02 F-03: the prep brief renders via <Prose> (plain text, safe from
+// XSS already) which bypasses renderAiText.js's shared filter — applied here
+// explicitly, once, on the final generated text before it's stored/displayed.
+import { scanForProhibitedDirectives } from "../../../../lib/aiOutputFilter.js";
 import DuringVisit from "./DuringVisit.jsx";
 import VisitSummary from "./VisitSummary.jsx";
 
@@ -85,7 +89,10 @@ function PreVisitBrief({ visit, onStart }) {
   const runPrep = () => {
     setPrepLoading(true); setPrepErr("");
     generateVisitPrep(appt)
-      .then(text => { setPrep(text); saveVisitPrep(prepKey, { text, sig }); })
+      .then(text => {
+        const { redactedText } = scanForProhibitedDirectives(text);
+        setPrep(redactedText); saveVisitPrep(prepKey, { text: redactedText, sig });
+      })
       .catch(e => {
         const net = /failed to fetch|networkerror|load failed/i.test(e.message || "");
         setPrepErr(net ? "Couldn’t reach the AI server — check your connection and try again." : (e.message || "Couldn’t generate prep — try again when online."));

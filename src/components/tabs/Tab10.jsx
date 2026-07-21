@@ -4,6 +4,10 @@ import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceC } from "../../prompts/surfaceC.js";
 import { downloadAnalysisMarkdown } from "../../lib/analysisExport.js";
 import { PrintLabel, PinIcon } from "../icons.jsx";
+// AUDIT_SEC_02 F-03: this summary renders as a plain text child (line ~312,
+// `whiteSpace:"pre-wrap"`) — safe from XSS on its own, but that means it never
+// passes through renderAiText.js's shared filter. Applied explicitly here.
+import { scanForProhibitedDirectives } from "../../lib/aiOutputFilter.js";
 
 const INTELLITRAX_LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -284,7 +288,7 @@ function AIPanel({ note, onClose }) {
         throw new Error(err?.error?.message || err?.error || `Server error ${res.status}`);
       }
       const data = await res.json();
-      setResult(data.content[0].text);
+      setResult(scanForProhibitedDirectives(data.content[0].text).redactedText);
     } catch (e) {
       setError(e.message || "Request failed.");
     }

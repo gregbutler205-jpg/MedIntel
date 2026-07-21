@@ -8,6 +8,14 @@ import { useState } from "react";
 import { renderAiMarkdownToHtml } from "../lib/renderAiText.js";
 import { saveAnalysisToNotes, downloadAnalysisMarkdown, getLastSyncStamp, ANALYSIS_FOOTER } from "../lib/analysisExport.js";
 import { PrintLabel } from "./icons.jsx";
+// AUDIT_SEC_02 F-03: the on-screen render already passes through the shared
+// filter (renderAiMarkdownToHtml -> applyBoldSafe), but Save-to-Notes and
+// Download-as-markdown both used the raw `content` prop directly — bypassing
+// it entirely. Redacting ONCE here, and using that single value for the
+// render, the saved note, and the downloaded file, guarantees the three can
+// never disagree (a downloaded file carrying the raw directive the on-screen
+// version had already redacted would be a worse leak than either alone).
+import { scanForProhibitedDirectives } from "../lib/aiOutputFilter.js";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
@@ -17,9 +25,10 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
   const modeLabel = isAdvanced ? "Advanced Mode" : "Standard Mode";
   const dateLabel = (timestamp ? new Date(timestamp) : new Date())
     .toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  const { redactedText: safeContent } = scanForProhibitedDirectives(content);
 
   const handleSave = () => {
-    saveAnalysisToNotes({ title, content, mode });
+    saveAnalysisToNotes({ title, content: safeContent, mode });
     setSaved(true);
   };
 
@@ -66,7 +75,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: saved ? "rgba(16,185,129,.10)" : "rgba(16,185,129,.14)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: saved ? "default" : "pointer", flexShrink: 0 }}>
           {saved ? "✓ Saved to My Notes" : "Save to My Notes"}
         </button>
-        <button onClick={() => downloadAnalysisMarkdown({ analysisType: title, content, mode })}
+        <button onClick={() => downloadAnalysisMarkdown({ analysisType: title, content: safeContent, mode })}
           title="Download this analysis as a dated markdown file"
           style={{ padding: "7px 14px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#b0c4d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", flexShrink: 0 }}>
           ↓ .md
@@ -88,8 +97,9 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
             <hr className="ao-rule" />
           </div>
 
-          {/* AI text — rendered ONLY via the shared escaped renderer (S-02/PG-02) */}
-          <div className="ao-body" dangerouslySetInnerHTML={{ __html: renderAiMarkdownToHtml(content) }} />
+          {/* AI text — rendered ONLY via the shared escaped renderer (S-02/PG-02),
+              from the same filtered text used for save/export (F-03). */}
+          <div className="ao-body" dangerouslySetInnerHTML={{ __html: renderAiMarkdownToHtml(safeContent) }} />
 
           {/* Screen footer note */}
           <div className="ao-chrome" style={{ marginTop: 28, paddingTop: 12, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.6 }}>

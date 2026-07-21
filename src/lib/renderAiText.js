@@ -6,6 +6,16 @@
 // codebase permitted to turn AI-generated text into HTML — escape first, then
 // apply the **bold** / ----- transforms. No other function may build HTML from
 // AI output; route new AI-rendering surfaces through this module.
+//
+// AUDIT_SEC_02 F-03: applyBoldSafe is also the deterministic post-generation
+// output filter's (aiOutputFilter.js) one true choke point — every
+// AI-rendering surface (Tab05/Tab10/Tab11/Tab14, AnalysisOverlay) calls either
+// this function directly or renderAiMarkdownToHtml below, which itself calls
+// this function for every line/cell it renders. Scanning here means the CSC's
+// "never give specific action guidance" rule has a deterministic backstop, not
+// just a system-prompt instruction the model could ignore or be jailbroken
+// past.
+import { scanForProhibitedDirectives } from "./aiOutputFilter.js";
 
 export function escapeHtml(str) {
   return String(str ?? "")
@@ -20,7 +30,8 @@ export function escapeHtml(str) {
 // Escaping before the bold transform means a literal "<" in AI text can never
 // reach the DOM as a tag, regardless of where it sits relative to ** markers.
 export function applyBoldSafe(text, strongStyle) {
-  const escaped = escapeHtml(text);
+  const { redactedText } = scanForProhibitedDirectives(text);
+  const escaped = escapeHtml(redactedText);
   const styleAttr = strongStyle ? ` style="${strongStyle}"` : "";
   return escaped.replace(/\*\*(.*?)\*\*/g, (_, m) => `<strong${styleAttr}>${m}</strong>`);
 }
@@ -53,7 +64,13 @@ export function renderAiMarkdownToHtml(rawText) {
           <span>${applyBoldSafe(cells.slice(1).join(" — "))}</span></div>`;
     }
     const hm = t.match(/^\*\*([^*]+?)\*\*:?\s*$/);
-    if (hm) return `<div style="font-weight:700;font-size:15px;margin-top:16px;margin-bottom:6px">${escapeHtml(hm[1].replace(/:$/, ""))}</div>`;
+    if (hm) {
+      // The only direct escapeHtml call in this file that bypasses
+      // applyBoldSafe (headings have no ** left to re-bold) — scan explicitly
+      // so this path isn't the one hole in the F-03 filter's coverage.
+      const { redactedText } = scanForProhibitedDirectives(hm[1].replace(/:$/, ""));
+      return `<div style="font-weight:700;font-size:15px;margin-top:16px;margin-bottom:6px">${escapeHtml(redactedText)}</div>`;
+    }
     if (t.startsWith("- ") || t.startsWith("• ")) {
       const c = t.replace(/^[-•]\s+/, "");
       return `<div style="display:flex;gap:8px;margin-bottom:5px;padding-left:8px">

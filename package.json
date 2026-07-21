@@ -1,7 +1,7 @@
 {
   "name": "intellitrax",
   "private": true,
-  "version": "1.36.1",
+  "version": "1.37.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,8 @@
     "test:onboarding": "node scripts/testOnboarding.mjs",
     "test:advisory": "node scripts/testAdvisory.mjs",
     "test:vault-restore": "node scripts/testVaultRestore.mjs",
-    "test:emergency-card": "node scripts/testEmergencyCardEscaping.mjs"
+    "test:emergency-card": "node scripts/testEmergencyCardEscaping.mjs",
+    "test:ai-filter": "node scripts/testAiOutputFilter.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",

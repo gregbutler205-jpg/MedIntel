@@ -5,6 +5,13 @@ import { useState, useRef, useEffect } from "react";
 import { C, mono, sans } from "../companionUI.jsx";
 import MicButton from "../MicButton.jsx";
 import { askInsinaStream, buildRecordSystem, buildSymptomPrepSystem } from "../../../lib/companionAI.js";
+// AUDIT_SEC_02 F-03: this chat renders plain React text children (safe from
+// XSS on its own — React auto-escapes text nodes) but that means it never
+// passes through renderAiText.js's shared HTML builder, where the
+// deterministic directive filter normally lives. Applied explicitly here,
+// once, on the FINAL streamed text — not per-chunk, which would scan
+// incomplete sentences and could false-positive mid-stream.
+import { scanForProhibitedDirectives } from "../../../lib/aiOutputFilter.js";
 
 const PROMPTS = [
   "Summarize my current status",
@@ -57,7 +64,10 @@ export default function AILite({ initialPrompt, initialSurface, onPromptConsumed
         messages: next,
         signal: ctrl.signal,
         onDelta: (_chunk, accum) => setMessages(prev => { const c = [...prev]; c[c.length - 1] = { role: "assistant", text: accum, streaming: true }; return c; }),
-      }).then(full => setMessages(prev => { const c = [...prev]; c[c.length - 1] = { role: "assistant", text: full }; return c; }));
+      }).then(full => {
+        const { redactedText } = scanForProhibitedDirectives(full);
+        setMessages(prev => { const c = [...prev]; c[c.length - 1] = { role: "assistant", text: redactedText }; return c; });
+      });
     } catch (e) {
       if (e.name === "AbortError") setMessages(prev => { const c = [...prev]; c[c.length - 1] = { role: "assistant", text: c[c.length - 1].text || "_(stopped)_" }; return c; });
       else { setError(e.message); setMessages(prev => { const c = [...prev]; c[c.length - 1] = { role: "assistant", text: `Error: ${e.message}` }; return c; }); }
