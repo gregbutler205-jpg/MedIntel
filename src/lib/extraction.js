@@ -1,16 +1,23 @@
 // ── Extraction interface (ONBOARDING_SPEC v1.1 §4.1–§4.3, work order) ────────
 // SINGLE entry point for every onboarding extraction. Two implementations
-// behind one interface: `fixture` (the spec's demo dataset — default until
-// the proxy work order ships) and `live` (Render proxy /extract). Selected
-// by VITE_EXTRACTION_MODE. The §3.0 consent gate is enforced HERE, at the
+// behind one interface: `fixture` (the spec's demo dataset — the shipped
+// default) and `live` (a Render proxy extraction route). Selected by
+// VITE_EXTRACTION_MODE. The §3.0 consent gate is enforced HERE, at the
 // choke point: no extraction of any kind runs while consents.ai_processing
 // is not true — fixture mode included, so the gate is testable end-to-end.
+//
+// AUDIT_SEC_02 F-09: the proxy does not yet expose an onboarding-extraction
+// route, so `live` mode is NOT wired end-to-end — fixture is the only
+// functional path today. The old `live` code POSTed to a nonexistent
+// `/extract` with its own copy of the bearer-auth header, the exact
+// "each surface rolls its own fetch" drift the unified aiClient (A-02) exists
+// to prevent. Until the route decision lands (route name + response shape),
+// live mode fails loudly rather than silently 404-ing; when it ships it must
+// go THROUGH aiClient so auth is attached in exactly one place.
 
 import { extractionAllowed } from "./onboardingState.js";
 import { buildFixtureResult } from "./fixtureExtraction.js";
-import { getPilotToken } from "./pilotAuth.js";
 
-const PROXY_URL = import.meta.env?.VITE_PROXY_URL || "http://localhost:3001";
 export const EXTRACTION_MODE = import.meta.env?.VITE_EXTRACTION_MODE === "live" ? "live" : "fixture";
 
 export const PAGES_PER_CALL = 15; // §4.2: batch ≤15 pages per model call, merge client-side
@@ -19,13 +26,13 @@ export class ExtractionConsentError extends Error {
   constructor() { super("AI processing consent has not been granted — extraction is blocked."); this.name = "ExtractionConsentError"; }
 }
 
-function assertConsent() {
-  if (!extractionAllowed()) throw new ExtractionConsentError();
+/** Thrown when live extraction is requested but the proxy route isn't wired yet (F-09). */
+export class ExtractionNotWiredError extends Error {
+  constructor() { super("Live extraction is not available yet — the proxy extraction route is not implemented. Use fixture mode."); this.name = "ExtractionNotWiredError"; }
 }
 
-function authHeaders() {
-  const token = getPilotToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+function assertConsent() {
+  if (!extractionAllowed()) throw new ExtractionConsentError();
 }
 
 /** Merge multiple §4.1 results for one logical document (page batching). */
@@ -42,14 +49,13 @@ export function mergeExtractionResults(results, sourceName) {
   };
 }
 
-async function proxyExtract(body) {
-  const res = await fetch(`${PROXY_URL}/extract`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`Extraction failed (${res.status}).`);
-  return res.json();
+// The single network primitive for live extraction. Deliberately unimplemented
+// (F-09): there is no proxy extraction route yet, and when there is, this must
+// be built through aiClient (single auth attachment point) — not a private
+// fetch + a duplicated bearer header. Fails loudly so `live` mode can never
+// silently POST document text to a nonexistent endpoint.
+async function proxyExtract(_body) {
+  throw new ExtractionNotWiredError();
 }
 
 /**

@@ -253,6 +253,12 @@ await (async () => {
     assert.equal(r.documents.length, 2);
   });
 })();
+check("F-09: ExtractionNotWiredError is exported for the not-yet-wired live path", () => {
+  assert.equal(typeof extraction.ExtractionNotWiredError, "function");
+  const e = new extraction.ExtractionNotWiredError();
+  assert.equal(e.name, "ExtractionNotWiredError");
+  assert.ok(/not (available|implemented)/i.test(e.message), "message explains live is unavailable");
+});
 check("§4.2: page-batch merge collapses to one document, first non-null doc_date wins", () => {
   const merged = extraction.mergeExtractionResults([
     { documents: [{ source_name: "a.pdf", doc_date: null, doc_date_confidence: null, items: [{ category: "lab", fields: {}, confidence: 0.9, source_page: 1, source_region: null }] }] },

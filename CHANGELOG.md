@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.5 — 2026-07-21
+
+### Fixed
+- **Removed the dormant, broken live-extraction fetch (AUDIT_SEC_02 F-09, Low).**
+  `extraction.js` (onboarding document extraction) had a `live` mode that POSTed
+  to a proxy route `/extract` that does not exist — using its own raw `fetch`
+  and a duplicated copy of the bearer-auth header, the exact "each surface rolls
+  its own fetch" drift the unified `aiClient` (A-02) exists to prevent. It was
+  never reachable in practice (`fixture` mode is the shipped default), but in
+  `live` mode it would have silently POSTed document text to a 404. Replaced the
+  ad-hoc fetch with a fail-loud stub (`ExtractionNotWiredError`) and removed the
+  duplicated auth header and now-unused `PROXY_URL`. The spec'd consent gate and
+  page-batch/merge logic (§4.2) are unchanged. **Open decision for Greg:** when
+  a real onboarding-extraction proxy route is designed (name + response shape),
+  it must be implemented *through* `aiClient` so auth lives in one place.
+
 ## v1.37.4 — 2026-07-21
 
 ### Security
