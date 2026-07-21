@@ -12,6 +12,18 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.3 — 2026-07-21
+
+### Security
+- **Dropped the stale `api.anthropic.com` origin from the CSP (AUDIT_SEC_02
+  F-07, Low).** Since A-02, every AI call routes through the Render proxy and
+  the browser never contacts Anthropic directly, yet `connect-src` still
+  allowlisted `https://api.anthropic.com` (the CSP comment even said "remove
+  when A-02 lands"). Removed it from both `index.html` and `companion/index.html`
+  and updated the origin-inventory comment. No functional change — nothing in
+  `src/` connected there; the proxy origin (`insina-health.onrender.com`) and
+  the other verified origins are untouched.
+
 ## v1.37.2 — 2026-07-21
 
 ### Fixed

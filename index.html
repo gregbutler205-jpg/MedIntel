@@ -8,12 +8,13 @@
          iframes), fonts.googleapis.com / fonts.gstatic.com (Google Fonts),
          *.googleusercontent.com (Google profile photo), www.googleapis.com
          (Drive + Calendar), insina-health.onrender.com (AI proxy),
-         api.anthropic.com (BYO-key fallback path — remove when A-02 lands),
-         clinicaltables.nlm.nih.gov (ICD-10 lookup). style-src 'unsafe-inline'
+         clinicaltables.nlm.nih.gov (ICD-10 lookup). No api.anthropic.com: every
+         AI call now goes through the proxy (A-02 landed); the browser never
+         talks to Anthropic directly. style-src 'unsafe-inline'
          is accepted debt: inline styles are pervasive in the codebase.
          Stripped during `npm run dev` only (see vite.config.js) because the
          React dev plugin injects an inline refresh preamble. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://insina-health.onrender.com https://www.googleapis.com https://accounts.google.com https://api.anthropic.com https://clinicaltables.nlm.nih.gov; frame-src https://accounts.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://insina-health.onrender.com https://www.googleapis.com https://accounts.google.com https://clinicaltables.nlm.nih.gov; frame-src https://accounts.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- PWA / iOS -->
