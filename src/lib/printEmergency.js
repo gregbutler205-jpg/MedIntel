@@ -18,8 +18,10 @@
 // escaped there too, not just text nodes) — printMedicationList.js's local
 // `esc()` only escapes & < > because it never populates an attribute; this
 // file does, so it uses the fuller shared escapeHtml instead. Card front/back
-// images are base64 data URIs (compressImage output) — that alphabet cannot
-// contain < > " ' so they're left as-is.
+// images are normally base64 data URIs (compressImage output) whose alphabet
+// carries no HTML metacharacters — so escaping them is a no-op on real data —
+// but they are escaped anyway (defense in depth): a tampered or restored
+// mi_cards that ever put a non-base64 string in a src can't break out.
 import { escapeHtml } from "./renderAiText.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
@@ -125,12 +127,12 @@ export function buildEmergencyHtml() {
   )).join("");
 
   // Insurance / ID card images (front + back where present), full width.
-  // front/back are base64 data URIs (compressImage output) — that alphabet
-  // cannot contain < > " ' so the src attribute is safe unescaped; the label
-  // is free-text the patient typed, so it is escaped.
+  // front/back are normally base64 data URIs (compressImage output) with no HTML
+  // metacharacters, so escapeHtml is a no-op on real data — but src and label are
+  // both escaped so a tampered mi_cards value can't break out of the attribute.
   const cardImgs = cards.flatMap(c => [
-    c.front ? `<div class="idcard"><div class="idcard-lbl">${escapeHtml(c.label || "Card")} — front</div><img src="${c.front}" /></div>` : "",
-    c.back  ? `<div class="idcard"><div class="idcard-lbl">${escapeHtml(c.label || "Card")} — back</div><img src="${c.back}" /></div>` : "",
+    c.front ? `<div class="idcard"><div class="idcard-lbl">${escapeHtml(c.label || "Card")} — front</div><img src="${escapeHtml(c.front)}" /></div>` : "",
+    c.back  ? `<div class="idcard"><div class="idcard-lbl">${escapeHtml(c.label || "Card")} — back</div><img src="${escapeHtml(c.back)}" /></div>` : "",
   ].filter(Boolean));
   const cardSection = cardImgs.length === 0 ? "" : `
     <div class="section">

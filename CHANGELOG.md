@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.8 — 2026-07-21
+
+### Security
+- **Emergency Card now escapes the ID-card image `src` too (AUDIT_SEC_02 F-01
+  follow-up, defense-in-depth).** The F-01 fix escaped every free-text field but
+  deliberately left the insurance/ID-card image data URIs (`c.front`/`c.back`)
+  unescaped, on the sound rationale that a base64 data URI carries no HTML
+  metacharacters. That holds for real images (`compressImage` output), but it
+  assumed the value is *always* base64 — a tampered or maliciously restored
+  `mi_cards` could put an attribute-breakout string in the `src`. Both are now
+  wrapped in `escapeHtml` — a no-op on legitimate base64, and a hard stop on a
+  tampered value. `scripts/testEmergencyCardEscaping.mjs` gains a tampered-card
+  case (attribute breakout + `<script>` in the image `src`); verified it fails
+  against the old code (two `<script>` tags) and passes against the fix (8/8).
+
 ## v1.37.7 — 2026-07-21
 
 ### Security

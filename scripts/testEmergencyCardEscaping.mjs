@@ -43,7 +43,14 @@ set("mi_allergies", [{ allergen: PAYLOAD, reaction: PAYLOAD }]);
 set("mi_emergency_contacts", [{ name: PAYLOAD, relationship: PAYLOAD, phone: PAYLOAD_ATTR }]);
 set("mi_care_team", [{ name: PAYLOAD, role: PAYLOAD, phone: PAYLOAD_ATTR, phone24: PAYLOAD_ATTR }]);
 set("mi_labs", [{ name: PAYLOAD, value: PAYLOAD, unit: PAYLOAD, refRange: PAYLOAD, date: "2026-01-01", category: "CBC", flag: true }]);
-set("mi_cards", [{ label: PAYLOAD, front: "data:image/jpeg;base64,/9j/4AAQ" }]);
+// One legitimate card (clean base64) + one "tampered" card whose src carries an
+// attribute-breakout + <script> — simulating a maliciously restored mi_cards.
+// Escaping the src is a no-op on the clean one and neutralizes the tampered one.
+const CARD_SRC_ATTACK = `data:image/jpeg;base64,AAA"><script>alert('card')</script>`;
+set("mi_cards", [
+  { label: PAYLOAD, front: "data:image/jpeg;base64,/9j/4AAQ" },
+  { label: "Tampered", front: CARD_SRC_ATTACK },
+]);
 set("mi_lab_category_order", []);
 
 const html = buildEmergencyHtml();
@@ -52,7 +59,8 @@ ok(!html.includes(PAYLOAD), "the raw <img onerror> payload never appears unescap
 ok(!html.includes(PAYLOAD_ATTR), "the raw attribute-breakout payload never appears unescaped anywhere in the card");
 ok(html.includes("&lt;img src=x onerror=") , "the payload IS present, escaped, in profile/condition/med/allergy fields (proves fields render, just safely)");
 ok(html.includes("&quot;&gt;&lt;script&gt;"), "the attribute-breakout payload is present, escaped (proves phone/tel-href fields render, just safely)");
-ok(html.includes(`src="data:image/jpeg;base64,/9j/4AAQ"`), "card image data URI still renders unescaped (base64 can't carry HTML metacharacters)");
+ok(html.includes(`src="data:image/jpeg;base64,/9j/4AAQ"`), "a legitimate base64 data URI still renders intact (escapeHtml is a no-op on base64 chars)");
+ok(!html.includes(CARD_SRC_ATTACK), "a tampered card image src (attribute breakout) never appears unescaped");
 ok(!html.includes("<img src=x"), "no live <img> tag was injected into the DOM structure");
 // The card legitimately ships ONE <script> (its own window.print() trigger) —
 // the payload attempted to inject a second; the count must stay at exactly 1.
