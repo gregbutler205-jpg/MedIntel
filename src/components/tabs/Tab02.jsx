@@ -80,12 +80,20 @@ function CardHeader({ title, editing, onEdit, onSave, onCancel, onAdd }) {
 }
 
 // ── Simple field row ───────────────────────────────────────────────────────────
-function FieldRow({ label, value, editing, field, vals, setVals }) {
+function FieldRow({ label, value, editing, field, vals, setVals, options, placeholder }) {
+  const current = vals[field] ?? value ?? "";
   return (
     <div style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
       <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
       {editing
-        ? <input value={vals[field] ?? value ?? ""} onChange={e => setVals(p => ({ ...p, [field]: e.target.value }))} style={inp} />
+        ? options
+          ? <select value={current} onChange={e => setVals(p => ({ ...p, [field]: e.target.value }))} style={inp}>
+              <option value="">— select —</option>
+              {options.map(o => <option key={o} value={o}>{o}</option>)}
+              {/* keep a stored value selectable even if it isn't in the list */}
+              {current && !options.includes(current) && <option value={current}>{current}</option>}
+            </select>
+          : <input value={current} onChange={e => setVals(p => ({ ...p, [field]: e.target.value }))} style={inp} placeholder={placeholder || ""} />
         : <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>{value || <span style={{ color:T.ghost, fontStyle:"italic" }}>—</span>}</span>
       }
     </div>
@@ -610,7 +618,9 @@ export default function ProfileTab() {
     ["Blood Type","blood"],["Height","height"],["Weight","weight"],
     ["Phone","phone"],["Email","email"],["Address","address"],
     // ED-critical fields (2026-07-20): print on the Emergency Card + report when filled.
-    ["Code Status","codeStatus"],["Advance Directive","advanceDirective"],["Implanted Devices","implantedDevices"],
+    ["Code Status","codeStatus",{ options:["Full Code","DNR (Do Not Resuscitate)","DNI (Do Not Intubate)","DNR/DNI","Comfort Care Only"] }],
+    ["Advance Directive","advanceDirective",{ placeholder:"e.g. Living will + healthcare POA (Maria Rivera, 555-847-3042) — copies at UMC" }],
+    ["Implanted Devices","implantedDevices",{ placeholder:"e.g. Biliary stent (2024); right hip replacement (2021)" }],
   ];
   const INSURANCE_FIELDS = [
     ["Primary Insurer","ins1"],["Plan","plan1"],["Member ID","mid1"],["Group #","grp1"],
@@ -665,8 +675,8 @@ export default function ProfileTab() {
               onSave={savePersonal}
               onCancel={() => { setEdPersonal(false); setTempPersonal({}); }}
             />
-            {PERSONAL_FIELDS.map(([label, field]) => (
-              <FieldRow key={field} label={label} value={P[field]} editing={edPersonal} field={field} vals={tempPersonal} setVals={setTempPersonal} />
+            {PERSONAL_FIELDS.map(([label, field, cfg]) => (
+              <FieldRow key={field} label={label} value={P[field]} editing={edPersonal} field={field} vals={tempPersonal} setVals={setTempPersonal} {...(cfg || {})} />
             ))}
           </div>
 

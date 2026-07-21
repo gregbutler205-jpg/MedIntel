@@ -12,6 +12,15 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.35.2 — 2026-07-20
+
+### Changed
+- **Health Profile edit mode:** Code Status is now a dropdown (Full Code, DNR,
+  DNI, DNR/DNI, Comfort Care Only — a stored custom value stays selectable);
+  Advance Directive and Implanted Devices show example placeholder text in
+  lighter type. These fields aren't part of onboarding's Quick Start Basics,
+  which is unchanged by design.
+
 ## v1.35.1 — 2026-07-20
 
 ### Changed
