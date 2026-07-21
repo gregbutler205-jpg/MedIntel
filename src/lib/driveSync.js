@@ -37,8 +37,10 @@ export function collectLocalData() {
   return data;
 }
 
-/** Snapshot all managed mi_* keys as raw ciphertext blobs. Used for every Drive upload — P-02 point 7. */
-function collectLocalCiphertext() {
+/** Snapshot all managed mi_* keys as raw ciphertext blobs. Used for every Drive
+ * upload — P-02 point 7 — and by folderBackup.js (v1.38.0), so the folder-backup
+ * file is byte-for-byte the same protection class as the Drive backup. */
+export function collectLocalCiphertext() {
   const data = { _exportedAt: new Date().toISOString() };
   // Include the vault key-envelope so a wiped/new device can rebuild the vault
   // and unlock with the passphrase OR recovery key. The envelope only WRAPS the
@@ -61,33 +63,44 @@ function collectLocalCiphertext() {
 }
 
 /**
- * Rebuild a wiped/new device from the Drive backup, WITHOUT the DEK. Writes the
- * vault envelope + every ciphertext blob to localStorage raw; the caller then
- * reloads and unlocks with the passphrase or recovery key (which unwraps the DEK
- * from the restored envelope and decrypts the blobs). Returns
- * { count, hasEnvelope } or null if no Drive backup exists.
+ * Restore core, payload level: rebuild a device from an encrypted backup object
+ * (envelope + ciphertext blobs), WITHOUT the DEK. Writes everything raw via
+ * importRawCiphertext; the caller then reloads and unlocks with the passphrase
+ * or recovery key. Shared by restoreFromDrive() and the folder/file restore
+ * (folderBackup.js) so there is exactly one restore path.
+ * Returns { count, hasEnvelope } or null for an empty payload.
  */
-export async function restoreFromDrive(token) {
-  const driveData = await downloadFromDrive(token);
-  if (!driveData) return null;
+export function restoreFromBackupObject(data) {
+  if (!data) return null;
 
   // No envelope → the blobs can't be decrypted on this device (old backup from
   // before the fix). Restore NOTHING rather than strand orphaned ciphertext.
-  const hasEnvelope = driveData._vaultEnvelope != null;
+  const hasEnvelope = data._vaultEnvelope != null;
   if (!hasEnvelope) return { count: 0, hasEnvelope: false };
 
-  const env = typeof driveData._vaultEnvelope === "string"
-    ? driveData._vaultEnvelope : JSON.stringify(driveData._vaultEnvelope);
+  const env = typeof data._vaultEnvelope === "string"
+    ? data._vaultEnvelope : JSON.stringify(data._vaultEnvelope);
   secureStorage.importRawCiphertext(secureStorage.VAULT_KEY, env);
 
   let count = 0;
-  for (const [key, blob] of Object.entries(driveData)) {
+  for (const [key, blob] of Object.entries(data)) {
     if (!key.startsWith("mi_") || EXCLUDE_KEYS.has(key)) continue;
     const raw = typeof blob === "string" ? blob : JSON.stringify(blob);
     secureStorage.importRawCiphertext(key, raw);
     count++;
   }
   return { count, hasEnvelope };
+}
+
+/**
+ * Rebuild a wiped/new device from the Drive backup. Downloads, then delegates
+ * to restoreFromBackupObject(). Returns { count, hasEnvelope } or null if no
+ * Drive backup exists.
+ */
+export async function restoreFromDrive(token) {
+  const driveData = await downloadFromDrive(token);
+  if (!driveData) return null;
+  return restoreFromBackupObject(driveData);
 }
 
 // ── Drive file helpers ────────────────────────────────────────────────────────

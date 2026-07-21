@@ -63,5 +63,88 @@ const driveBackup = { _vaultEnvelope: envelope, ...Object.fromEntries(Object.ent
     "a backup missing the envelope has data but no way to derive the key — the pre-fix state");
 }
 
+// ═══ v1.38.0 folder backup: shared restore core + file-restore guards ═════════
+// These run against the REAL secureStorage/driveSync/folderBackup modules under
+// a Storage polyfill (same convention as testOnboarding.mjs) — the polyfill must
+// exist BEFORE the modules load, because secureStorage captures
+// Storage.prototype methods at import time.
+
+class Storage {
+  constructor() { this._m = new Map(); }
+  getItem(k) { return this._m.has(k) ? this._m.get(k) : null; }
+  setItem(k, v) { this._m.set(k, String(v)); }
+  removeItem(k) { this._m.delete(k); }
+  clear() { this._m.clear(); }
+  key(i) { return [...this._m.keys()][i] ?? null; }
+  get length() { return this._m.size; }
+}
+globalThis.Storage = Storage;
+globalThis.localStorage = new Storage();
+
+const secureStorage = await import("../src/lib/secureStorage.js");
+const { restoreFromBackupObject } = await import("../src/lib/driveSync.js");
+const { isEncryptedBackupPayload, restoreEncryptedBackup } = await import("../src/lib/folderBackup.js");
+
+// ── Format detection: encrypted backups vs the readable plaintext export ──────
+{
+  ok(isEncryptedBackupPayload(driveBackup), "detects a Drive/folder-format backup (envelope present) as encrypted");
+  const envelopeless = Object.fromEntries(Object.entries(driveBackup).filter(([k]) => k !== "_vaultEnvelope"));
+  ok(isEncryptedBackupPayload(envelopeless), "detects ciphertext-shaped mi_* blobs as encrypted even without an envelope");
+  const plaintextExport = { exported: "2026-07-21", labs: [{ name: "Potassium", value: "4.6" }], mi_labs: [{ name: "Potassium", value: "4.6" }] };
+  ok(!isEncryptedBackupPayload(plaintextExport), "a readable export (plain values) is NOT detected as encrypted — takes the plaintext import path");
+}
+
+// ── Wiped device: restoreFromBackupObject lands envelope + blobs raw ──────────
+{
+  localStorage.clear();
+  const result = restoreFromBackupObject(driveBackup);
+  ok(result.hasEnvelope && result.count === Object.keys(RECORD).length,
+    `restoreFromBackupObject lands the envelope + all ${Object.keys(RECORD).length} blobs (count=${result.count})`);
+  const storedEnv = localStorage.getItem("mi_vault");
+  ok(!!storedEnv, "the vault envelope is written to mi_vault");
+  const storedBlob = JSON.parse(localStorage.getItem("mi_meds_full"));
+  ok(storedBlob?.v === 1 && !!storedBlob.iv && !!storedBlob.data,
+    "blobs land as RAW ciphertext (never through the patched setItem — no double-encryption)");
+  // The restored envelope must actually unlock: full crypto round-trip.
+  const dekR = await vault.unlockWithPassphrase(PASSPHRASE, JSON.parse(storedEnv));
+  const plain = await vault.decryptString(dekR, { iv: storedBlob.iv, data: storedBlob.data });
+  ok(plain === RECORD.mi_meds_full, "restored envelope + blob decrypt with the original passphrase (end-to-end)");
+}
+
+// ── No-envelope payload: refuse rather than strand ciphertext ─────────────────
+{
+  localStorage.clear();
+  const noEnvelope = Object.fromEntries(Object.entries(driveBackup).filter(([k]) => k !== "_vaultEnvelope"));
+  const result = restoreFromBackupObject(noEnvelope);
+  ok(result.count === 0 && result.hasEnvelope === false, "restoreFromBackupObject restores NOTHING from an envelope-less backup");
+  ok(localStorage.getItem("mi_meds_full") === null, "no orphaned ciphertext written");
+  let threw = null;
+  try { restoreEncryptedBackup(noEnvelope); } catch (e) { threw = e; }
+  ok(threw?.code === "no-envelope", "restoreEncryptedBackup refuses an envelope-less file with code no-envelope");
+}
+
+// ── Envelope-mismatch guard: a foreign vault's file must not brick this device ─
+{
+  localStorage.clear();
+  const foreign = await vault.setupVault("a completely different passphrase");
+  localStorage.setItem("mi_vault", JSON.stringify(foreign.envelope)); // this device's vault
+  let threw = null;
+  try { restoreEncryptedBackup(driveBackup); } catch (e) { threw = e; } // file from the ORIGINAL vault
+  ok(threw?.code === "envelope-mismatch", "restoring a different vault's backup over a live vault is refused");
+  ok(JSON.stringify(JSON.parse(localStorage.getItem("mi_vault"))) === JSON.stringify(foreign.envelope),
+    "the device's own envelope is untouched after the refusal");
+  ok(localStorage.getItem("mi_meds_full") === null, "no blobs from the foreign file were written");
+}
+
+// ── Matching-vault file restore: succeeds and re-arms the migration rails ─────
+{
+  localStorage.clear();
+  localStorage.setItem("mi_vault", JSON.stringify(envelope)); // same vault as the file
+  localStorage.setItem("mi_schema_version", "9");
+  const result = restoreEncryptedBackup(driveBackup);
+  ok(result.hasEnvelope && result.count === Object.keys(RECORD).length, "same-vault file restore lands every blob");
+  ok(localStorage.getItem("mi_schema_version") === "1", "schema stamp reset to baseline so idempotent migrations re-run (A-08)");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (vault-restore)`);
 process.exit(fail ? 1 : 0);

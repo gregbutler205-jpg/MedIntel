@@ -4,6 +4,7 @@ import PasswordInput from "./PasswordInput.jsx"; // WO-5: show/hide toggle
 import { runMigrations } from "../lib/migrations.js";
 import { initGoogleAuth, ensureAccessToken } from "../lib/googleAuth.js";
 import { restoreFromDrive } from "../lib/driveSync.js";
+import { isEncryptedBackupPayload, restoreEncryptedBackup } from "../lib/folderBackup.js";
 
 const LOGO = import.meta.env.BASE_URL + "logo-white.png";
 
@@ -35,6 +36,42 @@ export default function LockScreen({ onUnlock }) {
   useEffect(() => { setError(""); }, [mode]);
   // Init Google sign-in early so "Restore from Google Drive" is ready on a fresh device.
   useEffect(() => { try { initGoogleAuth(); } catch { /* GIS not loaded yet — button retries */ } }, []);
+
+  // v1.38.0 — same recovery, from a backup FILE (folder backup or a downloaded
+  // Drive-format backup). Encrypted files restore raw (envelope + ciphertext)
+  // exactly like the Drive path; plaintext exports are pointed at the Tab13
+  // import, which needs an unlocked record. Never destructive.
+  function handleFileRestore() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (!isEncryptedBackupPayload(data)) {
+            setError("That file is a readable export, not an encrypted backup. Set up (or unlock) your record first, then restore it from Settings → Export & Backup.");
+            return;
+          }
+          const result = restoreEncryptedBackup(data);
+          if (!result?.hasEnvelope) {
+            setError("This backup has no key envelope, so it can't rebuild a device on its own. Use a newer backup file.");
+            return;
+          }
+          window.location.reload(); // vault now present → unlock with your password or recovery key
+        } catch (err) {
+          setError(err?.code === "envelope-mismatch"
+            ? "That backup belongs to a different vault (different password) than the one on this device."
+            : "Restore failed — " + (err?.message || "that doesn't look like an Insina backup file."));
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
 
   // #50 — new/wiped-device recovery: pull the Drive backup (envelope + ciphertext),
   // land it locally, then reload into the normal unlock screen. Never destructive.
@@ -202,11 +239,16 @@ export default function LockScreen({ onUnlock }) {
               </button>
             </form>
             <div style={styles.divider}><span style={styles.dividerText}>already have a record?</span></div>
-            <button type="button" onClick={handleDriveRestore} disabled={restoring} style={styles.secondaryBtn}>
-              {restoring ? "Restoring from Google Drive…" : "Restore from Google Drive"}
-            </button>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <button type="button" onClick={handleDriveRestore} disabled={restoring} style={styles.secondaryBtn}>
+                {restoring ? "Restoring from Google Drive…" : "Restore from Google Drive"}
+              </button>
+              <button type="button" onClick={handleFileRestore} disabled={restoring} style={styles.secondaryBtn}>
+                Restore from a backup file
+              </button>
+            </div>
             <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 6, lineHeight: 1.6 }}>
-              Rebuilds this device from your Drive backup. You'll unlock with your existing password or recovery key.
+              Rebuilds this device from your Drive backup or an encrypted backup file (folder backups included). You'll unlock with your existing password or recovery key.
             </div>
           </>
         )}

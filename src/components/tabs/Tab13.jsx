@@ -5,6 +5,7 @@ import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup } from "../../lib/driveSync.js";
+import { isFolderBackupSupported, getFolderStatus, chooseBackupFolder, clearBackupFolder, backupToFolder, isEncryptedBackupPayload, restoreEncryptedBackup } from "../../lib/folderBackup.js";
 import { unlock, changePassphrase, isUnlocked } from "../../lib/secureStorage.js";
 import PasswordInput from "../PasswordInput.jsx"; // WO-5: show/hide toggle
 import { getAccessToken } from "../../lib/googleAuth.js";
@@ -151,6 +152,44 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   const [pinError, setPinError]   = useState("");
   const [pinSuccess, setPinSuccess] = useState(false);
   const [restoreId, setRestoreId] = useState(null);
+
+  // v1.38.0 folder backup (File System Access) — status is async (IDB handle +
+  // permission query), so it loads into state; refreshed after every action.
+  const [folderStatus, setFolderStatus] = useState(null);
+  useEffect(() => { getFolderStatus().then(setFolderStatus).catch(() => {}); }, []);
+  const refreshFolderStatus = () => getFolderStatus().then(setFolderStatus).catch(() => {});
+
+  async function handleChooseFolder() {
+    try {
+      await chooseBackupFolder();
+      // First backup immediately — the picker click is the user gesture the
+      // permission prompt needs, and an empty configured folder is a footgun.
+      await backupToFolder({ interactive: true });
+      showToast("Folder chosen — first encrypted backup saved");
+    } catch (e) {
+      if (e?.name === "AbortError") return; // user closed the picker
+      showToast(e?.code === "permission" ? "Folder permission was declined" : "Folder backup failed — " + (e?.message || "try again"));
+    } finally {
+      refreshFolderStatus();
+    }
+  }
+
+  async function handleFolderBackupNow() {
+    try {
+      await backupToFolder({ interactive: true });
+      showToast("Encrypted backup saved to your folder");
+    } catch (e) {
+      showToast(e?.code === "permission" ? "Folder permission was declined" : "Folder backup failed — " + (e?.message || "try again"));
+    } finally {
+      refreshFolderStatus();
+    }
+  }
+
+  async function handleStopFolderBackup() {
+    await clearBackupFolder();
+    showToast("Folder backups stopped — existing files were left in place");
+    refreshFolderStatus();
+  }
 
   // Lab category order
   const [labCatOrder, setLabCatOrderState] = useState(() => {
@@ -302,6 +341,23 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target.result);
+          // v1.38.0: encrypted backups (Drive-format / folder backups) must go
+          // through the RAW import path — writing ciphertext through the patched
+          // setItem while unlocked would treat it as plaintext and double-encrypt
+          // it, corrupting every restored key. Detect and route before the
+          // plaintext formats below.
+          if (isEncryptedBackupPayload(data)) {
+            try {
+              const result = restoreEncryptedBackup(data);
+              showToast(`Restored ${result.count} encrypted sections — reloading…`);
+              setTimeout(() => window.location.reload(), 1800);
+            } catch (err) {
+              showToast(err?.code === "envelope-mismatch"
+                ? "That backup belongs to a different vault — refused so you aren't locked out"
+                : "Encrypted restore failed — " + (err?.message || "invalid file"));
+            }
+            return;
+          }
           const MAP = {
             labs:         "mi_labs",
             medications:  "mi_meds_full",
@@ -542,9 +598,58 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               </button>
               <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>Free with your Google account · no health data stored on our servers</span>
             </div>
+            <div style={{ fontSize:10.5, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginTop:10, lineHeight:1.7 }}>
+              No Google account? Creating one is free at accounts.google.com — Drive comes with it.
+              {isFolderBackupSupported()
+                ? " Prefer to skip Google entirely? Use Folder Backup below instead."
+                : " Prefer to skip Google entirely? Use Download Backup below and keep the file somewhere safe (your own cloud folder works)."}
+            </div>
           </div>
         )}
       </div>
+
+      {/* v1.38.0: Folder Backup — the no-Google channel (File System Access API,
+          Chromium desktop only; hidden elsewhere). Same encrypted payload as a
+          Drive backup — never plaintext, because this folder may sync to a
+          third-party cloud. */}
+      {folderStatus?.supported && (
+        <div style={{ ...cardStyle, marginBottom: 14 }}>
+          <div style={sectionLbl}>Folder Backup — Works Without Google</div>
+          {!folderStatus.configured ? (
+            <div>
+              <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.7, marginBottom:12 }}>
+                Choose a folder on this computer and Insina will save encrypted backups there —
+                the same protection as a Drive backup, no Google account involved.
+                Tip: pick a folder inside Dropbox, OneDrive, or iCloud Drive and your own
+                cloud service carries the backups off this device automatically.
+              </div>
+              <button onClick={handleChooseFolder} style={{ ...btnGhost, borderColor:"rgba(79,142,247,.35)", color:"#7eb8d8" }}>
+                Choose backup folder…
+              </button>
+            </div>
+          ) : (
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+              <div>
+                <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>
+                  Saving encrypted backups to “{folderStatus.name}”
+                  {folderStatus.permission !== "granted" && " · permission needed — click Back up now to re-allow"}
+                </div>
+                <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                  {(() => {
+                    const label = daysAgoLabel(localStorage.getItem("mi_last_folder_backup"), null);
+                    return label ? `Last folder backup ${label} · keeps 4 rolling copies` : "No folder backup yet · keeps 4 rolling copies";
+                  })()}
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                <button onClick={handleFolderBackupNow} style={{ ...btnGhost, borderColor:"rgba(79,142,247,.35)", color:"#7eb8d8" }}>Back up now</button>
+                <button onClick={handleChooseFolder} style={btnGhost}>Change folder…</button>
+                <button onClick={handleStopFolderBackup} style={btnGhost}>Stop</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Row 1: Sources + Storage */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>

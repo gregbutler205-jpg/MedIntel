@@ -20,6 +20,7 @@ import SearchPopup from './components/SearchPopup.jsx';
 import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken, clearSessionToken } from './lib/googleAuth.js';
 import { getAutoLockMinutes } from './lib/autoLock.js';
 import { fullSync, uploadToDrive, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
+import { attemptAutoFolderBackup, isFolderBackupSupported } from './lib/folderBackup.js';
 
 
 // ── Tab component imports ─────────────────────────────────────────────────────
@@ -792,8 +793,13 @@ function AppShell() {
         .then(ts => setLastWeeklyBackup(ts))
         .catch(e => console.warn("[WeeklyBackup] auto-backup failed:", e));
     } else if (!googleUser) {
-      // No Drive — show reminder banner
-      setShowBackupBanner(true);
+      // No Drive — a configured backup folder covers the weekly silently
+      // (v1.38.0); the reminder banner appears only when it can't (no folder
+      // chosen, permission lapsed, or unsupported browser).
+      attemptAutoFolderBackup().then(wrote => {
+        if (wrote) setLastWeeklyBackup(new Date().toISOString());
+        else setShowBackupBanner(true);
+      });
     }
   }, []); // intentionally once on mount
 
@@ -1039,7 +1045,7 @@ function AppShell() {
                             {daysAgoLabel(lastWeeklyBackup, null)
                               ? `Last backed up ${daysAgoLabel(lastWeeklyBackup, null)}.`
                               : "Your data has never been backed up."}
-                            {" "}Connect Google Drive in Settings for automatic weekly backups.
+                            {" "}Connect Google Drive in Settings for automatic weekly backups{isFolderBackupSupported() ? " — or choose a backup folder in Export & Backup (no Google needed)" : ""}.
                           </div>
                         </div>
                         <button

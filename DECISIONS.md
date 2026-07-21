@@ -1191,6 +1191,46 @@ stays behind `TRIPWIRE_ADVISORY_ENABLED = false` regardless.
 
 ---
 
+## DEC-040: Folder Backup — the no-Google backup channel is a user-chosen folder, encrypted-payload-only, not a second cloud integration
+
+**Status:** Settled and shipped (v1.38.0, 2026-07-21)
+
+**Problem.** Drive is the only automatic backup/sync channel, which leaves two user segments
+uncovered: people with no Google account, and people who deliberately won't use Google — a real
+segment for a privacy-first product. Options considered: (a) manual file export only (shipped,
+but easy to neglect — the eviction-exposed segment), (b) File System Access API folder backups,
+(c) native Dropbox/OneDrive/WebDAV OAuth integrations, (d) Insina-hosted encrypted storage.
+
+**Decision (Greg, Option b).** Ship folder backup via the File System Access API: the user picks
+a folder once; Insina writes dated encrypted backup files there (rolling 4, mirroring the Drive
+weekly window). Pointing the folder at a Dropbox/OneDrive/iCloud-synced directory yields
+automatic off-device backup on the user's own cloud with **zero new OAuth integrations** and no
+change to the non-custodial story. (c) is deferred — each provider is a real integration plus
+threat-model review; iCloud has no usable web API anyway. (d) is off the table without its own
+DEC: even ciphertext-only hosting changes "we never hold your record," which is load-bearing in
+the landing copy and legal drafts.
+
+**Constraints that are part of the decision, not implementation detail:**
+1. **Encrypted payload only.** The folder file comes from the same `collectLocalCiphertext()`
+   as a Drive backup (ciphertext + wrapped key-envelope). Never `collectLocalData()` — the
+   chosen folder may sync to a third-party cloud, and plaintext PHI there would silently undo
+   P-02 point 7. (The human-readable plaintext export remains a deliberate, separate action.)
+2. **Encrypted restores go through the raw-import path only** (`restoreFromBackupObject`, the
+   #50 primitive). Writing ciphertext through the patched `setItem` while unlocked
+   double-encrypts and corrupts — a latent bug this work also fixed in Tab13's file import.
+3. **Two refusal guards on file restore:** an envelope-less file restores nothing (stranded
+   ciphertext), and a file whose envelope differs from the device's live vault is refused
+   (restoring it would lock the user out; its blobs wouldn't decrypt locally anyway).
+4. Chromium-desktop-only surface, feature-detected; Safari/Firefox users keep manual export
+   (positioned as "save it into your own cloud folder"). Silent weekly folder backups run only
+   while the browser still grants the folder permission; otherwise the existing reminder banner
+   returns with a one-click re-auth path.
+
+**Related:** DEC-037 (envelope in backups — what makes these files disaster-recovery-grade),
+P-02 point 7, `src/lib/folderBackup.js`, `scripts/testVaultRestore.mjs` (20 cases).
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.

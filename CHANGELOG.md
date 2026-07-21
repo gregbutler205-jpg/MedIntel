@@ -12,6 +12,51 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.38.0 — 2026-07-21
+
+### Added
+- **Folder Backup — the no-Google backup channel (File System Access API).**
+  Users who can't or won't use Google Drive can now pick a local folder once
+  (Settings & Backup → Folder Backup); Insina writes dated, **encrypted** backup
+  files there — rolling 4 copies, mirroring the Drive weekly snapshots. Pointing
+  the folder at a Dropbox / OneDrive / iCloud Drive synced directory gives
+  automatic off-device backup on the user's own cloud with zero new OAuth
+  integrations. Payload parity is the load-bearing rule: the file comes from the
+  same `collectLocalCiphertext()` as a Drive backup (ciphertext + wrapped key
+  envelope) — never plaintext, since the chosen folder may sync to a third-party
+  cloud. Chromium-desktop only; the UI feature-detects and hides elsewhere. New
+  `src/lib/folderBackup.js`; directory handle persists in IndexedDB (handles
+  aren't JSON-serializable). The weekly reminder banner now silently runs a
+  folder backup instead when one is configured and permitted.
+- **Restore from a backup file on the lock screen.** A wiped/new device can now
+  rebuild from an encrypted backup *file* (folder backup or Drive-format) next
+  to the existing "Restore from Google Drive" — same raw-import path (#50),
+  then unlock with the existing password or recovery key.
+
+### Fixed
+- **Encrypted backups restored via Settings → Restore no longer corrupt.**
+  Tab13's file import wrote every `mi_*` value through the patched
+  `localStorage.setItem` — correct for readable exports, but an **encrypted**
+  backup (Drive-format weekly file, and now folder backups) restored while
+  unlocked would have its ciphertext treated as plaintext and double-encrypted,
+  corrupting every restored key. The import now detects the encrypted format and
+  routes it through the raw import path, with two guards: an envelope-less file
+  is refused (blobs would be stranded undecryptable), and a file from a
+  *different* vault is refused (restoring its envelope would lock the user out;
+  its blobs wouldn't decrypt locally anyway). A successful encrypted restore
+  resets the schema stamp so the idempotent A-08 migrations re-run. 15 new
+  cases in `scripts/testVaultRestore.mjs` (20 total) cover format detection,
+  raw restore end-to-end through a real unlock, both refusal guards, and the
+  stamp reset.
+
+### Notes
+- `driveSync.js`: `collectLocalCiphertext()` is now exported (single payload
+  source for Drive + folder), and the Drive restore core is extracted as
+  `restoreFromBackupObject()` so file- and Drive-restore share one path.
+- Copy: the Drive connect card gains "No Google account? Creating one is free…"
+  plus a pointer to Folder Backup (or Download Backup on non-Chromium); the
+  weekly banner mentions the folder option.
+
 ## v1.37.8 — 2026-07-21
 
 ### Security
