@@ -12,6 +12,27 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.1 — 2026-07-21
+
+### Fixed
+- **Safety: onboarding bulk-accept now refuses per-item categories in the write
+  layer (AUDIT_SEC_02 F-04, Med).** The §5.2 clinical-safety rule — medications,
+  allergies, and conditions require explicit per-item confirmation and may never
+  be bulk-accepted (C3) — was enforced only by the Review & Confirm UI choosing
+  not to render a bulk button for those categories, plus a `CONFIRMATION_MATRIX`
+  config flag. `confirmItemToRecord`, the single write path, had no awareness of
+  bulk vs. per-item, so one config edit (`bulk:true` on medication) or any future
+  loop over it would have silently bypassed the invariant. Added a logic-layer
+  backstop in `src/lib/onboardingConfirm.js`: a hard-coded `PER_ITEM_ONLY` set
+  (deliberately independent of the editable matrix), a sanctioned
+  `bulkConfirmItems()` entry point that refuses those categories regardless of
+  caller or config, and a guard inside `confirmItemToRecord` that rejects any
+  `{bulk:true}` write of a protected category. `ReviewQueue`'s "Accept all
+  high-confidence" now routes through `bulkConfirmItems()`. A single-item
+  confirmation (the per-item path) is unchanged for every category. Five new
+  cases in `scripts/testOnboarding.mjs` pin the guard and assert `PER_ITEM_ONLY`
+  cannot silently drift from the matrix.
+
 ## v1.37.0 — 2026-07-21
 
 ### Added

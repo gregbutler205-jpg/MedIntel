@@ -8,6 +8,7 @@
 import { getMedsFull, setMedsFull } from "../store.js";
 import { setItemStatus, getDocument } from "./onboardingStaging.js";
 import { evaluateAndFire, clearNkdaAssertion } from "./artifactEngine.js";
+import { CONFIRMATION_MATRIX } from "../config/onboardingConfig.js";
 
 const cap = s => (s ? s[0].toUpperCase() + s.slice(1) : s);
 const readArr = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
@@ -83,6 +84,20 @@ const STORE_KEY = {
   vital: "mi_readings",
 };
 
+// §5.2 C3 clinical-safety invariant (AUDIT_SEC_02 F-04): these categories must
+// NEVER be written through a bulk path — each needs explicit per-item
+// confirmation. Hard-coded here, deliberately independent of CONFIRMATION_MATRIX,
+// so that a one-character config edit (e.g. flipping medication to bulk:true)
+// cannot silently widen bulk-accept into a clinical-safety category. The two
+// MUST stay in agreement; testOnboarding asserts PER_ITEM_ONLY === the matrix's
+// perItem:true set, so any future change has to touch both under review.
+const PER_ITEM_ONLY = new Set(["medication", "allergy", "condition"]);
+
+/** True for a category that requires explicit per-item confirmation (never bulk). */
+export function isPerItemOnly(category) {
+  return PER_ITEM_ONLY.has(category);
+}
+
 /**
  * Accept: write the staged item into the record and mark it confirmed.
  * @param {object} item - staged item (from onboardingStaging)
@@ -90,6 +105,15 @@ const STORE_KEY = {
  * @returns the written record entry (or null if unsupported)
  */
 export function confirmItemToRecord(item, opts = {}) {
+  // F-04 backstop: refuse a clinical-safety category committed via a bulk path.
+  // bulkConfirmItems() (the only sanctioned bulk entry point) already filters
+  // these out; this catches any other caller that passes {bulk:true}. A bare
+  // single-item confirmation (no opts.bulk) is the per-item confirmation itself
+  // and is allowed for every category.
+  if (opts.bulk && PER_ITEM_ONLY.has(item.category)) {
+    console.warn(`[onboardingConfirm] refused bulk write of "${item.category}" — requires per-item confirmation (§5.2 C3).`);
+    return null;
+  }
   const effective = opts.fieldsOverride ? { ...item, fields: { ...item.fields, ...opts.fieldsOverride } } : item;
   const entry = recordShapeFor(effective, opts);
   if (!entry) return null;
@@ -105,6 +129,30 @@ export function confirmItemToRecord(item, opts = {}) {
   if (item.category === "allergy") clearNkdaAssertion();
   evaluateAndFire();
   return entry;
+}
+
+/**
+ * The ONLY sanctioned bulk-accept entry point (AUDIT_SEC_02 F-04). "Accept all
+ * high-confidence" in the ReviewQueue routes through here instead of looping
+ * confirmItemToRecord directly, so the C3 invariant lives in the write layer and
+ * not just in which button the UI chooses to render. Any PER_ITEM_ONLY category
+ * is refused here regardless of caller or config; everything else is committed.
+ * @param {object[]} items - staged items to bulk-accept
+ * @returns {{ committed: object[], refused: object[] }}
+ */
+export function bulkConfirmItems(items = []) {
+  const committed = [];
+  const refused = [];
+  for (const item of items) {
+    if (PER_ITEM_ONLY.has(item.category)) {
+      refused.push(item);
+      console.warn(`[onboardingConfirm] refused bulk-accept of "${item.category}" — requires per-item confirmation (§5.2 C3).`);
+      continue;
+    }
+    const entry = confirmItemToRecord(item, { bulk: true });
+    if (entry) committed.push(entry);
+  }
+  return { committed, refused };
 }
 
 // ── §5.3 Compare-view resolutions ─────────────────────────────────────────────

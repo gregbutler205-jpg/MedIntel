@@ -419,6 +419,69 @@ check("§5.3 resolutions: keep-current soft-rejects the staged item (recoverable
   }
 });
 
+// ── F-04 (AUDIT_SEC_02): bulk-accept write-layer guard for C3 categories ──────
+// The §5.2 invariant (meds/allergies/conditions are per-item only) must hold in
+// the WRITE layer, not just in which button the UI renders. These pin the guard
+// against CONFIRMATION_MATRIX so a one-character config edit can't defeat it.
+check("F-04: isPerItemOnly matches the matrix's perItem:true set (no silent drift)", () => {
+  for (const cat of ["medication", "allergy", "condition"]) {
+    assert.equal(confirm.isPerItemOnly(cat), true, `${cat} is per-item only`);
+    assert.equal(cfg.CONFIRMATION_MATRIX[cat].perItem, true, `${cat} matrix perItem must agree`);
+  }
+  for (const cat of ["lab", "vital", "procedure", "immunization", "care_team"]) {
+    assert.equal(confirm.isPerItemOnly(cat), false, `${cat} is not per-item only`);
+    assert.equal(cfg.CONFIRMATION_MATRIX[cat].perItem, false, `${cat} matrix perItem must agree`);
+  }
+});
+
+check("F-04: bulkConfirmItems refuses meds/allergies/conditions and writes nothing for them", () => {
+  localStorage.clear();
+  state.saveState({ phase: 4 });
+  const items = [
+    { id: "bm1", category: "medication", fields: { name: "tacrolimus", dose: "5 mg" } },
+    { id: "ba1", category: "allergy", fields: { substance: "penicillin", reaction: "rash" } },
+    { id: "bc1", category: "condition", fields: { name: "hypertension" } },
+  ];
+  const { committed, refused } = confirm.bulkConfirmItems(items);
+  assert.equal(committed.length, 0, "nothing committed");
+  assert.equal(refused.length, 3, "all three refused");
+  assert.equal(localStorage.getItem("mi_meds_full"), null, "no med written");
+  assert.equal(localStorage.getItem("mi_allergies"), null, "no allergy written");
+  assert.equal(localStorage.getItem("mi_conditions"), null, "no condition written");
+});
+
+check("F-04: bulkConfirmItems still commits bulk-eligible categories (labs, vitals)", () => {
+  localStorage.clear();
+  state.saveState({ phase: 4 });
+  const items = [
+    { id: "bl1", category: "lab", fields: { test: "ALT", value: "28", unit: "U/L", collected_date: "2026-05-18" } },
+    { id: "bv1", category: "vital", fields: { type: "Heart Rate", value: "72", date: "2026-05-18" } },
+  ];
+  const { committed, refused } = confirm.bulkConfirmItems(items);
+  assert.equal(refused.length, 0, "nothing refused");
+  assert.equal(committed.length, 2, "both committed");
+  assert.equal(JSON.parse(localStorage.getItem("mi_labs")).length, 1, "lab written");
+  assert.equal(JSON.parse(localStorage.getItem("mi_readings")).length, 1, "vital written");
+});
+
+check("F-04: confirmItemToRecord({bulk:true}) is the backstop — refuses a C3 category directly", () => {
+  localStorage.clear();
+  state.saveState({ phase: 4 });
+  const med = { id: "bd1", category: "medication", fields: { name: "prednisone", dose: "10 mg" } };
+  const entry = confirm.confirmItemToRecord(med, { bulk: true });
+  assert.equal(entry, null, "returns null (refused)");
+  assert.equal(localStorage.getItem("mi_meds_full"), null, "nothing written");
+});
+
+check("F-04: a bare single-item confirm is unaffected — a med still writes (per-item path)", () => {
+  localStorage.clear();
+  state.saveState({ phase: 4 });
+  const med = { id: "bs1", category: "medication", fields: { name: "aspirin", dose: "81 mg" } };
+  const entry = confirm.confirmItemToRecord(med);
+  assert.ok(entry && entry.name === "Aspirin", "single-item write succeeds");
+  assert.equal(JSON.parse(localStorage.getItem("mi_meds_full")).length, 1, "med written");
+});
+
 // ═══ WP4: first-artifact engine (§6) ═════════════════════════════════════════
 
 const engine = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/artifactEngine.js");

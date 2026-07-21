@@ -1,16 +1,17 @@
 // ── Phase 4: Review & Confirm — staging queue UI (ONBOARDING_SPEC v1.1 §3.4, §5) ──
 // Category summary → per-category review in the fixed high-consequence-first
-// order. The §5.2 matrix is enforced structurally: the bulk-accept control is
-// rendered only when CONFIRMATION_MATRIX[cat].bulk is true, so no state of
-// the meds/allergies/conditions screens can ever show one (C3). Source panel
-// is mandatory on every item (§3.4). Also used standalone from Import
-// Records (§2: the queue stays reachable after onboarding).
+// order. The §5.2 matrix is enforced on two layers: structurally, the
+// bulk-accept control renders only when CONFIRMATION_MATRIX[cat].bulk is true;
+// and in the write layer, bulk-accept routes through bulkConfirmItems(), which
+// refuses meds/allergies/conditions regardless of config (AUDIT_SEC_02 F-04, C3).
+// Source panel is mandatory on every item (§3.4). Also used standalone from
+// Import Records (§2: the queue stays reachable after onboarding).
 
 import { useEffect, useMemo, useState } from "react";
 import { CONFIRMATION_MATRIX, CATEGORY_REVIEW_ORDER, CONFIDENCE_HIGH, CONFIDENCE_LOW, REJECT_RETENTION_DAYS } from "../../config/onboardingConfig.js";
 import { getStagedStore, getDocument, setItemStatus, updateItem, stagedCounts } from "../../lib/onboardingStaging.js";
 import { findMatchCandidate, analyzeLabs } from "../../lib/onboardingDuplicates.js";
-import { confirmItemToRecord, recordShapeFor, recordEntriesFor, resolveKeepCurrent, resolveReplaceWithNew, resolveKeepBoth, resolveMerge } from "../../lib/onboardingConfirm.js";
+import { confirmItemToRecord, bulkConfirmItems, recordShapeFor, recordEntriesFor, resolveKeepCurrent, resolveReplaceWithNew, resolveKeepBoth, resolveMerge } from "../../lib/onboardingConfirm.js";
 import { assertNoKnownAllergies, hasNkdaAssertion } from "../../lib/artifactEngine.js";
 
 const CAT_LABEL = {
@@ -399,7 +400,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
 
         {bulkGroups.map(g => (
           <button key={g.docId || "all"} style={{ ...primaryBtn, alignSelf: "flex-start" }}
-            onClick={() => { g.items.forEach(i => confirmItemToRecord(i)); refresh(); }}>
+            onClick={() => { bulkConfirmItems(g.items); refresh(); }}>
             Accept all {g.items.length} high-confidence {CAT_LABEL[cat].toLowerCase()}{g.label ? ` — ${g.label}` : ""}
           </button>
         ))}
