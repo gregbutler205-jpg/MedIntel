@@ -1035,6 +1035,162 @@ layer on the same envelope pattern.
 
 ---
 
+## DEC-035: Landing at root, app moves to /app/, companion unchanged; root SW kill-switch
+
+**Status:** Settled and shipped (v1.27.0, 2026-07-19)
+
+**Problem.** The production app lived at the domain root (`insinahealth.com/`). A public marketing
+landing page needs that root, and the app needs a stable path of its own so linking to it (Sign In,
+the demo, task-engine deep links) doesn't collide with the landing's routing.
+
+**Decision.** Static landing (`landing/`) publishes to the root; the full app moves to `/app/`
+(new Vite build target, `scripts/build.mjs`, with its own `base: '/app/'`); the mobile companion
+stays at `/companion/`, untouched. `localStorage` is origin-scoped, so the existing vault is
+unaffected by the path move — same-origin, different path. A root-scope service-worker
+**kill-switch** ships at the old `/sw.js` path: any browser still holding the old root-scoped
+worker fetches this file on its next check, which immediately unregisters itself and forces a
+re-fetch from the new root (the landing page), so stale cached app shells don't get stuck serving
+from `/`. `/app/` and `/companion/` each register their own scoped worker independently.
+
+**Related:** commit `67345db`, v1.27.0 CHANGELOG entry, DEC-036/037 (the demo-isolation decisions
+that build on this same path split).
+
+---
+
+## DEC-036: The 2026-07-19 incident — the demo wiped a real record; root cause and the fix line
+
+**Status:** Settled and shipped (v1.27.1 → v1.28.0 → v1.32.1, 2026-07-19/20)
+
+**What happened.** Greg's real, encrypted record on `insinahealth.com/app/` was wiped by the
+public demo loader. Root cause: `loadDemoData()` / the standalone `/demo/` seeder called
+`localStorage.clear()` **unconditionally** before seeding the fictional dataset — with no check
+for an existing real vault. The demo had just been linked from the new landing page's "Open Demo"
+button, and the browser that hit it was serving a **cached pre-guard copy** of the demo (the SW
+hadn't yet retired the stale asset), so even the first guard attempt didn't run. Recovered from a
+local `insina-backup-pre-encryption-*.json` safety-net file (not from Drive — see DEC-037's
+finding on why Drive alone couldn't restore).
+
+**Decision — layered fix, each landing as its own release:**
+1. **v1.27.1 (immediate hotfix):** every demo loader (`/demo/`, `/demo-review/`, in-app
+   `loadDemoData()`) never calls `localStorage.clear()` again and refuses to run outright when
+   any real record is present (an encrypted vault, a non-demo PIN, or real health-data keys).
+2. **v1.28.0:** closed the *reverse* leak — a user who explores the demo then creates a real vault
+   previously carried the demo data forward into their new encryption. Added an unambiguous
+   `mi_is_demo` marker (safer than reusing the PIN hash, since a real user could legitimately pick
+   PIN 1234) and clear demo data before `setupVaultAndMigrate()` runs.
+3. **v1.32.1:** discovered the demo had actually been broken (silently, showing "Encrypt your
+   health record" instead of the demo) since P-02 shipped encryption, because the storage
+   interception and the lock screen both applied unconditionally. Added
+   `secureStorage.isDemoMode()` — true only when the demo marker is set **and no vault exists** —
+   to skip interception/lock/auto-lock/onboarding for demo installs. `hasVault()` always wins;
+   verified live in both directions (real vault + a forged demo marker still locks; no vault +
+   marker opens straight to the dashboard with data rendering).
+4. **DEC-037 (#49):** the demo was later moved to its own origin entirely, making this whole class
+   of bug structurally impossible regardless of what the code does.
+
+**Related:** DEC-037 (Drive gap), DEC-038 (demo origin isolation), FINDINGS_SEC_02 (confirmed the
+`isDemoMode()` gate is correctly bypass-proof against a real vault).
+
+---
+
+## DEC-037: Drive backup now carries the wrapped key-envelope — closes the "Drive can't actually restore you" gap
+
+**Status:** Settled and shipped (v1.28.0, 2026-07-19; crypto-proven via `scripts/testVaultRestore.mjs`)
+
+**Problem — exposed by the DEC-036 incident.** Greg's real record lived in his Google Drive backup
+the whole time, but when his device was wiped, **Drive alone could not recover it.** P-02's
+envelope model wraps a random 256-bit DEK under a passphrase-derived KEK; `driveSync.js`
+deliberately uploaded ciphertext data but **excluded the envelope itself** (`mi_vault` was
+never part of the backup payload). So a wiped/new device had the locked data but no way to
+re-derive the key that opens it — "your data lives in your Drive" was not true in a recoverable
+sense. Greg was saved only by an unrelated local pre-encryption backup file, not by Drive.
+
+**Decision.** `collectLocalCiphertext()` now includes `_vaultEnvelope` (the wrapped-DEK
+envelope) in every Drive upload. A new `restoreFromDrive()` rebuilds a wiped/new device from
+that backup **without needing the DEK**: it writes the envelope + every ciphertext blob to
+localStorage while still locked, then the caller reloads and unlocks normally with the existing
+passphrase or recovery key (either one re-derives the same DEK from the restored envelope). A
+backup with no envelope (pre-fix, or genuinely missing) restores nothing rather than stranding
+undecryptable blobs. "Restore from Google Drive" was added to both the desktop lock screen (on
+the setup/no-vault view) and the companion's first-run screen.
+
+**Threat-model tradeoff, accepted.** Carrying the envelope in Drive means an attacker who gets the
+Drive backup can attempt an **offline** passphrase brute-force (previously they'd have had only
+undecryptable ciphertext with no envelope to attack). Mitigated by PBKDF2-SHA256 at 600,000
+iterations and a 256-bit random recovery key; this is the standard "encrypted vault synced to the
+cloud" pattern (1Password, Bitwarden, etc. all make the same tradeoff) and is what makes
+cross-device recovery possible at all. Flagged for disclosure-accuracy review (FINDINGS_SEC_02,
+F-11) — the "your data never leaves in a usable form" story now depends on passphrase strength,
+not on the envelope being physically absent from the cloud copy.
+
+**Verified:** a standalone crypto test (`npm run test:vault-restore`, 5/5 passing) proves the
+envelope-carried key reconstructs and decrypts on a fresh device via both the passphrase and the
+recovery key, and that a wrong passphrase is still rejected. Verified live end-to-end the same
+night: desktop pushed a fresh Drive backup, phone companion ran "Restore from Google Drive," and
+Greg's real data appeared correctly on the phone.
+
+**Resolves OPEN-12** (see below) — a second real device (the phone) has now been exercised
+against a live Drive backup produced by this code, with real data, not just unit tests.
+
+**Related:** DEC-036 (the incident that exposed this), OPEN-12.
+
+---
+
+## DEC-038: Demo isolation — dedicated subdomain, separate origin, separate storage (#49)
+
+**Status:** Settled and shipped (v1.32.0/v1.32.1, 2026-07-20)
+
+**Problem.** DEC-036's in-app guards (never clear, refuse when a real record exists) stop the demo
+from *executing* a wipe, but the demo still shared an origin — and therefore `localStorage` — with
+the real app. Defense in depth, not a structural fix; a future code change or another stale-cache
+scenario could reopen the same class of bug.
+
+**Decision.** The demo now runs on its own origin, `demo.insinahealth.com` (a second GitHub repo +
+Pages site, `npm run build:demo` producing a dedicated build with the demo seeder at the root and
+the app at `/app/` — no duplicate copy of the marketing landing or the companion). Because browser
+storage is strictly per-origin, the demo **cannot** see, overwrite, or clear a real record no
+matter what the code does — the isolation is enforced by the browser, not by application logic.
+The landing's "Open Demo" buttons point at `https://demo.insinahealth.com/`. The in-app guards
+(DEC-036) remain as defense in depth on the isolated origin too.
+
+**Verified live:** demo origin resolves over HTTPS with a valid Let's Encrypt cert; opening the
+demo and then opening `insinahealth.com/app/` in the same browser leaves the real record
+untouched (confirmed by Greg directly: "Demo looks good, and my history is intact").
+
+**Related:** DEC-036, DEC-037, `docs/DEMO_SUBDOMAIN_SETUP.md`.
+
+---
+
+## DEC-039: Tripwire advisory copy — proactive contact, never advise waiting for the coordinator callback (provisional pending clinical review)
+
+**Status:** Settled for pilot prep, **subject to revision on formal clinical review** (2026-07-20)
+
+**Problem.** Greg's transplant coordinator reliably calls same-day or next-day after labs are
+drawn — a workflow the deterministic advisory templates (INSINA_AI_PROMPTS §9, verbatim/
+snapshot-tested) didn't explicitly address. Question: should a TODAY-tier advisory on an imported
+(staged) lab tell the patient to wait for that expected callback, or contact the coordinator
+proactively regardless?
+
+**Decision (Greg, Option A).** Keep the shipped copy exactly as written: always proactive contact,
+never "wait and see if they call." Reasoning: the TODAY band already represents a near-critical
+value (e.g. potassium 6.2, platelets 30) where a redundant call costs the coordinator ninety
+seconds but a missed/delayed callback (wrong number on file, result landing Friday at 5pm,
+coordinator out) costs real time on a value that matters. The staged-import template's existing
+clause — "If you have not already discussed this result with your care team, contact them now" —
+already covers centers with a fast callback workflow: it only pushes action when the callback
+*didn't* already happen.
+
+**Explicitly provisional.** Both the band thresholds and this copy decision are marked DRAFT /
+REVIEW-REQUIRED pending formal clinical review before/during the pilot, which may revise either.
+Any resulting change ships as a deliberate template-version bump (`ADVISORY_TEMPLATES_VERSION`
+1.0.0 → 1.1.0+, snapshot tests updated on purpose) — never a silent wording edit. Advisory firing
+stays behind `TRIPWIRE_ADVISORY_ENABLED = false` regardless.
+
+**Related:** A-01/PG-09, the tripwire threshold review artifact
+(`https://claude.ai/code/artifact/16648614-9f0f-4eb7-b99e-1c391f8248e1`), `src/data/advisoryTemplates.js`.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
@@ -1087,10 +1243,13 @@ layer on the same envelope pattern.
   from the real auto-lock timeout which must clear the DEK and require the passphrase). Needs
   design for how it interacts with the existing single inactivity-timeout `lock()` path in
   `App.jsx`, which today always does a full DEK-clearing lock. (Spawned by DEC-027.)
-- **OPEN-12:** Drive-sync-side multi-device key handling is unverified beyond unit tests — P-02's
-  ciphertext-only upload (DEC-027) assumes every device sharing a Drive backup unlocks with the
-  same passphrase/recovery key (single-DEK model). A second real device has not been exercised
-  against a live Drive backup produced by this code. (Spawned by DEC-027.)
+- **OPEN-12 (largely resolved 2026-07-20 by DEC-037):** Drive-sync-side multi-device key handling
+  was unverified beyond unit tests. Now: `restoreFromDrive()` ships (v1.28.0), the envelope rides
+  along in the Drive backup, and a second real device (Greg's phone, via the companion's "Restore
+  from Google Drive") was exercised live against a real Drive backup with real data — confirmed
+  working. Still open: no automated/repeatable multi-device test exists beyond that one manual
+  verification; a concurrent-edit/merge-conflict scenario across two live devices remains
+  untested. (Spawned by DEC-027; resolved-in-part by DEC-037.)
 - **OPEN-13:** ~~`src/components/Dashboard.jsx` is dead code~~ RESOLVED (UI-1 track cleanup): both
   `Dashboard.jsx` and the likewise-unimported `Sidebar.jsx` were confirmed dead (the live
   dashboard and sidebar are inline in `App.jsx`) and deleted. (Spawned by DEC-028.)
@@ -1124,3 +1283,21 @@ layer on the same envelope pattern.
   needs either a new surface definition or an explicit decision that Surface A's (or G's) rules
   extend to it. Until then this is the one remaining AI surface outside the prompts-as-code
   architecture. (Spawned by DEC-029.)
+- **OPEN-16:** AUDIT_SEC_02 (read-only re-audit, 2026-07-20) found 1 High, 5 Med, 9 Low/Info —
+  no Criticals; all six prior hardening fixes (V-01..V-06) held. Findings await Greg's triage
+  before any change order (`FINDINGS_SEC_02.md`, uncommitted per the work order — disposable, not
+  a repo artifact). Top three by risk: **(1)** `src/lib/printEmergency.js` builds the Emergency
+  Card via `document.write` interpolating patient/OCR-derived fields — including this weekend's
+  new `codeStatus`/`advanceDirective`/`implantedDevices` free-text fields — with **no HTML
+  escaping** (unlike its sibling `printMedicationList.js`, which correctly escapes); reintroduces
+  the exact XSS class S-02/PG-02 closed elsewhere. **(2)** No post-generation AI output filter
+  (AI-09) — prohibited-directive scanning (e.g. dose-change language) relies entirely on the
+  system-prompt instruction with no deterministic backstop; deterministic *urgency* is separately
+  handled by the tripwire engine. **(3)** The onboarding staging queue's "meds/allergies/
+  conditions need per-item confirmation, only labs may bulk-accept" rule is enforced only by a UI
+  gate + `CONFIRMATION_MATRIX` config flag (`onboardingConfig.js`), not inside the commit function
+  `confirmItemToRecord` itself — holds today, but one config edit or one future bulk-calling
+  caller away from silently bypassing a clinical-safety invariant. Also flagged: the "never
+  transmitted to any third party" disclosure language is inaccurate as written — the egress trace
+  found the ICD-10 lookup puts the typed condition string in a URL to NLM, and Maps/MedlinePlus
+  links leak a med/facility name on click (see OPEN-1/OPEN-2's disclosure-accuracy thread).
