@@ -345,6 +345,28 @@ the loop; current lean) or goes direct from the browser (the key never touches I
 infrastructure; allowlist enforcement drops to the client). Decided at S-08 implementation
 and logged as its own DEC. Feature: the hardened BYO call path.
 
+**CL-035 - Move large binaries out of localStorage into IndexedDB (encrypted blobs).**
+Bucket 2, then Code. Owner: Design (LLM), then Claude Code. Logged 2026-07-21 on a measured
+trigger: Greg's real record stands at **3.53 MB of localStorage** — ~70% of Safari's ~5 MB
+floor — dominated by base64 insurance-card images (`mi_cards`) plus the ~33% ciphertext
+encoding overhead, and still growing (875 labs and counting). localStorage exhaustion is the
+ugly failure mode: several write paths silently swallow `QuotaExceededError`, so a full store
+means silently dropped writes on a medical record. The fix is NOT a wholesale IndexedDB
+migration (the P-02 sync-read interception depends on localStorage semantics; 167 call sites) —
+it is moving the large binaries only: card images and future document scans/photos become
+encrypted blobs in IDB, where the origin-bucket quota is effectively unlimited, while all
+structured JSON stays where it is. Precedents already in-tree: `visitCapture.js` stores visit
+audio in IDB; `folderBackup.js` (DEC-040) persists its directory handle there. Companion
+quick wins to spec alongside: call `navigator.storage.persist()` + surface
+`navigator.storage.estimate()` usage in Settings & Backup, and unify quota-error handling so
+no write path swallows QuotaExceededError silently (cards.js/Tab14 warn correctly; the
+onboarding/task/advisory writers do not). Design must cover: migration of existing `mi_cards`
+entries (A-08-style, backup-gated), the Drive/folder backup payload treatment of IDB blobs
+(today's backups only walk `mi_*` localStorage keys — moved images must not silently vanish
+from backups), and Emergency Card print + Tab02 read paths going async. Feature: an
+encrypted-blob store for large binaries with quota telemetry, leaving the localStorage vault
+architecture untouched.
+
 ### Modules and gaps
 
 **CL-018 - Reports needing the informational-only revision.** Bucket 1 and 2. Owner: Greg,
