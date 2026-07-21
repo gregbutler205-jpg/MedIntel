@@ -1231,6 +1231,82 @@ P-02 point 7, `src/lib/folderBackup.js`, `scripts/testVaultRestore.mjs` (20 case
 
 ---
 
+## DEC-041: Care-team questions — one open-ended umbrella question per topic, with a required "Why you're asking" education section
+
+**Status:** Settled and shipped (v1.39.0, 2026-07-21 work order Part 1)
+
+**Decision (Greg, work order).** Care-team question generation is restricted to one open-ended
+umbrella question per topic (a topic = a clinical change or discrepancy, not each downstream
+implication). Questions never name a specific test to order, level to recheck, dose to adjust,
+or timing to change — prohibited shapes include "Should we recheck my [drug] level" and
+"Do we need to adjust timing or dose"; the permitted shape is "[What changed] since my last
+visit. Is there anything we need to do differently?" Reconciliation questions ("which of these
+am I supposed to be taking") are exempt: clarification, not direction. Settled education topics
+for the patient's long-term conditions are excluded from the question list unless the record
+shows an active problem — but may appear in the new, **required** "Why you're asking" section
+as stated facts with an "Ask your physician if you'd like more information" pointer. Education
+items state the clinical fact **without mechanism** and never predict or suggest physician
+actions. Numeric limit/dose queries follow the existing record-cite-or-defer posture (now
+regression-covered). The contact routing paragraph is retained unchanged.
+
+**Rationale (from the work order).** Physician-directed specificity reads as the patient — and
+therefore Insina — directing care; it damages physician receptivity and drifts toward directing
+clinical action. Questions open the door; education equips the patient to walk through it.
+
+**Placement.** Prompt-layer, NOT Clinical Safety Core: a shared QUESTION GENERATION / WHY
+YOU'RE ASKING / NUMERIC LIMITS block in `src/prompts/core.js`, composed via `assembleSystem`
+onto every surface that produces care-team questions — A (Tab11), B1/B2 (Tab05), C (Tab10),
+G (companion symptom prep), H (report annotation), and Tab14's Consultation Prep (whose bare
+pre-A-09 prompt gets the block appended; its full builder migration remains the known gap
+documented in `surfaceH.js`). PROMPT_VERSION bumped to X-1.1 on A/B/C/G/H; spec doc updated
+(INSINA_AI_PROMPTS.md v2.5). Deterministic regression: `scripts/testQuestionRules.mjs`
+(49 cases — block on every surface, omeprazole prohibited/permitted shapes, Tylenol
+record-cite-or-defer, doc↔code parity).
+
+**Explicitly NOT changed:** CSC rule 11's example phrasing (`Suggested question for your care
+team: "Should we...?"`) now **diverges** from these rules. CSC edits are gated (§8 change
+control; same handling as the pending rule 10 rewording) — the divergence is flagged here and
+in the spec doc for a future deliberate CSC version bump, and the test suite asserts CSC v1.1
+is byte-unchanged.
+
+---
+
+## DEC-042: AI Analysis becomes multi-turn conversation sessions with an explicit End & Save Report
+
+**Status:** Settled and shipped (v1.40.0, 2026-07-21 work order Part 2)
+
+**Decision (Greg, work order).** The AI Analysis tab (Tab11) runs as explicit conversation
+sessions: "New Conversation" is the primary, prominent action; each session is a persistent
+chat thread; "End & Save Report" is always visible while a session is open and closes it by
+generating one discussion report for the whole session. An open session survives tab
+navigation and app restarts (localStorage); on return, a banner offers Resume / End & save
+report / Discard. **Context per turn = patient record + current session turns only.** Saved
+prior conversations shown in the tab are archive UI only and are never included in API
+context; session context clears on End & Save or explicit discard. Rationale: cost control
+(payload compounding), quality (stale conversations contaminate current analysis), and
+boundary integrity (the report captures exactly what the AI saw). Anything durable belongs in
+the patient record, not chat history.
+
+**Report format (no AI summary step).** Header (session date/time); the raw transcript of
+every turn **verbatim as displayed** (each turn timestamped; assistant turns pass through the
+same deterministic F-03 output filter the screen applied — the report shows exactly what the
+patient saw); "Questions for your care team" and "Why you're asking" consolidated and
+deduplicated across turns **deterministically** (client-side section extraction + normalized
+dedup — no model call, so no synthesis step where wording or hedges could drift); a single
+contact-routing block at the end, rendered from the care-team record. The report saves to My
+Notes with the AI-generated label (DEC-022) and opens in the AnalysisOverlay.
+
+**Consultation Prep is unchanged** as a one-shot document (its question output follows
+DEC-041). The existing per-conversation Transcript/Summary print buttons remain as separate
+conveniences.
+
+**Finding — daily question limit:** the work order asked to verify the believed 10/day limit;
+**no such limit exists anywhere in the codebase** (the only throttles are the proxy's 60/hr/IP
+chat and 20/hr/IP extract caps). Nothing was invented: whether to add a true daily turn cap is
+an open question for Greg, recorded in OPEN-17.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
@@ -1363,3 +1439,15 @@ P-02 point 7, `src/lib/folderBackup.js`, `scripts/testVaultRestore.mjs` (20 case
   decision (deferred to Greg):** when a real onboarding-extraction proxy route is designed, wire
   it through `aiClient` (single auth point), not a per-surface fetch. **F-05 open decision:** the
   disclosure-language accuracy thread (OPEN-1/OPEN-2) is unchanged by this pass.
+- **OPEN-17 (spawned by DEC-042, 2026-07-21):** Two items from the conversation-sessions work.
+  **(a) Daily question limit:** the work order believed a 10/day limit existed; none does — the
+  only throttles are the proxy's per-IP hourly caps (60/hr chat, 20/hr extract). Decide whether
+  to add a true client-side daily turn cap (the work order's "the daily limit is the cap"
+  presumed one) or accept the proxy caps as the only limit. Nothing was implemented pending the
+  decision. **(b) Unencrypted AI chat storage:** Tab11's local family — `insina_ai_messages`
+  (full chat threads with clinical content), `insina_ai_session`, `insina_ai_mode`,
+  `insina_ai_log` — uses the `insina_` prefix, not `mi_`, so it sits OUTSIDE the P-02 vault:
+  plaintext at rest and absent from Drive/folder backups (which walk managed `mi_*` keys only).
+  Pre-existing, widened slightly by sessions persisting across restarts. Candidate fix: migrate
+  the family to `mi_`-prefixed keys (encrypted + backed up) with an A-08-style rename migration.
+  Session REPORTS are unaffected — they save into `mi_notes`, which is encrypted and backed up.

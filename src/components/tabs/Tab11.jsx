@@ -15,12 +15,30 @@ import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 import { formatDocumentBlock, stripControlChars } from "../../prompts/documents.js";
 import { sortReadingsByRecency } from "../../lib/vitals.js";
+import { apiMessagesForConv, buildSessionReportText } from "../../lib/aiSessionReport.js";
 
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
 const STORAGE_KEY    = "insina_ai_messages";
 const AI_MODE_KEY    = "insina_ai_mode";
 const AI_LOG_KEY     = "insina_ai_log";
+// DEC-042: the open-session marker — { conv, startedAt }. Present = a session
+// is open (survives tab navigation and app restarts); cleared on End & Save
+// Report or explicit discard. NOTE: like its siblings above, this key sits
+// outside the P-02 vault (insina_ prefix) — OPEN-17(b) tracks migrating the
+// whole family to managed mi_* keys.
+const AI_SESSION_KEY = "insina_ai_session";
+
+function loadSessionMarker() {
+  try { const s = JSON.parse(localStorage.getItem(AI_SESSION_KEY)); return s && typeof s.conv === "number" ? s : null; }
+  catch { return null; }
+}
+function saveSessionMarker(s) {
+  try { localStorage.setItem(AI_SESSION_KEY, JSON.stringify(s)); } catch {}
+}
+function clearSessionMarker() {
+  try { localStorage.removeItem(AI_SESSION_KEY); } catch {}
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mode helpers
@@ -549,13 +567,32 @@ export default function AIAnalysis({ onNavChange }) {
       return raw.map(m => ({ ...m, conv: m.conv ?? 0 }));
     } catch { return []; }
   });
-  // Which conversation new messages are added to. Starts at the last one loaded.
+  // DEC-042 session model: which conversation new messages are added to.
+  // An OPEN session resumes its own conv; otherwise start on a FRESH conv id
+  // (max+1) so ended/archived conversations are never appended to — the old
+  // "resume the max conv" init silently reopened archives after an End & Save.
   const [currentConv, setCurrentConv] = useState(() => {
     try {
+      const marker = loadSessionMarker();
+      if (marker) return marker.conv;
       const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      return raw.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0);
+      if (raw.length === 0) return 0;
+      return raw.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1;
     } catch { return 0; }
   });
+  // Open-session marker (null = no session open). The resume banner shows on
+  // arrival whenever an open session with messages exists; resuming, sending,
+  // ending, or discarding dismisses it.
+  const [session, setSession] = useState(() => loadSessionMarker());
+  const [resumeBanner, setResumeBanner] = useState(() => {
+    try {
+      const marker = loadSessionMarker();
+      if (!marker) return false;
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      return raw.some(m => (m.conv ?? 0) === marker.conv);
+    } catch { return false; }
+  });
+  const [discardConfirm, setDiscardConfirm] = useState(false);
   const [summaryBusyConv, setSummaryBusyConv] = useState(null); // conv id being summarized
   const [input, setInput]             = useState("");
   const [streaming, setStreaming]     = useState(false);
@@ -663,6 +700,14 @@ export default function AIAnalysis({ onNavChange }) {
     const mode = loadModeData()?.mode || "standard";
 
     const conv = currentConv;
+    // DEC-042: typing into a fresh thread opens the session implicitly — the
+    // explicit "New Conversation" action does the same thing up front.
+    if (!session || session.conv !== conv) {
+      const marker = { conv, startedAt: new Date().toISOString() };
+      saveSessionMarker(marker);
+      setSession(marker);
+    }
+    setResumeBanner(false); // sending IS resuming
     const userMsg  = { role: "user", text: trimmed, conv, ts: new Date().toISOString() };
     const baseMessages = messagesOverride !== null ? messagesOverride : messages;
     const newMsgs  = [...baseMessages, userMsg];
@@ -670,11 +715,10 @@ export default function AIAnalysis({ onNavChange }) {
     setInput("");
     setStreaming(true);
 
-    // Only send THIS conversation's history to the AI — each conversation has
-    // its own independent context.
-    const apiMessages = newMsgs
-      .filter(m => (m.conv ?? 0) === conv)
-      .map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text }));
+    // DEC-042 context rule: the API sees the record (system prompt) + THIS
+    // session's turns only. Prior conversations rendered above are archive UI
+    // and never enter context (unit-tested in aiSessionReport.js).
+    const apiMessages = apiMessagesForConv(newMsgs, conv);
 
     let accum = "";
     const assistantIdx = newMsgs.length;
@@ -776,7 +820,7 @@ export default function AIAnalysis({ onNavChange }) {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [messages, streaming, staleConsent, currentConv]);
+  }, [messages, streaming, staleConsent, currentConv, session]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
@@ -797,14 +841,85 @@ export default function AIAnalysis({ onNavChange }) {
     } catch {}
   };
 
-  // Start a new conversation segment without clearing the screen. Earlier
-  // conversations stay visible above, each independently printable.
+  // ── DEC-042 session actions ────────────────────────────────────────────────
+
+  // End & Save Report: close the open session and generate ONE discussion
+  // report for the whole session — header, verbatim timestamped transcript
+  // (as displayed, F-03-filtered), consolidated deduped Questions / Why
+  // you're asking, single contact block. Saves to My Notes with the
+  // AI-generated label (DEC-022) and opens in the report overlay. No AI call.
+  const endAndSaveReport = () => {
+    if (streaming || !session) return;
+    const convMsgs = messages.filter(m => (m.conv ?? 0) === session.conv && !m.streaming);
+    if (convMsgs.length === 0) {
+      // Nothing was said — just close the empty session, no report to save.
+      clearSessionMarker();
+      setSession(null);
+      setResumeBanner(false);
+      return;
+    }
+    const endedAt = new Date().toISOString();
+    const careTeam = (() => { try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; } })();
+    const reportText = buildSessionReportText({ convMessages: convMsgs, careTeam, startedAt: session.startedAt, endedAt });
+    const mode = convMsgs.find(m => m.mode)?.mode || currentMode;
+    const title = `AI Conversation Report — ${new Date(endedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+    try {
+      const notes = JSON.parse(localStorage.getItem("mi_notes") || "[]");
+      notes.unshift(mkAnalysisNote({ title, content: reportText, mode }));
+      localStorage.setItem("mi_notes", JSON.stringify(notes));
+    } catch {}
+    setAnalysisOverlay({ title, content: reportText, mode, timestamp: endedAt });
+    clearSessionMarker();
+    setSession(null);
+    setResumeBanner(false);
+    setDiscardConfirm(false);
+    // The ended conversation stays above as archive; new sends go to a fresh id.
+    setCurrentConv(messages.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1);
+    setError("");
+  };
+
+  // Discard: drop the open session WITHOUT a report (explicit option per the
+  // work order). Two-step confirm — the messages are deleted, not archived.
+  const discardSession = () => {
+    if (streaming || !session) return;
+    if (!discardConfirm) { setDiscardConfirm(true); return; }
+    const remaining = messages.filter(m => (m.conv ?? 0) !== session.conv);
+    setMessages(remaining);
+    clearSessionMarker();
+    setSession(null);
+    setResumeBanner(false);
+    setDiscardConfirm(false);
+    setCurrentConv(remaining.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + (remaining.length ? 1 : 0));
+    setError("");
+  };
+
+  // Resume: point the composer back at the open session's thread.
+  const resumeSession = () => {
+    if (!session) return;
+    setCurrentConv(session.conv);
+    setResumeBanner(false);
+    setDiscardConfirm(false);
+  };
+
+  // New Conversation — the primary action. If a session with messages is
+  // open, it is ended-and-saved FIRST (explicit end; nothing silently
+  // dropped), then a fresh session opens immediately.
   const startNewConversation = () => {
     if (streaming) return;
-    const currentHasMessages = messages.some(m => (m.conv ?? 0) === currentConv);
-    if (!currentHasMessages) return; // nothing to close off yet
-    const nextId = messages.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1;
-    setCurrentConv(nextId);
+    if (session && messages.some(m => (m.conv ?? 0) === session.conv)) {
+      endAndSaveReport(); // also advances currentConv to a fresh id
+      const nextId = messages.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1;
+      const marker = { conv: nextId, startedAt: new Date().toISOString() };
+      saveSessionMarker(marker);
+      setSession(marker);
+      return;
+    }
+    // No open thread with content: open (or re-stamp) a session on the
+    // current fresh conv so the thread is explicitly live.
+    const marker = { conv: currentConv, startedAt: new Date().toISOString() };
+    saveSessionMarker(marker);
+    setSession(marker);
+    setResumeBanner(false);
     setError("");
   };
 
@@ -1025,9 +1140,22 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
-        <span style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
-          Print buttons are on each conversation ↓
-        </span>
+        {/* DEC-042: New Conversation is the PRIMARY action (not buried), and
+            End & Save Report is always visible while a session is open. */}
+        <button
+          onClick={startNewConversation}
+          disabled={streaming || staleConsent}
+          title="Start a new conversation session (an open one is ended & saved first)"
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: streaming || staleConsent ? "not-allowed" : "pointer", flexShrink: 0, opacity: streaming || staleConsent ? 0.5 : 1 }}
+        >＋ New Conversation</button>
+        {session && (
+          <button
+            onClick={endAndSaveReport}
+            disabled={streaming}
+            title="Close this conversation and save one discussion report covering the whole session"
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: streaming ? "not-allowed" : "pointer", flexShrink: 0, opacity: streaming ? 0.5 : 1 }}
+          >■ End &amp; Save Report</button>
+        )}
       </div>
 
       {/* Mode indicator bar — compact, with a Change action (UI-15). Model
@@ -1186,6 +1314,33 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+            {/* DEC-042: abandoned-session recovery — an open session survives
+                navigation and restarts; on return, offer resume / end / discard. */}
+            {resumeBanner && session && (
+              <div className="no-print" style={{ background: "rgba(79,142,247,.07)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</span>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5" }}>You have an open conversation</div>
+                  <div style={{ fontSize: 10.5, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>
+                    Started {session.startedAt ? new Date(session.startedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "earlier"} — resume where you left off, or close it out.
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
+                  <button onClick={resumeSession} style={{ padding: "6px 13px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 7, color: "#7eb8d8", fontSize: 11, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Resume conversation</button>
+                  <button onClick={endAndSaveReport} style={{ padding: "6px 13px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, color: "#10b981", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>End &amp; save report</button>
+                  {discardConfirm ? (
+                    <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: 10, color: "#c4a060", fontFamily: "'DM Mono',monospace" }}>Delete without a report?</span>
+                      <button onClick={discardSession} style={{ padding: "6px 10px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Discard</button>
+                      <button onClick={() => setDiscardConfirm(false)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Keep</button>
+                    </span>
+                  ) : (
+                    <button onClick={discardSession} title="Delete this open conversation without saving a report" style={{ padding: "6px 10px", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#6a8090", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Discard</button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {messages.length === 0 && (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
                 <div style={{ fontSize: 32, color: "#1a2840" }}>✦</div>
@@ -1193,6 +1348,11 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", maxWidth: 320, lineHeight: 1.6 }}>
                   Ask anything about your health data, labs, medications, or upcoming appointments.
                 </div>
+                <button
+                  onClick={startNewConversation}
+                  disabled={streaming || staleConsent}
+                  style={{ marginTop: 6, padding: "10px 22px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 9, color: "#7eb8d8", fontSize: 13, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}
+                >＋ New Conversation</button>
               </div>
             )}
 
@@ -1284,12 +1444,12 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                   className="new-conv-btn"
                   onClick={startNewConversation}
                   disabled={streaming}
-                  title="Finish this topic and start a separate conversation below"
+                  title="End & save this conversation's report, then start a fresh one"
                 >
                   ＋ New Conversation
                 </button>
                 <span style={{ marginLeft: 10, fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
-                  starts a fresh topic — earlier ones stay above, each printable
+                  ends &amp; saves the open conversation's report first — earlier ones stay above as archive (never sent to the AI)
                 </span>
               </div>
             )}

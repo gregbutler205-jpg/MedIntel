@@ -12,6 +12,40 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.40.0 — 2026-07-21
+
+### Added
+- **AI Analysis conversation sessions with End & Save Report (2026-07-21 work
+  order Part 2, DEC-042).** The AI Analysis tab now runs explicit sessions:
+  **New Conversation** is the primary topbar action (also the empty-state CTA;
+  typing into a fresh thread opens a session implicitly), and **End & Save
+  Report** stays visible in the topbar for the whole session. Ending generates
+  ONE discussion report — session date/time header, the **verbatim timestamped
+  transcript exactly as displayed** (assistant turns pass through the same
+  deterministic F-03 filter the screen applied; no AI summary step), then
+  "Questions for your care team" and "Why you're asking" **consolidated and
+  deduplicated across all turns in code** (new `src/lib/aiSessionReport.js` —
+  section extraction + normalized dedup, no model call), and a single
+  contact-routing block rendered from the care-team record (24-hour lines
+  first). The report saves to My Notes with the AI-generated label (DEC-022)
+  and opens in the report overlay. An open session survives tab navigation and
+  app restarts; on return a banner offers **Resume / End & save report /
+  Discard** (discard is two-step and deletes without a report). Ended
+  conversations remain on screen as archive and are **never included in API
+  context** — context per turn is the patient record + current session only,
+  now enforced through the unit-tested `apiMessagesForConv()` helper. Starting
+  a new conversation while one is open ends-and-saves it first (nothing is
+  silently dropped). Fixed alongside: the old mount logic resumed the *last*
+  conversation id, silently reopening archives — sessions now resume only via
+  the open-session marker, and fresh sends always target a fresh thread.
+  New `scripts/testAiSessionReport.mjs` (`npm run test:ai-session`, 28 cases)
+  + live browser verification of the banner → End & Save → report flow.
+  **Verified, not implemented:** the work order's believed 10/day question
+  limit does not exist anywhere in the codebase (only the proxy's hourly IP
+  caps); adding one is an open decision — OPEN-17(a). Also flagged:
+  OPEN-17(b), the `insina_ai_*` chat-storage family sits outside the P-02
+  vault (pre-existing). Consultation Prep is unchanged as a one-shot document.
+
 ## v1.39.0 — 2026-07-21
 
 ### Changed
