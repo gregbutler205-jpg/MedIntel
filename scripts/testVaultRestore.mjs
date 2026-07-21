@@ -12,7 +12,7 @@ const ok = (c, m) => { if (c) { pass++; console.log("PASS — " + m); } else { f
 const PASSPHRASE = "correct horse battery staple 42";
 const RECORD = {
   mi_meds_full: JSON.stringify([{ name: "Tacrolimus", dose: "3 mg" }, { name: "Aspirin", dose: "81 mg" }]),
-  mi_profile_personal: JSON.stringify({ name: "Gregory D Butler", dob: "1970-01-01" }),
+  mi_profile_personal: JSON.stringify({ name: "Jordan T. Rivera", dob: "1970-01-01" }),
   mi_labs: JSON.stringify([{ name: "Potassium", value: "4.6" }]),
 };
 
