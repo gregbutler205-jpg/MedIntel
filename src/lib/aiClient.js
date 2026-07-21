@@ -20,6 +20,9 @@ import { getPilotToken } from "./pilotAuth.js";
 
 // Optional-chained so this module also loads under plain Node (test harnesses);
 // Vite always defines import.meta.env in the browser build.
+// VITE_PROXY_URL comes from the tracked, PUBLIC-only .env.production at build
+// time (see .gitignore's intentional !.env.production negation, AUDIT_SEC_02
+// F-10); the localhost default is the dev fallback.
 const PROXY_URL = import.meta.env?.VITE_PROXY_URL || "http://localhost:3001";
 
 // Resolved once, in one place. "extraction" and "lite" are not literally

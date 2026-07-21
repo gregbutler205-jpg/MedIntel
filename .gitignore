@@ -7,4 +7,10 @@ dist
 *.docx
 .claude/
 .env*
+# EXCEPTION (AUDIT_SEC_02 F-10): .env.production is intentionally tracked. It
+# holds ONLY the public proxy URL (VITE_PROXY_URL), which is already baked into
+# every shipped client bundle — not a secret — and the GitHub Pages CI build
+# (deploy.yml → npm run build) needs it in the checkout. NEVER put a real secret
+# in this file; secrets live in Render / GitHub env, never in the repo.
+!.env.production
 dist-demo/

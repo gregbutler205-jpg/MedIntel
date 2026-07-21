@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.37.6 — 2026-07-21
+
+### Security
+- **Made `.env.production` tracking explicit and secret-proof (AUDIT_SEC_02
+  F-10, Low).** `.env.production` was git-tracked even though `.gitignore` lists
+  `.env*`, a silent contradiction: it holds only the public `VITE_PROXY_URL`
+  (already baked into every client bundle, not a secret), but the mismatch meant
+  a secret later added to it would be committed unnoticed. Rather than untrack it
+  (the GitHub Pages CI build, `deploy.yml → npm run build`, reads it from the
+  checkout — verified that a build without it falls back to a localhost proxy
+  URL and breaks production AI), the tracking is now **intentional and
+  documented**: an `!.env.production` negation in `.gitignore` plus prominent
+  "PUBLIC CONFIG ONLY — never put a secret here" banners in both `.gitignore`
+  and the file, and a pointer comment in `aiClient.js`. All other `.env*` remain
+  ignored. No behavior change; production bundle still targets the Render proxy.
+
 ## v1.37.5 — 2026-07-21
 
 ### Fixed
