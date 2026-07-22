@@ -1367,6 +1367,42 @@ repeat-reading protocols, SpO2 baseline display, hemolysis metadata.
 
 ---
 
+## DEC-044: Clinical-reviewer credential bar — a licensed clinician (physician, NP, or PA) is sufficient for the threshold matrix; NP review authorized
+
+**Status:** Settled (Greg, 2026-07-21)
+
+**Question.** Who may sign CLINICAL_REVIEW_MATRIX.md? The external review (DEC-043 provenance)
+recommended "a licensed transplant clinician"; the project's own documents (DEC-026, PG-09,
+INSINA_AI_PROMPTS §8) require licensed clinical review with a recorded `reviewed_by` but never
+specify the credential — setting the bar is Greg's Bucket 1 call.
+
+**Decision.** A licensed clinician — physician, nurse practitioner, or physician assistant — is
+sufficient. Greg's NP will perform the review. Rationale: (1) the v1 table is deliberately
+diagnosis-agnostic panic values (DEC-026) — standard critical-value bounds any experienced
+licensed clinician is competent to adjudicate — plus wording and boundary-semantics questions;
+(2) this is content review for informational software, not clinical practice on a patient — the
+review requirement is self-imposed risk management (PG-09), so the credential bar is Insina's to
+set; (3) the review is versioned and upgradeable — a specialist co-signature can be added before
+any scale beyond the pilot.
+
+**The one transplant-flavored number is independently sourced.** The 100.4°F fever trigger is
+confirmed against the patient's own transplant program reference manual (Greg, 2026-07-21) — no
+separate transplant-team concurrence required. The matrix records this provenance on the
+temperature row.
+
+**Boundaries.** MOD-IMMUNOSUPPRESSION (the condition module) is a separate, genuinely
+transplant-specific review item — NOT covered by this decision; it keeps its own gate. The
+"does reviewer credential matter for our liability posture?" question rides with the attorney
+pass (OPEN-5) — cheap to ask, and its answer can upgrade this bar later without reopening it
+here. The review handout (`Insina Health — Clinical Review Packet.docx`) is generated from the
+matrix and lives outside the repo (`*.docx` is gitignored per S-01); the in-repo
+CLINICAL_REVIEW_MATRIX.md remains the source of truth the signed paper copy is transcribed
+back into.
+
+**Related:** DEC-026, DEC-039, DEC-043, PG-09, CLINICAL_REVIEW_MATRIX.md.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.

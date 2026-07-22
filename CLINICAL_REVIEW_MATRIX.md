@@ -2,7 +2,14 @@
 
 **Status:** DRAFT / REVIEW-REQUIRED. Nothing in this document is clinically
 approved. Firing remains gated behind `TRIPWIRE_ADVISORY_ENABLED = false`
-until a licensed transplant clinician signs the decisions below.
+until a licensed clinician signs the decisions below. **Reviewer credential
+bar (DEC-044, Greg 2026-07-21): a licensed clinician — physician, nurse
+practitioner, or physician assistant — is sufficient.** The thresholds are
+deliberately diagnosis-agnostic panic values (DEC-026), not transplant-
+specialty judgments; the one transplant-flavored number (the 100.4°F fever
+trigger) is confirmed against the patient's transplant program reference
+manual. The review is versioned and upgradeable — a specialist co-signature
+can be added before any scale beyond the pilot.
 **Table version under review:** 1.1.0-draft (`src/data/tripwireTable.js`,
 `src/config/tripwireDefaults.js`). **Wording version under review:** 1.1.0
 (`src/data/advisoryTemplates.js`). **Provenance:** the 2026-07-19 work order
@@ -76,7 +83,7 @@ write a ruling.
 | Diastolic BP (mmHg) | E >120 · T <50 | Same repeat/symptom logic as systolic; <50 already T (matches alternate) | Value-only vs symptom-gated | [ ] Current [ ] Alternate [ ] Ruling: ______ |
 | Heart rate (bpm) | E <40 · E >140 · T [40, 50) · T [120, 140] | <40 / >140 → E only with danger symptoms; T without symptoms after confirming reading; value-only E only at an extreme reviewer-set bound | Value-only vs symptom-gated | [ ] Current [ ] Alternate [ ] Ruling: ______ |
 | SpO2 (%) | E <88 · T [88, 92) | Endorsed as conservative starting points; add immediate repeat with proper sensor placement; display documented baseline when one exists; never claim the number alone proves hypoxia | Repeat protocol only | [ ] Current [ ] Current + repeat flow [ ] Ruling: ______ |
-| Temperature (°F) | E ≥103.0 · T [100.4, 103.0) — **no low-temp band (known gap)** | Add E <95.0 (hypothermia). Make ≥103 immediate team contact / ED, with E reserved for danger symptoms (confusion, seizure, cannot wake, severe breathing trouble, blue lips, stiff neck) | Low-temp number + high-side model | [ ] Current + add <95 E [ ] Alternate [ ] Ruling: ______ |
+| Temperature (°F) | E ≥103.0 · T [100.4, 103.0) — **no low-temp band (known gap)**. *The 100.4 trigger is confirmed against the patient's transplant program reference manual (G. Butler, 2026-07-21).* | Add E <95.0 (hypothermia). Make ≥103 immediate team contact / ED, with E reserved for danger symptoms (confusion, seizure, cannot wake, severe breathing trouble, blue lips, stiff neck) | Low-temp number + high-side model | [ ] Current + add <95 E [ ] Alternate [ ] Ruling: ______ |
 
 ### Labs (EMERGENCY bounds are the same critical values as the A-01 urgent tier — single source, test-asserted)
 
