@@ -16,6 +16,7 @@ import { selectConditionModules, formatConditionModules } from "../../lib/condit
 import { formatDocumentBlock, stripControlChars } from "../../prompts/documents.js";
 import { sortReadingsByRecency } from "../../lib/vitals.js";
 import { apiMessagesForConv, buildSessionReportText } from "../../lib/aiSessionReport.js";
+import { DAILY_QUESTION_LIMIT, dailyLimitReached, questionsRemainingToday, recordQuestionSent } from "../../lib/dailyQuestionLimit.js";
 
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
@@ -593,6 +594,8 @@ export default function AIAnalysis({ onNavChange }) {
     } catch { return false; }
   });
   const [discardConfirm, setDiscardConfirm] = useState(false);
+  // OPEN-17a: 15 conversation questions per day; counted on successful sends.
+  const [questionsLeft, setQuestionsLeft] = useState(() => questionsRemainingToday());
   const [summaryBusyConv, setSummaryBusyConv] = useState(null); // conv id being summarized
   const [input, setInput]             = useState("");
   const [streaming, setStreaming]     = useState(false);
@@ -694,6 +697,12 @@ export default function AIAnalysis({ onNavChange }) {
     if (!trimmed || streaming) return;
     // Block if stale consent is active
     if (staleConsent) return;
+    // OPEN-17a: the daily limit is the cap — enforced per conversation turn.
+    if (dailyLimitReached()) {
+      setError(`Daily question limit reached — ${DAILY_QUESTION_LIMIT} conversation questions per day. The counter resets at midnight.`);
+      setQuestionsLeft(0);
+      return;
+    }
 
     setColdStartRetry(null);
     setError("");
@@ -754,6 +763,11 @@ export default function AIAnalysis({ onNavChange }) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || `Server error ${res.status}`);
       }
+
+      // OPEN-17a: the turn reached the model — count it now. Rejected requests
+      // and cold-start fetch failures never got here, so Retry can't double-charge.
+      recordQuestionSent();
+      setQuestionsLeft(questionsRemainingToday());
 
       const reader  = res.body.getReader();
       const decoder = new TextDecoder();
@@ -1474,12 +1488,18 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               />
               {streaming
                 ? <button className="stop-btn" onClick={() => abortRef.current?.abort()}>Stop ◼</button>
-                : <button className="send-btn" onClick={() => sendMessage(input)} disabled={!input.trim() || staleConsent}>Send ↑</button>
+                : <button className="send-btn" onClick={() => sendMessage(input)} disabled={!input.trim() || staleConsent || questionsLeft === 0}
+                    title={questionsLeft === 0 ? `Daily limit reached — ${DAILY_QUESTION_LIMIT} questions per day, resets at midnight` : undefined}>Send ↑</button>
               }
             </div>
             <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between", paddingRight: 64 }}>
               <span>Shift+Enter for new line · Enter to send</span>
-              <span>{isAdvanced ? "Advanced Mode" : "Standard Mode"} · sent pseudonymously per message</span>
+              <span>
+                <span style={{ color: questionsLeft === 0 ? "#ef4444" : questionsLeft <= 3 ? "#f59e0b" : "#a0b4c8" }}>
+                  {questionsLeft} of {DAILY_QUESTION_LIMIT} questions left today
+                </span>
+                {" · "}{isAdvanced ? "Advanced Mode" : "Standard Mode"} · sent pseudonymously per message
+              </span>
             </div>
           </div>
         </div>

@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.41.0 — 2026-07-21
+
+### Added
+- **Daily question limit: 15 conversation questions per day (OPEN-17a resolved
+  by Greg).** The DEC-042 work order presumed a daily limit existed; none did.
+  Now it does: `src/lib/dailyQuestionLimit.js` counts each **successful**
+  conversation turn in the AI Analysis tab (a rejected request or cold-start
+  fetch failure never consumes quota, so Retry can't double-charge a turn) and
+  blocks the 16th send with clear copy. Local-midnight reset; a live
+  "N of 15 questions left today" counter sits in the composer footer (amber at
+  ≤3, red at 0) and Send disables at zero. Fail-open on corrupted counter
+  state — the proxy's per-IP hourly caps (60/hr chat) remain the hard
+  backstop. Per the work order: per-conversation Summary prints and other AI
+  surfaces are not conversation turns and are not counted. New
+  `scripts/testDailyQuestionLimit.mjs` (`npm run test:daily-limit`, 8 cases).
+
 ## v1.40.0 — 2026-07-21
 
 ### Added

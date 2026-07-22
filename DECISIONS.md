@@ -1302,8 +1302,12 @@ conveniences.
 
 **Finding — daily question limit:** the work order asked to verify the believed 10/day limit;
 **no such limit exists anywhere in the codebase** (the only throttles are the proxy's 60/hr/IP
-chat and 20/hr/IP extract caps). Nothing was invented: whether to add a true daily turn cap is
-an open question for Greg, recorded in OPEN-17.
+chat and 20/hr/IP extract caps). Nothing was invented: whether to add a true daily turn cap was
+recorded as OPEN-17(a). **Resolved 2026-07-21 (Greg): 15 questions per day per user**, shipped
+v1.41.0 — enforced client-side per conversation turn in Tab11 (`src/lib/dailyQuestionLimit.js`):
+successful sends only (a rejected request or cold-start failure never consumes quota, so Retry
+can't double-charge), local-midnight reset, visible "N of 15 left today" counter, Send disabled
+at zero. Fail-open on corrupted state — the proxy's hourly caps remain the hard backstop.
 
 ---
 
@@ -1440,11 +1444,9 @@ an open question for Greg, recorded in OPEN-17.
   it through `aiClient` (single auth point), not a per-surface fetch. **F-05 open decision:** the
   disclosure-language accuracy thread (OPEN-1/OPEN-2) is unchanged by this pass.
 - **OPEN-17 (spawned by DEC-042, 2026-07-21):** Two items from the conversation-sessions work.
-  **(a) Daily question limit:** the work order believed a 10/day limit existed; none does — the
-  only throttles are the proxy's per-IP hourly caps (60/hr chat, 20/hr extract). Decide whether
-  to add a true client-side daily turn cap (the work order's "the daily limit is the cap"
-  presumed one) or accept the proxy caps as the only limit. Nothing was implemented pending the
-  decision. **(b) Unencrypted AI chat storage:** Tab11's local family — `insina_ai_messages`
+  **(a) Daily question limit — RESOLVED 2026-07-21 (Greg): 15/day per user**, shipped v1.41.0
+  (`src/lib/dailyQuestionLimit.js`, per-turn enforcement in Tab11, successful sends only,
+  local-midnight reset, visible counter; see the DEC-042 finding paragraph for detail). **(b) Unencrypted AI chat storage:** Tab11's local family — `insina_ai_messages`
   (full chat threads with clinical content), `insina_ai_session`, `insina_ai_mode`,
   `insina_ai_log` — uses the `insina_` prefix, not `mi_`, so it sits OUTSIDE the P-02 vault:
   plaintext at rest and absent from Drive/folder backups (which walk managed `mi_*` keys only).
