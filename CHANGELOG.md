@@ -12,6 +12,38 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.42.0 — 2026-07-21
+
+### Changed
+- **Tripwire advisory: external-review disposition — nine engineering/wording
+  items (DEC-043). Everything remains inert behind
+  `TRIPWIRE_ADVISORY_ENABLED = false`; no threshold NUMBER changed.**
+  **(1) Band fall-through gaps closed** (table → v1.1.0-draft): low-side TODAY
+  bands get exclusive uppers (K 3.0, Na 130, glucose 70, Hgb 8.0, platelets 50;
+  SpO2 [88,92); HR [40,50)) — previously a hemoglobin of 7.95 fired *nothing*.
+  Strictly sensitivity-increasing; boundary battery + exact-critical-value pins
+  added (exact bound = TODAY stays the pinned convention, matrix Q-G1).
+  **(2) Audit log** gains `readingId` + `verification`, wired from all four
+  call sites. **(3) Verify-first for staged imports:** an OCR'd value now asks
+  "verify it against the original report" FIRST; the EMERGENCY/TODAY workflow
+  fires only after patient confirmation ("the value is wrong" logs a rejection
+  and routes back to Import Review). **(4) Templates → v1.1.0:** "meets Insina
+  Health's emergency/same-day alert threshold" replaces "safe range"; per-metric
+  symptom sentences replace the generic four-symptom line (vital sentences are
+  NEW DRAFTS pending review); the no-coordinator fallback routes
+  transplant-line-then-ED instead of "urgent care clinic"; do-not-drive-yourself
+  transportation wording added. **(5) Context-rich alerts:** value carries its
+  unit, staged values their result date, plus a source/verification meta line.
+  **(6) "Mark care team contacted — self-reported"** action, separate from
+  dismissal, own timestamp. **(7)** Advisory/display-range separation is now
+  test-asserted. **(8) `CLINICAL_REVIEW_MATRIX.md`** created — every threshold,
+  boundary ruling, escalation-model question, wording string, and deferred item
+  as sign-off checkboxes for a licensed clinician. **(9)** In-repo
+  AI-originated-urgency language sweep: clean (OPEN-1's external marketing copy
+  remains). Deferred to the clinical(+legal) package: ADA treatment steps,
+  symptom gating, low-temp bound, high-glucose cutoff. `testAdvisory.mjs`
+  35 → 77 cases.
+
 ## v1.41.0 — 2026-07-21
 
 ### Added

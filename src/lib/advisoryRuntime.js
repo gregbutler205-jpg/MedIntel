@@ -10,7 +10,7 @@
 import { TRIPWIRE_ADVISORY_ENABLED } from "../config/advisoryConfig.js";
 import { evaluateEntry } from "./advisoryEngine.js";
 import { ADVISORY_VITAL_FIELDS } from "../data/tripwireTable.js";
-import { buildAdvisory, ADVISORY_TEMPLATES_VERSION } from "../data/advisoryTemplates.js";
+import { buildAdvisory, buildStagedVerify, ADVISORY_TEMPLATES_VERSION } from "../data/advisoryTemplates.js";
 import { logAdvisoryEvent } from "./advisoryLog.js";
 
 /**
@@ -36,17 +36,34 @@ const SEVERITY = { EMERGENCY: 2, TODAY: 1 };
 /** Dispatch the takeover for one hit (logs the event, builds the text, opens the modal). */
 function fire(hit) {
   const coordinator = getCoordinator();
+  const staged = hit.source === "staged" && hit.resultDate ? { date: hit.resultDate } : null;
   const advisory = buildAdvisory({
     tier: hit.tier,
+    metricId: hit.metric,
     metric: hit.displayName,
     value: hit.value,
+    unit: hit.unit,
     coordinator,
-    staged: hit.source === "staged" && hit.resultDate ? { date: hit.resultDate } : null,
+    staged,
+    source: hit.source,
+    verification: hit.verification,
   });
+  // DEC-043 item 3, verify-first: an OCR/extracted value can be wrong (decimal
+  // placement, unit conversion, column alignment). A staged hit shows the
+  // verification prompt FIRST; the standard EMERGENCY/TODAY workflow fires only
+  // after the patient confirms the number against the original document.
+  const verifyText = staged
+    ? buildStagedVerify({ metric: hit.displayName, value: hit.value, unit: hit.unit, date: hit.resultDate })
+    : null;
   const eventId = logAdvisoryEvent(hit, ADVISORY_TEMPLATES_VERSION);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("insina-advisory", {
-      detail: { mode: hit.tier === "EMERGENCY" ? "emergency" : "today", hit, advisory, coordinator, eventId },
+      detail: {
+        mode: hit.tier === "EMERGENCY" ? "emergency" : "today",
+        hit, advisory, coordinator, eventId,
+        requiresVerification: !!staged,
+        verifyText,
+      },
     }));
   }
   return eventId;

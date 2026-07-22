@@ -25,7 +25,9 @@
 
 import { ADVISORY_LAB_BANDS, DEFAULT_LIBRARY } from "../config/tripwireDefaults.js";
 
-export const TRIPWIRE_TABLE_VERSION = "1.0.0-draft";
+// 1.1.0: fall-through band gaps closed (exclusive TODAY uppers; o2/hr low bands)
+// per the 2026-07-21 external review disposition (DEC-043). Numbers unchanged.
+export const TRIPWIRE_TABLE_VERSION = "1.1.0-draft";
 
 export const EMERGENCY = "EMERGENCY";
 export const TODAY = "TODAY";
@@ -64,7 +66,9 @@ const VITAL_METRICS = {
     bands: [
       { tier: EMERGENCY, test: lt(40) },
       { tier: EMERGENCY, test: gt(140) },
-      { tier: TODAY, test: inclIncl(40, 49) },
+      // v1.1.0: low TODAY upper is exclusive at 50 — the old [40,49] left a
+      // fall-through gap for fractional readings (49.5 fired nothing).
+      { tier: TODAY, test: inclExcl(40, 50) },
       { tier: TODAY, test: inclIncl(120, 140) },
     ],
   },
@@ -72,7 +76,8 @@ const VITAL_METRICS = {
     displayName: "oxygen saturation", unit: "%", source: "vital", appliesTo: ["manual", "staged"],
     bands: [
       { tier: EMERGENCY, test: lt(88) },
-      { tier: TODAY, test: inclIncl(88, 91) },
+      // v1.1.0: exclusive upper at 92 — the old [88,91] left 91.5 unflagged.
+      { tier: TODAY, test: inclExcl(88, 92) },
     ],
   },
   temp: {
@@ -93,11 +98,15 @@ function labUnit(canonicalId) {
   const a = DEFAULT_LIBRARY.analytes.find((x) => x.canonicalId === canonicalId);
   return a?.unit || "";
 }
-function bandsFromLab({ emLow, tLowMax, tHiMin, emHigh }) {
+function bandsFromLab({ emLow, tLowBelow, tHiMin, emHigh }) {
   const bands = [];
   if (emLow != null) bands.push({ tier: EMERGENCY, test: lt(emLow) });
   if (emHigh != null) bands.push({ tier: EMERGENCY, test: gt(emHigh) });
-  if (emLow != null && tLowMax != null) bands.push({ tier: TODAY, test: inclIncl(emLow, tLowMax) });
+  // v1.1.0: low-side TODAY is [emLow, tLowBelow) — exclusive upper closes the
+  // fall-through gap fractional results fell into (see tripwireDefaults.js).
+  // High side stays [tHiMin, emHigh] inclusive: contiguous with the > emHigh
+  // EMERGENCY band, so no gap exists there.
+  if (emLow != null && tLowBelow != null) bands.push({ tier: TODAY, test: inclExcl(emLow, tLowBelow) });
   if (tHiMin != null && emHigh != null) bands.push({ tier: TODAY, test: inclIncl(tHiMin, emHigh) });
   return bands;
 }

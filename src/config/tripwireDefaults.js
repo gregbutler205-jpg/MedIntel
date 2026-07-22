@@ -90,15 +90,23 @@ export const DEFAULT_LIBRARY = {
 // ALL DRAFT / REVIEW-REQUIRED. Firing is gated behind TRIPWIRE_ADVISORY_ENABLED
 // (default false) until Greg signs off these numbers.
 //
-// Convention (labs): EMERGENCY = value < emLow OR value > emHigh (exclusive).
-//                    TODAY     = emLow <= value <= tLowMax
+// Convention (labs): EMERGENCY = value < emLow OR value > emHigh (exclusive —
+//                    the EXACT critical value classifies TODAY; a decision
+//                    point in CLINICAL_REVIEW_MATRIX.md).
+//                    TODAY     = emLow <= value < tLowBelow   (exclusive upper)
 //                                OR tHiMin <= value <= emHigh (inclusive).
-// A null side carries no band. WBC is intentionally advisory-excluded in v1
-// (not in the work order's seed list) — it stays AI-context-only.
+// tLowBelow is the EXCLUSIVE upper edge of the low-side TODAY band — v1.1.0
+// (2026-07-21 review): the old inclusive tLowMax values (2.9, 129, 69, 7.9, 49)
+// left fall-through gaps where fractional results (hemoglobin 7.95, potassium
+// 2.95…) fired NOTHING. Exclusive uppers at the next clinical boundary close
+// the gaps; no value that previously fired changes tier — strictly
+// sensitivity-increasing. A null side carries no band. WBC is intentionally
+// advisory-excluded in v1 (not in the work order's seed list) — it stays
+// AI-context-only.
 export const ADVISORY_LAB_BANDS = {
-  potassium:  { emLow: 2.5, tLowMax: 2.9, tHiMin: 6.0,  emHigh: 6.5 },
-  sodium:     { emLow: 120, tLowMax: 129, tHiMin: 150,  emHigh: 160 },
-  glucose:    { emLow: 50,  tLowMax: 69,  tHiMin: 400,  emHigh: 500 },
-  hemoglobin: { emLow: 7,   tLowMax: 7.9, tHiMin: null, emHigh: null },
-  platelets:  { emLow: 20,  tLowMax: 49,  tHiMin: null, emHigh: null },
+  potassium:  { emLow: 2.5, tLowBelow: 3.0, tHiMin: 6.0,  emHigh: 6.5 },
+  sodium:     { emLow: 120, tLowBelow: 130, tHiMin: 150,  emHigh: 160 },
+  glucose:    { emLow: 50,  tLowBelow: 70,  tHiMin: 400,  emHigh: 500 },
+  hemoglobin: { emLow: 7,   tLowBelow: 8.0, tHiMin: null, emHigh: null },
+  platelets:  { emLow: 20,  tLowBelow: 50,  tHiMin: null, emHigh: null },
 };

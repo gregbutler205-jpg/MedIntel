@@ -113,7 +113,7 @@ export function saveReading(reading) {
   window.dispatchEvent(new Event("mi-data-synced"));
   // tripwire advisory §2: vitals-save hook (flag-gated; wrapped so the advisory
   // can never block the reading from being saved).
-  try { evaluateReadingAndFire(reading, { source: "manual" }); } catch { /* non-fatal */ }
+  try { evaluateReadingAndFire(reading, { source: "manual", readingId: reading.id ?? null }); } catch { /* non-fatal */ }
   return merged;
 }
 

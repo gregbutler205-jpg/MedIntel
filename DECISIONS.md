@@ -1311,12 +1311,72 @@ at zero. Fail-open on corrupted state — the proxy's hourly caps remain the har
 
 ---
 
+## DEC-043: Tripwire advisory — external-review disposition (nine engineering/wording items now; thresholds and symptom-gating to the clinical-review packet)
+
+**Status:** Settled and shipped flag-OFF (v1.42.0, 2026-07-21). Threshold decisions remain DRAFT.
+
+**Provenance.** ChatGPT reviewed the deterministic table and patient wording (architecture A,
+thresholds C+, wording B−); Claude reconciled the review against the actual implementation
+(several claims corrected: diastolic <50 was already TODAY; the audit log already carried
+table/template versions and dismissal semantics; A-12 already confirms extreme manual entries;
+stale/undated imports were already badge-only). Greg authorized the nine non-clinical items.
+External-model clinical citations are treated as unverified inputs per the intake rules —
+they shape the packet, they are not sign-off.
+
+**Shipped now (all inert behind `TRIPWIRE_ADVISORY_ENABLED = false`):**
+1. **Band fall-through gaps closed** (table v1.1.0-draft): low-side TODAY bands get exclusive
+   uppers at the next clinical boundary (K 3.0, Na 130, glucose 70, Hgb 8.0, platelets 50;
+   SpO2 [88,92); HR [40,50)). Previously a hemoglobin of 7.95 fired NOTHING. Strictly
+   sensitivity-increasing; no previously-firing value changes tier. Boundary battery + exact-
+   critical-value pins added (exact bound = TODAY stays the convention — matrix question Q-G1).
+2. **Audit log** gains `readingId` + `verification` (patient-entered / unverified-import /
+   patient-verified / patient-rejected), wired from every call site.
+3. **Verify-first for staged imports:** an in-window staged hit now renders "The imported value
+   appears to be… Verify it against the original report now" FIRST; the EMERGENCY/TODAY
+   workflow fires only after the patient confirms ("The value is wrong" logs a rejection and
+   routes back to Import Review). Consistent with CL-025's flag-don't-fix and "AI proposes,
+   patient disposes"; does not alter DEC-039's proactive-contact ruling.
+4. **Templates v1.1.0:** "meets Insina Health's emergency/same-day alert threshold" replaces
+   "safe range"/"emergency range" (the app states its threshold fired; it does not certify a
+   range as safe); per-metric symptom sentences replace the generic four-symptom line (lab
+   sentences mirror the A-01 guidance clauses; vital sentences are NEW DRAFTS pending review);
+   the no-coordinator fallback routes transplant-line-then-ED instead of "urgent care clinic";
+   emergency wording adds do-not-drive-yourself transportation guidance.
+5. **Context-rich alerts:** value carries its unit, staged values carry the result date, and a
+   meta line states source + verification status. Table version stays internal (log only).
+6. **"Mark care team contacted — self-reported"** button, separate from dismissal, own
+   timestamp, explicitly user-reported; dismissal continues to mean only "warning closed."
+7. **Separation asserted:** the advisory pipeline never reads patient/provider display ranges —
+   now a standing test, not an implicit property. (Provider-set individualized urgency ranges
+   remain DEC-005/OPEN-4 future work layered on top.)
+8. **CLINICAL_REVIEW_MATRIX.md** created: every threshold, boundary-inclusivity ruling,
+   value-only-vs-symptom-gated question, wording string, and deferred item as sign-off
+   checkboxes for a licensed transplant clinician.
+9. **AI-originated-urgency language sweep:** no in-repo document or product copy describes AI
+   urgency (only historical/decision records quoting the rejected language, and the rule
+   banning it). The remaining offender is the external overview/marketing copy — OPEN-1,
+   needs-attorney, unchanged.
+
+**Explicitly deferred to the combined clinical(+legal) review:** ADA-style hypoglycemia
+treatment steps (care direction — DEC-001/device line, needs-attorney), symptom-gated
+EMERGENCY classification, the low-temperature bound, a lower high-glucose same-day cutoff,
+repeat-reading protocols, SpO2 baseline display, hemolysis metadata.
+
+**Related:** DEC-002/003 (deterministic urgency), DEC-026 (library gating), DEC-039
+(proactive contact, provisional copy), CL-025, `scripts/testAdvisory.mjs` (77 cases).
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
   Current overview language ("generates urgent alerts ... with specific action guidance,"
   "requiring immediate action," "critically sub-therapeutic") describes the directive version of
   the product and reads as marketing an uncleared device. Needs attorney eyes.
+  *2026-07-21 (DEC-043 item 9): in-repo sweep confirms NO repository document or shipped product
+  copy describes AI-originated urgency — the landing page and all specs carry the deterministic
+  framing; the only hits are decision records quoting the rejected language and the §8 rule
+  banning it. What remains open here is exactly the EXTERNAL overview/marketing copy.*
 - **OPEN-2:** Naming and copy pass against California AB 489 (effective 2026-01-01), which
   prohibits AI systems from using terms or design elements implying the AI holds a healthcare
   license. Review module names and voice.

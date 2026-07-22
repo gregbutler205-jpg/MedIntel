@@ -665,7 +665,7 @@ export default function App({ onNavChange }) {
     try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
     window.dispatchEvent(new Event("mi-data-synced")); // A-01: manual-entry hook for the tripwire engine
     // tripwire advisory §2: manual-lab hook (flag-gated; never blocks the save)
-    try { evaluateAndFire(canonicalLabId(entry.name), entry.value, { source: "manual" }); } catch { /* advisory never blocks a save */ }
+    try { evaluateAndFire(canonicalLabId(entry.name), entry.value, { source: "manual", readingId: entry.id ?? null }); } catch { /* advisory never blocks a save */ }
     setNewLab({ name:"", value:"", unit:"", refRange:"", category:"Chemistry", date:"", notes:"" });
     setShowAddLab(false);
     setSelectedImportedLab(entry);

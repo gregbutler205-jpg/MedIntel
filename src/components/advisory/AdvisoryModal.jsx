@@ -8,7 +8,7 @@
 // Buttons are plain tel:/maps links — no geolocation call is made from Insina.
 
 import { useEffect, useState } from "react";
-import { markAdvisoryDismissed } from "../../lib/advisoryLog.js";
+import { markAdvisoryDismissed, markAdvisoryVerified, markAdvisoryRejected, markCareTeamContacted } from "../../lib/advisoryLog.js";
 import { printEmergency } from "../../lib/printEmergency.js";
 
 function edDirectionsUrl() {
@@ -31,9 +31,14 @@ function withInline911(text, keyBase) {
 
 export default function AdvisoryModal() {
   const [p, setP] = useState(null);
+  // DEC-043 item 3: staged values must be verified against the original
+  // document BEFORE the advisory workflow renders. Manual values skip this.
+  const [verified, setVerified] = useState(false);
+  // DEC-043 item 6: optional, self-reported — separate from dismissal.
+  const [contacted, setContacted] = useState(false);
 
   useEffect(() => {
-    const h = (e) => setP(e.detail || null);
+    const h = (e) => { setP(e.detail || null); setVerified(false); setContacted(false); };
     window.addEventListener("insina-advisory", h);
     return () => window.removeEventListener("insina-advisory", h);
   }, []);
@@ -51,8 +56,17 @@ export default function AdvisoryModal() {
   const mode = p.mode; // "emergency" | "today" | "info"
   const coord = p.coordinator;
   const isEmergency = mode === "emergency";
+  // Verify-first (DEC-043 item 3): an in-window staged hit renders the
+  // verification prompt until the patient confirms the imported number.
+  const needsVerify = !!p.requiresVerification && !verified && mode !== "info";
   const accent = isEmergency ? "var(--red)" : mode === "today" ? "var(--amber)" : "var(--red)";
-  const label = isEmergency ? "EMERGENCY" : mode === "today" ? "URGENT — CONTACT TODAY" : "EMERGENCY INFO";
+  const label = needsVerify
+    ? "VERIFY IMPORTED VALUE"
+    : isEmergency ? "EMERGENCY" : mode === "today" ? "URGENT — CONTACT TODAY" : "EMERGENCY INFO";
+
+  const confirmVerify = () => { if (p.eventId) markAdvisoryVerified(p.eventId); setVerified(true); };
+  const rejectVerify = () => { if (p.eventId) markAdvisoryRejected(p.eventId); setP(null); };
+  const reportContacted = () => { if (p.eventId) markCareTeamContacted(p.eventId); setContacted(true); };
 
   const openED = () => window.open(edDirectionsUrl(), "_blank", "noopener,noreferrer");
 
@@ -79,6 +93,22 @@ export default function AdvisoryModal() {
           <span aria-hidden="true" style={{ fontSize: 16 }}>⚠</span> {label}
         </div>
 
+        {needsVerify ? (
+          /* DEC-043 item 3 — verify-first for staged/imported values: an
+             OCR-extracted number can be wrong (decimal placement, unit
+             conversion, column alignment). The standard workflow fires only
+             after the patient confirms the number against the original. */
+          <div style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--text-bright)" }}>{p.verifyText}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button onClick={confirmVerify} style={btnPrimary}>The value is correct</button>
+              <button onClick={rejectVerify} style={btnSecondary}>The value is wrong — I'll fix it in Import Review</button>
+            </div>
+            <p style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+              Confirming opens the full alert with emergency contacts and next steps.
+            </p>
+          </div>
+        ) : (
         <div style={{ padding: "20px 22px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Advisory text (emergency/today) */}
           {p.advisory?.paragraphs?.map((para, i) => (
@@ -86,6 +116,10 @@ export default function AdvisoryModal() {
               {mode === "today" ? withInline911(para, `pt${i}`) : para}
             </p>
           ))}
+          {/* DEC-043 item 5: source + verification context, small and factual */}
+          {mode !== "info" && p.advisory?.metaLine && (
+            <p style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: -6 }}>{p.advisory.metaLine}</p>
+          )}
           {mode === "info" && (
             <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--text-secondary)" }}>
               Your emergency actions and card, in one place.
@@ -119,11 +153,27 @@ export default function AdvisoryModal() {
             <p style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>{p.advisory.secondaryLine}</p>
           )}
 
-          {/* Dismiss — understated, logs, no snooze */}
+          {/* DEC-043 item 6: optional, self-reported, separate from dismissal.
+              User-reported only — Insina never verifies contact happened. */}
+          {mode !== "info" && (
+            contacted ? (
+              <p style={{ alignSelf: "center", fontSize: 12, color: "var(--green, #10b981)", fontFamily: "var(--font-mono)" }}>
+                ✓ Care team contacted (self-reported)
+              </p>
+            ) : (
+              <button onClick={reportContacted} style={{ alignSelf: "center", background: "none", border: "1px solid var(--border-strong)", borderRadius: 8, color: "var(--text-secondary)", fontSize: 12, cursor: "pointer", fontFamily: "var(--font-sans)", padding: "7px 14px", minHeight: 36 }}>
+                Mark care team contacted — self-reported
+              </button>
+            )
+          )}
+
+          {/* Dismiss — understated, logs, no snooze. Dismissal means only that
+              the warning was closed — never that anyone was contacted. */}
           <button onClick={close} style={{ alignSelf: "center", marginTop: 2, background: "none", border: "none", color: "var(--text-dim)", fontSize: 13, cursor: "pointer", fontFamily: "var(--font-sans)", textDecoration: "underline", minHeight: 36 }}>
             {mode === "info" ? "Close" : "I understand"}
           </button>
         </div>
+        )}
       </div>
     </div>
   );

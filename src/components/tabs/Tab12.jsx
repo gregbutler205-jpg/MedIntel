@@ -335,7 +335,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           // confirms it into the record. Flag-gated (no-op until enabled); a
           // recent critical fires the takeover, older ones are inert here.
           extracted.forEach(l => {
-            try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null }); } catch { /* never blocks import */ }
+            try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null, readingId: l.id ?? null }); } catch { /* never blocks import */ }
           });
           setPdfInitialCount(extracted.length); // UI-20: for the excluded-in-review count
           setPdfStatus("done");

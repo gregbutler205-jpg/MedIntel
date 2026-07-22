@@ -28,19 +28,24 @@ function stagedWithinWindow(resultDate, now) {
  * @param {object} [context]
  * @param {"manual"|"staged"} [context.source="manual"]
  * @param {string|null} [context.resultDate=null]  ISO/date of the specimen or reading (staged only)
+ * @param {string|number|null} [context.readingId=null]  id of the source reading/lab/staged item, for the audit log
  * @param {number} [context.now=Date.now()]  injectable clock for tests
  * @returns {object|null} a hit, or null if nothing crosses / metric unknown / value unparseable
  *
  * Hit shape:
- *   { metric, displayName, unit, value, tier, source, resultDate,
- *     withinWindow, takeover, tableVersion }
+ *   { metric, displayName, unit, value, tier, source, resultDate, readingId,
+ *     verification, withinWindow, takeover, tableVersion }
+ * - verification: "patient-entered" for manual values (the patient typed and,
+ *   for extreme vitals, A-12 confirmed it); "unverified-import" for staged
+ *   OCR/extracted values until the patient verifies them against the original
+ *   (the verify-first flow, DEC-043 item 3).
  * - withinWindow: true for manual (presumed current); for staged, the 14-day rule.
  * - takeover: whether a full-screen/modal takeover should fire now. Manual always;
  *   staged only within the window. A staged hit outside the window still returns
  *   (takeover:false) so the caller can render the "historical critical value" badge.
  */
 export function evaluateEntry(metric, value, context = {}) {
-  const { source = "manual", resultDate = null } = context;
+  const { source = "manual", resultDate = null, readingId = null } = context;
   const now = typeof context.now === "number" ? context.now : Date.now();
 
   const def = TRIPWIRE_METRICS[metric];
@@ -70,6 +75,8 @@ export function evaluateEntry(metric, value, context = {}) {
     tier,
     source,
     resultDate: source === "staged" ? resultDate : null,
+    readingId,
+    verification: source === "staged" ? "unverified-import" : "patient-entered",
     withinWindow,
     takeover: withinWindow, // manual → true; staged → only inside the 14-day window
     tableVersion: TRIPWIRE_TABLE_VERSION,

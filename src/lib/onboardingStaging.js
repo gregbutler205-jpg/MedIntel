@@ -113,6 +113,7 @@ export function stageExtractionResult(result, docLinks = [], now = new Date()) {
           advisory_hit = evaluateAndFire(canonicalLabId(f.name), f.value, {
             source: "staged",
             resultDate: doc.doc_date || f.date || null,
+            readingId: item.id ?? null, // DEC-043 item 2: audit ties back to the staged item
             now: now.getTime(),
           });
         } catch { advisory_hit = null; }
