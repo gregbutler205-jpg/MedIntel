@@ -4,12 +4,19 @@
 approved. Firing remains gated behind `TRIPWIRE_ADVISORY_ENABLED = false`
 until a licensed clinician signs the decisions below. **Reviewer credential
 bar (DEC-044, Greg 2026-07-21): a licensed clinician — physician, nurse
-practitioner, or physician assistant — is sufficient.** The thresholds are
-deliberately diagnosis-agnostic panic values (DEC-026), not transplant-
-specialty judgments; the one transplant-flavored number (the 100.4°F fever
-trigger) is confirmed against the patient's transplant program reference
-manual. The review is versioned and upgradeable — a specialist co-signature
-can be added before any scale beyond the pilot.
+practitioner, or physician assistant — is sufficient.**
+
+**Scope of the approval (product-level, not patient-specific):** the sign-off
+approves these thresholds and this wording for the Insina Health **product**
+and its intended adult user population (patients managing complex medical
+care — organ-transplant recipients and similar), not for any individual
+patient. The thresholds are deliberately diagnosis-agnostic panic values
+(DEC-026); the one transplant-flavored number (the 100.4°F fever trigger) is
+consistent with standard transplant-program patient guidance (verified
+against a transplant program reference manual, 2026-07-21). Provider-set
+individualized ranges (DEC-005/OPEN-4) will layer per-patient on top of these
+product defaults. The review is versioned and upgradeable — a specialist
+co-signature can be added before any scale beyond the pilot.
 **Table version under review:** 1.1.0-draft (`src/data/tripwireTable.js`,
 `src/config/tripwireDefaults.js`). **Wording version under review:** 1.1.0
 (`src/data/advisoryTemplates.js`). **Provenance:** the 2026-07-19 work order
@@ -54,8 +61,9 @@ via a versioned table/template bump.
 
 **Q-G2 — Value-only vs symptom/context escalation.** Current design: a value
 alone fires the full tier ("conservative over-triage": a false takeover costs
-a phone call; a missed emergency costs more; the primary user is 61 and using
-the app under stress). External review proposes AHA-style gating for several
+a phone call; a missed emergency costs more; the product's users are patients
+managing complex conditions, often older and often using the app under
+stress). External review proposes AHA-style gating for several
 metrics: value → immediate repeat → EMERGENCY only with danger symptoms,
 TODAY otherwise (still fully deterministic — checkbox symptoms, no AI). This
 reduces sensitivity and adds steps at the worst moment; it also reduces alarm
@@ -83,7 +91,7 @@ write a ruling.
 | Diastolic BP (mmHg) | E >120 · T <50 | Same repeat/symptom logic as systolic; <50 already T (matches alternate) | Value-only vs symptom-gated | [ ] Current [ ] Alternate [ ] Ruling: ______ |
 | Heart rate (bpm) | E <40 · E >140 · T [40, 50) · T [120, 140] | <40 / >140 → E only with danger symptoms; T without symptoms after confirming reading; value-only E only at an extreme reviewer-set bound | Value-only vs symptom-gated | [ ] Current [ ] Alternate [ ] Ruling: ______ |
 | SpO2 (%) | E <88 · T [88, 92) | Endorsed as conservative starting points; add immediate repeat with proper sensor placement; display documented baseline when one exists; never claim the number alone proves hypoxia | Repeat protocol only | [ ] Current [ ] Current + repeat flow [ ] Ruling: ______ |
-| Temperature (°F) | E ≥103.0 · T [100.4, 103.0) — **no low-temp band (known gap)**. *The 100.4 trigger is confirmed against the patient's transplant program reference manual (G. Butler, 2026-07-21).* | Add E <95.0 (hypothermia). Make ≥103 immediate team contact / ED, with E reserved for danger symptoms (confusion, seizure, cannot wake, severe breathing trouble, blue lips, stiff neck) | Low-temp number + high-side model | [ ] Current + add <95 E [ ] Alternate [ ] Ruling: ______ |
+| Temperature (°F) | E ≥103.0 · T [100.4, 103.0) — **no low-temp band (known gap)**. *The 100.4 trigger is consistent with standard transplant-program patient guidance (verified against a transplant program reference manual, 2026-07-21).* | Add E <95.0 (hypothermia). Make ≥103 immediate team contact / ED, with E reserved for danger symptoms (confusion, seizure, cannot wake, severe breathing trouble, blue lips, stiff neck) | Low-temp number + high-side model | [ ] Current + add <95 E [ ] Alternate [ ] Ruling: ______ |
 
 ### Labs (EMERGENCY bounds are the same critical values as the A-01 urgent tier — single source, test-asserted)
 
@@ -127,6 +135,12 @@ Full strings in `src/data/advisoryTemplates.js`; snapshot-tested verbatim.
 Every checked decision above ships as a deliberate, versioned change
 (threshold-table and/or template version bump, snapshot tests updated on
 purpose). Until this page is signed, `TRIPWIRE_ADVISORY_ENABLED` stays false.
+
+**Approval statement:** I have reviewed the alert thresholds and
+patient-facing wording above and approve them, as marked, for use in the
+Insina Health product for its intended adult user population. This is a
+product-content review, not care of an individual patient; individual users'
+provider-set ranges layer on top of these defaults.
 
 Reviewer name: ______________________  License/credential: ______________
 Date: ____________  Signature: ______________________

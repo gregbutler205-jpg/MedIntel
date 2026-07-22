@@ -1390,6 +1390,13 @@ confirmed against the patient's own transplant program reference manual (Greg, 2
 separate transplant-team concurrence required. The matrix records this provenance on the
 temperature row.
 
+**Scope (added 2026-07-22, Greg):** the approval instrument is **product-level, not
+patient-specific** — the reviewer approves the thresholds and wording for Insina Health's
+intended adult user population, so the same sign-off carries into production/multi-user use.
+The matrix and handout were generalized accordingly (no patient-specific framing in the
+approval; the fever-trigger provenance cites transplant-program reference guidance rather than
+an individual's chart; per-patient provider-set ranges remain the DEC-005 layer on top).
+
 **Boundaries.** MOD-IMMUNOSUPPRESSION (the condition module) is a separate, genuinely
 transplant-specific review item — NOT covered by this decision; it keeps its own gate. The
 "does reviewer credential matter for our liability posture?" question rides with the attorney
