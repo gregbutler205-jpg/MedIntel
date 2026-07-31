@@ -12,6 +12,28 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.42.1 — 2026-07-22
+
+### Fixed
+- **Appointment duplicate check: "Use existing" no longer strands the user on
+  ancient history with nothing booked (Greg's 8/17 Labs report).** Three
+  compounding defects. (1) "Use existing" switched the list filter to "all,"
+  which sorts oldest-first, and expanded the matched record **off-screen with
+  no scroll** — the viewport landed on months-old appointments, reading as
+  "it took me to a lab appointment in April." The revealed record now scrolls
+  into mid-viewport (instant scroll — a smooth scroll gets canceled by the
+  filter re-render's row animations, verified live). (2) When the duplicate
+  was a **calendar-synced "suggested" record**, "Use existing" recorded
+  nothing — a suggestion isn't a confirmed appointment and is invisible under
+  the default Upcoming filter, so the net result was "no appointment for
+  8/17." "Use existing" on a suggested match now **confirms it to Upcoming**
+  (the user just asserted it's real). (3) The duplicate prompt showed a raw
+  ISO date with no status context; it now shows the formatted date, explains
+  when the match is an unconfirmed calendar suggestion, and states what "Use
+  existing" will do. Also added a confirmation toast for the "Use existing"
+  path. Verified end-to-end in the browser with the seeded bug scenario
+  (April history + suggested 8/17 Labs + manual 8/17 entry).
+
 ## v1.42.0 — 2026-07-21
 
 ### Changed

@@ -1050,6 +1050,23 @@ export default function AppointmentsTab({ onNavChange }) {
   const [appts, setAppts]     = useState(() => loadAppts());
   const [modal, setModal]     = useState(null);   // null | BLANK | appt object
   const [filter, setFilter]   = useState("upcoming");
+  // Duplicate-resolution reveal: the id of the existing appointment to scroll
+  // into view once the list has re-rendered under the new filter. Without this,
+  // "Use existing" flips the filter to "all" (sorted oldest-first) and the
+  // matched card expands OFF-SCREEN — the viewport lands on years-old history,
+  // which reads as "it took me to the wrong appointment."
+  const [revealId, setRevealId] = useState(null);
+  useEffect(() => {
+    if (!revealId) return;
+    const t = setTimeout(() => {
+      // behavior "auto" (instant), not "smooth": the reveal lands right after a
+      // filter re-render whose row entrance animations cancel an in-flight
+      // smooth scroll — verified live; the instant jump is immune.
+      document.getElementById(`appt-${revealId}`)?.scrollIntoView({ behavior: "auto", block: "center" });
+      setRevealId(null);
+    }, 120); // after the filter/expand re-render paints
+    return () => clearTimeout(t);
+  }, [revealId]);
   const [expanded, setExpanded] = useState(null);
   const [showAI, setShowAI]   = useState(null);  // appt.id for which AI panel is open
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -1195,12 +1212,25 @@ export default function AppointmentsTab({ onNavChange }) {
       setAppts(prev => prev.map(a => a.id === existing.id ? { ...a, ...updates } : a));
     } else if (choice === "keepBoth") {
       setAppts(prev => [incoming, ...prev]);
+    } else if (choice === "useExisting" && existing.status === "suggested") {
+      // The match was an unconfirmed calendar suggestion. "Use existing" means
+      // "yes, that IS my appointment" — so confirm it to a real upcoming
+      // appointment; otherwise the user walks away with nothing booked and an
+      // invisible suggestion (the original 8/17 Labs bug).
+      setAppts(prev => prev.map(a => a.id === existing.id ? { ...a, status: "upcoming" } : a));
     }
-    // "useExisting": nothing added — just show the record already on file.
-    if (choice !== "keepBoth") { setExpanded(existing.id); setFilter("all"); }
+    // Reveal the record on file: expand it, widen the filter, and scroll it
+    // into view (the revealId effect) so the viewport lands on the match, not
+    // on the oldest rows of the re-sorted "all" list.
+    if (choice !== "keepBoth") { setExpanded(existing.id); setFilter("all"); setRevealId(existing.id); }
     setDupPrompt(null);
     if (choice === "update") setSyncMsg({ kind: "ok", text: "Existing appointment updated." });
     if (choice === "keepBoth") setSyncMsg({ kind: "ok", text: "Appointment saved." });
+    if (choice === "useExisting") {
+      setSyncMsg({ kind: "ok", text: existing.status === "suggested"
+        ? "Calendar suggestion confirmed — it's now an upcoming appointment."
+        : "Showing your existing appointment." });
+    }
   };
 
   const handleDelete = (id) => {
@@ -1417,7 +1447,7 @@ export default function AppointmentsTab({ onNavChange }) {
             const isOpen  = expanded === appt.id;
 
             return (
-              <div key={appt.id} style={{ animationDelay:`${idx*40}ms` }}>
+              <div key={appt.id} id={`appt-${appt.id}`} style={{ animationDelay:`${idx*40}ms` }}>
                 <div className="apt-row" onClick={() => setExpanded(isOpen ? null : appt.id)}>
                   {/* Urgency bar — amber for suggested */}
                   <div style={{ width:3, height:44, borderRadius:2, background: appt.status === "suggested" ? "#f59e0b" : urgCfg.color, flexShrink:0, boxShadow:`0 0 8px ${appt.status === "suggested" ? "#f59e0b" : urgCfg.color}60` }} />
@@ -1553,8 +1583,11 @@ export default function AppointmentsTab({ onNavChange }) {
             <div style={{ fontSize:18, color:"#dde8f5", marginBottom:10 }}>Possible duplicate</div>
             <div style={{ fontSize:12, color:"#98afc4", marginBottom:22, lineHeight:1.6 }}>
               "{dupPrompt.incoming.title}" looks like "{dupPrompt.existing.title}"
-              {dupPrompt.existing.provider ? ` with ${dupPrompt.existing.provider}` : ""} already on {dupPrompt.existing.date}.
+              {dupPrompt.existing.provider ? ` with ${dupPrompt.existing.provider}` : ""} already on {fmtDate(dupPrompt.existing.date)}
+              {dupPrompt.existing.status === "suggested" ? " — a suggested appointment synced from your calendar, not yet confirmed"
+                : dupPrompt.existing.status && dupPrompt.existing.status !== "upcoming" ? ` (${dupPrompt.existing.status})` : ""}.
               Nothing has been saved yet — choose what to do.
+              {dupPrompt.existing.status === "suggested" && " \"Use existing\" will confirm it as your upcoming appointment."}
             </div>
             <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
               <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={() => resolveDup("useExisting")}>Use existing</button>
