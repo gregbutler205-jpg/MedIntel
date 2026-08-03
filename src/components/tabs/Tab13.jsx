@@ -4,7 +4,7 @@ import { daysAgoLabel } from "../../lib/displaySafe.js";
 import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
-import { uploadWeeklyBackup } from "../../lib/driveSync.js";
+import { uploadWeeklyBackup, readSyncDiag, getVaultFingerprint } from "../../lib/driveSync.js";
 import { isFolderBackupSupported, getFolderStatus, chooseBackupFolder, clearBackupFolder, backupToFolder, isEncryptedBackupPayload, restoreEncryptedBackup } from "../../lib/folderBackup.js";
 import { unlock, changePassphrase, isUnlocked } from "../../lib/secureStorage.js";
 import PasswordInput from "../PasswordInput.jsx"; // WO-5: show/hide toggle
@@ -152,6 +152,14 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   const [pinError, setPinError]   = useState("");
   const [pinSuccess, setPinSuccess] = useState(false);
   const [restoreId, setRestoreId] = useState(null);
+
+  // Sync diagnostics: this device's vault-key fingerprint (async) + the last
+  // merge result. Two devices sync records only when fingerprints MATCH; a
+  // failed-item count >0 usually means the other device writes under a
+  // different key (the invisible "phone changes never arrive" failure).
+  const [vaultFp, setVaultFp] = useState(null);
+  useEffect(() => { getVaultFingerprint().then(setVaultFp).catch(() => {}); }, []);
+  const syncDiag = readSyncDiag();
 
   // v1.38.0 folder backup (File System Access) — status is async (IDB handle +
   // permission query), so it loads into state; refreshed after every action.
@@ -575,6 +583,21 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               >
                 Snapshot now
               </button>
+            </div>
+            {/* Sync diagnostics: key fingerprint + last merge health */}
+            <div style={{ paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
+              <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>SYNC DIAGNOSTICS</div>
+              <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.7 }}>
+                Vault key fingerprint: <span style={{ color:"#7eb8d8" }}>{vaultFp || "—"}</span> · must match on every device that syncs this record (phone companion shows its own under Sync).
+              </div>
+              {syncDiag?.failed > 0 && (
+                <div style={{ marginTop:6, fontSize:10.5, color:"#f59e0b", fontFamily:"'DM Mono',monospace", lineHeight:1.7, background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.25)", borderRadius:7, padding:"7px 10px" }}>
+                  ⚠ Last sync could not read {syncDiag.failed} item{syncDiag.failed !== 1 ? "s" : ""} from Drive
+                  ({(syncDiag.failedKeys || []).slice(0, 4).join(", ")}{(syncDiag.failedKeys || []).length > 4 ? "…" : ""}).
+                  This usually means another device holds a different vault key — compare fingerprints, then on the mismatched device use
+                  "Restore from Google Drive" to re-key it. Nothing was overwritten locally.
+                </div>
+              )}
             </div>
           </div>
         ) : (

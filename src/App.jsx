@@ -19,7 +19,7 @@ import PreflightHost from './rie/PreflightHost.jsx';
 import SearchPopup from './components/SearchPopup.jsx';
 import { initGoogleAuth, signIn, signOut, getStoredUser, getAccessToken, clearSessionToken } from './lib/googleAuth.js';
 import { getAutoLockMinutes } from './lib/autoLock.js';
-import { fullSync, uploadToDrive, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
+import { fullSync, uploadWeeklyBackup, WEEKLY_INTERVAL_MS, collectLocalData } from './lib/driveSync.js';
 import { attemptAutoFolderBackup, isFolderBackupSupported } from './lib/folderBackup.js';
 
 
@@ -764,21 +764,25 @@ function AppShell() {
     return () => window.removeEventListener("keydown", h);
   }, []);
 
-  // ── Periodic background upload every 10 minutes while token is live ─────────
+  // ── Periodic background sync every 10 minutes while token is live ──────────
+  // Merge-first (fullSync), NOT a blind uploadToDrive: a blind upload from a
+  // device that hasn't pulled yet OVERWRITES the shared Drive file with a copy
+  // missing the other device's changes — the "phone logs never reach the web"
+  // clobber. Runs even while the tab is hidden (unlike the 5-minute visible
+  // pull), so a long-lived background tab still backs up — safely.
   useEffect(() => {
     if (!googleUser) return;
     const id = setInterval(async () => {
       const token = getAccessToken();
       if (!token) return; // Token expired — wait for user to re-auth via Sync button
       try {
-        const ts = await uploadToDrive(token);
-        setLastSyncTs(ts);
+        await refreshFromDrive(token);
       } catch (e) {
-        console.warn("[DriveSync] background upload failed:", e);
+        console.warn("[DriveSync] background sync failed:", e);
       }
     }, 10 * 60 * 1000); // 10 minutes
     return () => clearInterval(id);
-  }, [googleUser]);
+  }, [googleUser, refreshFromDrive]);
 
   // ── Weekly backup check on mount ─────────────────────────────────────────────
   useEffect(() => {

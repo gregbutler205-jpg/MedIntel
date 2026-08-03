@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback, Component } from "react";
 import { initGoogleAuth, signInWithRedirect, extractTokenFromHash, getAccessToken, getStoredUser } from "../../lib/googleAuth.js";
-import { fullSync, restoreFromDrive } from "../../lib/driveSync.js";
+import { fullSync, restoreFromDrive, getVaultFingerprint, readSyncDiag } from "../../lib/driveSync.js";
 import { enqueue, flush } from "../../lib/outbox.js";
 import { cleanupOldAudio } from "../../lib/visitCapture.js";
 import { scheduleMedReminders, runOpenNotifications } from "../../lib/notify.js";
@@ -65,7 +65,7 @@ class CompanionErrorBoundary extends Component {
 }
 
 // ── Sync status bar (also the sign-in entry point) ────────────────────────────
-function SyncBar({ syncState, lastSynced, onSync }) {
+function SyncBar({ syncState, lastSynced, onSync, vaultFp, diag }) {
   const signedIn = !!getStoredUser();
   if (!signedIn) return (
     <div style={{ background: "#0d1a28", borderBottom: `1px solid ${C.b1}`, padding: "8px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
@@ -74,14 +74,23 @@ function SyncBar({ syncState, lastSynced, onSync }) {
     </div>
   );
   return (
-    <div style={{ background: "#0a1520", borderBottom: `1px solid ${C.b2}`, padding: "6px 16px", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-      <div style={{ width: 6, height: 6, borderRadius: "50%", background: syncState === "done" ? C.green : syncState === "syncing" ? C.amber : C.ghost, boxShadow: syncState === "done" ? `0 0 5px ${C.green}60` : "none", flexShrink: 0 }} />
-      <span style={{ flex: 1, fontSize: 10, color: C.ghost, fontFamily: mono }}>
-        {syncState === "syncing" ? "Syncing with Drive…" : syncState === "done" && lastSynced ? `Synced ${lastSynced}` : syncState === "error" ? "Sync failed — tap to retry" : "Drive connected"}
-      </span>
-      <button onClick={onSync} disabled={syncState === "syncing"} style={{ background: "none", border: "none", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer", opacity: syncState === "syncing" ? 0.4 : 1 }}>
-        {syncState === "syncing" ? "…" : "↕ Sync"}
-      </button>
+    <div style={{ background: "#0a1520", borderBottom: `1px solid ${C.b2}`, flexShrink: 0 }}>
+      <div style={{ padding: "6px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: syncState === "done" ? C.green : syncState === "syncing" ? C.amber : C.ghost, boxShadow: syncState === "done" ? `0 0 5px ${C.green}60` : "none", flexShrink: 0 }} />
+        <span style={{ flex: 1, fontSize: 10, color: C.ghost, fontFamily: mono }}>
+          {syncState === "syncing" ? "Syncing with Drive…" : syncState === "done" && lastSynced ? `Synced ${lastSynced}` : syncState === "error" ? "Sync failed — tap to retry" : "Drive connected"}
+          {vaultFp ? ` · key ${vaultFp}` : ""}
+        </span>
+        <button onClick={onSync} disabled={syncState === "syncing"} style={{ background: "none", border: "none", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer", opacity: syncState === "syncing" ? 0.4 : 1 }}>
+          {syncState === "syncing" ? "…" : "↕ Sync"}
+        </button>
+      </div>
+      {diag?.failed > 0 && (
+        <div style={{ padding: "5px 16px 7px", fontSize: 9.5, color: C.amber, fontFamily: mono, lineHeight: 1.5 }}>
+          ⚠ {diag.failed} item{diag.failed !== 1 ? "s" : ""} from Drive couldn't be read — if this key code doesn't match the one under
+          Settings &amp; Backup on the web app, this phone holds a different vault key: use "Restore from Google Drive" here to re-key it.
+        </div>
+      )}
     </div>
   );
 }
@@ -133,10 +142,16 @@ function CompanionInner() {
   const [user, setUser] = useState(() => getStoredUser());
   const [skippedSignIn, setSkippedSignIn] = useState(false);
 
+  // Sync diagnostics: this phone's vault-key fingerprint + last merge health,
+  // so a key divergence from the web app is visible instead of a silent no-op.
+  const [vaultFp, setVaultFp] = useState(null);
+  const [syncDiag, setSyncDiag] = useState(() => readSyncDiag());
+  useEffect(() => { getVaultFingerprint().then(setVaultFp).catch(() => {}); }, []);
+
   const runSync = useCallback((token) => {
     setSyncState("syncing");
     return fullSync(token)
-      .then(ts => { setLastSynced(fmtTime(ts)); setSyncState("done"); return flush(token); })
+      .then(ts => { setLastSynced(fmtTime(ts)); setSyncState("done"); setSyncDiag(readSyncDiag()); return flush(token); })
       .catch(() => setSyncState("error"));
   }, []);
 
@@ -260,7 +275,7 @@ function CompanionInner() {
           📶 Offline — you can still capture; it’ll sync when you’re back online
         </div>
       )}
-      <SyncBar syncState={syncState} lastSynced={lastSynced} onSync={handleSync} />
+      <SyncBar syncState={syncState} lastSynced={lastSynced} onSync={handleSync} vaultFp={vaultFp} diag={syncDiag} />
 
       {/* Slim back bar on non-Today tabs (overlays render their own header back). */}
       {!overlay && tab !== "today" && (

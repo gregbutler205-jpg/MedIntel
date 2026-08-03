@@ -192,6 +192,7 @@ export async function downloadFromDrive(token) {
 export async function mergeIntoLocal(driveData) {
   if (!driveData) return 0;
   let count = 0;
+  const failures = [];
 
   for (const [key, blob] of Object.entries(driveData)) {
     if (!key.startsWith("mi_") || EXCLUDE_KEYS.has(key) || key === "_exportedAt") continue;
@@ -215,12 +216,50 @@ export async function mergeIntoLocal(driveData) {
       }
       count++;
     } catch {
-      // Local value exists but couldn't be parsed — keep it as-is rather than
-      // overwriting with a copy that would corrupt an unparseable local value.
+      // Keep local rather than overwrite with something unreadable — but COUNT
+      // the failure. A blob from Drive that won't decrypt here almost always
+      // means another device wrote it under a DIFFERENT vault key (AES-GCM auth
+      // failure): sync would otherwise "succeed" forever while transferring
+      // nothing — exactly the invisible "phone changes never reach the web"
+      // failure. The diagnostic below makes it visible in Settings & Backup.
+      failures.push(key);
       count++;
     }
   }
+
+  // Sync diagnostic (metadata only: key NAMES and counts, never values).
+  // Non-managed key on purpose — it must be readable even when a diverged key
+  // makes everything else unreadable.
+  try {
+    localStorage.setItem("insina_sync_diag", JSON.stringify({
+      ts: new Date().toISOString(),
+      merged: count - failures.length,
+      failed: failures.length,
+      failedKeys: failures.slice(0, 20),
+    }));
+  } catch { /* non-fatal */ }
+
   return count;
+}
+
+/** Last merge diagnostic ({ts, merged, failed, failedKeys}) or null. */
+export function readSyncDiag() {
+  try { const r = localStorage.getItem("insina_sync_diag"); return r ? JSON.parse(r) : null; } catch { return null; }
+}
+
+/**
+ * Short fingerprint of THIS device's vault key-envelope (SHA-256, first 8 hex).
+ * Two devices can sync records to each other only when their fingerprints
+ * match (same wrapped data-key). Shown in Settings & Backup and the companion
+ * so a key divergence is a visible fact instead of a silent sync no-op.
+ * Returns null when no vault exists.
+ */
+export async function getVaultFingerprint() {
+  const raw = secureStorage.getRawCiphertext(secureStorage.VAULT_KEY);
+  if (raw == null) return null;
+  const bytes = new TextEncoder().encode(raw);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].slice(0, 4).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**

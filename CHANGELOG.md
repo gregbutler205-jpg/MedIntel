@@ -12,6 +12,38 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.43.0 — 2026-08-03
+
+### Fixed
+- **Medications: the "AI Interaction Check" button now works — it previously
+  had no click handler at all.** It routes to AI Analysis with the full
+  medication-interaction prompt (same mechanism as the per-med AI quick
+  actions) and auto-sends. Also fixed the header's hardcoded "14 active" count
+  to the real active-medication count.
+- **Companion→web sync: the web's 10-minute background loop no longer
+  clobbers phone changes.** It ran a blind `uploadToDrive` — overwriting the
+  shared Drive file with the desktop's local snapshot, wiping anything the
+  phone had uploaded since the desktop's last pull (phone data resurfaced only
+  after the phone's next merge, so sync looked randomly broken). The loop now
+  runs the merge-first `fullSync` like every other sync path, and refreshes
+  the UI afterward.
+
+### Added
+- **Sync diagnostics: vault-key fingerprints + loud decrypt failures.** The
+  deepest cross-device failure was invisible: if two devices hold different
+  vault keys (e.g., one re-created its vault instead of restoring), every
+  Drive blob fails AES-GCM decryption during merge and `mergeIntoLocal`
+  silently kept local data — sync "succeeded" forever while transferring
+  nothing. Merge now counts unreadable items and writes a diagnostic
+  (`insina_sync_diag`, key names and counts only — never values). Settings &
+  Backup shows a **Vault key fingerprint** (SHA-256 of the key envelope, first
+  8 hex) plus an amber warning with re-key guidance when the last sync had
+  unreadable items; the companion's sync bar shows its own fingerprint and the
+  same warning. Two devices sync records only when fingerprints match — a key
+  divergence is now a visible, actionable fact instead of a silent no-op.
+  Verified live (Tab04 flow, Tab13 diagnostics render) + Node checks on the
+  fingerprint helper (null without vault, stable, envelope-sensitive).
+
 ## v1.42.2 — 2026-07-22
 
 ### Fixed
