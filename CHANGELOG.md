@@ -12,6 +12,27 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.42.2 — 2026-07-22
+
+### Fixed
+- **Deleted calendar-synced appointments no longer resurrect (the "deleted it
+  three times" Aug 3 bug).** Deleting a synced appointment erased the app's
+  only memory of it, so the next daily Google Calendar sync re-imported the
+  same event as a fresh suggestion — forever. Deletions (and the suggested-row
+  Dismiss, which shares the same path) now write a **tombstone**
+  (`mi_appt_dismissed`: Google event id + date/title, capped at 300, encrypted
+  at rest and carried in Drive/folder backups so deletions hold across
+  devices). Three enforcement points: the sync differ skips tombstoned events
+  (by event id, and by date+title so a re-issued recurring-event id can't
+  sneak through); the Appointments loader heals already-resurrected synced
+  copies at mount; and the delete-confirm dialog now says "It also won't come
+  back from calendar sync." Deliberately narrow: manual appointments (no
+  Google id) are never tombstone-filtered — re-creating one by hand on the
+  same date/title is the user's explicit choice and always sticks; the next
+  instance of a recurring event (different date) still imports. New
+  `scripts/testApptTombstones.mjs` (`npm run test:appt-tombstones`, 12 cases)
+  plus live browser verification of the delete → tombstone → heal cycle.
+
 ## v1.42.1 — 2026-07-22
 
 ### Fixed

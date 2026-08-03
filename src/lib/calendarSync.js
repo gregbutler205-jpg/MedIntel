@@ -114,18 +114,75 @@ export function enrichWithCareTeam(appt, careTeam) {
   };
 }
 
+// ── Deleted-appointment tombstones ───────────────────────────────────────────
+// Deleting (or dismissing) a synced appointment must also mean "and don't
+// re-import it." Without memory of the deletion, the daily calendar pull
+// re-creates the record from the same Google event the next day — the
+// "deleted it three times and it keeps coming back" bug. Tombstones remember
+// what the user deleted, by Google event id AND by date+title (recurring
+// events can re-issue ids; date+title also blocks a same-slot re-import), and
+// both the sync differ and the Appointments loader honor them. Stored under a
+// managed mi_* key: encrypted at rest and carried in Drive/folder backups, so
+// a deletion holds across devices too.
+const DISMISSED_KEY = "mi_appt_dismissed";
+const DISMISSED_MAX = 300; // plenty of history; keeps the key from growing forever
+
+const dtKey = a => `${a.date}|${String(a.title || "").trim().toLowerCase()}`;
+
+export function readDismissedAppts() {
+  try { const r = localStorage.getItem(DISMISSED_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
+}
+
+/** Record a deleted synced appointment so no future sync can resurrect it. */
+export function tombstoneAppt(appt) {
+  if (!appt) return;
+  const list = readDismissedAppts();
+  list.push({
+    gcalId: appt.gcalId || null,
+    date: appt.date || "",
+    title: String(appt.title || "").trim().toLowerCase(),
+    deletedAt: new Date().toISOString(),
+  });
+  try { localStorage.setItem(DISMISSED_KEY, JSON.stringify(list.slice(-DISMISSED_MAX))); } catch { /* locked/quota */ }
+}
+
+export function isTombstoned(appt, dismissed = readDismissedAppts()) {
+  if (!appt) return false;
+  const k = dtKey(appt);
+  return dismissed.some(d =>
+    (d.gcalId && appt.gcalId && d.gcalId === appt.gcalId) ||
+    (d.date && `${d.date}|${d.title}` === k)
+  );
+}
+
+/**
+ * Healer for lists loaded from storage: drop synced records a tombstone says
+ * the user already deleted (covers copies resurrected by an older sync or a
+ * Drive merge before the tombstone existed everywhere). Deliberately touches
+ * ONLY calendar-origin records (gcalId present) — a manually re-created
+ * appointment on the same date/title is the user's explicit choice and stays.
+ */
+export function filterTombstoned(appts) {
+  const dismissed = readDismissedAppts();
+  if (!dismissed.length) return appts;
+  return appts.filter(a => !a.gcalId || !isTombstoned(a, dismissed));
+}
+
 /**
  * Given existing appointments and freshly fetched events, return only the
  * mapped appointments that are NOT already present, each enriched from the Care
- * Team. Match on the Google event id first, then fall back to date + title.
+ * Team. Match on the Google event id first, then fall back to date + title —
+ * and skip anything the user has deleted (tombstones above).
  */
 export function diffNewAppointments(events, existing, careTeam = []) {
-  const key = a => `${a.date}|${String(a.title || "").trim().toLowerCase()}`;
+  const key = dtKey;
   const existingIds = new Set(existing.map(a => a.gcalId).filter(Boolean));
   const existingKeys = new Set(existing.map(key));
+  const dismissed = readDismissedAppts();
   return events
     .map(eventToAppointment)
     .filter(a => a.date) // skip anything without a usable date
     .filter(a => !(a.gcalId && existingIds.has(a.gcalId)) && !existingKeys.has(key(a)))
+    .filter(a => !isTombstoned(a, dismissed))
     .map(a => enrichWithCareTeam(a, careTeam));
 }

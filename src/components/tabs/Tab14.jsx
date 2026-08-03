@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar } from "../../lib/calendarSync.js";
+import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar, tombstoneAppt, filterTombstoned } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
@@ -136,7 +136,9 @@ function todayISO() {
 function loadAppts() {
   try {
     const raw = localStorage.getItem("mi_appointments");
-    return raw ? JSON.parse(raw) : seedAppts();
+    // filterTombstoned: heal synced records the user already deleted but that a
+    // pre-tombstone sync or Drive merge resurrected (manual records untouched).
+    return raw ? filterTombstoned(JSON.parse(raw)) : seedAppts();
   } catch { return seedAppts(); }
 }
 
@@ -1234,6 +1236,11 @@ export default function AppointmentsTab({ onNavChange }) {
   };
 
   const handleDelete = (id) => {
+    // Calendar-synced records get a tombstone so the daily pull can never
+    // re-import what the user deleted (delete AND the suggested-row Dismiss
+    // both land here). Manual records need none — nothing re-creates them.
+    const target = appts.find(a => a.id === id);
+    if (target?.gcalId) tombstoneAppt(target);
     setAppts(prev => prev.filter(a => a.id !== id));
     setDeleteConfirm(null);
     if (expanded === id) setExpanded(null);
@@ -1602,7 +1609,11 @@ export default function AppointmentsTab({ onNavChange }) {
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ background:"#0b1220", border:"1px solid #2a1a1a", borderRadius:14, padding:28, maxWidth:360, textAlign:"center" }}>
             <div style={{ fontSize:18, color:"#dde8f5", marginBottom:10 }}>Delete appointment?</div>
-            <div style={{ fontSize:12, color:"#98afc4", marginBottom:22 }}>This cannot be undone.</div>
+            <div style={{ fontSize:12, color:"#98afc4", marginBottom:22 }}>
+              This cannot be undone.
+              {appts.find(a => a.id === deleteConfirm)?.gcalId &&
+                " It also won't come back from calendar sync — future syncs skip what you delete."}
+            </div>
             <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
               <button className="apt-btn" style={{ background:"rgba(239,68,68,.12)", borderColor:"rgba(239,68,68,.3)", color:"#ef4444" }} onClick={() => handleDelete(deleteConfirm)}>Delete</button>
               <button className="apt-btn" style={{ background:"transparent", borderColor:"#1a2f4a", color:"#b0c4d8" }} onClick={() => setDeleteConfirm(null)}>Cancel</button>

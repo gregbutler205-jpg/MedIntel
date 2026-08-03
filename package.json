@@ -1,7 +1,7 @@
 {
   "name": "intellitrax",
   "private": true,
-  "version": "1.42.1",
+  "version": "1.42.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
     "test:ai-filter": "node scripts/testAiOutputFilter.mjs",
     "test:question-rules": "node scripts/testQuestionRules.mjs",
     "test:ai-session": "node scripts/testAiSessionReport.mjs",
+    "test:appt-tombstones": "node scripts/testApptTombstones.mjs",
     "test:daily-limit": "node scripts/testDailyQuestionLimit.mjs"
   },
   "dependencies": {
