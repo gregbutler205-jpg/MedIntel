@@ -12,6 +12,28 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.43.1 — 2026-08-03
+
+### Fixed
+- **Deleted appointments no longer resurrect through the Drive merge (the
+  Dr. Roy bug).** v1.42.2's tombstones blocked the calendar-import vector, but
+  a SECOND resurrection vector remained: the Drive merge's array union has no
+  concept of deletion, so a deleted appointment still living in the Drive file
+  (kept alive by the other device's uploads) was quietly union-ed back on
+  every sync — which is how an appointment that isn't even on the calendar
+  kept returning. Three changes close it: (1) **every** deletion now writes a
+  tombstone — manual records included — keyed by the record's exact id
+  (collision-proof: a manually re-created appointment gets a fresh id and is
+  never eaten by an old tombstone); (2) tombstones are enforced **at the merge
+  layer** — a post-pass after every Drive merge drops resurrected copies, and
+  because the tombstone list itself rides the backup, deletions **propagate**:
+  the other device merges the tombstones in and drops its own copy on its next
+  sync; (3) tombstone entries carry content-keyed ids so the merge union
+  dedupes identical tombstones across devices without dropping distinct
+  same-date ones. Delete-confirm copy now says deletions stick everywhere.
+  4 new test cases (16 total) + live browser verification of the full
+  delete → tombstone → merge-resurrection → heal cycle.
+
 ## v1.43.0 — 2026-08-03
 
 ### Fixed

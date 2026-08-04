@@ -11,6 +11,7 @@
 // collectLocalCiphertext() instead, and merge logic decrypts before merging
 // and re-encrypts before writing back.
 import * as secureStorage from "./secureStorage.js";
+import { filterTombstoned } from "./calendarSync.js";
 
 const BACKUP_FILENAME        = "insina-health-backup.json";
 const WEEKLY_BACKUP_PREFIX   = "insina-health-weekly-";
@@ -226,6 +227,26 @@ export async function mergeIntoLocal(driveData) {
       count++;
     }
   }
+
+  // Post-pass: enforce appointment deletions AT THE MERGE LAYER. _mergeArrays
+  // unions local + Drive by id with no concept of deletion, so a deleted
+  // appointment still living in the Drive file (kept alive by the other
+  // device's uploads) is quietly union-ed back on every sync — the Dr. Roy
+  // resurrection. Runs AFTER the loop so the tombstone list itself has already
+  // merged (a deletion made on the other device applies here in the same sync).
+  try {
+    const raw = secureStorage.getRawCiphertext("mi_appointments");
+    if (raw != null) {
+      const plain = await secureStorage.decryptRaw(raw);
+      const appts = JSON.parse(plain);
+      if (Array.isArray(appts)) {
+        const kept = filterTombstoned(appts);
+        if (kept.length !== appts.length) {
+          await secureStorage.setEncrypted("mi_appointments", JSON.stringify(kept));
+        }
+      }
+    }
+  } catch { /* locked or unreadable — the Tab14 loader applies the same filter */ }
 
   // Sync diagnostic (metadata only: key NAMES and counts, never values).
   // Non-managed key on purpose — it must be readable even when a diverged key

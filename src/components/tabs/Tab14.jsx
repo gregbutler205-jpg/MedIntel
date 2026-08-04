@@ -1236,11 +1236,15 @@ export default function AppointmentsTab({ onNavChange }) {
   };
 
   const handleDelete = (id) => {
-    // Calendar-synced records get a tombstone so the daily pull can never
-    // re-import what the user deleted (delete AND the suggested-row Dismiss
-    // both land here). Manual records need none — nothing re-creates them.
+    // EVERY deletion gets a tombstone (delete and the suggested-row Dismiss
+    // both land here) — not just calendar-synced records. The Drive merge
+    // unions local + Drive by record id with no concept of deletion, so a
+    // manual record still living in the Drive file (kept alive by the other
+    // device) resurrects after every delete — the Dr. Roy bug. The id-based
+    // tombstone kills that copy at the merge layer and propagates the
+    // deletion to the other device via the backed-up tombstone list.
     const target = appts.find(a => a.id === id);
-    if (target?.gcalId) tombstoneAppt(target);
+    if (target) tombstoneAppt(target);
     setAppts(prev => prev.filter(a => a.id !== id));
     setDeleteConfirm(null);
     if (expanded === id) setExpanded(null);
@@ -1611,8 +1615,9 @@ export default function AppointmentsTab({ onNavChange }) {
             <div style={{ fontSize:18, color:"#dde8f5", marginBottom:10 }}>Delete appointment?</div>
             <div style={{ fontSize:12, color:"#98afc4", marginBottom:22 }}>
               This cannot be undone.
-              {appts.find(a => a.id === deleteConfirm)?.gcalId &&
-                " It also won't come back from calendar sync — future syncs skip what you delete."}
+              {appts.find(a => a.id === deleteConfirm)?.gcalId
+                ? " It also won't come back from calendar sync or Drive sync — deletions now stick everywhere."
+                : " It also won't be restored by Drive sync — deletions now stick everywhere."}
             </div>
             <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
               <button className="apt-btn" style={{ background:"rgba(239,68,68,.12)", borderColor:"rgba(239,68,68,.3)", color:"#ef4444" }} onClick={() => handleDelete(deleteConfirm)}>Delete</button>

@@ -87,6 +87,39 @@ const EV_SEP7 = { id: "gcal-sep7", summary: "Labs", start: { date: "2026-09-07" 
   ok(healed.some(a => a.id === "a3"), "unrelated synced records are untouched");
 }
 
+// ── Manual records: the Drive-merge resurrection (the Dr. Roy bug) ───────────
+// A manual appointment (no gcalId) deleted locally still lives in the Drive
+// file via the other device's uploads; _mergeArrays unions it right back.
+// The id-based tombstone kills exactly that copy — and ONLY that copy.
+{
+  localStorage.clear();
+  const droy = { id: "droy1", gcalId: null, date: "2026-08-03", title: "Dr. Roy", status: "upcoming" };
+  tombstoneAppt(droy); // what handleDelete now does for EVERY deletion
+  const resurrected = [
+    { id: "droy1", gcalId: null, date: "2026-08-03", title: "Dr. Roy", status: "upcoming" }, // same id, back from the Drive union
+    { id: "other1", gcalId: null, date: "2026-08-03", title: "Dentist", status: "upcoming" },
+  ];
+  const healed = filterTombstoned(resurrected);
+  ok(healed.length === 1 && healed[0].id === "other1", "a merge-resurrected MANUAL record is dropped by its exact id");
+
+  const recreated = filterTombstoned([{ id: "droy-NEW", gcalId: null, date: "2026-08-03", title: "Dr. Roy", status: "upcoming" }]);
+  ok(recreated.length === 1, "manually RE-CREATING the same appointment (fresh id) always sticks — never eaten by the old tombstone");
+}
+
+// ── Tombstone entries are merge-safe: content-keyed ids, no duplicates ───────
+// mi_appt_dismissed itself rides the Drive merge, whose union dedupes by `id`.
+// Entries therefore need ids that are EQUAL for the same deletion (collapse
+// across devices) and DISTINCT for different deletions on the same date.
+{
+  localStorage.clear();
+  tombstoneAppt({ id: "m1", gcalId: null, date: "2026-08-03", title: "Dr. Roy" });
+  tombstoneAppt({ id: "m2", gcalId: null, date: "2026-08-03", title: "Dentist" });
+  tombstoneAppt({ id: "m1", gcalId: null, date: "2026-08-03", title: "Dr. Roy" }); // repeat delete of the same record
+  const list = readDismissedAppts();
+  ok(list.length === 2, `distinct same-date deletions keep distinct entries; repeats dedupe (got ${list.length})`);
+  ok(new Set(list.map(t => t.id)).size === 2 && list.every(t => t.id), "every tombstone carries a unique content-keyed id for the merge union");
+}
+
 // ── Cap: the tombstone list cannot grow unbounded ────────────────────────────
 {
   localStorage.clear();
