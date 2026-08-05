@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
+import { tombstoneRecord, untombstoneRecord } from "../../lib/recordTombstones.js";
 import { callAI, extractPdfVision } from "../../lib/aiClient.js";
 import { PrintLabel } from "../icons.jsx";
 import { formatDocumentBlock } from "../../prompts/documents.js";
@@ -500,6 +501,12 @@ export default function DocumentsTab() {
   // ── Delete handler ─────────────────────────────────────────────────────────
   function handleDelete(docId) {
     if (!window.confirm("Delete this document? This cannot be undone.")) return;
+    // Tombstone the document, its AI-reference entry, and every finding it
+    // produced — otherwise the Drive merge union resurrects them all.
+    tombstoneRecord("mi_documents", docs.find(d => d.id === docId));
+    const refEntry = loadRefDocs().find(r => r.id === docId);
+    if (refEntry) tombstoneRecord("mi_ref_docs", refEntry);
+    findings.filter(f => f.docId === docId).forEach(f => tombstoneRecord("mi_clinical_findings", f));
     const updated = docs.filter(d => d.id !== docId);
     setDocs(updated);
     saveDocs(updated);
@@ -514,7 +521,9 @@ export default function DocumentsTab() {
   // ── AI Reference toggle ────────────────────────────────────────────────────
   async function handleToggleRef(doc) {
     if (doc.isRef) {
-      // Turn OFF
+      // Turn OFF — tombstone so a sync can't flip it back on
+      const refEntry = loadRefDocs().find(r => r.id === doc.id);
+      if (refEntry) tombstoneRecord("mi_ref_docs", refEntry);
       saveRefDocs(loadRefDocs().filter(r => r.id !== doc.id));
       updateDoc(doc.id, { isRef: false });
     } else {
@@ -529,7 +538,11 @@ export default function DocumentsTab() {
         setExtraction({ docId: doc.id, phase: "summarizing", progress: "Creating AI reference summary…" });
         const summary = await apiSummarizeDoc(doc.extractedText, doc.title);
         const refs = loadRefDocs().filter(r => r.id !== doc.id);
-        refs.push({ id: doc.id, name: doc.title, text: summary, addedDate: new Date().toISOString().split("T")[0] });
+        const refEntry = { id: doc.id, name: doc.title, text: summary, addedDate: new Date().toISOString().split("T")[0] };
+        // Ref entries REUSE the document id: clear any tombstone from an
+        // earlier toggle-off so this deliberate re-add isn't eaten at merge.
+        untombstoneRecord("mi_ref_docs", refEntry);
+        refs.push(refEntry);
         saveRefDocs(refs);
         updateDoc(doc.id, { isRef: true });
         setExtraction(null);

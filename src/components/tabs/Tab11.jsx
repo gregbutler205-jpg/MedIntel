@@ -5,6 +5,7 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI, MODEL_MAP } from "../../lib/aiClient.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
@@ -1047,6 +1048,7 @@ Keep the summary concise — it should fit on one to two printed pages.`;
   };
 
   const removeRefDoc = (id) => {
+    tombstoneRecord("mi_ref_docs", refDocs.find(d => d.id === id));
     const updated = refDocs.filter(d => d.id !== id);
     setRefDocs(updated);
     localStorage.setItem("mi_ref_docs", JSON.stringify(updated));

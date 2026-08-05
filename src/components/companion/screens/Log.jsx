@@ -2,6 +2,7 @@
 // Structured tap-driven entry is the primary path (Insina is episodic, not a
 // daily logger). Quick Log is the convenience shortcut, not the front door.
 import { useState } from "react";
+import { tombstoneRecord } from "../../../lib/recordTombstones.js";
 import { C, mono, sans, Card, SL, Btn, Empty, Pill } from "../companionUI.jsx";
 import { rls, wls, uid, toISO, readings, latestWith, recentAverage, activeMeds } from "../../../lib/companionData.js";
 import { mkReading, saveReading, defaultVitalFlag } from "../../../lib/vitals.js";
@@ -246,7 +247,10 @@ function Symptoms({ queueSync, askAI }) {
     setTimeout(() => setSavedEntry(c => (c?.id === entry.id ? null : c)), 8000);
     queueSync?.();
   }
-  function remove(id) { const u = entries.filter(e => e.id !== id); setEntries(u); wls("mi_symptoms", u); queueSync?.(); }
+  function remove(id) {
+    tombstoneRecord("mi_symptoms", entries.find(e => e.id === id));
+    const u = entries.filter(e => e.id !== id); setEntries(u); wls("mi_symptoms", u); queueSync?.();
+  }
 
   return (
     <div>

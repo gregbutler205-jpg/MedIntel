@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 
 const STATUS_CFG = {
   active:   { color: "#ef4444", bg: "rgba(239,68,68,.10)",   border: "rgba(239,68,68,.25)",   label: "Active"   },
@@ -255,6 +256,7 @@ export default function ConditionsTab() {
     setSavedMsg("Condition saved.");
   }
   function handleDelete(id) {
+    tombstoneRecord("mi_conditions", conditions.find(x => x.id === id));
     const updated = conditions.filter(x => x.id !== id);
     setConditions(updated);
     save(updated);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getStore, setStore, mergeRecords, addImportLog } from "../../store.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
@@ -283,6 +284,7 @@ export default function ImportTab({ onImport, onNavChange }) {
   }
 
   function handleDelete(id) {
+    tombstoneRecord("mi_labs", labs.find(l => l.id === id));
     const updated = labs.filter(l => l.id !== id);
     saveLabs(updated);
     setLabs(updated);

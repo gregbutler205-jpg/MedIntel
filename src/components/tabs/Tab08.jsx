@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { uploadToDrive } from "../../lib/driveSync.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 
 // UI-18: MVP keeps Care Team, Emergency, Reference. Timeline, Goals,
 // Preventive, and Milestones are removed from the interface only — their
@@ -469,6 +470,7 @@ function CareTeam() {
 
   function handleDelete() {
     if (!deleteTarget) return;
+    tombstoneRecord("mi_care_team", deleteTarget);
     persistTeam(team.filter(t => t.id !== deleteTarget.id));
     setSelected(prev => {
       const next = new Set(prev);
@@ -638,7 +640,10 @@ function Milestones() {
     setShowAdd(false);
   };
   const toggleDone = (id) => saveMilestones(milestones.map(m => m.id === id ? { ...m, done: !m.done } : m));
-  const deleteMilestone = (id) => saveMilestones(milestones.filter(m => m.id !== id));
+  const deleteMilestone = (id) => {
+    tombstoneRecord("mi_milestones", milestones.find(m => m.id === id));
+    saveMilestones(milestones.filter(m => m.id !== id));
+  };
 
   return (
     <div style={{ padding:"24px 28px", overflowY:"auto", height:"100%" }}>

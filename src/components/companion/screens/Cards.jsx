@@ -1,6 +1,7 @@
 // ── Insurance & ID Cards — photograph, store, and share cards on the go. ───────
 // Same mi_cards record as the web app, so cards added here sync both ways.
 import { useState } from "react";
+import { tombstoneRecord } from "../../../lib/recordTombstones.js";
 import { C, mono, sans, Card, BackBar, Btn, Empty } from "../companionUI.jsx";
 import { getCards, setCards, blankCard, compressImage, shareImageDataUrl } from "../../../lib/cards.js";
 
@@ -19,7 +20,10 @@ export default function Cards({ onBack, queueSync }) {
       : [...cards, entry];
     return persist(updated);
   }
-  function remove(id) { persist(cards.filter(c => c.id !== id)); }
+  function remove(id) {
+    tombstoneRecord("mi_cards", cards.find(c => c.id === id));
+    persist(cards.filter(c => c.id !== id));
+  }
 
   if (viewing) return <Viewer card={viewing.card} side={viewing.side} onClose={() => setViewing(null)} />;
   if (editing) return <Editor card={editing} onSave={e => { if (save(e)) setEditing(null); }} onCancel={() => setEditing(null)} onError={() => {}} />;

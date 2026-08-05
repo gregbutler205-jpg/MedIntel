@@ -5,6 +5,8 @@
 // confirmations, exceptions, visits, notif prefs) also uses mi_* so it syncs too.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { tombstoneRecord } from "./recordTombstones.js";
+
 // ── Low-level storage helpers ───────────────────────────────────────────────
 export const rls = (k, fb) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : fb; } catch { return fb; } };
 export const wls = (k, v)  => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -182,6 +184,7 @@ export function logException({ group, medId: mid, medName, type, note }) {
   return entry;
 }
 export function removeException(id) {
+  tombstoneRecord("mi_med_exceptions", rls("mi_med_exceptions", []).find(e => e.id === id));
   wls("mi_med_exceptions", rls("mi_med_exceptions", []).filter(e => e.id !== id));
 }
 

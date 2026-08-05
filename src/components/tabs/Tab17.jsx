@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PrintLabel } from "../icons.jsx";
 import { getDiagnostics, setDiagnostics as persistDiagnostics, getConditions } from "../../store.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 
 // ── Diagnostics tab ────────────────────────────────────────────────────────────
 // Observational studies: imaging (MRI/CT/X-ray/US), EKG, EMG, EEG, echo, PFTs,
@@ -115,6 +116,7 @@ export default function DiagnosticsTab() {
     setModal(null);
   }
   function handleDelete(id) {
+    tombstoneRecord("mi_diagnostics", studies.find(x => x.id === id));
     save(studies.filter(x => x.id !== id));
     setDeleteId(null);
   }

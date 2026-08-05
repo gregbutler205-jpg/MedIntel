@@ -12,6 +12,35 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.44.0 — 2026-08-03
+
+### Fixed
+- **Deletions now stick in EVERY section — the resurrection bug generalized
+  (Care Team / Allergies / Conditions report).** The Dr. Roy fix (v1.43.1)
+  covered appointments only; the underlying flaw is in the shared Drive merge,
+  whose array union has no concept of deletion for ANY store — so deleted Care
+  Team members, allergies, conditions, meds, labs, notes, documents, and the
+  rest all resurrected from the Drive copy on the next sign-in. New generic
+  tombstone system (`src/lib/recordTombstones.js`): **every user deletion in
+  every section** writes a tombstone keyed by the record's merge identity (the
+  exact same key the union deduplicates by — one source of truth, now shared
+  with `_mergeArrays`), and the merge post-pass enforces tombstones for every
+  store that has them. The tombstone list is encrypted, backed up, and merged
+  across devices, so **deletions propagate**: the other device drops its own
+  copy on its next sync. 18 deletion sites wired across 14 stores (Tab02
+  care-team/allergies/contacts/cards, Tab03 records, Tab04 meds, Tab08
+  care-team/milestones, Tab09 documents/ref-docs/findings, Tab10 notes, Tab11
+  ref-docs, Tab12 labs, Tab15 conditions, Tab16 procedures, Tab17 diagnostics,
+  companion cards/symptoms/med-exceptions). Stores that deliberately re-add
+  under a stable id (AI-reference entries keyed by their document) get an
+  `untombstoneRecord` on re-add so the tombstone never eats a deliberate
+  re-creation; records re-created by hand get fresh ids and are never matched.
+  New `scripts/testRecordTombstones.mjs` (`npm run test:record-tombstones`,
+  11 cases) includes a REAL-vault end-to-end merge test that first reproduces
+  the shipped bug, then proves the fix and cross-device propagation; the suite
+  rides the prebuild gate (10 suites, 315 cases). Care Team delete verified
+  live in the browser (record removed + tombstone written).
+
 ## v1.43.2 — 2026-08-03
 
 ### Infrastructure

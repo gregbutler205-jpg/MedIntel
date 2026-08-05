@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { getRecords, setRecords } from "../../store.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 
 const TYPE_COLORS = {
   "Visit Note": "#4f8ef7",
@@ -389,6 +390,7 @@ export default function Records({ onNavChange }) {
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button onClick={() => setDeleteId(null)} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => {
+                tombstoneRecord("mi_records", records.find(r => r.id === deleteId));
                 const updated = records.filter(r => r.id !== deleteId);
                 setRecordsState(updated);
                 setRecords(updated);

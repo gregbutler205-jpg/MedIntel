@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { callAI } from "../../lib/aiClient.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceC } from "../../prompts/surfaceC.js";
 import { downloadAnalysisMarkdown } from "../../lib/analysisExport.js";
@@ -360,6 +361,7 @@ export default function Notes() {
 
   function updateNote(updated) { const next = notes.map(n => n.id === updated.id ? updated : n); saveNotes(next); setNotes(next); }
   function deleteNote(id) {
+    tombstoneRecord("mi_notes", notes.find(n => n.id === id));
     const remaining = notes.filter(n => n.id !== id);
     saveNotes(remaining);
     setNotes(remaining);

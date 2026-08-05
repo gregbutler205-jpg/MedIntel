@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { PrintLabel } from "../icons.jsx";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 const LOGO_WHITE = import.meta.env.BASE_URL + "logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
@@ -463,6 +464,9 @@ export default function ProfileTab() {
     setProviderModal(null);
   }
   function deleteProvider(id) {
+    // Tombstone first: without it the Drive merge union resurrects the deleted
+    // record from the other device's copy (the Care Team duplication bug).
+    tombstoneRecord("mi_care_team", careTeam.find(x => x.id === id));
     const updated = careTeam.filter(x => x.id !== id);
     setCareTeamState(updated);
     setCareTeam(updated);
@@ -479,6 +483,7 @@ export default function ProfileTab() {
     setAllergyModal(null);
   }
   function deleteAllergy(id) {
+    tombstoneRecord("mi_allergies", allergies.find(x => x.id === id));
     const updated = allergies.filter(x => x.id !== id);
     setAllergiesState(updated);
     setAllergies(updated);
@@ -495,6 +500,7 @@ export default function ProfileTab() {
     setEcModal(null);
   }
   function deleteContact(id) {
+    tombstoneRecord("mi_emergency_contacts", contacts.find(x => x.id === id));
     const updated = contacts.filter(x => x.id !== id);
     setContactsState(updated);
     setEmergencyContacts(updated);
@@ -511,6 +517,7 @@ export default function ProfileTab() {
     setCardModal(null);
   }
   function deleteCardEntry(id) {
+    tombstoneRecord("mi_cards", cards.find(x => x.id === id));
     const updated = cards.filter(x => x.id !== id);
     setCardsState(updated);
     setCards(updated);

@@ -12,6 +12,7 @@
 // and re-encrypts before writing back.
 import * as secureStorage from "./secureStorage.js";
 import { filterTombstoned } from "./calendarSync.js";
+import { mergeKeyFor, filterTombstonedRecords, tombstonedStores } from "./recordTombstones.js";
 
 const BACKUP_FILENAME        = "insina-health-backup.json";
 const WEEKLY_BACKUP_PREFIX   = "insina-health-weekly-";
@@ -228,25 +229,32 @@ export async function mergeIntoLocal(driveData) {
     }
   }
 
-  // Post-pass: enforce appointment deletions AT THE MERGE LAYER. _mergeArrays
-  // unions local + Drive by id with no concept of deletion, so a deleted
-  // appointment still living in the Drive file (kept alive by the other
-  // device's uploads) is quietly union-ed back on every sync — the Dr. Roy
-  // resurrection. Runs AFTER the loop so the tombstone list itself has already
-  // merged (a deletion made on the other device applies here in the same sync).
-  try {
-    const raw = secureStorage.getRawCiphertext("mi_appointments");
-    if (raw != null) {
-      const plain = await secureStorage.decryptRaw(raw);
-      const appts = JSON.parse(plain);
-      if (Array.isArray(appts)) {
-        const kept = filterTombstoned(appts);
-        if (kept.length !== appts.length) {
-          await secureStorage.setEncrypted("mi_appointments", JSON.stringify(kept));
-        }
+  // Post-pass: enforce deletions AT THE MERGE LAYER. _mergeArrays unions
+  // local + Drive with no concept of deletion, so a deleted record still
+  // living in the Drive file (kept alive by the other device's uploads) is
+  // quietly union-ed back on every sync — first seen as the Dr. Roy
+  // appointment, then confirmed on Care Team / Allergies / Conditions. Runs
+  // AFTER the loop so the tombstone lists themselves have already merged (a
+  // deletion made on the other device applies here in the same sync).
+  const enforceStore = async (storeKey, filterFn) => {
+    try {
+      const raw = secureStorage.getRawCiphertext(storeKey);
+      if (raw == null) return;
+      const value = JSON.parse(await secureStorage.decryptRaw(raw));
+      if (!Array.isArray(value)) return;
+      const kept = filterFn(value);
+      if (kept.length !== value.length) {
+        await secureStorage.setEncrypted(storeKey, JSON.stringify(kept));
       }
-    }
-  } catch { /* locked or unreadable — the Tab14 loader applies the same filter */ }
+    } catch { /* locked or unreadable — never block the rest of the sync */ }
+  };
+  // Appointments keep their richer calendar-aware filter (gcal id + date/title).
+  await enforceStore("mi_appointments", filterTombstoned);
+  // Every other store with recorded deletions gets the generic id-keyed filter.
+  for (const storeKey of tombstonedStores()) {
+    if (storeKey === "mi_appointments") continue; // covered above
+    await enforceStore(storeKey, arr => filterTombstonedRecords(storeKey, arr));
+  }
 
   // Sync diagnostic (metadata only: key NAMES and counts, never values).
   // Non-managed key on purpose — it must be readable even when a diverged key
@@ -350,12 +358,13 @@ export async function uploadWeeklyBackup(token) {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-/** Merge two arrays, deduplicating by id → ts → date → stringified value. Local items win. */
+/** Merge two arrays, deduplicating by id → ts → date → stringified value
+ * (mergeKeyFor — the SAME identity record tombstones kill by). Local items win. */
 function _mergeArrays(local, drive) {
   const seen = new Map();
   // Local first → local wins on duplicate key
   for (const item of [...local, ...drive]) {
-    const key = item?.id ?? item?.ts ?? item?.date ?? JSON.stringify(item);
+    const key = mergeKeyFor(item);
     if (!seen.has(key)) seen.set(key, item);
   }
   return Array.from(seen.values());

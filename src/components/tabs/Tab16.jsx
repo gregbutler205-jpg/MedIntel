@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { PrintLabel } from "../icons.jsx";
 import CPT_COMMON from "../../data/cpt_common.json";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 
 const ANESTHESIA = ["General", "Regional", "Local", "Spinal", "Epidural", "Sedation", "None / N/A"];
 const OUTCOMES   = ["Successful", "Successful with complications", "Incomplete", "Cancelled", "Unknown"];
@@ -227,6 +228,7 @@ export default function SurgeriesTab() {
     setModal(null);
   }
   function handleDelete(id) {
+    tombstoneRecord("mi_surgeries", surgeries.find(x => x.id === id));
     const updated = surgeries.filter(x => x.id !== id);
     setSurgeries(updated);
     saveSurgeries(updated);

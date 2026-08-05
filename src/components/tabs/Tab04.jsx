@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
 import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds, getLastImportLabel } from "../../store.js";
+import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
@@ -529,6 +530,7 @@ export default function App({ onNavChange }) {
   };
 
   const handleDeleteMed = (id) => {
+    tombstoneRecord("mi_meds_full", meds.find(m => m.id === id));
     const newMeds = meds.filter(m => m.id !== id);
     setMeds(newMeds);
     setMedsFull(newMeds);
