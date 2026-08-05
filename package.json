@@ -1,11 +1,12 @@
 {
   "name": "intellitrax",
   "private": true,
-  "version": "1.43.1",
+  "version": "1.43.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "npm run test:thresholds",
+    "prebuild": "npm run test:all",
+    "test:all": "npm run test:thresholds && npm run test:onboarding && npm run test:advisory && npm run test:vault-restore && npm run test:emergency-card && npm run test:ai-filter && npm run test:question-rules && npm run test:ai-session && npm run test:appt-tombstones",
     "build": "node scripts/build.mjs",
     "build:demo": "node scripts/build-demo.mjs",
     "preview": "vite preview",

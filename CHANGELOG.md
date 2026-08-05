@@ -12,6 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.43.2 — 2026-08-03
+
+### Infrastructure
+- **Every build now enforces the full test suite.** `prebuild` ran only the
+  threshold fixtures; the other eight suites ran by discipline. New `test:all`
+  chains all nine (thresholds, onboarding, advisory, vault-restore,
+  emergency-card escaping, AI output filter, question rules, AI session
+  report, appointment tombstones — 304 cases) and `prebuild` runs it, so a
+  build cannot complete with a failing suite. No app behavior change.
+- **Intake: CL-037 + CL-038 logged from the voice-recording security review**
+  — encrypt visit audio at rest (IDB blobs sit outside the P-02 vault; spec
+  with CL-035), and transcription-provider as a gated needs-attorney decision
+  (audio stays on-device until terms/retention/consent-law review, paired
+  with CL-009).
+
 ## v1.43.1 — 2026-08-03
 
 ### Fixed
