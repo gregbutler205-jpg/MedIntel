@@ -286,6 +286,20 @@ The Today screen surfaces proactive pattern flags (BP drifting up, a trough tren
 surfacing a concern the user did not ask about cross from display into interpretation? Feature:
 a defined boundary for what proactive flags may say, aligned with DEC-002.
 
+**CL-038 - Transcription provider is a gated decision: audio stays on-device until it is
+made.** Bucket 1, needs-attorney. Owner: Greg + attorney. Logged 2026-08-03 from the
+voice-recording security review. Visit-capture transcription currently defers (stubbed) —
+audio never leaves the phone. Turning it on means shipping recorded clinical conversations to
+a speech-to-text service: the single largest data exposure this product could take on.
+Decision inputs before ANY provider ships: provider retention and model-training terms (no
+BAA on consumer APIs); the fact that a voice defeats P-01 identity minimization (spoken names
+and voiceprints identify the patient and clinician regardless of payload pseudonymization);
+bystander voices captured without consent; and interaction with CL-009 (MS/LA recording-
+consent verification, also needs-attorney — the two should go to the attorney together).
+Standing rule until decided: transcription remains OFF and audio remains device-local. Same
+gating discipline as the tripwire thresholds (DEC-026/DEC-044). Feature: an approved
+transcription pathway with documented provider terms — or a recorded refusal.
+
 ### Data model and sync
 
 **CL-011 - Schema versioning and backup migration.** Bucket 2. Owner: Design, then Code.
@@ -366,6 +380,20 @@ entries (A-08-style, backup-gated), the Drive/folder backup payload treatment of
 from backups), and Emergency Card print + Tab02 read paths going async. Feature: an
 encrypted-blob store for large binaries with quota telemetry, leaving the localStorage vault
 architecture untouched.
+
+**CL-037 - Encrypt visit-recording audio at rest (CL-035 companion).** Bucket 2, then Code.
+Owner: Design (LLM), then Claude Code. Logged 2026-08-03 from the voice-recording security
+review. Doctor-visit audio (`visitCapture.js`) is stored as raw blobs in IndexedDB — OUTSIDE
+the P-02 vault, which encrypts managed `mi_*` localStorage only. That makes the app's single
+most sensitive artifact (a clinician's voice discussing the patient's health, possibly
+bystanders) its least-protected data on a lost or stolen phone. Current mitigations are real
+and stay: device-local only (audio never rides Drive/folder backups), 30-day auto-delete
+after summarization, consent-gated capture. Fix shape: encrypt blobs with the vault DEK
+before the IDB write and decrypt on read — same encrypted-blob store design as CL-035's
+card-image migration, so the two should be specced together. Design must cover: playback
+path decrypt, the locked-vault state (no DEK → recording buffered or refused, decided
+explicitly), and migration of any existing unencrypted blobs. Feature: visit audio encrypted
+at rest under the vault key.
 
 ### Modules and gaps
 
