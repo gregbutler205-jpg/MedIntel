@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.44.1 — 2026-08-03
+
+### Fixed
+- **Production deploy unblocked: portable test imports.**
+  `scripts/testOnboarding.mjs` imported its modules through hardcoded absolute
+  paths (`file:///C:/Documents/.../src/lib/...`) that resolve only on the
+  author's Windows machine. Harmless while CI's build ran the threshold suite
+  alone — but v1.43.2 put the full suite in `prebuild`, so the first CI build
+  after it failed at the Build step on Linux and the GitHub Pages deploy never
+  ran (v1.44.0 built and pushed but did not go live). All 10 imports now use
+  `new URL("../src/...", import.meta.url)`, which resolves relative to the test
+  file on any OS. Test-only change; verified all 10 suites (315 cases) pass and
+  the build completes.
+
+---
+
 ## v1.44.0 — 2026-08-03
 
 ### Fixed

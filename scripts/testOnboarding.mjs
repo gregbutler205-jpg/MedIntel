@@ -26,8 +26,8 @@ globalThis.addEventListener = () => {};
 globalThis.removeEventListener = () => {};
 globalThis.dispatchEvent = () => {};
 
-const state = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingState.js");
-const cfg = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/config/onboardingConfig.js");
+const state = await import(new URL("../src/lib/onboardingState.js", import.meta.url));
+const cfg = await import(new URL("../src/config/onboardingConfig.js", import.meta.url));
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -140,10 +140,10 @@ check("§3.1/§6: five goals, each mapped to an artifact; default goal is the em
 
 // ═══ WP2: extraction, staleness, staging, intake ═════════════════════════════
 
-const staging = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingStaging.js");
-const fixture = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/fixtureExtraction.js");
-const extraction = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/extraction.js");
-const intake = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingIntake.js");
+const staging = await import(new URL("../src/lib/onboardingStaging.js", import.meta.url));
+const fixture = await import(new URL("../src/lib/fixtureExtraction.js", import.meta.url));
+const extraction = await import(new URL("../src/lib/extraction.js", import.meta.url));
+const intake = await import(new URL("../src/lib/onboardingIntake.js", import.meta.url));
 
 const NOW = new Date("2026-07-15T12:00:00");
 
@@ -316,8 +316,8 @@ check("§4.3: scanned-PDF detection threshold and page ranges", () => {
 
 // ═══ WP3: duplicates, conflicts, confirmed record writes ═════════════════════
 
-const dup = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingDuplicates.js");
-const confirm = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/onboardingConfirm.js");
+const dup = await import(new URL("../src/lib/onboardingDuplicates.js", import.meta.url));
+const confirm = await import(new URL("../src/lib/onboardingConfirm.js", import.meta.url));
 
 // ── §5.3 normalization ────────────────────────────────────────────────────────
 check("§5.3: drug names resolve to ingredient level (brand, case, suffixes)", () => {
@@ -490,7 +490,7 @@ check("F-04: a bare single-item confirm is unaffected — a med still writes (pe
 
 // ═══ WP4: first-artifact engine (§6) ═════════════════════════════════════════
 
-const engine = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/artifactEngine.js");
+const engine = await import(new URL("../src/lib/artifactEngine.js", import.meta.url));
 
 function seedBasics() {
   localStorage.clear();
@@ -588,7 +588,7 @@ check("confirm path: a confirmed allergy revokes an earlier NKDA assertion", () 
 
 // ═══ WP5: ongoing task engine (§7) + storage prompt (§8) ═════════════════════
 
-const tasksMod = await import("file:///C:/Documents/Medical/IntelliTrax/Code/src/lib/taskEngine.js");
+const tasksMod = await import(new URL("../src/lib/taskEngine.js", import.meta.url));
 
 function seedForTasks(goal = "emergency_packet") {
   localStorage.clear();
