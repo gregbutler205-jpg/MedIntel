@@ -1,11 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SearchPopup.jsx — Global search across all health data
-// Keyword queries search localStorage directly (no tokens).
-// Natural-language questions route to AI Analysis (uses tokens).
+// SearchPopup.jsx — Global search across everything already in Insina
+// Every query — keyword OR question — is answered from localStorage. No tokens,
+// no network: "which doctor did my EGD", "when was my last cervical MRI", and
+// "what's my dosage of tacrolimus" are lookups, and the answers are already in
+// the record (src/lib/recordQuery.js). AI is an explicit secondary choice, for
+// questions that genuinely need reasoning rather than retrieval.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from "react";
 import { setPendingSelect } from "../lib/searchSelect.js";
+import { extractTerms, matchesTerms, buildDirectAnswer, sortByDate, detectIntent } from "../lib/recordQuery.js";
 
 const C = {
   overlay: "rgba(0,0,0,.72)",
@@ -40,156 +44,99 @@ function safeRead(key, fb) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fb; } catch { return fb; }
 }
 
-function includes(val, q) {
-  // String() guard: fields like severity can be numeric — .toLowerCase()
-  // on a number would throw and kill the whole search.
-  return String(val ?? "").toLowerCase().includes(q);
-}
-
-function snippet(text, query, radius = 100) {
-  if (!text) return "";
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return text.slice(0, radius * 2) + (text.length > radius * 2 ? "…" : "");
-  const s = Math.max(0, idx - radius);
-  const e = Math.min(text.length, idx + query.length + radius);
-  return (s > 0 ? "…" : "") + text.slice(s, e) + (e < text.length ? "…" : "");
-}
-
-// Detect natural-language questions vs. keyword searches.
-// Rules:
-//   1. Ends with "?" → always a question
-//   2. Single-word queries are always treated as keywords (medication names,
-//      lab names, condition names, etc. — never route those to AI)
-//   3. Multi-word queries starting with a clear question-word → AI
-function isQuestion(query) {
-  const q = query.trim().toLowerCase();
-  if (q.endsWith("?")) return true;
-  if (!q.includes(" ")) return false;   // single word → keyword search
-  return /^(what|why|how|when|where|who|is|are|was|were|has|have|had|does|do|did|can|could|should|would|will|tell me|explain|show me|give me|compare|analyze)\b/.test(q);
+function snippetOf(text, terms) {
+  const t = terms.find(x => String(text ?? "").toLowerCase().includes(x));
+  return t ? snippet(String(text), t) : "";
 }
 
 // ── Core search ───────────────────────────────────────────────────────────────
+// Term-based AND matching: every content term must appear somewhere in the
+// record. The old contiguous-substring match meant "cervical MRI" could not
+// find a study named "MRI Cervical Spine", and any question-shaped query
+// matched nothing at all. Each result carries its source `record` so the
+// answer layer can read fields (provider, dose, value) straight off it.
 function searchAll(query) {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
+  const terms = extractTerms(query);
+  if (!terms.length) return [];
   const results = [];
+  const add = (category, fields, record, shape) => {
+    if (matchesTerms(fields, terms)) results.push({ category, record, ...shape });
+  };
 
-  // Labs
-  safeRead("mi_labs", []).forEach(l => {
-    if ([l.name, l.value, l.notes, l.date, l.refRange].some(f => includes(f, q))) {
-      results.push({
-        category: "labs",
-        title:    l.name || "Lab Result",
-        subtitle: [
-          l.value != null ? `${l.value}${l.unit ? " " + l.unit : ""}` : null,
-          l.refRange ? `Ref: ${l.refRange}` : null,
-          l.flag ? "⚠ Flagged" : null,
-          l.date,
-        ].filter(Boolean).join(" · "),
-        date: l.date || "",
-      });
-    }
+  safeRead("mi_labs", []).forEach(l => add("labs",
+    [l.name, l.value, l.notes, l.date, l.refRange, l.category, l.facility], l, {
+      title: l.name || "Lab Result",
+      subtitle: [
+        l.value != null ? `${l.value}${l.unit ? " " + l.unit : ""}` : null,
+        l.refRange ? `Ref: ${l.refRange}` : null,
+        l.flag ? "⚠ Flagged" : null,
+        l.date,
+      ].filter(Boolean).join(" · "),
+      date: l.date || "",
+    }));
+
+  safeRead("mi_meds_full", []).forEach(m => add("medications",
+    [m.name, m.brand, m.dose, m.strength, m.frequency, m.notes, m.category, m.prescriber, m.route], m, {
+      title: m.name || "Medication",
+      subtitle: [m.dose || m.strength, m.frequency, m.status !== "active" ? m.status : null].filter(Boolean).join(" · "),
+      date: "",
+    }));
+
+  safeRead("mi_conditions", []).forEach(c => add("conditions",
+    [c.name, c.notes, c.status, c.severity, c.since], c, {
+      title: c.name || "Condition",
+      subtitle: [c.status, c.since ? "Since " + c.since : null].filter(Boolean).join(" · "),
+      date: c.since || "",
+    }));
+
+  safeRead("mi_appointments", []).forEach(a => add("appointments",
+    [a.title, a.provider, a.facility, a.notes, a.type, a.address, a.specialty, a.date], a, {
+      title: a.title || "Appointment",
+      subtitle: [a.provider, a.facility, a.date].filter(Boolean).join(" · "),
+      date: a.date || "",
+    }));
+
+  safeRead("mi_symptoms", []).forEach(sy => {
+    const name = sy.symptom || sy.name;
+    add("symptoms", [name, sy.note, sy.notes, sy.location, sy.severity, sy.date], sy, {
+      title: name || "Symptom",
+      subtitle: [sy.severity != null && sy.severity !== "" ? `Severity ${sy.severity}` : null, sy.date].filter(Boolean).join(" · "),
+      date: sy.date || "",
+    });
   });
 
-  // Medications
-  safeRead("mi_meds_full", []).forEach(m => {
-    if ([m.name, m.brand, m.dose, m.frequency, m.notes, m.category, m.prescriber].some(f => includes(f, q))) {
-      results.push({
-        category: "medications",
-        title:    m.name || "Medication",
-        subtitle: [m.dose, m.frequency, m.status !== "active" ? m.status : null].filter(Boolean).join(" · "),
-        date: "",
-      });
-    }
-  });
+  safeRead("mi_surgeries", []).forEach(sg => add("surgeries",
+    [sg.procedure, sg.surgeon, sg.facility, sg.notes, sg.outcome, sg.date], sg, {
+      title: sg.procedure || "Procedure",
+      subtitle: [sg.surgeon, sg.facility, sg.date].filter(Boolean).join(" · "),
+      date: sg.date || "",
+    }));
 
-  // Conditions
-  safeRead("mi_conditions", []).forEach(c => {
-    if ([c.name, c.notes, c.status, c.severity].some(f => includes(f, q))) {
-      results.push({
-        category: "conditions",
-        title:    c.name || "Condition",
-        subtitle: [c.status, c.since ? "Since " + c.since : null].filter(Boolean).join(" · "),
-        date: c.since || "",
-      });
-    }
-  });
+  safeRead("mi_diagnostics", []).forEach(d => add("diagnostics",
+    [d.name, d.type, d.bodyPart, d.orderedBy, d.readingProvider, d.impression, d.relatedCondition, d.facility, d.date], d, {
+      title: d.name || [d.type, d.bodyPart].filter(Boolean).join(" ") || "Diagnostic study",
+      subtitle: [d.readingProvider || d.orderedBy, d.facility, d.date].filter(Boolean).join(" · "),
+      date: d.date || "",
+    }));
 
-  // Appointments
-  safeRead("mi_appointments", []).forEach(a => {
-    if ([a.title, a.provider, a.facility, a.notes, a.type, a.address].some(f => includes(f, q))) {
-      results.push({
-        category: "appointments",
-        title:    a.title || "Appointment",
-        subtitle: [a.provider, a.facility, a.date].filter(Boolean).join(" · "),
-        date: a.date || "",
-      });
-    }
-  });
-
-  // Symptoms — the tracker stores the name as `symptom` and notes as `note`;
-  // older/companion entries may carry `name`/`notes`. Search both.
-  safeRead("mi_symptoms", []).forEach(s => {
-    const name = s.symptom || s.name;
-    if ([name, s.note, s.notes, s.location, s.severity].some(f => includes(f, q))) {
-      results.push({
-        category: "symptoms",
-        title:    name || "Symptom",
-        subtitle: [s.severity != null && s.severity !== "" ? `Severity ${s.severity}` : null, s.date].filter(Boolean).join(" · "),
-        date: s.date || "",
-      });
-    }
-  });
-
-  // Procedures (store keeps the legacy mi_surgeries key)
-  safeRead("mi_surgeries", []).forEach(s => {
-    if ([s.procedure, s.surgeon, s.facility, s.notes, s.outcome].some(f => includes(f, q))) {
-      results.push({
-        category: "surgeries",
-        title:    s.procedure || "Procedure",
-        subtitle: [s.surgeon, s.facility, s.date].filter(Boolean).join(" · "),
-        date: s.date || "",
-      });
-    }
-  });
-
-  // Diagnostics (observational studies — imaging, EKG, EMG, …)
-  safeRead("mi_diagnostics", []).forEach(d => {
-    if ([d.name, d.orderedBy, d.readingProvider, d.impression, d.relatedCondition, d.facility].some(f => includes(f, q))) {
-      results.push({
-        category: "diagnostics",
-        title:    d.name || "Diagnostic study",
-        subtitle: [d.readingProvider, d.facility, d.date].filter(Boolean).join(" · "),
-        date: d.date || "",
-      });
-    }
-  });
-
-  // Reference documents (name + full text with snippet)
   safeRead("mi_ref_docs", []).forEach(d => {
-    const nameHit = includes(d.name, q);
-    const textHit = includes(d.text, q);
-    if (nameHit || textHit) {
-      results.push({
-        category: "documents",
-        title:    d.name || "Document",
-        subtitle: textHit ? snippet(d.text, query) : "Matched document name",
-        date: d.addedAt ? d.addedAt.slice(0, 10) : "",
-      });
-    }
+    if (!matchesTerms([d.name, d.text], terms)) return;
+    results.push({
+      category: "documents", record: d,
+      title: d.name || "Document",
+      subtitle: snippetOf(d.text, terms) || "Matched document name",
+      date: d.addedAt ? String(d.addedAt).slice(0, 10) : "",
+    });
   });
 
-  // AI conversation history (free — localStorage only)
   safeRead("insina_ai_messages", []).forEach((m, i) => {
-    if (includes(m.text, q)) {
-      results.push({
-        category: "aiHistory",
-        title:    m.role === "user" ? "Your question" : "AI response",
-        subtitle: snippet(m.text, query, 80),
-        date: "",
-        msgIndex: i,
-      });
-    }
+    if (!matchesTerms([m.text], terms)) return;
+    results.push({
+      category: "aiHistory", record: m,
+      title: m.role === "user" ? "Your question" : "AI response",
+      subtitle: snippetOf(m.text, terms),
+      date: "", msgIndex: i,
+    });
   });
 
   return results;
@@ -201,7 +148,7 @@ function searchAll(query) {
 export default function SearchPopup({ onClose, onNavChange }) {
   const [query,   setQuery]   = useState("");
   const [results, setResults] = useState([]);
-  const [aiMode,  setAiMode]  = useState(false);
+  const [answer,  setAnswer]  = useState(null);
   const inputRef = useRef(null);
 
   // Focus input on open
@@ -214,12 +161,14 @@ export default function SearchPopup({ onClose, onNavChange }) {
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
-  // Run search on query change
+  // Every query searches the record — questions included. The record is the
+  // answer source; AI is a separate, explicit action the user can still take.
   useEffect(() => {
     const q = query.trim();
-    if (!q) { setResults([]); setAiMode(false); return; }
-    if (isQuestion(q)) { setAiMode(true); setResults([]); }
-    else               { setAiMode(false); setResults(searchAll(q)); }
+    if (!q) { setResults([]); setAnswer(null); return; }
+    const found = searchAll(q);
+    setResults(found);
+    setAnswer(buildDirectAnswer(q, found));
   }, [query]);
 
   function handleAskAI() {
@@ -263,8 +212,12 @@ export default function SearchPopup({ onClose, onNavChange }) {
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter" && aiMode) handleAskAI(); }}
-            placeholder="Search your health data, or ask a question…"
+            onKeyDown={e => {
+              if (e.key !== "Enter") return;
+              if (answer) handleResult(answer.result.category, answer.result);
+              else if (results.length === 0 && query.trim()) handleAskAI();
+            }}
+            placeholder="Search or ask: which doctor did my EGD, dosage of tacrolimus…"
             style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: C.p, fontSize: 14, fontFamily: "'Sora',sans-serif" }}
           />
           {query && (
@@ -276,41 +229,49 @@ export default function SearchPopup({ onClose, onNavChange }) {
         {/* ── Results ── */}
         <div style={{ overflowY: "auto", flex: 1 }}>
 
-          {/* AI question card */}
-          {aiMode && q && (
-            <div style={{ padding: "14px 18px 8px" }}>
+          {/* Direct answer — read straight out of the record, no AI, no tokens */}
+          {answer && (
+            <div style={{ padding: "14px 18px 4px" }}>
               <button
-                onClick={handleAskAI}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: "linear-gradient(135deg,rgba(79,142,247,.12),rgba(167,139,250,.08))", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 10, cursor: "pointer", textAlign: "left" }}
+                onClick={() => handleResult(answer.result.category, answer.result)}
+                style={{ width: "100%", display: "flex", alignItems: "flex-start", gap: 13, padding: "13px 15px", background: "rgba(16,185,129,.07)", border: `1px solid rgba(16,185,129,.28)`, borderRadius: 10, cursor: "pointer", textAlign: "left" }}
               >
-                <span style={{ fontSize: 18, color: C.blue, flexShrink: 0 }}>✦</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: C.p, fontWeight: 600, marginBottom: 3 }}>Ask AI: "{q}"</div>
-                  <div style={{ fontSize: 10, color: C.dim, fontFamily: "'DM Mono',monospace" }}>Opens AI Analysis with your full health context · uses tokens</div>
+                <span style={{ fontSize: 15, color: C.green, flexShrink: 0, marginTop: 1 }}>✓</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, color: C.p, fontWeight: 600, marginBottom: 3, lineHeight: 1.45 }}>{answer.text}</div>
+                  <div style={{ fontSize: 10, color: C.dim, fontFamily: "'DM Mono',monospace" }}>
+                    {answer.sourceLabel} · {CATEGORIES[answer.result.category]?.label} · click to open
+                  </div>
                 </div>
-                <span style={{ color: C.blue, fontSize: 14 }}>→</span>
               </button>
-              <div style={{ fontSize: 10, color: C.ghost, fontFamily: "'DM Mono',monospace", marginTop: 8, paddingLeft: 2 }}>
-                Press <strong style={{ color: C.dim }}>Enter</strong> to open, or refine your query for a keyword search
-              </div>
             </div>
           )}
 
           {/* Keyword results grouped by category */}
-          {!aiMode && q && total === 0 && (
-            <div style={{ padding: "48px 18px", textAlign: "center", color: C.ghost, fontSize: 12, fontFamily: "'DM Mono',monospace" }}>
-              No results found for "{q}"
+          {q && total === 0 && (
+            <div style={{ padding: "34px 18px 26px", textAlign: "center" }}>
+              <div style={{ color: C.ghost, fontSize: 12, fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+                Nothing in your record matches "{q}"
+              </div>
+              <button
+                onClick={handleAskAI}
+                style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "10px 16px", background: "linear-gradient(135deg,rgba(79,142,247,.12),rgba(167,139,250,.08))", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 10, cursor: "pointer", color: C.p, fontSize: 12, fontFamily: "'Sora',sans-serif" }}
+              >
+                <span style={{ color: C.blue, fontSize: 14 }}>✦</span>
+                Ask AI Analysis instead
+                <span style={{ color: C.dim, fontSize: 10, fontFamily: "'DM Mono',monospace" }}>· uses tokens</span>
+              </button>
             </div>
           )}
 
-          {!aiMode && Object.entries(grouped).map(([cat, items]) => {
+          {Object.entries(grouped).map(([cat, items]) => {
             const cfg = CATEGORIES[cat];
             return (
               <div key={cat} style={{ padding: "12px 18px 4px" }}>
                 <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: cfg.color, fontFamily: "'DM Mono',monospace", marginBottom: 6, paddingLeft: 2 }}>
                   {cfg.label}
                 </div>
-                {items.slice(0, 6).map((r, i) => (
+                {sortByDate(items).slice(0, 6).map((r, i) => (
                   <button
                     key={i}
                     onClick={() => handleResult(cat, r)}
@@ -342,22 +303,23 @@ export default function SearchPopup({ onClose, onNavChange }) {
               </svg>
               <div style={{ fontSize: 12, color: C.ghost, fontFamily: "'DM Mono',monospace", lineHeight: 2 }}>
                 Search labs, medications, conditions, appointments,<br />
-                symptoms, surgeries, documents and more.<br />
-                <span style={{ color: C.blue }}>Ask a question to open AI Analysis.</span>
+                symptoms, procedures, diagnostics, documents and more.<br />
+                <span style={{ color: C.green }}>Ask in plain words — answered from your record.</span>
               </div>
             </div>
           )}
         </div>
 
         {/* ── Footer ── */}
-        {!aiMode && total > 0 && (
+        {total > 0 && (
           <div style={{ padding: "8px 18px", borderTop: `1px solid ${C.b2}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 10, color: C.ghost, fontFamily: "'DM Mono',monospace" }}>
               {total} result{total !== 1 ? "s" : ""} · click any to open that section
             </span>
-            <span style={{ fontSize: 10, color: C.ghost, fontFamily: "'DM Mono',monospace" }}>
-              ↑↓ navigate · Enter select
-            </span>
+            <button onClick={handleAskAI} title="Send this question to AI Analysis (uses tokens)"
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: C.blue, fontFamily: "'DM Mono',monospace", padding: 0 }}>
+              ✦ Ask AI instead
+            </button>
           </div>
         )}
       </div>

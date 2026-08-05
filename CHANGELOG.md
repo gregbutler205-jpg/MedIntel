@@ -12,6 +12,38 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.45.0 — 2026-08-05
+
+### Changed
+- **Search now answers from your record instead of handing questions to AI.**
+  Search is a search of what is already in Insina — "which doctor did my EGD",
+  "when was my last cervical MRI", "what's my dosage of tacrolimus" are lookups
+  whose answers are already stored. Two defects made that impossible: (1) any
+  question-shaped query was routed straight to AI Analysis and the local record
+  was **never searched** (`setResults([])`), and (2) matching required the
+  ENTIRE query as one contiguous substring, so "cervical MRI" could not match a
+  study named "MRI Cervical Spine" and "which doctor did my EGD" — whose lead
+  word wasn't even in the question-word list — searched for that literal string
+  and returned nothing. New `src/lib/recordQuery.js` strips question
+  scaffolding to content terms, matches with AND semantics across every field,
+  detects the question shape lexically (who / when / dose / value, plus
+  last-vs-first), and reads the answer off the matched record. Search shows a
+  direct answer card with its source record (click to open) above the usual
+  grouped results — no tokens, no network, works offline.
+- **AI is now an explicit choice, never automatic.** It appears as "Ask AI
+  instead" in the footer, and as the suggested next step only when nothing in
+  the record matches.
+- **Retrieval only, never invention:** if the record has no provider for that
+  procedure, no dose for that drug, or no matching entry, there is no answer
+  card — results alone. A discontinued medication is always answered with its
+  status ("marked inactive"), never as if current. New
+  `scripts/testRecordQuery.mjs` (`npm run test:record-query`, 33 cases) pins
+  all three of the questions above end-to-end plus the never-fabricate rules;
+  the prebuild gate now runs 11 suites / 348 cases. Verified live in the
+  browser: all three questions answered from seeded records with AI untouched.
+
+---
+
 ## v1.44.1 — 2026-08-03
 
 ### Fixed

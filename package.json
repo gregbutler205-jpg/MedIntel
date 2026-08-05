@@ -1,12 +1,12 @@
 {
   "name": "intellitrax",
   "private": true,
-  "version": "1.44.1",
+  "version": "1.45.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "prebuild": "npm run test:all",
-    "test:all": "npm run test:thresholds && npm run test:onboarding && npm run test:advisory && npm run test:vault-restore && npm run test:emergency-card && npm run test:ai-filter && npm run test:question-rules && npm run test:ai-session && npm run test:appt-tombstones && npm run test:record-tombstones",
+    "test:all": "npm run test:thresholds && npm run test:onboarding && npm run test:advisory && npm run test:vault-restore && npm run test:emergency-card && npm run test:ai-filter && npm run test:question-rules && npm run test:ai-session && npm run test:appt-tombstones && npm run test:record-tombstones && npm run test:record-query",
     "build": "node scripts/build.mjs",
     "build:demo": "node scripts/build-demo.mjs",
     "preview": "vite preview",
@@ -20,6 +20,7 @@
     "test:ai-session": "node scripts/testAiSessionReport.mjs",
     "test:appt-tombstones": "node scripts/testApptTombstones.mjs",
     "test:record-tombstones": "node scripts/testRecordTombstones.mjs",
+    "test:record-query": "node scripts/testRecordQuery.mjs",
     "test:daily-limit": "node scripts/testDailyQuestionLimit.mjs"
   },
   "dependencies": {
