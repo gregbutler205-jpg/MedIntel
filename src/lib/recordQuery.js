@@ -35,8 +35,25 @@ const STOPWORDS = new Set([
   "get", "got", "go", "went", "see", "saw", "tell", "show", "give", "about",
   "doctor", "dr", "physician", "provider", "surgeon", "performed", "perform",
   "ordered", "read", "date", "level", "levels", "value", "result", "results",
+  "phone", "number", "numbers", "call", "contact", "fax", "address", "hours",
   "please", "s",
 ]);
+
+// Category words name a SECTION rather than a record's contents: nothing inside
+// a pharmacy entry literally says "pharmacy", so "what's my pharmacy phone
+// number" has no usable content terms at all. Treat the section word as a hint
+// — it selects the store to answer from instead of being matched against text.
+const CATEGORY_HINTS = {
+  pharmacy: "pharmacies", pharmacies: "pharmacies", pharmacist: "pharmacies", drugstore: "pharmacies",
+};
+
+/** The section a query names outright, or null. */
+export function detectCategoryHint(query) {
+  for (const w of String(query ?? "").toLowerCase().split(/[^a-z]+/)) {
+    if (CATEGORY_HINTS[w]) return CATEGORY_HINTS[w];
+  }
+  return null;
+}
 
 /** Content terms: the query with question scaffolding and punctuation removed. */
 export function extractTerms(query) {
@@ -45,7 +62,7 @@ export function extractTerms(query) {
     .replace(/[^\p{L}\p{N}\s.'-]/gu, " ")   // keep decimals, apostrophes, hyphens
     .split(/\s+/)
     .map(t => t.replace(/^[.'-]+|[.'-]+$/g, ""))
-    .filter(t => t && !STOPWORDS.has(t));
+    .filter(t => t && !STOPWORDS.has(t) && !CATEGORY_HINTS[t]);
 }
 
 /**
@@ -65,6 +82,11 @@ export function detectIntent(query) {
     kind = "when";
   } else if (/\b(dose|dosage|dosing|how much|how many)\b/.test(q)) {
     kind = "dose";
+  } else if (detectCategoryHint(q) === "pharmacies"
+             || (/\b(phone|number|call|contact|fax|address)\b/.test(q) && /\b(pharmacy|pharmacies|drugstore)\b/.test(q))) {
+    // Contact lookup for a place, not a clinical value. Checked BEFORE the
+    // value branch, which would otherwise claim "…phone number" via "number".
+    kind = "contact";
   } else if (/\b(level|value|result|count|reading|number)s?\b/.test(q)) {
     kind = "value";
   }
@@ -145,6 +167,21 @@ export function buildDirectAnswer(query, results) {
     const freq = cand.record.frequency ? `, ${cand.record.frequency}` : "";
     const inactive = cand.record.status && cand.record.status !== "active" ? ` — marked ${cand.record.status}` : "";
     return { text: `${cand.title}: ${dose}${freq}${inactive}`, sourceLabel: "From your medication list", result: cand };
+  }
+
+  if (intent.kind === "contact") {
+    // Pharmacy contact lookups ("what's my pharmacy's phone number") — the
+    // primary pharmacy wins, then whatever matched first.
+    const cands = ordered.filter(r => r.category === "pharmacies");
+    const cand = cands.find(r => r.record?.primary) || cands[0];
+    if (!cand) return null;
+    const bits = [cand.record.phone, cand.record.address].filter(Boolean);
+    if (!bits.length) return null;
+    return {
+      text: `${cand.title}: ${bits.join(" · ")}`,
+      sourceLabel: cand.record.primary ? "Your primary pharmacy" : "From your record",
+      result: cand,
+    };
   }
 
   if (intent.kind === "value") {

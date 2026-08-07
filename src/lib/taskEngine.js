@@ -169,7 +169,7 @@ export function evaluateTasks(now = new Date()) {
     key: "T7", rule: "T7",
     benefit: "Refill reminders can tell you where to call.",
     reason: "Add your pharmacy — helps with refill tracking.",
-    minutes: 1, route: "medications", ctaLabel: "Add pharmacy",
+    minutes: 1, route: "profile", ctaLabel: "Add pharmacy",
   });
 
   // T8 — unverified medication names from free-text manual entry

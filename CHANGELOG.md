@@ -12,6 +12,38 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.46.0 — 2026-08-05
+
+### Added
+- **Pharmacy contact information on the Patient Profile.** Until now "pharmacy"
+  existed only as a free-text label on each medication ("CVS #5777") — it named
+  where a fill came from but carried no phone, address, or hours, so there was
+  nowhere to keep the number you actually call about a refill. New Pharmacy card
+  on the Patient Profile tab (beside Emergency Contacts) with add / edit /
+  delete: name, type (Retail, Mail-order, Specialty, Hospital, Compounding),
+  phone, fax, address, hours, notes, and a **Primary** flag. Multiple pharmacies
+  are supported deliberately — transplant patients commonly use a local retail
+  pharmacy plus a mail-order or specialty pharmacy for immunosuppressants.
+  Stored under the managed `mi_pharmacies` key, so it is encrypted at rest,
+  carried in Drive/folder backups, and covered by the v1.44.0 deletion
+  tombstones. Pharmacies also print in the Patient Profile report.
+- **Search finds and answers from it.** "what's my pharmacy phone number" now
+  returns a direct answer card — the primary pharmacy first — alongside the
+  usual results. This needed a new **category-hint** mechanism in
+  `recordQuery.js`: nothing *inside* a pharmacy entry contains the word
+  "pharmacy", so a pure term match found nothing; a section word now selects
+  the store to answer from instead of being matched against record text.
+  Contact intent is checked ahead of the value branch (which would otherwise
+  claim "…phone number" via "number"); clinical value lookups are unchanged.
+  9 new cases (`test:record-query`, 42 total; 11 suites / 357 overall).
+
+### Fixed
+- The onboarding "Add your pharmacy" task (T7) routed to the Medications tab,
+  where pharmacy contact details could not be entered. It now routes to the
+  Patient Profile, where the field actually lives.
+
+---
+
 ## v1.45.0 — 2026-08-05
 
 ### Changed

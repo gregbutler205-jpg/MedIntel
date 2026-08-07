@@ -101,6 +101,12 @@ export function setAllergies(v) { setStore('allergies', v); }
 
 export function getEmergencyContacts() { return getStore('emergency_contacts') ?? []; }
 export function setEmergencyContacts(v) { setStore('emergency_contacts', v); }
+// Pharmacies (mi_pharmacies): the patient's own pharmacy contacts — retail,
+// mail-order, and specialty. Separate from the free-text `pharmacy` label on
+// each medication, which names WHERE a fill came from but carries no phone or
+// address. Managed mi_* key: encrypted at rest, synced, tombstone-aware.
+export function getPharmacies() { return getStore('pharmacies') ?? []; }
+export function setPharmacies(v) { setStore('pharmacies', v); }
 
 // Diagnostics (observational studies: imaging, EKG, EMG, …). Supersedes the
 // old 'imaging' store — migration v3 moves mi_imaging entries here. The

@@ -6,7 +6,7 @@
 // matching bug stays fixed. Run: npm run test:record-query
 
 import {
-  extractTerms, detectIntent, matchesTerms, sortByDate, buildDirectAnswer,
+  extractTerms, detectIntent, matchesTerms, sortByDate, buildDirectAnswer, detectCategoryHint,
 } from "../src/lib/recordQuery.js";
 
 let pass = 0, fail = 0;
@@ -85,6 +85,28 @@ const res = (category, record, title, date) => ({ category, record, title, date:
   const aInactive = buildDirectAnswer("dosage of prednisone", [inactive]);
   ok(aInactive && aInactive.text.includes("marked inactive"),
     "a discontinued medication is answered WITH its status, never as if current");
+}
+
+// ── Pharmacy contact lookups (section words, not record contents) ────────────
+// Nothing inside a pharmacy entry literally contains the word "pharmacy", so a
+// pure term match finds nothing. The section word acts as a hint instead.
+{
+  ok(detectCategoryHint("what's my pharmacy phone number") === "pharmacies", "'pharmacy' names a section");
+  ok(detectCategoryHint("when was my last MRI") === null, "no section word → no hint");
+  ok(extractTerms("what's my pharmacy phone number").length === 0, "contact scaffolding + section word leave no content terms");
+  ok(detectIntent("what's my pharmacy phone number").kind === "contact",
+    "contact intent wins over the value branch (which would grab 'number')");
+  ok(detectIntent("what was my last potassium level").kind === "value", "clinical value lookups are unaffected");
+
+  const primary = { category: "pharmacies", record: { name: "CVS #5777", phone: "(601)-555-0142", address: "1200 Hardy St", primary: true }, title: "CVS #5777", date: "" };
+  const mail = { category: "pharmacies", record: { name: "Optum Rx", phone: "(800)-555-0199", type: "Mail-order" }, title: "Optum Rx", date: "" };
+  const a = buildDirectAnswer("what's my pharmacy phone number", [mail, primary]);
+  ok(a && a.text.startsWith("CVS #5777"), `the PRIMARY pharmacy answers, not list order (got: ${a && a.text})`);
+  ok(a && a.sourceLabel === "Your primary pharmacy", "labelled as the primary pharmacy");
+  ok(a && a.text.includes("(601)-555-0142"), "phone comes from the record");
+
+  const noPhone = { category: "pharmacies", record: { name: "Corner Drug" }, title: "Corner Drug", date: "" };
+  ok(buildDirectAnswer("pharmacy phone number", [noPhone]) === null, "no phone or address recorded → no answer card");
 }
 
 // ── Sorting helper ───────────────────────────────────────────────────────────

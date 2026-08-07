@@ -8,6 +8,7 @@ import {
   getCareTeam, setCareTeam,
   getAllergies, setAllergies,
   getEmergencyContacts, setEmergencyContacts,
+  getPharmacies, setPharmacies,
   getDiagnostics,
   getConditions, getSurgeries, getMedsFull, getLatestReading,
 } from "../../store.js";
@@ -237,6 +238,67 @@ function ECModal({ contact, onSave, onClose }) {
   );
 }
 
+// ── Pharmacy Modal ─────────────────────────────────────────────────────────────
+// Transplant patients typically use more than one: a local retail pharmacy plus
+// a mail-order or specialty pharmacy that fills the immunosuppressants. Each
+// gets its own contact details rather than a single free-text field.
+const PHARMACY_TYPES = ["Retail", "Mail-order", "Specialty", "Hospital / Outpatient", "Compounding", "Other"];
+const BLANK_PHARMACY = { id:null, name:"", type:"Retail", phone:"", fax:"", address:"", hours:"", notes:"", primary:false };
+function PharmacyModal({ pharmacy, onSave, onClose }) {
+  const [form, setForm] = useState({ ...BLANK_PHARMACY, ...pharmacy });
+  const set = (k,v) => setForm(f => ({ ...f, [k]:v }));
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
+      <div style={{ background:T.card, border:`1px solid ${T.borderActive}`, borderRadius:16, padding:28, width:480, maxHeight:"90vh", overflowY:"auto" }}>
+        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:T.p, marginBottom:20 }}>{form.id ? "Edit Pharmacy" : "Add Pharmacy"}</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Pharmacy Name *</label>
+            <input style={inp} value={form.name} onChange={e => set("name", e.target.value)} placeholder="e.g. CVS #5777" />
+          </div>
+          <div>
+            <label style={lbl}>Type</label>
+            <select style={inp} value={form.type} onChange={e => set("type", e.target.value)}>
+              {PHARMACY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>Phone</label>
+            <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601) 555-0000" />
+          </div>
+          <div>
+            <label style={lbl}>Fax</label>
+            <input style={inp} value={form.fax} onChange={e => set("fax", formatPhone(e.target.value))} placeholder="optional" />
+          </div>
+          <div>
+            <label style={lbl}>Hours</label>
+            <input style={inp} value={form.hours} onChange={e => set("hours", e.target.value)} placeholder="e.g. Mon-Fri 9-7, Sat 9-5" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Address</label>
+            <input style={inp} value={form.address} onChange={e => set("address", e.target.value)} placeholder="Street, City, State ZIP" />
+          </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Notes</label>
+            <input style={inp} value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="e.g. fills tacrolimus, 90-day supply" />
+          </div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20 }}>
+          <input type="checkbox" id="pharmacy-primary" checked={form.primary} onChange={e => set("primary", e.target.checked)} style={{ width:14, height:14, cursor:"pointer" }} />
+          <label htmlFor="pharmacy-primary" style={{ fontSize:12, color:T.dim, cursor:"pointer" }}>Primary pharmacy</label>
+        </div>
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
+          <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
+          <button onClick={() => { if (!form.name.trim()) return; onSave({ ...form, id: form.id ?? Date.now() }); }}
+            style={{ padding:"8px 18px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:T.green, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>
+            Save Pharmacy
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Diagnostics ────────────────────────────────────────────────────────────────
 // The old in-profile Imaging modal is gone: diagnostic studies (imaging, EKG,
 // EMG, …) are owned by the Diagnostics tab (Tab17); this screen and the printed
@@ -403,6 +465,7 @@ export default function ProfileTab() {
   const [careTeam, setCareTeamState]       = useState(() => getCareTeam());
   const [allergies, setAllergiesState]     = useState(() => getAllergies());
   const [contacts, setContactsState]       = useState(() => getEmergencyContacts());
+  const [pharmacies, setPharmaciesState]   = useState(() => getPharmacies());
 
   // Read-only pulls from other sections
   const [conditions, setConditions] = useState([]);
@@ -426,6 +489,7 @@ export default function ProfileTab() {
   const [providerModal, setProviderModal]   = useState(null); // null | BLANK | existing
   const [allergyModal, setAllergyModal]     = useState(null);
   const [ecModal, setEcModal]               = useState(null);
+  const [pharmacyModal, setPharmacyModal]   = useState(null);
   const [cardModal, setCardModal]           = useState(null); // null | blank | existing card
   const [cardViewer, setCardViewer]         = useState(null); // { card, side }
   const [cardSelectOpen, setCardSelectOpen] = useState(false); // print-card picker
@@ -499,6 +563,23 @@ export default function ProfileTab() {
     setEmergencyContacts(updated);
     setEcModal(null);
   }
+  // Pharmacies
+  function savePharmacy(ph) {
+    const updated = ph.id && pharmacies.find(x => x.id === ph.id)
+      ? pharmacies.map(x => x.id === ph.id ? ph : x)
+      : [...pharmacies, ph];
+    setPharmaciesState(updated);
+    setPharmacies(updated);
+    setPharmacyModal(null);
+  }
+  function deletePharmacy(id) {
+    tombstoneRecord("mi_pharmacies", pharmacies.find(x => x.id === id));
+    const updated = pharmacies.filter(x => x.id !== id);
+    setPharmaciesState(updated);
+    setPharmacies(updated);
+    setDeleteTarget(null);
+  }
+
   function deleteContact(id) {
     tombstoneRecord("mi_emergency_contacts", contacts.find(x => x.id === id));
     const updated = contacts.filter(x => x.id !== id);
@@ -530,6 +611,7 @@ export default function ProfileTab() {
     else if (deleteTarget.type === "allergy") deleteAllergy(deleteTarget.id);
     else if (deleteTarget.type === "contact") deleteContact(deleteTarget.id);
     else if (deleteTarget.type === "card") deleteCardEntry(deleteTarget.id);
+    else if (deleteTarget.type === "pharmacy") deletePharmacy(deleteTarget.id);
   }
 
   // mi_records supplements, split by intent: Procedure records are things done
@@ -872,6 +954,34 @@ export default function ProfileTab() {
             }
           </div>
 
+          {/* ── Pharmacies ── */}
+          <div style={card}>
+            <CardHeader title="Pharmacy" onAdd={() => setPharmacyModal({ ...BLANK_PHARMACY })} />
+            {pharmacies.length === 0
+              ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No pharmacy added</div>
+              : [...pharmacies].sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0)).map((ph, i, arr) => (
+                  <div key={ph.id} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                    <div style={{ width:36, height:36, borderRadius:"50%", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:T.blue, flexShrink:0 }}>℞</div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                        <span style={{ fontSize:13, fontWeight:600, color:T.s }}>{ph.name}</span>
+                        {ph.primary && <span style={{ fontSize:9, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
+                        {ph.type && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{ph.type}</span>}
+                      </div>
+                      {ph.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{ph.phone}{ph.fax ? ` · fax ${ph.fax}` : ""}</div>}
+                      {ph.address && <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{ph.address}</div>}
+                      {ph.hours && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{ph.hours}</div>}
+                      {ph.notes && <div style={{ fontSize:11, color:T.dim, marginTop:2 }}>{ph.notes}</div>}
+                    </div>
+                    <div style={{ display:"flex", gap:4 }}>
+                      <button className="icon-btn" onClick={() => setPharmacyModal(ph)}>✎</button>
+                      <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"pharmacy", id:ph.id, label:ph.name })}>✕</button>
+                    </div>
+                  </div>
+                ))
+            }
+          </div>
+
           {/* ── Procedures (read-only mirror of the Procedures tab + Procedure records) ── */}
           <div style={{ ...card, gridColumn:"1/-1" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
@@ -1005,6 +1115,7 @@ export default function ProfileTab() {
       {providerModal && <ProviderModal provider={providerModal} onSave={saveProvider}       onClose={() => setProviderModal(null)} />}
       {allergyModal  && <AllergyModal  allergy={allergyModal}  onSave={saveAllergy}        onClose={() => setAllergyModal(null)}  />}
       {ecModal       && <ECModal       contact={ecModal}       onSave={saveContact}        onClose={() => setEcModal(null)}       />}
+      {pharmacyModal && <PharmacyModal pharmacy={pharmacyModal} onSave={savePharmacy}       onClose={() => setPharmacyModal(null)} />}
       {cardModal     && <CardModal     card={cardModal}        onSave={saveCardEntry}      onClose={() => setCardModal(null)}     />}
       {cardViewer    && <CardViewer    card={cardViewer.card}  side={cardViewer.side}      onClose={() => setCardViewer(null)}    />}
       {cardSelectOpen && <CardSelectModal cards={cards} onClose={() => setCardSelectOpen(false)} onConfirm={(ids) => { setCardSelectOpen(false); setTimeout(() => requestReport("profile", () => handlePrint(ids)), 30); }} />}
@@ -1062,6 +1173,19 @@ export default function ProfileTab() {
             <div key={i} className="pr">
               <span className="pr-lbl">{c.name}{c.primary?" (Primary)":""}</span>
               <span className="pr-val">{c.relationship} &nbsp;·&nbsp; {c.phone}{c.email?` · ${c.email}`:""}</span>
+            </div>
+          ))}
+        </>}
+
+        {/* Pharmacy */}
+        {pharmacies.length > 0 && <>
+          <h2>Pharmacy</h2>
+          {pharmacies.map((ph,i)=>(
+            <div key={i} className="pr">
+              <span className="pr-lbl">{ph.name}{ph.primary?" (Primary)":""}</span>
+              <span className="pr-val">
+                {[ph.type, ph.phone, ph.fax?`fax ${ph.fax}`:"", ph.address].filter(Boolean).join("  ·  ")}
+              </span>
             </div>
           ))}
         </>}

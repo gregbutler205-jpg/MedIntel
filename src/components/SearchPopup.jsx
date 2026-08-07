@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { setPendingSelect } from "../lib/searchSelect.js";
-import { extractTerms, matchesTerms, buildDirectAnswer, sortByDate, detectIntent } from "../lib/recordQuery.js";
+import { extractTerms, matchesTerms, buildDirectAnswer, sortByDate, detectCategoryHint } from "../lib/recordQuery.js";
 
 const C = {
   overlay: "rgba(0,0,0,.72)",
@@ -31,6 +31,7 @@ const CATEGORIES = {
   labs:         { label: "Labs & Results",  color: "#10b981", tab: "labs"         },
   medications:  { label: "Medications",     color: "#f59e0b", tab: "medications"  },
   conditions:   { label: "Conditions",      color: "#a78bfa", tab: "conditions"   },
+  pharmacies:   { label: "Pharmacy",        color: "#4f8ef7", tab: "profile"       },
   appointments: { label: "Appointments",    color: "#4f8ef7", tab: "appointments" },
   symptoms:     { label: "Symptoms",        color: "#ef4444", tab: "symptoms"     },
   surgeries:    { label: "Procedures",      color: "#7eb8d8", tab: "surgeries"    },
@@ -57,10 +58,14 @@ function snippetOf(text, terms) {
 // answer layer can read fields (provider, dose, value) straight off it.
 function searchAll(query) {
   const terms = extractTerms(query);
-  if (!terms.length) return [];
+  // "my pharmacy's phone number" leaves no content terms — the section word IS
+  // the query. Fall back to listing that section rather than finding nothing.
+  const hint = detectCategoryHint(query);
+  if (!terms.length && !hint) return [];
   const results = [];
   const add = (category, fields, record, shape) => {
-    if (matchesTerms(fields, terms)) results.push({ category, record, ...shape });
+    const hit = terms.length ? matchesTerms(fields, terms) : hint === category;
+    if (hit) results.push({ category, record, ...shape });
   };
 
   safeRead("mi_labs", []).forEach(l => add("labs",
@@ -87,6 +92,13 @@ function searchAll(query) {
       title: c.name || "Condition",
       subtitle: [c.status, c.since ? "Since " + c.since : null].filter(Boolean).join(" · "),
       date: c.since || "",
+    }));
+
+  safeRead("mi_pharmacies", []).forEach(ph => add("pharmacies",
+    [ph.name, ph.type, ph.phone, ph.fax, ph.address, ph.hours, ph.notes], ph, {
+      title: ph.name || "Pharmacy",
+      subtitle: [ph.type, ph.phone, ph.address].filter(Boolean).join(" · "),
+      date: "",
     }));
 
   safeRead("mi_appointments", []).forEach(a => add("appointments",
