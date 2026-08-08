@@ -1,0 +1,8 @@
+# Generated at runtime, not repo artifacts.
+# Snapshots are the baseline for the NEXT quarterly diff — keep them on disk
+# (the script never overwrites one), but they are regenerable public-domain
+# data and would bloat the repo, so they stay out of git by default.
+snapshots/
+reports/
+__pycache__/
+*.pyc
