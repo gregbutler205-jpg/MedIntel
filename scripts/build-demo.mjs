@@ -44,6 +44,12 @@ const seeder = readFileSync("public/demo/index.html", "utf-8");
 if (!seeder.includes(SEEDER_FROM)) {
   throw new Error(`demo build: expected ${SEEDER_FROM} in public/demo/index.html — redirect rewrite would silently no-op`);
 }
+// A seeder with no dataset version can never detect a stale demo, so returning
+// visitors would silently keep leftovers (tombstones, name maps) that shadow
+// the fresh data. Fail the build rather than ship a demo that degrades.
+if (!/const DEMO_DATASET_VERSION = "[^"]+"/.test(seeder)) {
+  throw new Error("demo build: DEMO_DATASET_VERSION missing from public/demo/index.html — stale demos would never reset");
+}
 writeFileSync("dist-demo/index.html", seeder.replace(SEEDER_FROM, SEEDER_TO));
 
 // public/CNAME rides along in the app build and names the PRODUCTION domain.

@@ -1453,8 +1453,37 @@ other.** Both were updated here. Unifying them is real work — the seeder must 
 boots and cannot import a module from the app bundle — and is logged as intake rather than done
 inline, but any future demo-data change must touch both files until it is.
 
+**Amendment — version-aware re-seeding (v1.46.2, 2026-08-09).** A claim in the original entry
+needs correcting: the seeder was thought to leave returning visitors on stale data. It does not —
+it rewrites every `DEMO` key on every visit, verified live. (The 0/0/0/0 reading that suggested
+otherwise was GitHub Pages CDN lag on the just-pushed root HTML, checked seconds after the push.)
+
+The real defect is narrower and worse. Keys created by **using** the demo are not in `DEMO`, so a
+plain overwrite never clears them. Deleting an appointment writes a tombstone to
+`mi_record_tombstones` (v1.44.0 deletion memory, working as designed); the next visit rewrites
+`mi_appointments` fresh, but the surviving tombstone filters that record straight back out —
+permanently, on that device. `mi_lab_name_map`, `mi_dismissed_alerts`, the RIE audit and the
+`insina_ai_*` family drift the same way. The demo degrades the more it is used, and the person
+most exposed is whoever demos it repeatedly on one laptop.
+
+**Decision.** The seeder carries `DEMO_DATASET_VERSION`. A stored version mismatch triggers a full
+demo reset — every `mi_*` and `insina_*` key removed, then the dataset written fresh — instead of
+an overwrite. `?reset=1` forces it on demand. The version is deliberately **not** `package.json`'s:
+tying them would force a reset on every unrelated release, including mid-demo.
+
+**Why this is safe in the one file that has wiped a live record (2026-07-19).** The bulk delete —
+the only one in the codebase — sits strictly inside the branch the pre-existing guard has already
+cleared (vault present, or health data without `mi_is_demo`, still returns before any of this). It
+re-checks for a vault immediately before deleting and throws rather than deletes if one appears, is
+scoped to the app's own key prefixes, and `clear()` is still never called. `?reset=1` grants no new
+power: a device holding a real record is refused exactly as before. The version is stamped **last**,
+so a throw mid-seed leaves it stale and the next visit retries rather than assuming success.
+`scripts/testDemoSeeder.mjs` executes the real inline script in a `vm` sandbox (39 cases) — the
+seeder previously had no test coverage of any kind, being plain inline HTML with no import graph.
+
 **Related:** AUDIT_SEC_02 F-12 (OPEN-16), DEC-041/042 (the report format the example follows),
-`src/lib/aiClient.js`, `scripts/build-demo.mjs`.
+DEC-038/#49 (demo origin isolation), `src/lib/aiClient.js`, `scripts/build-demo.mjs`,
+`scripts/testDemoSeeder.mjs`.
 
 ---
 

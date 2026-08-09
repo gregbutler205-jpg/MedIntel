@@ -51,6 +51,27 @@
 // ── Demo PIN hash (SHA-256 of "1234" + app salt) ─────────────────────────────
 const DEMO_PIN_HASH = "fc72e05e2a2c820e5cd0aa1c610ebb093bd5e1f86dc3b485d30d17dc45efccbf";
 
+// ── Demo dataset version ─────────────────────────────────────────────────────
+// Bump this string whenever DEMO below changes. A returning visitor whose
+// stored version differs gets a FULL demo reset instead of a plain overwrite.
+//
+// Why a reset is needed at all, given the seeder already rewrites every DEMO
+// key on each visit: using the demo creates keys that are NOT in DEMO, and a
+// plain overwrite never clears them. Deleting an appointment writes a
+// tombstone to mi_record_tombstones / mi_appt_tombstones (v1.44.0 deletion
+// memory, working exactly as designed); the next visit rewrites
+// mi_appointments fresh, but the surviving tombstone filters that record back
+// out — permanently, on that device. mi_lab_name_map (Group Tests),
+// mi_dismissed_alerts, the RIE audit and the insina_ai_* chat family drift the
+// same way. So the demo degrades the more it is used, and the person most
+// exposed is whoever demos it repeatedly on one laptop.
+//
+// Deliberately NOT tied to package.json's version: that would force a reset on
+// every unrelated release, including mid-demo. This changes only when the
+// dataset does.
+const DEMO_DATASET_VERSION = "2026-08-09.1";
+const DEMO_VERSION_KEY = "mi_demo_dataset_version";
+
 // ── Demo dataset ─────────────────────────────────────────────────────────────
 const DEMO = {
 
@@ -328,11 +349,42 @@ mi_notes: [
       document.querySelector(".pin").innerHTML = '<a href="../" style="color:#7eb8d8">Open my record →</a>';
       return;
     }
-    // Safe: empty device or an existing demo. Write demo data WITHOUT clearing —
-    // there is nothing here to protect, and clear() is never used again.
+    // Reached only on an empty device or one already proven to be a demo:
+    // the guard above returned for anything carrying a real record.
+
+    // ── Version-aware reset ──────────────────────────────────────────────────
+    // Stale dataset (or ?reset=1) → clear the demo's own keys so leftovers from
+    // previous visits can't shadow the fresh data. Anything already on this
+    // device is demo data by the guard above, so there is nothing to preserve.
+    const forcedReset = new URLSearchParams(location.search).has("reset");
+    const staleDataset = localStorage.getItem(DEMO_VERSION_KEY) !== DEMO_DATASET_VERSION;
+
+    if (staleDataset || forcedReset) {
+      // Defence in depth. The guard already returned on a vault, so this can
+      // only fire if that logic is ever changed — in which case we refuse
+      // rather than delete. This file has wiped a live record once (2026-07-19);
+      // it does not get a second chance.
+      if (localStorage.getItem("mi_vault") !== null) {
+        throw new Error("refusing to reset: a vault is present");
+      }
+      // Enumerate first, then delete — removing while iterating by index skips
+      // entries. Scoped to the app's own prefixes; nothing else on the origin
+      // is touched, and clear() is still never used.
+      const doomed = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith("mi_") || k.startsWith("insina_"))) doomed.push(k);
+      }
+      doomed.forEach(k => localStorage.removeItem(k));
+      document.querySelector(".msg").textContent = "Refreshing demo data…";
+    }
+
     localStorage.setItem("mi_is_demo", "1");
     localStorage.setItem("mi_auth_hash", DEMO_PIN_HASH);
     Object.entries(DEMO).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+    // Written LAST: if anything above throws, the version stays stale and the
+    // next visit retries the reset rather than assuming it succeeded.
+    localStorage.setItem(DEMO_VERSION_KEY, DEMO_DATASET_VERSION);
     // Relative redirect: from /app/demo/ (production) → /app/; from /demo/ (dev) → /.
     setTimeout(() => { window.location.href = "../"; }, 1800);
   } catch(e) {

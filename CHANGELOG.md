@@ -12,6 +12,53 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.46.2 — 2026-08-09
+
+Demo-only release, like v1.46.1. No change to the app for a real user.
+
+### Fixed
+- **The demo no longer degrades the more it is used.** The seeder rewrites every
+  key in its `DEMO` object on each visit, so demo *content* was always current —
+  but **using** the demo creates keys that are not in `DEMO`, and those were never
+  cleared. Deleting an appointment writes a tombstone to `mi_record_tombstones` /
+  `mi_appt_tombstones` (v1.44.0 deletion memory, working exactly as designed); the
+  next visit rewrote `mi_appointments` fresh, but the surviving tombstone filtered
+  that record straight back out — permanently, on that device. `mi_lab_name_map`
+  (Group Tests), `mi_dismissed_alerts`, the RIE audit and the `insina_ai_*` chat
+  family drifted the same way. The visitor most exposed was whoever demos it
+  repeatedly on one laptop.
+
+  The seeder now carries a `DEMO_DATASET_VERSION`. A returning visitor whose
+  stored version differs gets a **full demo reset** — every `mi_*` and `insina_*`
+  key removed, then the dataset written fresh — instead of a plain overwrite.
+  Same version, no reset: an ordinary revisit stays cheap. The version is
+  deliberately **not** tied to `package.json`, so an unrelated release cannot
+  force a reset in the middle of a demo.
+
+  `?reset=1` forces a reset on demand — an escape hatch for demo day.
+
+### Safety
+The reset is the only bulk delete in the codebase, in the one file that has wiped
+a live record before (2026-07-19). It runs strictly inside the branch the existing
+guard has already cleared, re-checks for a vault immediately before deleting and
+refuses rather than deletes if one appears, is scoped to the app's own key
+prefixes (nothing else on the origin is touched), and still never calls
+`clear()`. `?reset=1` grants no new power — a device holding a real record is
+refused exactly as before.
+
+### Added
+- `npm run test:demo-seeder` — 39 cases that execute the **real** `<script>` block
+  out of `public/demo/index.html` in a `vm` sandbox with a localStorage polyfill,
+  rather than re-implementing or grepping it. Covers both refusal paths (vault
+  present; unmarked real data), the plain-overwrite path, the stale-version reset,
+  a pre-versioning device, `?reset=1` including that it cannot wipe a real record,
+  and that the refusal branch is genuinely reached rather than crashed into.
+  Wired into `test:all` (13 suites / 404 cases). The build now also fails if the
+  version constant is missing, since a seeder that cannot detect staleness would
+  ship a demo that silently degrades.
+
+---
+
 ## v1.46.1 — 2026-08-08
 
 Public-demo release. Nothing in this version changes behavior for a real user with
