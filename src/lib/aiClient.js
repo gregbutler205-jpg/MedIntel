@@ -17,6 +17,30 @@
 // which is not what broke.
 
 import { getPilotToken } from "./pilotAuth.js";
+import { isDemoMode } from "./secureStorage.js";
+
+// The public demo runs on its own origin, which is deliberately kept off the
+// proxy's CORS allowlist so a public demo can never spend the AI budget
+// (AUDIT_SEC_02 F-12 — security-positive, accepted). The side effect was ugly:
+// the browser reports a blocked cross-origin request as "Failed to fetch",
+// which every surface's error handling reads as a Render cold start. The demo
+// therefore told visitors "Server is waking up… click Retry" — advice that can
+// never come true. Short-circuiting here, at the one place every AI call goes
+// through, replaces a misleading transient-sounding error with the truth.
+export const DEMO_AI_MESSAGE =
+  "AI features are turned off in this public demo, so it can't run up an API bill. " +
+  "Everything else is fully interactive. To see what the AI produces, open My Notes — " +
+  "a saved example analysis is waiting there.";
+
+function demoBlockedResponse() {
+  // A real Response object so callers keep their normal res.ok / res.json()
+  // handling. 403 (not 503) on purpose: 503 is the cold-start code several
+  // surfaces map to "server waking up", which is exactly the wrong message.
+  return new Response(JSON.stringify({ error: DEMO_AI_MESSAGE, demo: true }), {
+    status: 403,
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
 // Optional-chained so this module also loads under plain Node (test harnesses);
 // Vite always defines import.meta.env in the browser build.
@@ -91,6 +115,7 @@ function getAuthHeaders() {
  * @returns {Promise<Response>} the raw fetch Response — callers keep their existing res.ok / res.json() / res.body.getReader() handling
  */
 export async function callAI({ surface, mode, model, maxTokens, system, messages, stream = false, signal }) {
+  if (isDemoMode()) return demoBlockedResponse();
   const resolvedModel = model || MODEL_MAP[mode] || MODEL_MAP.standard;
   const resolvedMaxTokens = Math.min(maxTokens ?? SURFACE_MAX_TOKENS[surface] ?? 1024, PROXY_HARD_CEILING);
 
@@ -120,6 +145,7 @@ export async function callAI({ surface, mode, model, maxTokens, system, messages
  * @returns {Promise<{text:string, pageCount:number}>}
  */
 export async function extractPdfVision(pages) {
+  if (isDemoMode()) throw new Error(DEMO_AI_MESSAGE);
   const r = await fetch(`${PROXY_URL}/api/extract-pdf`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...getAuthHeaders() },

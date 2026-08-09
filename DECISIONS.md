@@ -1410,6 +1410,54 @@ back into.
 
 ---
 
+## DEC-045: The public demo tells the truth about AI being off, and ships a saved example instead
+
+**Status:** Settled and shipped (v1.46.1, 2026-08-08)
+
+**Problem.** `demo.insinahealth.com` is deliberately excluded from the proxy's CORS allowlist so a
+public page can never spend the AI budget (AUDIT_SEC_02 **F-12**, accepted as security-positive).
+The consequence was worse than "AI doesn't work." A browser reports a blocked cross-origin request
+as `TypeError: Failed to fetch` — indistinguishable, client-side, from a network failure — and every
+surface's error handling maps that to a Render cold start. So the demo told visitors
+**"Server is waking up… click Retry when ready."** Advice that can never come true, on the tab a
+first-time viewer is most likely to open, followed by a Retry button that fails identically forever.
+F-12 called graceful copy "optional future polish"; it is not optional when the fallback actively
+misleads.
+
+**Decision.** Gate at the choke point, not per surface. `isDemoMode()` short-circuits inside
+`aiClient.js` — the one module every AI call already goes through (A-02/PG-08) — so no future
+surface can be added that misses the gate and inherits the fake cold-start again.
+
+1. **403, deliberately not 503.** 503 is the cold-start code several surfaces map to "server waking
+   up," which is precisely the wrong message. The response body carries `{error, demo: true}` so a
+   surface can render demo-specific copy without string-matching.
+2. **The demo never reaches the network at all.** The short-circuit returns a synthetic `Response`
+   before `fetch`, so the budget protection no longer depends on the CORS allowlist alone —
+   allowlist and client gate are now independent controls.
+3. **Show the output, don't just describe it.** The demo ships a saved example analysis pinned in
+   My Notes, written in the DEC-041/042 report format against the demo patient's own values. A
+   viewer sees what the AI actually produces without a single API call. The Tab11 notice points
+   there by name.
+
+**Also seeded, because the demo was hollow where it mattered.** Verified live: `mi_pharmacies`,
+`mi_diagnostics`, `mi_emergency_contacts` and `mi_notes` were all empty while meds/labs/conditions
+were full. That silently broke the two newest features as demo material — the v1.46.0 pharmacy card
+had nothing to show, and the v1.45.0 deterministic search ("when was my last cervical MRI") returned
+nothing, since imaging lives in `mi_diagnostics`. Pharmacy names were chosen to match the pharmacy
+strings already on the demo medication records, so the two views corroborate rather than contradict.
+
+**Gotcha this work uncovered — the demo dataset exists in two places.** `src/demoData.js` (used by
+the app's in-place demo toggle) and an inlined `DEMO` object in `public/demo/index.html` (the
+standalone seeder that `demo.insinahealth.com` actually runs). **Editing one does not affect the
+other.** Both were updated here. Unifying them is real work — the seeder must run before the app
+boots and cannot import a module from the app bundle — and is logged as intake rather than done
+inline, but any future demo-data change must touch both files until it is.
+
+**Related:** AUDIT_SEC_02 F-12 (OPEN-16), DEC-041/042 (the report format the example follows),
+`src/lib/aiClient.js`, `scripts/build-demo.mjs`.
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.
@@ -1537,9 +1585,13 @@ back into.
   256-bit random recovery key — the "never leaves in a usable form" story now depends on
   passphrase strength, not envelope absence (see DEC-037). **F-12** — `demo.insinahealth.com` is
   deliberately excluded from the proxy CORS allowlist so the public demo cannot spend the AI
-  budget; security-positive. Consequence: the demo's AI buttons error rather than degrade
-  gracefully — accepted (the demo is a static showcase); graceful "AI disabled in demo" copy is
-  optional future polish. **F-15** — the RIE audit log intentionally stores actual flagged values
+  budget; security-positive. *CLOSED 2026-08-08 (v1.46.1, DEC-045): the "optional future polish"
+  turned out not to be optional — the blocked request surfaced as `Failed to fetch`, which every
+  surface reads as a Render cold start, so the demo told visitors "Server is waking up… click
+  Retry," which could never come true. `isDemoMode()` now short-circuits in `aiClient.js` with a
+  403 (not 503) before the fetch, and the demo ships a saved example analysis in My Notes. The
+  CORS exclusion stands and is now one of two independent controls, not the only one.*
+  **F-15** — the RIE audit log intentionally stores actual flagged values
   (not field-names-only) because the audit's purpose is to show exactly what changed; N-05's
   "values not stored" expectation is consciously not met, mitigated by `mi_rie_audit` being a
   managed key encrypted at rest (P-02), never logged, never sent to the proxy. **F-09 open

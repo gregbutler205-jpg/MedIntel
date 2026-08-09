@@ -4,6 +4,39 @@
 // post-liver-transplant patient on standard immunosuppression.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Saved example analysis shown in My Notes on the demo (see mi_notes below).
+// Written to the DEC-041 question rules: one umbrella question per topic, no
+// named test/dose/timing changes, and education stated as fact without
+// mechanism or predicted physician actions.
+const AI_EXAMPLE_BODY = `**Bottom line**
+Your liver enzymes look stable, but three results from your April 28 labs are worth raising with your care team: your tacrolimus level, your kidney numbers, and your fasting glucose. Bring these to your team before changing anything.
+
+-----
+
+**What your data shows**
+- Tacrolimus trough was 4.8 ng/mL on April 28, 2026, below your lab's reference range of 5-15. The March 15 draw was 5.3.
+- ALT 38 U/L and AST 28 U/L on April 28, both within range and steady since March.
+- Creatinine 1.4 mg/dL and eGFR 58 on April 28, both outside the reference range. Your record lists CKD Stage 2 related to tacrolimus.
+- Fasting glucose 118 mg/dL, above the 70-99 reference range.
+- Alkaline phosphatase 142 U/L on April 28, within range, after 156 on March 15.
+
+**What may need attention**
+- Your tacrolimus trough moved from 5.3 to 4.8 between March and April, and the most recent value sits below the reference range printed on your report.
+- Creatinine and eGFR were both outside the range on the most recent draw. Your care team list shows Dr. Park co-managing this with Dr. Chen.
+- Fasting glucose has been running above the reference range.
+
+**Questions for your care team**
+- "My tacrolimus level came back below the range on my last draw. Is there anything we need to do differently?"
+- "My kidney numbers were outside the range again in April. Is there anything we should be watching?"
+- "My fasting glucose has been running above range. Is there anything we need to look at?"
+
+**Why you're asking**
+- Tacrolimus levels can shift with dose timing, food, and other medicines.
+- Tacrolimus can affect kidney function over time.
+- Steroids taken after a transplant can raise blood sugar. Ask your physician if you'd like more information.
+- Alkaline phosphatase can come from bone as well as from the liver.
+- If your doctor's answer doesn't cover any of these, ask about that one directly.`;
+
 export const DEMO_DATA = {
 
   // ── Profile ────────────────────────────────────────────────────────────────
@@ -493,6 +526,76 @@ export const DEMO_DATA = {
   mi_lab_custom_ranges: {
     "tacrolimus level (trough)": { low: 3.0, high: 6.0 },
   },
+
+  // ── Emergency contacts ─────────────────────────────────────────────────────
+  // The Emergency Card reads this structured store; the free-text `emergency`
+  // field on the profile is display-only, so without these the card's contact
+  // section silently disappears.
+  mi_emergency_contacts: [
+    { id: 1700000060, name: "Maria Rivera", relationship: "Spouse",
+      phone: "(555) 847-3042", email: "maria.rivera@example.com", primary: true },
+    { id: 1700000061, name: "David Rivera", relationship: "Brother (living donor)",
+      phone: "(555) 847-6621", email: "", primary: false },
+  ],
+
+  // ── Pharmacies ─────────────────────────────────────────────────────────────
+  // Two on purpose: transplant patients typically fill day-to-day prescriptions
+  // at a retail pharmacy and the immunosuppressants through a specialty or
+  // mail-order pharmacy.
+  mi_pharmacies: [
+    { id: 1700000070, name: "City Pharmacy", type: "Retail",
+      phone: "(555) 612-4400", fax: "(555) 612-4409",
+      address: "2140 Riverside Ave, Springfield",
+      hours: "Mon-Fri 9-8, Sat 9-5, Sun 10-4",
+      notes: "Day-to-day prescriptions: blood pressure medicines, prednisone, vaccines.", primary: true },
+    { id: 1700000071, name: "University Medical Center Pharmacy", type: "Specialty",
+      phone: "(555) 294-8850", fax: "(555) 294-8851",
+      address: "1 Medical Center Dr, Suite 120, Springfield",
+      hours: "Mon-Fri 8-6",
+      notes: "Fills tacrolimus and mycophenolate on a 90-day supply. Ships to home.",
+      primary: false },
+  ],
+
+  // ── Diagnostics (observational studies) ────────────────────────────────────
+  mi_diagnostics: [
+    { id: 1700000080, name: "Liver Ultrasound with Doppler", date: "2026-06-18",
+      orderedBy: "Dr. Sarah Chen, MD", readingProvider: "Dr. Alan Reed (Radiology)",
+      facility: "University Medical Center", relatedCondition: "Liver Transplant Recipient",
+      impression: "Graft echotexture normal. Hepatic artery, portal and hepatic veins patent with normal waveforms. No biliary dilatation. No perihepatic fluid." },
+    { id: 1700000081, name: "DEXA Bone Density Scan", date: "2026-02-10",
+      orderedBy: "Dr. Michael Torres, MD", readingProvider: "Dr. Alan Reed (Radiology)",
+      facility: "City Medical Group Imaging", relatedCondition: "",
+      impression: "Lumbar spine T-score -1.4, femoral neck T-score -1.6. Osteopenia. Right hip not scored (arthroplasty)." },
+    { id: 1700000082, name: "Transthoracic Echocardiogram", date: "2025-11-05",
+      orderedBy: "Dr. Michael Torres, MD", readingProvider: "Dr. Priya Nair (Cardiology)",
+      facility: "City Medical Group", relatedCondition: "Hypertension",
+      impression: "LVEF 60%. Normal chamber sizes. Mild left ventricular hypertrophy. No significant valvular disease." },
+    { id: 1700000083, name: "MRI Cervical Spine w/o contrast", date: "2025-05-19",
+      orderedBy: "Dr. Michael Torres, MD", readingProvider: "Dr. Alan Reed (Radiology)",
+      facility: "City Medical Group Imaging", relatedCondition: "",
+      impression: "Mild multilevel degenerative change at C5-C6 and C6-C7. No cord compression." },
+  ],
+
+  // ── My Notes ───────────────────────────────────────────────────────────────
+  // The first entry is a SAVED AI analysis (aiGenerated: true, so the app shows
+  // its AI-generated label per DEC-022). AI calls are switched off on the public
+  // demo origin, so this is how a visitor sees what the analysis actually
+  // produces — a real saved artifact, not a live call faked at runtime.
+  mi_notes: [
+    { id: "1700000090", title: "AI Analysis - Lab Review (saved example)",
+      pinned: true, tag: "General", date: "2026-04-29",
+      preview: "Your liver enzymes look stable, but three results from your April 28 labs are worth raising with your care team.",
+      aiGenerated: true, aiMode: "standard",
+      sections: [{ id: "s1", type: "text", header: "AI Analysis", body: AI_EXAMPLE_BODY }] },
+    { id: "1700000091", title: "Questions for Dr. Chen - August visit",
+      pinned: false, tag: "General", date: "2026-07-30",
+      preview: "Ask about the tacrolimus trough trend and whether the every-6-week draw schedule still makes sense.",
+      sections: [{ id: "s1", type: "text", header: "Notes",
+        body: `- Tacrolimus trough has drifted down over the last two draws.
+- Ask whether the every-6-week lab schedule still makes sense.
+- Mention the mild ankle swelling in the evenings (started ~2 weeks ago).
+- Refill for mycophenolate runs out Sept 12 - confirm the specialty pharmacy has it on file.` }] },
+  ],
 
 };
 

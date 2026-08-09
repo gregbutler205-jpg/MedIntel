@@ -762,6 +762,21 @@ export default function AIAnalysis({ onNavChange }) {
       if (!res.ok) {
         if (res.status === 413) throw new Error("Your record context is too large to send in one request — this usually means several large uploaded reference documents. Remove some from AI context (Reference Docs panel) and try again.");
         const err = await res.json().catch(() => ({}));
+        // Demo origin: AI is deliberately switched off (aiClient short-circuits
+        // before any network call). Render it as an explanation, not an error —
+        // the old path reported the blocked request as a Render cold start and
+        // told visitors to wait and retry, which could never succeed.
+        if (err?.demo) {
+          setMessages(prev => {
+            const copy = [...prev];
+            copy[assistantIdx] = {
+              role: "assistant", mode, conv, ts: new Date().toISOString(),
+              text: "**AI is turned off in this demo**\n\nThis public demo runs on its own domain, kept off the AI service on purpose so a public page can't run up an API bill. Everything else here is fully interactive — your record, labs, medications, search, reports and the Emergency Card all work.\n\nTo see what the analysis actually produces, open **My Notes**. A saved example is pinned at the top, showing the full format: what your data shows, what may need attention, the questions it drafts for your care team, and why you're asking each one.",
+            };
+            return copy;
+          });
+          return; // the finally block clears the streaming state
+        }
         throw new Error(err?.error || `Server error ${res.status}`);
       }
 

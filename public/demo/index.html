@@ -182,7 +182,128 @@ mi_symptoms: [
 
 mi_lab_custom_ranges: {
   "tacrolimus level (trough)": {"low":3.0,"high":6.0}
-}
+},
+
+mi_emergency_contacts: [
+  {
+    "id": 1700000060,
+    "name": "Maria Rivera",
+    "relationship": "Spouse",
+    "phone": "(555) 847-3042",
+    "email": "maria.rivera@example.com",
+    "primary": true
+  },
+  {
+    "id": 1700000061,
+    "name": "David Rivera",
+    "relationship": "Brother (living donor)",
+    "phone": "(555) 847-6621",
+    "email": "",
+    "primary": false
+  }
+],
+mi_pharmacies: [
+  {
+    "id": 1700000070,
+    "name": "City Pharmacy",
+    "type": "Retail",
+    "phone": "(555) 612-4400",
+    "fax": "(555) 612-4409",
+    "address": "2140 Riverside Ave, Springfield",
+    "hours": "Mon-Fri 9-8, Sat 9-5, Sun 10-4",
+    "notes": "Day-to-day prescriptions: blood pressure medicines, prednisone, vaccines.",
+    "primary": true
+  },
+  {
+    "id": 1700000071,
+    "name": "University Medical Center Pharmacy",
+    "type": "Specialty",
+    "phone": "(555) 294-8850",
+    "fax": "(555) 294-8851",
+    "address": "1 Medical Center Dr, Suite 120, Springfield",
+    "hours": "Mon-Fri 8-6",
+    "notes": "Fills tacrolimus and mycophenolate on a 90-day supply. Ships to home.",
+    "primary": false
+  }
+],
+mi_diagnostics: [
+  {
+    "id": 1700000080,
+    "name": "Liver Ultrasound with Doppler",
+    "date": "2026-06-18",
+    "orderedBy": "Dr. Sarah Chen, MD",
+    "readingProvider": "Dr. Alan Reed (Radiology)",
+    "facility": "University Medical Center",
+    "relatedCondition": "Liver Transplant Recipient",
+    "impression": "Graft echotexture normal. Hepatic artery, portal and hepatic veins patent with normal waveforms. No biliary dilatation. No perihepatic fluid."
+  },
+  {
+    "id": 1700000081,
+    "name": "DEXA Bone Density Scan",
+    "date": "2026-02-10",
+    "orderedBy": "Dr. Michael Torres, MD",
+    "readingProvider": "Dr. Alan Reed (Radiology)",
+    "facility": "City Medical Group Imaging",
+    "relatedCondition": "",
+    "impression": "Lumbar spine T-score -1.4, femoral neck T-score -1.6. Osteopenia. Right hip not scored (arthroplasty)."
+  },
+  {
+    "id": 1700000082,
+    "name": "Transthoracic Echocardiogram",
+    "date": "2025-11-05",
+    "orderedBy": "Dr. Michael Torres, MD",
+    "readingProvider": "Dr. Priya Nair (Cardiology)",
+    "facility": "City Medical Group",
+    "relatedCondition": "Hypertension",
+    "impression": "LVEF 60%. Normal chamber sizes. Mild left ventricular hypertrophy. No significant valvular disease."
+  },
+  {
+    "id": 1700000083,
+    "name": "MRI Cervical Spine w/o contrast",
+    "date": "2025-05-19",
+    "orderedBy": "Dr. Michael Torres, MD",
+    "readingProvider": "Dr. Alan Reed (Radiology)",
+    "facility": "City Medical Group Imaging",
+    "relatedCondition": "",
+    "impression": "Mild multilevel degenerative change at C5-C6 and C6-C7. No cord compression."
+  }
+],
+mi_notes: [
+  {
+    "id": "1700000090",
+    "title": "AI Analysis - Lab Review (saved example)",
+    "pinned": true,
+    "tag": "General",
+    "date": "2026-04-29",
+    "preview": "Your liver enzymes look stable, but three results from your April 28 labs are worth raising with your care team.",
+    "aiGenerated": true,
+    "aiMode": "standard",
+    "sections": [
+      {
+        "id": "s1",
+        "type": "text",
+        "header": "AI Analysis",
+        "body": "**Bottom line**\nYour liver enzymes look stable, but three results from your April 28 labs are worth raising with your care team: your tacrolimus level, your kidney numbers, and your fasting glucose. Bring these to your team before changing anything.\n\n-----\n\n**What your data shows**\n- Tacrolimus trough was 4.8 ng/mL on April 28, 2026, below your lab's reference range of 5-15. The March 15 draw was 5.3.\n- ALT 38 U/L and AST 28 U/L on April 28, both within range and steady since March.\n- Creatinine 1.4 mg/dL and eGFR 58 on April 28, both outside the reference range. Your record lists CKD Stage 2 related to tacrolimus.\n- Fasting glucose 118 mg/dL, above the 70-99 reference range.\n- Alkaline phosphatase 142 U/L on April 28, within range, after 156 on March 15.\n\n**What may need attention**\n- Your tacrolimus trough moved from 5.3 to 4.8 between March and April, and the most recent value sits below the reference range printed on your report.\n- Creatinine and eGFR were both outside the range on the most recent draw. Your care team list shows Dr. Park co-managing this with Dr. Chen.\n- Fasting glucose has been running above the reference range.\n\n**Questions for your care team**\n- \"My tacrolimus level came back below the range on my last draw. Is there anything we need to do differently?\"\n- \"My kidney numbers were outside the range again in April. Is there anything we should be watching?\"\n- \"My fasting glucose has been running above range. Is there anything we need to look at?\"\n\n**Why you're asking**\n- Tacrolimus levels can shift with dose timing, food, and other medicines.\n- Tacrolimus can affect kidney function over time.\n- Steroids taken after a transplant can raise blood sugar. Ask your physician if you'd like more information.\n- Alkaline phosphatase can come from bone as well as from the liver.\n- If your doctor's answer doesn't cover any of these, ask about that one directly."
+      }
+    ]
+  },
+  {
+    "id": "1700000091",
+    "title": "Questions for Dr. Chen - August visit",
+    "pinned": false,
+    "tag": "General",
+    "date": "2026-07-30",
+    "preview": "Ask about the tacrolimus trough trend and whether the every-6-week draw schedule still makes sense.",
+    "sections": [
+      {
+        "id": "s1",
+        "type": "text",
+        "header": "Notes",
+        "body": "- Tacrolimus trough has drifted down over the last two draws.\n- Ask whether the every-6-week lab schedule still makes sense.\n- Mention the mild ankle swelling in the evenings (started ~2 weeks ago).\n- Refill for mycophenolate runs out Sept 12 - confirm the specialty pharmacy has it on file."
+      }
+    ]
+  }
+],
 
 };
 

@@ -12,6 +12,46 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.46.1 — 2026-08-08
+
+Public-demo release. Nothing in this version changes behavior for a real user with
+a vault — every change is gated on `isDemoMode()` or lives in demo seed data.
+
+### Fixed
+- **The demo no longer claims the server is waking up when AI is off on purpose.**
+  `demo.insinahealth.com` is deliberately kept off the proxy's CORS allowlist so a
+  public page cannot spend the AI budget (AUDIT_SEC_02 F-12). But the browser
+  reports a blocked cross-origin request as `TypeError: Failed to fetch`, which
+  every surface's error handling reads as a Render cold start — so the demo showed
+  **"Server is waking up… click Retry when ready"** and a Retry button that could
+  never succeed. `isDemoMode()` now short-circuits inside `aiClient.js`, the single
+  module every AI call already routes through, returning **403** with
+  `{error, demo: true}`. 403 and not 503 on purpose: 503 is the cold-start code
+  those surfaces map to the wrong message. The request never leaves the browser, so
+  budget protection no longer rests on the CORS allowlist alone. AI Analysis renders
+  a short explanation of what is off and why, and points at the saved example below.
+
+### Added
+- **A saved example analysis, pinned in the demo's My Notes.** Written in the
+  DEC-041/042 report format against the demo patient's own numbers, so a visitor can
+  see exactly what the AI produces — sections, care-team questions, "Why you're
+  asking," the deferral posture — without a single API call.
+- **Demo seed data for four empty stores.** `mi_pharmacies`, `mi_diagnostics`,
+  `mi_emergency_contacts` and `mi_notes` were all empty while medications, labs,
+  conditions and appointments were full, which quietly broke the two newest features
+  as demo material: v1.46.0's Pharmacy card had nothing to show, and v1.45.0's
+  deterministic search returned nothing for "when was my last cervical MRI" because
+  imaging lives in `mi_diagnostics`. Pharmacy names match the pharmacy strings
+  already on the demo medication records, so the two views agree.
+
+### Note for future demo work
+The demo dataset lives in **two** places — `src/demoData.js` (the in-app demo
+toggle) and an inlined `DEMO` object in `public/demo/index.html` (the standalone
+seeder `demo.insinahealth.com` actually runs). Editing one does not affect the
+other. Both were updated here; see DEC-045.
+
+---
+
 ## v1.46.0 — 2026-08-05
 
 ### Added
