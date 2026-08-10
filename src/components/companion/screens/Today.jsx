@@ -6,6 +6,7 @@ import {
   flaggedLabs, appointments, daysUntil,
 } from "../../../lib/companionData.js";
 import { computePatternFlags, dismissFlag } from "../../../lib/patternFlags.js";
+import { isDemoMode } from "../../../lib/secureStorage.js";
 
 export default function Today({ goTab, openLog, openEmergency, openSettings, openSurgeries, openCards, startVisit, lastSynced }) {
   const [flags, setFlags] = useState(() => computePatternFlags());
@@ -43,9 +44,11 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>{greeting}{firstName() ? "," : ""}</div>
           {firstName() && <div style={{ fontFamily: serif, fontSize: 26, color: C.p, lineHeight: 1.15 }}>{firstName()}</div>}
-          <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
-            {lastSynced ? `Synced ${lastSynced}` : "Not synced yet"}
-          </div>
+          {!isDemoMode() && (
+            <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
+              {lastSynced ? `Synced ${lastSynced}` : "Not synced yet"}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={openSettings} title="Notifications"

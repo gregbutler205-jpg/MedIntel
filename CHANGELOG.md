@@ -12,6 +12,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.46.4 — 2026-08-10
+
+### Changed
+- **The companion hides its sync furniture in the demo.** With the phone UI newly
+  demoable (v1.46.3), two bits of Drive-sync status were left on screen with
+  nothing behind them: the "Connect Drive to sync with the web app" bar — which
+  invited a visitor to sign a Google account into a Drive that will never hold
+  this fictional record — and the "Not synced yet" line under the greeting. Both
+  are now suppressed when `isDemoMode()` is true, so the demo opens on the record
+  itself rather than on a call to action that leads nowhere.
+
+  Scoped strictly to demo mode and verified live in **both** directions: with the
+  demo seeded, all three elements are absent; with a real vault created on the
+  same origin, the sync bar, the Sign in button and the "Not synced yet" line all
+  return. Nothing changes for a real user — `isDemoMode()` requires the absence of
+  a vault, and a real companion user necessarily has one to get past the lock
+  screen at all.
+
+---
+
 ## v1.46.3 — 2026-08-09
 
 Demo-only, like the two before it. For a real user with a vault nothing changes:

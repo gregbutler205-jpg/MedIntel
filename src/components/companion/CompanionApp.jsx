@@ -66,6 +66,10 @@ class CompanionErrorBoundary extends Component {
 
 // ── Sync status bar (also the sign-in entry point) ────────────────────────────
 function SyncBar({ syncState, lastSynced, onSync, vaultFp, diag }) {
+  // The public demo has no Google account to connect and nothing to sync, so
+  // the whole bar is noise there — the signed-out branch would invite a visitor
+  // to sign in to a Drive that will never hold this fictional record.
+  if (isDemoMode()) return null;
   const signedIn = !!getStoredUser();
   if (!signedIn) return (
     <div style={{ background: "#0d1a28", borderBottom: `1px solid ${C.b1}`, padding: "8px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
