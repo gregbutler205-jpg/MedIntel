@@ -1917,6 +1917,68 @@ other. Both were updated here; see DEC-045.
 ---
 
 
+## v1.23.0 — 2026-07-09
+
+*Entry reconstructed 2026-08-09 from commit `6216710` — this release shipped
+without a CHANGELOG entry at the time. Content is taken from the commit and its
+diff, not from memory.*
+
+### Changed — Dashboard overhaul
+- **Log Vitals became a proper modal.** The inline 4-field form on the Dashboard
+  was replaced with a full 10-field overlay: date, systolic, diastolic, heart
+  rate, resting heart rate, oxygen saturation, weight, temperature, glucose and
+  sleep. Logging a full set of readings no longer means leaving the Dashboard.
+- **The stat cards are gone.** DataFreshness, Refills, BP, Weight and BMI cards
+  were removed — five panels competing for the top of the screen, each showing
+  one number.
+- **"Last Updated" now opens a freshness popup** with a per-category date for
+  Labs, Medications, Vitals, Appointments, Conditions and Documents, plus the
+  last sync time and a **Sync Now** action. This replaced the standalone
+  freshness card with something that answers "is anything stale?" in one place.
+- **A real Home button.** The subtle back-arrow on non-dashboard tabs was
+  replaced with a prominent house icon plus a "Home" label on every tab. (A-14
+  in v1.24.0 later extended the same button, byte-for-byte, to the four tabs
+  that render their own topbar.)
+- **New Current Vitals panel** above Active Alerts, showing the nine most recent
+  vitals plus calculated BMI; the older Recent Vitals table was removed.
+
+---
+
+
+## v1.22.0 — 2026-07-09
+
+*Entry reconstructed 2026-08-09 from commit `816a780` — this release shipped
+without a CHANGELOG entry, and its `package.json` bump was skipped too (the
+commit subject reads "v1.21.0"; the version was tagged after the fact). Content
+is taken from the commit and its diff.*
+
+### Added
+- **Dashboard hot buttons.** A row of nine action buttons — Test Results,
+  Medications, Appointments, Symptoms, Log Vitals, Import Records, Refills,
+  Emergency Info and Last Updated — replaced the lone "Log Vitals" button, making
+  the common destinations reachable in one tap from the Dashboard.
+- **Print helpers for Emergency Info and Refills** (`printEmergency()`,
+  `printRefills()`).
+
+### Changed
+- **AI Lab Analysis prompt rewritten** with clinical communication rules and a
+  fixed per-finding structure: Finding, Why it matters, Urgency, Best clinician
+  to ask, Patient action, and a suggested question. Analysis results also began
+  auto-saving to the Notes tab. (This is the ancestor of what later became the
+  prompts-as-code architecture and the DEC-041 question rules.)
+- **Imaging and procedure entries from the Records tab now appear on the Patient
+  Profile**, marked with a Records badge, so procedures live in one view.
+- **Dashboard appointments show facility and address**, not just the time.
+
+### Fixed
+- **Appointment changes sync immediately.** Saving an appointment now triggers a
+  Drive upload straight away instead of waiting for the next scheduled sync.
+- **Attach Records modal lists your records.** It now reads `mi_records`; a
+  smart-quote parse error in the same view was fixed.
+
+---
+
+
 ## v1.21.0 — 2026-07-01
 
 ### Changed — Appointments post-visit capture
