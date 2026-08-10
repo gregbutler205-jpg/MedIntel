@@ -168,6 +168,26 @@ ok(!/__APP_VERSION__|pkg\.version/.test(SEEDER_SRC),
   ok(r.get("mi_labs") === '[{"real":true}]', "?reset=1 with a vault present: real data intact");
 }
 
+// ── ?next=companion hand-off ─────────────────────────────────────────────────
+// Nothing links to the companion, so a visitor can land on /companion/ with an
+// empty record. The demo build injects a guard there that bounces to the seeder
+// with ?next=companion; the seeder must send them back rather than to the app.
+{
+  const r = runSeeder({ search: "?next=companion" });
+  ok(r.redirectedTo === "../companion/", `?next=companion returns to the phone UI (got ${r.redirectedTo})`);
+  ok(JSON.parse(r.get("mi_labs") || "[]").length > 0, "?next=companion still seeds the full dataset");
+  ok(r.get("mi_is_demo") === "1", "?next=companion still marks the device as a demo");
+}
+{
+  const r = runSeeder({ search: "?next=somethingelse" });
+  ok(r.redirectedTo === "../", "an unknown ?next value falls back to the app, never an open redirect");
+}
+{
+  const r = runSeeder({ search: "?next=companion", initial: { mi_vault: "REAL", mi_labs: '[{"real":true}]' } });
+  ok(r.get("mi_vault") === "REAL", "?next=companion with a vault present: still refuses");
+  ok(r.redirectedTo !== "../companion/", "?next=companion with a vault present: no hand-off");
+}
+
 // ── Structural invariants ────────────────────────────────────────────────────
 ok(!/localStorage\.clear\(\)/.test(SEEDER_SRC), "the seeder never calls localStorage.clear()");
 ok(SEEDER_SRC.indexOf("setItem(DEMO_VERSION_KEY, DEMO_DATASET_VERSION)") > SEEDER_SRC.indexOf("Object.entries(DEMO)"),

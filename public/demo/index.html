@@ -385,8 +385,19 @@ mi_notes: [
     // Written LAST: if anything above throws, the version stays stale and the
     // next visit retries the reset rather than assuming it succeeded.
     localStorage.setItem(DEMO_VERSION_KEY, DEMO_DATASET_VERSION);
+    // Where to hand off to. The companion lives on the same origin and shares
+    // this storage, but it is NOT reachable without seeding first — nothing
+    // links to it, so a visitor arriving at /companion/ directly would have an
+    // empty record and be asked to create a password. The demo build injects a
+    // guard there that bounces here with ?next=companion; honour it so they
+    // land back on the phone UI rather than the web app.
+    const goCompanion = new URLSearchParams(location.search).get("next") === "companion";
+
     // Relative redirect: from /app/demo/ (production) → /app/; from /demo/ (dev) → /.
-    setTimeout(() => { window.location.href = "../"; }, 1800);
+    setTimeout(() => {
+      if (goCompanion) { window.location.href = "../companion/"; return; }
+      window.location.href = "../";
+    }, 1800);
   } catch(e) {
     document.querySelector(".msg").textContent = "Error loading demo: " + e.message;
   }

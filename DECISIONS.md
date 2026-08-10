@@ -1481,9 +1481,35 @@ so a throw mid-seed leaves it stale and the next visit retries rather than assum
 `scripts/testDemoSeeder.mjs` executes the real inline script in a `vm` sandbox (39 cases) — the
 seeder previously had no test coverage of any kind, being plain inline HTML with no import graph.
 
+**Amendment — the companion joins the demo (v1.46.3, 2026-08-09).** The demo had no phone
+experience at all, for two unrelated reasons. `build-demo.mjs` built only the web app, so
+`/companion/` was a 404. And `CompanionApp` gated purely on `isUnlocked()`, so even with the demo
+record seeded on that origin it demanded a password. The allowance was never in doubt —
+`isDemoMode()`'s docstring has said "skip the encryption interception **and the lock screen**"
+since P-02 — the web app implemented its half in `App.jsx` and the companion simply never did.
+
+**Decision.** Build the companion into the demo, and let it take the same
+`isUnlocked() || isDemoMode()` path the web app takes. The Google sign-in wall is skipped in demo
+mode too: it is the immediate next gate, with no account to connect and nothing to sync.
+
+**The cold-entry problem, and why a redirect is involved.** Nothing links to the companion — you
+reach it by typing the URL — so a visitor can arrive at `/companion/` having never run the seeder
+at `/`. Empty storage means `isDemoMode()` is false and they meet the password screen anyway, so
+honouring demo mode alone would not have been enough. The demo build injects a guard into its
+companion HTML that bounces such a visitor to `/?next=companion`; the seeder honours that
+parameter and hands back to the phone UI. Constraints that are part of the decision: an
+unrecognised `?next` falls back to the app (never an open redirect), the guard tests `mi_vault`
+first so a real record is untouched, and the injection happens in the demo build only — the
+production companion never carries it, asserted against `dist/` after every build.
+
+**Safety.** `hasVault()` still wins everywhere. Verified live: with a vault planted, the companion
+renders "Unlock your record" and no record content appears; without one, the demo opens directly.
+The `?next=companion` hand-off refuses just as the seeder does when a vault is present.
+
 **Related:** AUDIT_SEC_02 F-12 (OPEN-16), DEC-041/042 (the report format the example follows),
-DEC-038/#49 (demo origin isolation), `src/lib/aiClient.js`, `scripts/build-demo.mjs`,
-`scripts/testDemoSeeder.mjs`.
+DEC-038/#49 (demo origin isolation), P-02 (the vault gate this deliberately bypasses for demos
+only), `src/lib/aiClient.js`, `src/components/companion/CompanionApp.jsx`,
+`scripts/build-demo.mjs`, `scripts/testDemoSeeder.mjs`.
 
 ---
 

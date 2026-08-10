@@ -16,7 +16,7 @@ import { computePatternFlags } from "../../lib/patternFlags.js";
 import { nextAppointment, daysUntil } from "../../lib/companionData.js";
 import { C, mono, sans } from "./companionUI.jsx";
 
-import { isUnlocked } from "../../lib/secureStorage.js";
+import { isUnlocked, isDemoMode } from "../../lib/secureStorage.js";
 import Lock       from "./screens/Lock.jsx";
 import SignIn     from "./screens/SignIn.jsx";
 import Today      from "./screens/Today.jsx";
@@ -238,7 +238,14 @@ function CompanionInner() {
 
   // P-02 vault gate — BEFORE anything renders or syncs. Without it the
   // companion ran locked: reads null, captures silently dropped.
-  const [unlocked, setUnlocked] = useState(() => isUnlocked());
+  // Demo installs have no vault and nothing to protect, so they open directly
+  // rather than being asked to create a password — the same allowance the web
+  // app makes in App.jsx, and the one isDemoMode()'s own docstring describes
+  // ("skip the encryption interception and the lock screen"). The companion
+  // never implemented its half, so the public demo dead-ended on a setup
+  // screen. isDemoMode() is false the moment a real vault exists, so this can
+  // never serve a real record unlocked.
+  const [unlocked, setUnlocked] = useState(() => isUnlocked() || isDemoMode());
   if (!unlocked) {
     return (
       <div style={{ background: C.bg, height: "100dvh", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", fontFamily: sans, overflow: "hidden" }}>
@@ -255,7 +262,10 @@ function CompanionInner() {
 
   // Sign-in gate: a full screen before the app handles Google connection. Optional —
   // "Continue without signing in" lets offline capture proceed.
-  if (!user && !skippedSignIn) {
+  // Skipped in demo mode: there is no Google account to connect and nothing to
+  // sync, so a visitor who just cleared the vault gate would otherwise land on
+  // a second wall asking them to sign in.
+  if (!user && !skippedSignIn && !isDemoMode()) {
     return (
       <div style={{ background: C.bg, height: "100dvh", maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", fontFamily: sans, overflow: "hidden" }}>
         <SignIn onSignIn={signInWithRedirect} onSkip={() => setSkippedSignIn(true)} />

@@ -12,6 +12,52 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.46.3 — 2026-08-09
+
+Demo-only, like the two before it. For a real user with a vault nothing changes:
+every code path added here is gated on `isDemoMode()`, which is false the moment
+a vault exists.
+
+### Fixed
+- **The phone app is now demoable.** It failed two independent ways. The demo
+  build never included the companion at all — `build-demo.mjs` built only the web
+  app, so `demo.insinahealth.com/companion/` was a 404. And the companion itself
+  never honoured demo mode: `CompanionApp` gated on `isUnlocked()` alone, so a
+  visitor was met with **"Protect your record — create a password"** even with the
+  demo record already seeded on that origin. `isDemoMode()`'s own docstring had
+  described the intended allowance since P-02 ("skip the encryption interception
+  **and the lock screen**"); the web app implemented its half in `App.jsx` and the
+  companion never did.
+
+  The companion now opens straight into the demo record, matching the web app's
+  `isUnlocked() || isDemoMode()` pattern exactly. A second gate needed the same
+  treatment: the Google sign-in wall, which a demo visitor would have hit
+  immediately after clearing the first one, with no account to connect and
+  nothing to sync.
+
+- **Reaching it cold no longer dead-ends.** Nothing in the app links to the
+  companion — you get there by typing the URL — so a visitor can land on
+  `/companion/` having never run the seeder at `/`, with empty storage and no demo
+  marker. The demo build injects a guard that bounces such a visitor to
+  `/?next=companion`; the seeder honours that and hands back to the phone UI
+  instead of the web app. An unrecognised `?next` value falls back to the app, so
+  it can never become an open redirect, and the guard checks `mi_vault` first so a
+  real record is left strictly alone.
+
+### Safety
+The vault gate is unchanged for anyone with a vault — verified live: with a vault
+present the companion shows "Unlock your record" and no record content renders.
+The seed guard is injected by `build-demo.mjs` into the demo output only; the
+production companion never receives it (asserted against `dist/` after building).
+
+### Added
+- 6 more cases in `test:demo-seeder` (45 total) covering the `?next=companion`
+  hand-off, the fallback for an unknown `?next`, and that the hand-off still
+  refuses when a vault is present. `build:demo` now fails if the companion output
+  or the injection point is missing. 13 suites / 410 cases.
+
+---
+
 ## v1.46.2 — 2026-08-09
 
 Demo-only release, like v1.46.1. No change to the app for a real user.
