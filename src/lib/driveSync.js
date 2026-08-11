@@ -359,13 +359,25 @@ export async function uploadWeeklyBackup(token) {
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 /** Merge two arrays, deduplicating by id → ts → date → stringified value
- * (mergeKeyFor — the SAME identity record tombstones kill by). Local items win. */
+ * (mergeKeyFor — the SAME identity record tombstones kill by). Local items win —
+ * EXCEPT when both copies of a record carry a numeric `updatedAt` edit stamp,
+ * where the newer edit wins. Local-first union silently discards field EDITS
+ * made on the other device (marking a report for prep on the laptop never
+ * reached the phone's copy, and the phone's next upload put the unmarked copy
+ * back on Drive). Only records that stamp updatedAt on edit opt in — before
+ * prep marks (DEC-046, v1.47.0) no synced store stamped it, so nothing else
+ * changes behavior. */
 function _mergeArrays(local, drive) {
   const seen = new Map();
-  // Local first → local wins on duplicate key
+  // Local first → local wins on duplicate key (unless the drive copy is a newer edit)
   for (const item of [...local, ...drive]) {
     const key = mergeKeyFor(item);
-    if (!seen.has(key)) seen.set(key, item);
+    const prev = seen.get(key);
+    if (!prev) { seen.set(key, item); continue; }
+    if (typeof item?.updatedAt === "number" && typeof prev?.updatedAt === "number" &&
+        item.updatedAt > prev.updatedAt) {
+      seen.set(key, item);
+    }
   }
   return Array.from(seen.values());
 }

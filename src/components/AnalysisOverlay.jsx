@@ -16,11 +16,18 @@ import { PrintLabel } from "./icons.jsx";
 // never disagree (a downloaded file carrying the raw directive the on-screen
 // version had already redacted would be a worse leak than either alone).
 import { scanForProhibitedDirectives } from "../lib/aiOutputFilter.js";
+// DEC-046: right after a report is saved, offer to mark it for the doctors it
+// concerns — the moment the marking decision is freshest.
+import PrepMarkPicker from "./PrepMarkPicker.jsx";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
-export default function AnalysisOverlay({ title, content, mode = "standard", timestamp, onClose }) {
+export default function AnalysisOverlay({ title, content, mode = "standard", timestamp, onClose, savedNoteId = null }) {
   const [saved, setSaved] = useState(false);
+  // The saved note's id — either passed in (Tab11's session report is already
+  // in mi_notes when this overlay opens) or captured from our own Save.
+  const [ownNoteId, setOwnNoteId] = useState(null);
+  const markNoteId = savedNoteId || ownNoteId;
   const isAdvanced = mode === "advanced";
   const modeLabel = isAdvanced ? "Advanced Mode" : "Standard Mode";
   const dateLabel = (timestamp ? new Date(timestamp) : new Date())
@@ -28,7 +35,8 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
   const { redactedText: safeContent } = scanForProhibitedDirectives(content);
 
   const handleSave = () => {
-    saveAnalysisToNotes({ title, content: safeContent, mode });
+    const note = saveAnalysisToNotes({ title, content: safeContent, mode });
+    setOwnNoteId(note?.id ?? null);
     setSaved(true);
   };
 
@@ -85,6 +93,14 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
           ✕
         </button>
       </div>
+
+      {/* DEC-046: once the report exists in My Notes, offer prep marking.
+          ao-chrome → hidden in print. */}
+      {markNoteId && (
+        <div className="ao-chrome" style={{ background: "#0a1018", borderBottom: "1px solid #0d1a28", padding: "9px 22px", flexShrink: 0 }}>
+          <PrepMarkPicker noteId={markNoteId} reportText={safeContent} />
+        </div>
+      )}
 
       {/* Report body */}
       <div className="ao-scroll" style={{ flex: 1, overflowY: "auto", padding: "28px 0" }}>

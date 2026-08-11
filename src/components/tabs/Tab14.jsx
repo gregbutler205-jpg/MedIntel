@@ -11,6 +11,9 @@ import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
 import { QUESTION_RULES } from "../../prompts/core.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
+// DEC-046: reports the patient marked for this visit ride into the prep prompt;
+// completing the visit consumes the marks.
+import { markedReportsForAppointment, buildMarkedReportsSection, clearPrepMarksForAppointment } from "../../lib/prepMarks.js";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
@@ -916,6 +919,21 @@ function ApptAIPanel({ appt }) {
   const [stale, setStale]             = useState(false);
   const sig = prepSig(appt);
 
+  // DEC-046: reports the patient marked for this doctor — shown BEFORE
+  // generating (the same transparency the AI tab's "Data used in this
+  // analysis" panel gives), each with a one-tap exclude for this run.
+  const [markedForVisit] = useState(() => {
+    try { return markedReportsForAppointment(appt); } catch { return { reports: [], droppedCount: 0 }; }
+  });
+  const [excludedIds, setExcludedIds] = useState(() => new Set());
+  const toggleExclude = (id) => setExcludedIds(prev => {
+    const next = new Set(prev);
+    const k = String(id);
+    if (next.has(k)) next.delete(k); else next.add(k);
+    return next;
+  });
+  const includedReports = markedForVisit.reports.filter(r => !excludedIds.has(String(r.id)));
+
   // Load any prep already generated for this appointment (here or on the
   // companion, synced via Drive), so it shows without regenerating.
   useEffect(() => {
@@ -950,8 +968,11 @@ Please provide:
 2. What to bring or prepare
 3. Any relevant concerns from my medical history to raise
 4. Questions to ask about my current medications or conditions${additionalQ.trim() ? `\n\nAdditional questions: ${additionalQ}` : ""}`;
-    return base;
-  }, [appt, additionalQ]);
+    // DEC-046: marked reports ride along as S-07 document blocks. Empty when
+    // nothing is marked/included — the prompt is then byte-identical to the
+    // pre-DEC-046 prompt.
+    return base + buildMarkedReportsSection(includedReports);
+  }, [appt, additionalQ, includedReports]);
 
   const runAnalysis = async () => {
     setLoading(true); setError(""); setAnalysis("");
@@ -991,6 +1012,36 @@ Please provide:
         {stale && <span style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:0 }}>· details changed — regenerate</span>}
         {analysis && <button onClick={() => requestReport("consultationPrep", () => printConsultationPrep(appt, analysis))} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}><PrintLabel size={11} /></button>}
       </div>
+      {/* DEC-046: what marked analyses will ride into this prep — visible and
+          excludable BEFORE generating, never silently included. */}
+      {markedForVisit.reports.length > 0 && (
+        <div style={{ marginBottom:12, background:"rgba(16,185,129,.04)", border:"1px solid rgba(16,185,129,.18)", borderRadius:8, padding:"10px 13px" }}>
+          <div style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:7 }}>
+            Marked analyses for this visit ({includedReports.length} of {markedForVisit.reports.length} included)
+          </div>
+          {markedForVisit.reports.map(r => {
+            const included = !excludedIds.has(String(r.id));
+            return (
+              <div key={r.id} style={{ display:"flex", alignItems:"center", gap:9, marginBottom:5 }}>
+                <div onClick={() => toggleExclude(r.id)} role="checkbox" aria-checked={included}
+                  style={{ width:14, height:14, border:`1px solid ${included ? "#10b981" : "#1a2f4a"}`, borderRadius:3, background: included ? "rgba(16,185,129,.12)" : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  {included && <span style={{ fontSize:9, color:"#10b981" }}>✓</span>}
+                </div>
+                <span style={{ fontSize:11, color: included ? "#c4d8ee" : "#4a5c6a", flex:1, lineHeight:1.4 }}>{r.title}</span>
+                <span style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{r.date}</span>
+              </div>
+            );
+          })}
+          {markedForVisit.droppedCount > 0 && (
+            <div style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", marginTop:4 }}>
+              +{markedForVisit.droppedCount} older marked {markedForVisit.droppedCount === 1 ? "report" : "reports"} not included (3 newest only)
+            </div>
+          )}
+          <div style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:6 }}>
+            Marked in My Notes · included in this prep · clears when the visit is completed
+          </div>
+        </div>
+      )}
       <div style={{ marginBottom:10 }}>
         <label style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", display:"block", marginBottom:5 }}>Additional Questions / Context</label>
         <textarea
@@ -1194,6 +1245,15 @@ export default function AppointmentsTab({ onNavChange }) {
       // Nothing is saved or discarded here — the prompt holds the entered
       // appointment until the user picks use existing / update / keep both.
       if (dup) { setDupPrompt({ incoming: appt, existing: dup }); setModal(null); return; }
+    }
+    // DEC-046 lifecycle: completing a visit consumes its prep marks — a mark
+    // means "for my next visit with this doctor." Covers BOTH completion
+    // paths (the Mark Complete button and the edit form's status select),
+    // since each routes through here. clearPrepMarksForAppointment never
+    // throws; a mark-clear failure must not block saving the appointment.
+    const prevStatus = appts.find(a => a.id === appt.id)?.status;
+    if (appt.status === "completed" && prevStatus !== "completed") {
+      clearPrepMarksForAppointment(appt);
     }
     setAppts(prev => {
       const exists = prev.find(a => a.id === appt.id);

@@ -9,6 +9,8 @@ import { PrintLabel, PinIcon } from "../icons.jsx";
 // `whiteSpace:"pre-wrap"`) — safe from XSS on its own, but that means it never
 // passes through renderAiText.js's shared filter. Applied explicitly here.
 import { scanForProhibitedDirectives } from "../../lib/aiOutputFilter.js";
+// DEC-046: mark (or retarget) any AI report for appointment prep after the fact.
+import PrepMarkPicker from "../PrepMarkPicker.jsx";
 
 const TAG_STYLES = {
   Appt:     { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
@@ -48,6 +50,9 @@ function NoteItem({ note, active, onClick }) {
         </div>
         {note.aiGenerated && (
           <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
+        )}
+        {note.prepTargets?.length > 0 && (
+          <span title={`Marked for appointment prep: ${note.prepTargets.map(t => t.name).join(", ")}`} style={{ fontSize: 8, background: "rgba(16,185,129,.12)", color: "#10b981", border: "1px solid rgba(16,185,129,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>PREP</span>
         )}
         {note.pinned && <span style={{ color: "#f59e0b", flexShrink: 0, display: "flex" }} title="Pinned"><PinIcon size={11} /></span>}
       </div>
@@ -181,6 +186,26 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
               title="Download this analysis as a dated markdown file"
               style={{ background: "none", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono', monospace", padding: "3px 10px", cursor: "pointer", flexShrink: 0 }}
             >↓ .md</button>
+          </div>
+        )}
+
+        {/* DEC-046: mark this report for appointment prep — after the fact,
+            for reports saved before marking existed or to retarget. persist
+            routes through updateNote because this component rewrites the whole
+            notes array from React state on every edit; a direct storage write
+            would be clobbered by the next keystroke. */}
+        {note.aiGenerated && (
+          <div key={`prep-${note.id}`} style={{ background: "rgba(16,185,129,.05)", border: "1px solid rgba(16,185,129,.18)", borderRadius: 8, padding: "9px 13px", marginBottom: 18 }}>
+            <PrepMarkPicker
+              noteId={note.id}
+              reportText={(note.sections || []).map(s => s.body || "").join("\n\n")}
+              persist={(id, targets) => {
+                const copy = { ...note, updatedAt: Date.now() };
+                if (targets.length) copy.prepTargets = targets;
+                else delete copy.prepTargets;
+                onUpdate(copy);
+              }}
+            />
           </div>
         )}
 

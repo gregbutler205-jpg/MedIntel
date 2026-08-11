@@ -893,12 +893,15 @@ export default function AIAnalysis({ onNavChange }) {
     const reportText = buildSessionReportText({ convMessages: convMsgs, careTeam, startedAt: session.startedAt, endedAt });
     const mode = convMsgs.find(m => m.mode)?.mode || currentMode;
     const title = `AI Conversation Report — ${new Date(endedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+    let savedNoteId = null;
     try {
       const notes = JSON.parse(localStorage.getItem("mi_notes") || "[]");
-      notes.unshift(mkAnalysisNote({ title, content: reportText, mode }));
+      const note = mkAnalysisNote({ title, content: reportText, mode });
+      notes.unshift(note);
       localStorage.setItem("mi_notes", JSON.stringify(notes));
+      savedNoteId = note.id; // DEC-046: lets the overlay offer prep marking
     } catch {}
-    setAnalysisOverlay({ title, content: reportText, mode, timestamp: endedAt });
+    setAnalysisOverlay({ title, content: reportText, mode, timestamp: endedAt, savedNoteId });
     clearSessionMarker();
     setSession(null);
     setResumeBanner(false);
@@ -1145,6 +1148,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           content={analysisOverlay.content}
           mode={analysisOverlay.mode}
           timestamp={analysisOverlay.timestamp}
+          savedNoteId={analysisOverlay.savedNoteId || null}
           onClose={() => setAnalysisOverlay(null)}
         />
       )}

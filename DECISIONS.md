@@ -1513,6 +1513,62 @@ only), `src/lib/aiClient.js`, `src/components/companion/CompanionApp.jsx`,
 
 ---
 
+## DEC-046: AI reports carry forward into Consultation Prep by explicit patient marking
+
+**Status:** Settled and shipped (v1.47.0, 2026-08-11)
+
+**Problem (Greg, from use).** A symptom analysis recommended raising specific points with three
+specialists — and Consultation Prep could not see any of it. The prep prompt reads conditions,
+meds, and keyword-matched documents, but never `mi_notes`, where every AI analysis is saved. The
+app produced advice, then forgot it at exactly the moment it mattered. (Distinct from DEC-042,
+which deliberately keeps saved conversations out of AI context; this gap was never decided,
+just never built — the Surface H / OPEN-9 scope note territory.)
+
+**Decision (Greg): explicit marking, not search.** When a report is generated and saved, the
+patient marks it for the care-team members it concerns; Consultation Prep for a matching
+appointment carries the marked report into its prompt. Chosen over prep-time notes search
+because it is deterministic (no fuzzy matching deciding what the AI sees), bounded (only what
+was marked rides along), and consistent with the house principle — the analysis proposes, the
+patient disposes.
+
+**Mechanism.**
+1. **Marking:** after Save to Notes (AnalysisOverlay; Tab11's session report passes its note id
+   through), a picker lists the care team with the members the report text mentions
+   **pre-checked** — deterministic last-name + distinctive-specialty matching
+   (`suggestPrepTargets`; "hepatologist" matches a Hepatology member via y-stemming; generic
+   words like "transplant"/"medicine" are stoplisted so they never suggest anyone). Nothing
+   persists until the patient applies. Any AI note can be marked or retargeted later in Tab10.
+2. **Storage:** `prepTargets` on the note (id + name/specialty snapshot per member), inside
+   `mi_notes` — so encrypted at rest, backed up, tombstoned for free.
+3. **Prep side (Tab14):** marked reports matching the appointment — provider resolved through
+   the shared `matchCareTeamMember` scorer, specialty fallback — are listed **before**
+   generating, each with an exclude toggle (the Tab11 "Data used" transparency pattern), capped
+   at the 3 newest with the overflow counted visibly. Included reports enter the prompt as
+   S-07 document blocks (3,000-char visible truncation) under an instruction to carry findings
+   and questions forward rather than re-derive. **With nothing marked the prompt is
+   byte-identical to pre-DEC-046** — pinned by test.
+4. **Lifecycle (Greg):** a mark means "for my next visit with this doctor." Completing the
+   appointment clears the matching targets (both completion paths route through Tab14's
+   `handleSave`); marks for other doctors on the same note survive. Manual unmark anytime.
+
+**Merge-layer change this required.** `_mergeArrays` is local-first-wins by record id, which
+silently discards field *edits* arriving from the other device — a mark made on the laptop
+would never reach the phone's copy, and the phone's next upload would put the unmarked copy
+back on Drive. The union now prefers the copy with the **newer numeric `updatedAt`** when both
+sides carry one; `setPrepTargets`/clears stamp it. Double-gated: no store stamped `updatedAt`
+before this, so nothing else changes behavior — verified by a merge test asserting unstamped
+records keep local-first-wins.
+
+**Scope (Greg):** web Consultation Prep only; the logic lives in `src/lib/prepMarks.js`
+precisely so the companion's visit prep can adopt it as a follow-on without duplication.
+
+**Related:** DEC-041 (question rules, still governing prep output), DEC-042 (explicitly NOT
+reopened), DEC-022 (AI-generated labeling), S-07 (document delimiting), OPEN-9 / Surface H
+(the prep surface's full builder migration remains open), `scripts/testPrepMarks.mjs`
+(37 cases).
+
+---
+
 ## Open items (spawned by the decisions above)
 
 - **OPEN-1** (priority): Bring the Insina overview and any marketing copy in line with DEC-001.

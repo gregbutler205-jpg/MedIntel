@@ -12,6 +12,53 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.47.0 — 2026-08-11
+
+### Added
+- **AI analyses can now follow you into your appointments (DEC-046).** An analysis
+  often ends with points to raise with specific specialists — and Consultation
+  Prep couldn't see any of it: the prep prompt read conditions, meds and
+  keyword-matched documents, but never My Notes, where every analysis is saved.
+  Now, when a report is saved, a picker offers **"Include in appointment prep
+  for:"** with the care-team members the report mentions already checked —
+  deterministic text matching ("Dr. Chen" by name, "hepatologist" by specialty;
+  generic words like "transplant" never suggest anyone). Nothing is marked until
+  you apply. Any AI note in My Notes can be marked or retargeted later, and
+  marked notes carry a green **PREP** chip.
+
+  When you prep for a matching appointment, the marked reports are listed
+  *before* generating — each with a checkbox to leave it out of this run, capped
+  at the 3 newest with any overflow counted visibly — and ride into the prompt as
+  delimited document blocks with an instruction to carry the findings and
+  questions forward rather than re-derive them. With nothing marked, the prep
+  prompt is byte-identical to before.
+
+  **A mark means "for my next visit with that doctor":** completing the
+  appointment clears its marks automatically (marks for other doctors on the
+  same report survive); unmark manually anytime in My Notes. Saved conversations
+  are still never auto-sent (DEC-042 stands) — the only thing that flows onward
+  is what you explicitly marked.
+
+### Fixed
+- **Edits to a note now survive a two-device sync.** The Drive merge unions
+  records by id with local-first-wins, which silently discarded field *edits*
+  from the other device — a prep mark made on the laptop would never reach the
+  phone's copy, and the phone's next upload put the unmarked copy back on Drive.
+  When both copies of a record carry an `updatedAt` edit stamp, the newer edit
+  now wins. Only stamped records opt in (nothing stamped one before this
+  release), so no other store's merge behavior changes — pinned by test.
+
+### Tests
+- `npm run test:prep-marks` — 37 cases: the suggestion matcher, appointment
+  matching (name, specialty fallback, never-wildcard), cap/ordering/overflow,
+  the S-07 prompt block including the empty ⇒ byte-identical guarantee,
+  clear-on-completion (other doctors' marks survive; idempotent), and the
+  merge rule exercised through a REAL vault and the REAL `mergeIntoLocal` in
+  both directions plus the unstamped-records-unchanged case.
+  15 suites / 460 cases.
+
+---
+
 ## v1.46.5 — 2026-08-11
 
 ### Fixed
