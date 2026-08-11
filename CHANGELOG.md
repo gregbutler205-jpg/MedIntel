@@ -12,6 +12,44 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.46.5 — 2026-08-11
+
+### Fixed
+- **The Dashboard now stays in step with the Vitals tab and the phone.** A reading
+  logged on the companion and merged in by a Drive sync appeared under Vitals but
+  the Dashboard kept showing the previous figure until you navigated away and came
+  back. Cause: the Vitals tab re-reads on every `mi-data-synced` event; the
+  Dashboard only re-read when you navigated *to* it, and never listened for that
+  event at all. It does now, registered unconditionally so returning to the
+  Dashboard can't show something that went stale while another tab was open.
+
+  The same gap applied to any vitals save made elsewhere in the app (`saveReading`
+  dispatches the event) and to RIE fixes.
+
+  Two related staleness bugs fell out of the same fix. `refreshFromDrive` re-read
+  only readings and medications, so **appointments and alerts were stale after a
+  sync**; and `activeConditions` was never re-read after mount, so **a condition
+  added mid-session never reached the Dashboard summary until a full page
+  reload**. All of it now goes through one `refreshDashboardData()`, so a future
+  Dashboard field cannot quietly miss the refresh path.
+
+### Changed
+- **Blood Pressure on the Dashboard is dark orange, not red.** Red is reserved for
+  genuinely urgent readings. A *flagged* value still renders red — that path is
+  separate and untouched — so an out-of-range BP is as loud as it ever was; it is
+  only the resting colour that stops shouting.
+
+### Added
+- `npm run test:dashboard-sync` — 13 checks pinning the wiring behind "these three
+  areas should always be the same": both surfaces listen for `mi-data-synced`, the
+  Dashboard's listener isn't gated behind a nav check, `refreshDashboardData`
+  re-reads every store the Dashboard renders, and red remains reserved for flagged
+  values. Structural rather than behavioural — the Dashboard is React + DOM and
+  this harness is Node-only — so the live behaviour was verified in-browser with a
+  reproduction that failed before the fix and passes after. 14 suites / 423 cases.
+
+---
+
 ## v1.46.4 — 2026-08-10
 
 ### Changed

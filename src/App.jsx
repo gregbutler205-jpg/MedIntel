@@ -658,15 +658,32 @@ function AppShell() {
     return () => window.removeEventListener("insina-open-search", h);
   }, []);
 
-  // Refresh dashboard data from localStorage each time the user navigates to the dashboard
-  useEffect(() => {
-    if (activeNav !== "dashboard") return;
+  // Everything the dashboard renders, re-read from storage in one place.
+  //
+  // The dashboard, the Vitals tab and the phone must agree. They did not: Tab06
+  // re-reads on every "mi-data-synced" event, and the dashboard only re-read
+  // when you navigated TO it. So a reading logged on the companion and merged in
+  // by a Drive sync showed up under Vitals but the dashboard kept displaying the
+  // previous figure until you navigated away and back. Same gap for a vitals
+  // save made anywhere else in the app (saveReading dispatches this event) and
+  // for an RIE fix.
+  //
+  // refreshFromDrive re-read only readings + meds, so appointments, alerts and
+  // conditions were stale after a sync too — and activeConditions was never
+  // re-read at all after mount, so a condition added mid-session never reached
+  // the dashboard summary until a full page reload. One function now covers all
+  // of it, so a new dashboard field cannot quietly miss the refresh path.
+  const refreshDashboardData = useCallback(() => {
     setReadings(getStore('readings'));
     setMeds(getStore('meds_full'));
     // Refresh auto-alerts from flagged labs + vitals
     const auto = generateAutoAlerts();
     const stored = getStore('alerts').map((a, i) => ({ ...a, fp: `stored:${i}:${(a.text||"").substring(0,40)}`, source:"stored" }));
     setAlerts([...auto, ...stored].slice(0, 10));
+    try {
+      const raw = localStorage.getItem("mi_conditions");
+      if (raw) setActiveConditions(JSON.parse(raw).filter(c => c.status === "active"));
+    } catch {}
     try {
       const raw = localStorage.getItem("mi_appointments");
       if (raw) {
@@ -686,7 +703,22 @@ function AppShell() {
         if (next.length > 0) setUpcoming(next);
       }
     } catch {}
-  }, [activeNav]);
+  }, []);
+
+  // Navigating to the dashboard re-reads, as before.
+  useEffect(() => {
+    if (activeNav !== "dashboard") return;
+    refreshDashboardData();
+  }, [activeNav, refreshDashboardData]);
+
+  // …and so does any data change, whatever its source: a Drive merge, a vitals
+  // save, an RIE fix. Registered unconditionally rather than only while the
+  // dashboard is on screen, so coming back to it never shows a stale figure.
+  useEffect(() => {
+    const h = () => refreshDashboardData();
+    window.addEventListener("mi-data-synced", h);
+    return () => window.removeEventListener("mi-data-synced", h);
+  }, [refreshDashboardData]);
 
   // Download + merge from Drive, then refresh dashboard data from localStorage.
   const refreshFromDrive = useCallback(async (token) => {
@@ -1111,7 +1143,11 @@ function AppShell() {
                       const latestSleep   = readings.find(r => r.sleep != null);
                       const bmi           = calcBMIApp(latestWeight?.weight);
                       const vitals = [
-                        { label:"Blood Pressure", val: latestBP ? `${latestBP.bp_s}/${latestBP.bp_d}` : null, unit:"mmHg", date:latestBP?.date, color:"#ef4444", flag:!!latestBP?.flag },
+                        // Dark orange, not red: red is reserved for genuinely urgent
+                        // readings. A flagged value still renders #ef4444 below via the
+                        // `flag` branch, so out-of-range BP stays red — it is only the
+                        // resting colour that stops shouting.
+                        { label:"Blood Pressure", val: latestBP ? `${latestBP.bp_s}/${latestBP.bp_d}` : null, unit:"mmHg", date:latestBP?.date, color:"#ea580c", flag:!!latestBP?.flag },
                         { label:"Heart Rate",      val: latestHR?.hr,             unit:"bpm",   date:latestHR?.date,      color:"#f59e0b" },
                         { label:"Resting HR",      val: latestRHR?.resting_hr,    unit:"bpm",   date:latestRHR?.date,     color:"#f87171" },
                         { label:"O2 Sat",          val: latestO2?.o2,             unit:"%",     date:latestO2?.date,      color:"#4f8ef7" },
