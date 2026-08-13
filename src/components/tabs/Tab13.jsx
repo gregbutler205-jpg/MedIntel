@@ -6,7 +6,8 @@ import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
 import { uploadWeeklyBackup, readSyncDiag, getVaultFingerprint } from "../../lib/driveSync.js";
 import { isFolderBackupSupported, getFolderStatus, chooseBackupFolder, clearBackupFolder, backupToFolder, isEncryptedBackupPayload, restoreEncryptedBackup } from "../../lib/folderBackup.js";
-import { unlock, changePassphrase, isUnlocked } from "../../lib/secureStorage.js";
+import { unlock, changePassphrase, isUnlocked, isDemoMode } from "../../lib/secureStorage.js";
+import { ensureReportFolders, getReportFolderState, REPORT_ROOT } from "../../lib/driveReports.js";
 import PasswordInput from "../PasswordInput.jsx"; // WO-5: show/hide toggle
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { APP_VERSION } from "../../version.js";
@@ -20,6 +21,44 @@ function Toast({ msg, onDone }) {
   return (
     <div style={{ position: "fixed", bottom: 24, right: 24, background: "#0b1220", border: "1px solid #10b981", borderRadius: 10, padding: "12px 18px", fontSize: 12, color: "#10b981", fontFamily: "'DM Mono', monospace", zIndex: 200 }}>
       ✓ {msg}
+    </div>
+  );
+}
+
+// ── Report archive row (v1.48.0) ─────────────────────────────────────────────
+// One-click creation of the standard "Insina Health Reports" folder structure
+// in the patient's own Drive. Hidden in demo mode — a demo visitor's real
+// Drive must never be touched. The app can create these folders but (by the
+// deliberate drive.file scope) cannot see files the patient drops into them
+// via the Drive UI — report links are attached per entry, automatically on
+// import or pasted by hand.
+function ReportArchiveRow({ showToast }) {
+  const [folders, setFolders] = useState(getReportFolderState);
+  const [busy, setBusy]       = useState(false);
+  if (isDemoMode()) return null;
+
+  async function setup() {
+    setBusy(true);
+    const state = await ensureReportFolders({ interactive: true });
+    setBusy(false);
+    if (state) { setFolders(state); showToast("Report folders ready in your Drive ✓"); }
+    else showToast("Couldn't set up folders — connect Google Drive first");
+  }
+
+  return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
+      <div>
+        <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>REPORT ARCHIVE</div>
+        <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.6 }}>
+          {folders
+            ? <>“{REPORT_ROOT}” is set up in your Drive — imported reports are filed there automatically.{" "}
+                {folders.rootLink && <a href={folders.rootLink} target="_blank" rel="noopener noreferrer" style={{ color:"#7eb8d8" }}>Open folder ↗</a>}</>
+            : <>Create a standard folder structure in your Drive (“{REPORT_ROOT}”) so original reports have one predictable home. Imports file themselves there and keep a link on the entry.</>}
+        </div>
+      </div>
+      <button onClick={setup} disabled={busy} style={{ padding:"8px 16px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, marginLeft:14, opacity: busy ? 0.6 : 1 }}>
+        {busy ? "Setting up…" : folders ? "Re-check folders" : "Set up report folders"}
+      </button>
     </div>
   );
 }
@@ -584,6 +623,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 Snapshot now
               </button>
             </div>
+            <ReportArchiveRow showToast={showToast} />
             {/* Sync diagnostics: key fingerprint + last merge health */}
             <div style={{ paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
               <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>SYNC DIAGNOSTICS</div>

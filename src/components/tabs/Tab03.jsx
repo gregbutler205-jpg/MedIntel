@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { getRecords, setRecords } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
+import { sanitizeReportUrl } from "../../lib/driveReports.js";
 
 const TYPE_COLORS = {
   "Visit Note": "#4f8ef7",
@@ -79,6 +80,23 @@ export default function Records({ onNavChange }) {
     localStorage.setItem("mi_auto_analyze_doc", docId);
     if (onNavChange) onNavChange("ai");
   };
+
+  // v1.48.0: attach/replace the link to the original report in the patient's
+  // own Drive. Auto-filled by the import pass-through; this hand path covers
+  // reports the patient uploaded to Drive directly (invisible to the app's
+  // deliberately narrow drive.file scope). updatedAt stamp = DEC-046 opt-in
+  // so the edit survives a two-device sync.
+  function editReportLink(rec) {
+    const entered = window.prompt("Paste the report's link (https… — Google Drive “Copy link” works; empty clears):", rec.reportLink || "");
+    if (entered === null) return;
+    const clean = sanitizeReportUrl(entered);
+    if (entered.trim() && !clean) { alert("Only https:// links can be saved."); return; }
+    const patched = { ...rec, reportLink: clean, updatedAt: Date.now() };
+    const next = records.map(r => r.id === rec.id ? patched : r);
+    setRecords(next);
+    setRecordsState(next);
+    setSelected(patched);
+  }
 
   const filtered = records.filter(r => {
     const matchType   = filter === "All" || r.type === filter;
@@ -234,6 +252,17 @@ export default function Records({ onNavChange }) {
                   {showSourceDoc ? "Hide source document" : "View source document →"}
                 </button>
               )}
+              {/* v1.48.0: original report in the patient's own Drive */}
+              {sanitizeReportUrl(selected.reportLink) && (
+                <a href={sanitizeReportUrl(selected.reportLink)} target="_blank" rel="noopener noreferrer"
+                  style={{ color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 10px", textDecoration: "none" }}>
+                  Open original report ↗
+                </a>
+              )}
+              <button onClick={() => editReportLink(selected)}
+                style={{ background: "transparent", border: "none", color: "#4a6a8a", cursor: "pointer", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: 0, textDecoration: "underline" }}>
+                {selected.reportLink ? "edit link" : "add report link"}
+              </button>
             </div>
 
             {/* UI-19: inline source-document viewer (the extracted text stored at import) */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { PrintLabel } from "../icons.jsx";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
+import { sanitizeReportUrl } from "../../lib/driveReports.js";
 const LOGO_WHITE = import.meta.env.BASE_URL + "logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
@@ -1027,10 +1028,14 @@ export default function ProfileTab() {
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{d.name || "—"}</div>
                           <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>
-                            {[d.readingProvider && `Read by ${d.readingProvider}`, d.facility, d.relatedCondition].filter(Boolean).join(" · ")}
+                            {[d.orderedBy && `Ordered by ${d.orderedBy}`, d.readingProvider && `Read by ${d.readingProvider}`, d.facility, d.relatedCondition].filter(Boolean).join(" · ")}
                           </div>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+                          {sanitizeReportUrl(d.reportLink) && (
+                            <a href={sanitizeReportUrl(d.reportLink)} target="_blank" rel="noopener noreferrer" className="no-print"
+                              style={{ fontSize:9, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>report ↗</a>
+                          )}
                           <span style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace" }}>{dateStr}</span>
                           {d.fromRecords && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>Records ↗</span>}
                         </div>

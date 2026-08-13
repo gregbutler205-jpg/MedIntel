@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { PrintLabel } from "../icons.jsx";
 import { getDiagnostics, setDiagnostics as persistDiagnostics, getConditions } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
+import { uploadReportToDrive, sanitizeReportUrl } from "../../lib/driveReports.js";
 
 // ── Diagnostics tab ────────────────────────────────────────────────────────────
 // Observational studies: imaging (MRI/CT/X-ray/US), EKG, EMG, EEG, echo, PFTs,
@@ -13,6 +14,7 @@ import { tombstoneRecord } from "../../lib/recordTombstones.js";
 const BLANK = {
   id: null, name: "", date: "", orderedBy: "", readingProvider: "",
   impression: "", relatedCondition: "", facility: "",
+  reportLink: "", reportFileId: "",
 };
 function genId() { return Math.random().toString(36).slice(2); }
 function fmtDate(iso) {
@@ -25,6 +27,26 @@ function fmtDate(iso) {
 function StudyModal({ study, conditions, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK, ...study });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  // v1.48.0: hand-entered studies never pass through an import, so the modal
+  // offers both halves of the report-link feature directly: paste any https
+  // link, or upload the report file here and let the app file it in the Drive
+  // archive ("Imaging & Diagnostics") and fill the link itself.
+  const uploadRef = useRef(null);
+  const [uploadState, setUploadState] = useState(""); // "" | "busy" | error text
+  async function handleReportUpload(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadState("busy");
+    const res = await uploadReportToDrive(file, { area: "Imaging & Diagnostics", dateISO: form.date, title: form.name || file.name });
+    if (res?.url) {
+      setForm(f => ({ ...f, reportLink: res.url, reportFileId: res.fileId }));
+      setUploadState("");
+    } else {
+      setUploadState("Couldn't upload — connect Google Drive in Settings & Backup first, or paste a link instead.");
+    }
+  }
 
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200 }}>
@@ -69,13 +91,32 @@ function StudyModal({ study, conditions, onSave, onClose }) {
             <label style={lbl}>Impression / Findings</label>
             <textarea style={{ ...inp, height:90, resize:"vertical" }} value={form.impression} onChange={e => set("impression", e.target.value)} placeholder="Reading provider's impression — e.g. No acute findings. Stable post-transplant appearance." />
           </div>
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={lbl}>Report Link (your Google Drive)</label>
+            <div style={{ display:"flex", gap:8 }}>
+              <input style={{ ...inp, flex:1 }} value={form.reportLink} onChange={e => set("reportLink", e.target.value)} placeholder="Paste the report's Drive link — or upload it →" />
+              <button type="button" onClick={() => uploadRef.current?.click()} disabled={uploadState === "busy"}
+                style={{ padding:"8px 12px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap", opacity: uploadState === "busy" ? 0.6 : 1 }}>
+                {uploadState === "busy" ? "⏳ Uploading…" : "⬆ Upload to Drive"}
+              </button>
+              <input ref={uploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleReportUpload} style={{ display:"none" }} />
+            </div>
+            {uploadState && uploadState !== "busy" && (
+              <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace", marginTop:5 }}>{uploadState}</div>
+            )}
+            <div style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:5 }}>
+              The file goes to your own Drive ("Insina Health Reports / Imaging &amp; Diagnostics") — Insina keeps only this link, never the document.
+            </div>
+          </div>
         </div>
 
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
           <button onClick={onClose} style={btnGhost}>Cancel</button>
           <button onClick={() => {
             if (!form.name.trim()) return;
-            onSave({ ...form, name: form.name.trim(), id: form.id || genId() });
+            const link = sanitizeReportUrl(form.reportLink);
+            if (form.reportLink.trim() && !link) { setUploadState("Only https:// links can be saved — check the report link."); return; }
+            onSave({ ...form, name: form.name.trim(), reportLink: link, id: form.id || genId() });
           }} style={btnPrimary}>
             {form.id ? "Save Changes" : "Add Study"}
           </button>
@@ -108,9 +149,13 @@ export default function DiagnosticsTab() {
     persistDiagnostics(list);
   }
   function handleSave(s) {
-    const updated = s.id && studies.some(x => x.id === s.id)
-      ? studies.map(x => x.id === s.id ? s : x)
-      : [...studies, s];
+    // v1.48.0: stamp every save so the Drive merge's newer-edit-wins rule
+    // (DEC-046, opt-in per store) carries edits — a report link added on one
+    // device survives a two-device sync.
+    const stamped = { ...s, updatedAt: Date.now() };
+    const updated = stamped.id && studies.some(x => x.id === stamped.id)
+      ? studies.map(x => x.id === stamped.id ? stamped : x)
+      : [...studies, stamped];
     updated.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     save(updated);
     setModal(null);
@@ -183,6 +228,9 @@ export default function DiagnosticsTab() {
                     {s.orderedBy       && <span>Ordered by {s.orderedBy}</span>}
                     {s.readingProvider && <span>Read by {s.readingProvider}</span>}
                     {s.facility        && <span>🏥 {s.facility}</span>}
+                    {sanitizeReportUrl(s.reportLink) && (
+                      <a href={sanitizeReportUrl(s.reportLink)} target="_blank" rel="noopener noreferrer" className="no-print" style={{ color:"#7eb8d8" }}>Open report ↗</a>
+                    )}
                   </div>
                   {s.impression && <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.55 }}>{s.impression}</div>}
                   {s.migratedFromImaging && !s.impression && (

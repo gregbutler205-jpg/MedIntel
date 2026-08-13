@@ -5,6 +5,7 @@ import { tombstoneRecord, untombstoneRecord } from "../../lib/recordTombstones.j
 import { callAI, extractPdfVision } from "../../lib/aiClient.js";
 import { PrintLabel } from "../icons.jsx";
 import { formatDocumentBlock } from "../../prompts/documents.js";
+import { uploadReportToDrive, areaForDocCategory, sanitizeReportUrl } from "../../lib/driveReports.js";
 
 // ── Categories (base — counts computed dynamically from docs) ─────────────────
 const CATEGORIES_BASE = [
@@ -158,6 +159,7 @@ function UploadModal({ onSave, onClose }) {
         : "[No file attached]",
       fileSize:          file ? `${(file.size / 1024).toFixed(1)} KB` : "—",
       uploadedAt:        new Date().toISOString(),
+      dateISO:           date || "", // v1.48.0: kept for the Drive archive filename
     };
     onSave(doc, file);
   }
@@ -339,9 +341,12 @@ export default function DocumentsTab() {
   });
 
   // ── Doc updater (always reads fresh docs from prev state) ──────────────────
+  // v1.48.0: every edit stamps updatedAt so the Drive merge's newer-edit-wins
+  // rule (DEC-046, opt-in per store) carries field changes — a Drive link
+  // attached on one device now survives a two-device sync.
   function updateDoc(docId, updates) {
     setDocs(prev => {
-      const next = prev.map(d => d.id === docId ? { ...d, ...updates } : d);
+      const next = prev.map(d => d.id === docId ? { ...d, ...updates, updatedAt: Date.now() } : d);
       saveDocs(next);
       return next;
     });
@@ -488,6 +493,13 @@ export default function DocumentsTab() {
 
     // Keep file reference alive for Vision extraction
     if (file) pendingFileRef.current = { id: doc.id, file };
+
+    // v1.48.0: pass the original through to the patient's Drive archive.
+    // Strictly best-effort — the document save above never waits on this.
+    if (file) {
+      uploadReportToDrive(file, { area: areaForDocCategory(doc.category), dateISO: doc.dateISO, title: doc.title })
+        .then(res => { if (res?.url) updateDoc(doc.id, { driveLink: res.url, driveFileId: res.fileId }); });
+    }
 
     // Auto-trigger background processing based on file type
     if (file?.type === "application/pdf") {
@@ -824,6 +836,29 @@ export default function DocumentsTab() {
                       <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Active ✦</span>
                     </div>
                   )}
+                  {/* v1.48.0: link to the original report in the patient's own Drive.
+                      Auto-filled by the import pass-through; editable by hand for
+                      reports uploaded to Drive directly (the app can't see those). */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>Original Report</span>
+                    <span style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", display: "flex", gap: 8, alignItems: "center" }}>
+                      {sanitizeReportUrl(selectedDoc.driveLink)
+                        ? <a href={sanitizeReportUrl(selectedDoc.driveLink)} target="_blank" rel="noopener noreferrer" style={{ color: "#7eb8d8" }}>Open in Drive ↗</a>
+                        : <span style={{ color: "#4a5c6a" }}>not linked</span>}
+                      <button
+                        onClick={() => {
+                          const entered = window.prompt("Paste the report's link (https… — Google Drive “Copy link” works; empty clears):", selectedDoc.driveLink || "");
+                          if (entered === null) return;
+                          const clean = sanitizeReportUrl(entered);
+                          if (entered.trim() && !clean) { alert("Only https:// links can be saved."); return; }
+                          updateDoc(selectedDoc.id, { driveLink: clean, ...(clean ? {} : { driveFileId: "" }) });
+                        }}
+                        style={{ background: "transparent", border: "none", color: "#4a6a8a", cursor: "pointer", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: 0, textDecoration: "underline" }}
+                      >
+                        {selectedDoc.driveLink ? "edit" : "add link"}
+                      </button>
+                    </span>
+                  </div>
                 </div>
 
                 {(selectedDoc.tags || []).length > 0 && (

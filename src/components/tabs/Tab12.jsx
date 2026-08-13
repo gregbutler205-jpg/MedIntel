@@ -9,6 +9,18 @@ import ReviewQueue from "../onboarding/ReviewQueue.jsx";
 import { getStagedStore } from "../../lib/onboardingStaging.js";
 import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
 import { canonicalLabId } from "../../lib/labCanonical.js";
+import { uploadReportToDrive, areaForRecordType, getReportFolderState } from "../../lib/driveReports.js";
+
+// v1.48.0: after a record is saved, file its original PDF in the patient's
+// Drive archive and attach the link. Fire-and-forget — record saves never
+// wait on Drive, and a null result just means "not archived".
+function archiveOriginal(record, file) {
+  if (!file) return;
+  uploadReportToDrive(file, { area: areaForRecordType(record.type), dateISO: record.date, title: record.title })
+    .then(res => {
+      if (res?.url) mergeRecords([{ ...record, reportLink: res.url, reportFileId: res.fileId, updatedAt: Date.now() }]);
+    });
+}
 
 // ── Onboarding staging queue access (ONBOARDING_SPEC v1.1 §2, §11.13) ─────────
 // Unconfirmed items never enter the record; this card keeps the queue (and
@@ -234,6 +246,7 @@ export default function ImportTab({ onImport, onNavChange }) {
   const [batchProgress, setBatchProgress] = useState(null); // null | { done, total, current }
   const [batchSummary, setBatchSummary]   = useState([]);   // [{ name, ok, title?, date?, color?, count?, error? }]
   const fileInputRef = useRef(null);
+  const pdfFileRef   = useRef(null); // v1.48.0: original File from the single-file flow, for the Drive archive
 
   const DOC_TYPES = [
     { label: "Lab Results",     type: "Lab Report", color: "#10b981" },
@@ -322,6 +335,7 @@ export default function ImportTab({ onImport, onNavChange }) {
     // ── Single file — existing preview/review flow ──────────────────────────
     if (pdfs.length === 1) {
       const file = pdfs[0];
+      pdfFileRef.current = file;
       setPdfFileName(file.name || "Document.pdf");
       setPdfStatus("extracting");
       try {
@@ -370,6 +384,8 @@ export default function ImportTab({ onImport, onNavChange }) {
           const extracted = await parseLabsWithClaude(text);
           if (extracted.length === 0) throw new Error("No lab results found");
           allLabs.push(...extracted);
+          // v1.48.0: archive each original lab PDF (the batch record links to the folder)
+          uploadReportToDrive(file, { area: "Lab Reports", dateISO: extracted[0]?.date, title: file.name.replace(/\.pdf$/i, "") });
           summary.push({ name: file.name, ok: true, count: extracted.length });
         } else {
           const extracted = await parseDocWithClaude(text, uploadDocType);
@@ -388,6 +404,7 @@ export default function ImportTab({ onImport, onNavChange }) {
             refDocId: batchDocId,
           };
           mergeRecords([record]);
+          archiveOriginal(record, file); // v1.48.0: Drive archive + link, best-effort
           // Save to AI Reference Docs — always, even if text extraction returned empty
           try {
             const docId = batchDocId;
@@ -416,7 +433,10 @@ export default function ImportTab({ onImport, onNavChange }) {
       setLabs(updatedLabs); // force list to refresh immediately
       const ok   = summary.filter(s => s.ok).length;
       const fail = summary.filter(s => !s.ok).length;
-      // Single Records entry for the whole batch
+      // Single Records entry for the whole batch. v1.48.0: each original PDF is
+      // archived to Drive individually; one record can't point at N files, so
+      // it links to the Lab Reports FOLDER when the archive is set up.
+      const labFolderLink = getReportFolderState()?.areas?.["Lab Reports"]?.link || "";
       mergeRecords([{
         id: Date.now(),
         title: `Lab Import — ${ok} file${ok !== 1 ? "s" : ""}`,
@@ -427,6 +447,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         summary: `${labeled.length} lab result${labeled.length !== 1 ? "s" : ""} imported from ${ok} PDF${ok !== 1 ? "s" : ""}${fail ? ` (${fail} file${fail !== 1 ? "s" : ""} failed)` : ""}.`,
         source: "Imported from PDF", // UI-19: truthful source label
         addedAt: new Date().toISOString(),
+        ...(labFolderLink ? { reportLink: labFolderLink, updatedAt: Date.now() } : {}),
       }]);
       showToast(`${labeled.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} saved.${fail ? ` ${fail} failed — see summary.` : ""}`);
       // UI-20: Import History entry for the batch
@@ -458,6 +479,7 @@ export default function ImportTab({ onImport, onNavChange }) {
       refDocId: docId,
     };
     mergeRecords([record]);
+    archiveOriginal(record, pdfFileRef.current); // v1.48.0: Drive archive + link, best-effort
     // Save to AI Reference Docs — always, even if text extraction returned empty
     // (scanned PDFs get a summary fallback so the AI at least knows the doc exists)
     try {
@@ -499,6 +521,7 @@ export default function ImportTab({ onImport, onNavChange }) {
     // Store refDocId in the record so the Records tab can link back to full text
     record.refDocId = docId;
     mergeRecords([record]);
+    archiveOriginal(record, pdfFileRef.current); // v1.48.0: Drive archive + link, best-effort
     // Save full text to AI Reference Docs
     try {
       const existing = JSON.parse(localStorage.getItem("mi_ref_docs") || "[]");
@@ -526,7 +549,7 @@ export default function ImportTab({ onImport, onNavChange }) {
     // Save a reference record to Records tab so it shows in Medical Records
     const labDate = newLabs[0]?.date || new Date().toISOString().split("T")[0];
     const facility = newLabs[0]?.facility || "";
-    mergeRecords([{
+    const labRecord = {
       id: Date.now(),
       title: pdfFileName ? pdfFileName.replace(/\.pdf$/i, "") : "Lab Report",
       type: "Lab Report",
@@ -536,7 +559,9 @@ export default function ImportTab({ onImport, onNavChange }) {
       summary: `${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} imported from PDF. Tests: ${newLabs.slice(0,5).map(l=>l.name).join(", ")}${newLabs.length > 5 ? "…" : "."}`,
       source: "Imported from PDF", // UI-19: truthful source label
       addedAt: new Date().toISOString(),
-    }]);
+    };
+    mergeRecords([labRecord]);
+    archiveOriginal(labRecord, pdfFileRef.current); // v1.48.0: Drive archive + link, best-effort
 
     // UI-20: Import History entry (excluded = removed during review)
     addImportLog({

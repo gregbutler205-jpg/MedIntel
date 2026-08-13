@@ -12,6 +12,59 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.48.0 — 2026-08-13
+
+### Added
+- **Original reports now live in your own Drive, one link away.** The record
+  keeps what a report *means*; the report itself belongs in your own storage.
+  A one-click **Set up report folders** (Settings & Backup, Google Drive
+  section) creates "Insina Health Reports" in your Drive with subfolders per
+  area — Imaging & Diagnostics, Lab Reports, Clinical Notes, Operative &
+  Procedures, Hospital & Discharge, Referrals, Other.
+
+  From then on, importing a PDF **passes the original straight through to the
+  right subfolder** and pins an "Open report / Open original report ↗" link on
+  the entry it created — Import Records (single, batch, and lab imports) and
+  Source Documents uploads alike. Nothing new is stored inside Insina: the
+  record carries only the link. Every save path treats the archive as
+  best-effort — if Drive is disconnected or the upload fails, the record
+  saves exactly as before, without the link.
+
+  Hand-entered diagnostic studies get both halves in the study form: paste any
+  https link (a report already in Drive, or a patient-portal link), or upload
+  the file right there and the app files it and fills the link in. Links show
+  on Diagnostics cards, the Health Profile's diagnostics list, and Medical
+  Records entries (which also take a pasted link via "add report link").
+  Only https links are accepted anywhere a link can be entered.
+
+  Scope honesty: the app keeps its deliberately narrow Drive permission
+  (drive.file) — it can create these folders and see files *it* uploaded, but
+  cannot list files you drop into the folders yourself. That's what the paste
+  path is for. Demo mode never touches a visitor's real Drive: setup and
+  uploads are hard no-ops there and the Settings row is hidden.
+
+- **Diagnostics carry-forward on the Patient Profile.** The profile's
+  on-screen Diagnostics list now shows the ordering doctor alongside the
+  reading provider and facility (the printed profile already had all three).
+
+### Fixed
+- **Edits to documents and diagnostic studies now survive a two-device sync.**
+  Source Document edits and Diagnostics saves stamp `updatedAt`, opting those
+  stores into the newer-edit-wins merge rule (DEC-046) — so a report link
+  attached on the laptop reaches the phone instead of being silently
+  discarded by the local-first union.
+
+### Tests
+- `npm run test:drive-reports` — 82 checks: area mapping for every record
+  type and document category, https-only link sanitization, archive filename
+  building, folder-state parsing, the demo-mode and no-token no-op contracts,
+  and structural wiring (all four import paths archive, upload pass-throughs
+  present, updatedAt stamps present, every rendered link sanitized +
+  `rel="noopener noreferrer"`, prompt builders never see link fields).
+  16 suites / 542 cases.
+
+---
+
 ## v1.47.0 — 2026-08-11
 
 ### Added
