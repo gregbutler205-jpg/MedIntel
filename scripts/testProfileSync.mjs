@@ -149,5 +149,35 @@ const KEY = "mi_profile_personal";
   ok(sync.includes("{ ...local, ...value }"), "merge object branch: legacy shallow merge retained for unstamped");
 }
 
+// ── 8. Weight auto-fill from Vitals (v1.49.0) ────────────────────────────────
+{
+  const { latestWeightReading } = await import("../src/store.js");
+
+  localStorage.setItem("mi_readings", JSON.stringify([
+    { id: "r1", date: "2026-08-13", systolic: 128, diastolic: 82 },            // newest, BP-only
+    { id: "r2", date: "2026-08-10", weight: "182.4" },                          // newest WITH weight
+    { id: "r3", date: "2026-08-01", weight: 185 },
+    { id: "r4", date: "2026-08-12", weight: "not-a-number" },                   // junk ignored
+  ]));
+  await secureStorage.flushPendingWrites();
+  const w = latestWeightReading();
+  ok(w?.id === "r2", "picks the newest reading that HAS a weight (skips newer BP-only + junk)");
+  ok(parseFloat(w.weight) === 182.4, "returns the reading with its weight value");
+
+  localStorage.setItem("mi_readings", JSON.stringify([{ id: "r1", date: "2026-08-13", systolic: 128 }]));
+  await secureStorage.flushPendingWrites();
+  ok(latestWeightReading() === null, "no logged weights → null (profile field is the fallback)");
+
+  localStorage.setItem("mi_readings", JSON.stringify([]));
+  await secureStorage.flushPendingWrites();
+  ok(latestWeightReading() === null, "empty readings → null, never throws");
+
+  const tab02 = readFileSync(SRC("components/tabs/Tab02.jsx"), "utf8");
+  ok(tab02.includes("latestWeightReading"), "Health Profile uses the vitals weight helper");
+  ok(tab02.includes("log a new weight on the Vitals tab"), "edit mode explains where weight now comes from");
+  const emergency = readFileSync(SRC("lib/printEmergency.js"), "utf8");
+  ok(emergency.includes("latestWeightReading"), "emergency packet prints the CURRENT weight from Vitals");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (profile-sync)`);
 assert.equal(fail, 0);

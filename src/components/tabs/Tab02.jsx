@@ -11,7 +11,7 @@ import {
   getEmergencyContacts, setEmergencyContacts,
   getPharmacies, setPharmacies,
   getDiagnostics,
-  getConditions, getSurgeries, getMedsFull, getLatestReading,
+  getConditions, getSurgeries, getMedsFull, getLatestReading, latestWeightReading,
 } from "../../store.js";
 import { getCards, setCards, blankCard, compressImage, shareImageDataUrl } from "../../lib/cards.js";
 import { requestReport } from "../../rie/preflightChecks.js";
@@ -709,6 +709,14 @@ export default function ProfileTab() {
   const P = personal;
   const I = insurance;
 
+  // v1.49.0: weight auto-fills from the newest Vitals reading that has one —
+  // the profile field is only a fallback for records with no logged weights.
+  const vitalsWeight = latestWeightReading();
+  const vitalsWeightLbs = vitalsWeight ? `${parseFloat(vitalsWeight.weight)} lbs` : null;
+  const vitalsWeightDate = vitalsWeight?.date
+    ? new Date(vitalsWeight.date + (vitalsWeight.date.length === 10 ? "T12:00:00" : "")).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : "";
+
   const PERSONAL_FIELDS = [
     ["Full Name","name"],["Date of Birth","dob"],["Age","age"],["Sex","sex"],
     ["Blood Type","blood"],["Height","height"],["Weight","weight"],
@@ -771,9 +779,28 @@ export default function ProfileTab() {
               onSave={savePersonal}
               onCancel={() => { setEdPersonal(false); setTempPersonal({}); }}
             />
-            {PERSONAL_FIELDS.map(([label, field, cfg]) => (
-              <FieldRow key={field} label={label} value={P[field]} editing={edPersonal} field={field} vals={tempPersonal} setVals={setTempPersonal} {...(cfg || {})} />
-            ))}
+            {PERSONAL_FIELDS.map(([label, field, cfg]) => {
+              // v1.49.0: weight auto-fills from Vitals whenever a weight has
+              // been logged — shown read-only (in edit mode too) so the value
+              // can never diverge from the Vitals tab. With no logged weight,
+              // the normal editable field applies.
+              if (field === "weight" && vitalsWeight) {
+                return (
+                  <div key={field} style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
+                    <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
+                    <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>
+                      {vitalsWeightLbs}
+                      <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginLeft:8 }}>
+                        auto from Vitals{vitalsWeightDate ? ` · ${vitalsWeightDate}` : ""}{edPersonal ? " — log a new weight on the Vitals tab to change it" : ""}
+                      </span>
+                    </span>
+                  </div>
+                );
+              }
+              return (
+                <FieldRow key={field} label={label} value={P[field]} editing={edPersonal} field={field} vals={tempPersonal} setVals={setTempPersonal} {...(cfg || {})} />
+              );
+            })}
           </div>
 
           {/* ── Insurance ── */}
@@ -1159,7 +1186,7 @@ export default function ProfileTab() {
         {/* Demographics */}
         <h2>Demographics &amp; Contact</h2>
         <div className="grid2">
-          {[["Height",P.height],["Weight",P.weight],["Phone",P.phone],["Email",P.email],["Address",P.address],
+          {[["Height",P.height],["Weight", vitalsWeightLbs ? `${vitalsWeightLbs}${vitalsWeightDate ? ` (as of ${vitalsWeightDate})` : ""}` : P.weight],["Phone",P.phone],["Email",P.email],["Address",P.address],
             ["Code Status",P.codeStatus],["Advance Directive",P.advanceDirective],["Implanted Devices",P.implantedDevices]].map(([l,v])=>v?(
             <div key={l} className="pr"><span className="pr-lbl">{l}</span><span className="pr-val">{v}</span></div>
           ):null)}

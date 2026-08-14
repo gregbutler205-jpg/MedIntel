@@ -23,6 +23,7 @@
 // but they are escaped anyway (defense in depth): a tampered or restored
 // mi_cards that ever put a non-base64 string in a src can't break out.
 import { escapeHtml } from "./renderAiText.js";
+import { latestWeightReading } from "../store.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
 export function buildEmergencyHtml() {
@@ -90,9 +91,22 @@ export function buildEmergencyHtml() {
 
   const kv = (label, value) => value ? `<span class="dim">${escapeHtml(label)}:</span> ${escapeHtml(value)}` : "";
 
+  // v1.49.0: weight auto-fills from the newest Vitals reading that carries one
+  // (with its as-of date — an ED wants CURRENT weight, and the manual profile
+  // field goes stale). Falls back to the profile field when none is logged.
+  const weightNow = (() => {
+    try {
+      const w = latestWeightReading();
+      if (!w) return profile.weight;
+      const d = w.date ? new Date(w.date + (String(w.date).length === 10 ? "T12:00:00" : "")) : null;
+      const asOf = d && !isNaN(d) ? ` (as of ${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })})` : "";
+      return `${parseFloat(w.weight)} lbs${asOf}`;
+    } catch { return profile.weight; }
+  })();
+
   const demoRows = [
     kv("DOB", profile.dob), kv("Age", profile.age), kv("Sex", sex),
-    kv("Height", profile.height), kv("Weight", profile.weight),
+    kv("Height", profile.height), kv("Weight", weightNow),
     kv("Phone", profile.phone), kv("Email", profile.email), kv("Address", profile.address),
   ].filter(Boolean);
 

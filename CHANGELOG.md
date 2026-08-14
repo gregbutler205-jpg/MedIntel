@@ -12,6 +12,28 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.49.0 — 2026-08-13
+
+### Added
+- **Weight auto-fills from Vitals.** The Health Profile's weight is no longer
+  a second, manually maintained copy: whenever any weight has been logged on
+  the Vitals tab (or from the phone), the profile shows the newest one —
+  labeled "auto from Vitals" with its date — on screen, in edit mode (as a
+  read-only value pointing you to the Vitals tab), and on the printed
+  profile. The emergency packet now prints that same CURRENT weight with an
+  as-of date, instead of whatever was typed into the profile long ago. The
+  helper picks the newest reading that actually carries a weight — a newer
+  BP-only entry doesn't blank it. Records with no logged weights keep the
+  editable profile field exactly as before.
+
+### Tests
+- Weight auto-fill cases added to `npm run test:profile-sync` (25 checks):
+  newest-with-weight selection past BP-only and junk entries, null fallback,
+  and structural checks on the profile and emergency packet.
+  17 suites / 567 cases.
+
+---
+
 ## v1.48.1 — 2026-08-13
 
 ### Fixed

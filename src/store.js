@@ -132,6 +132,25 @@ export function getLatestReading() {
   return readings.length > 0 ? readings[0] : null;
 }
 
+// v1.49.0: the patient's CURRENT weight lives in Vitals — the Health Profile
+// and the emergency packet auto-fill from the newest reading that actually
+// carries one (the newest reading overall may be BP-only). Returns the
+// reading, or null when no weight has ever been logged (callers fall back to
+// the manually entered profile field).
+export function latestWeightReading() {
+  const readings = getStore('readings') ?? [];
+  const ts = r => {
+    const t = new Date(r.date || r.ts || r.enteredAt || 0).getTime();
+    return Number.isFinite(t) ? t : 0;
+  };
+  let best = null;
+  for (const r of readings) {
+    if (r == null || r.weight == null || r.weight === "" || isNaN(parseFloat(r.weight))) continue;
+    if (!best || ts(r) > ts(best)) best = r;
+  }
+  return best;
+}
+
 // Add an import log entry
 export function addImportLog(entry) {
   const log = getStore('importLog');
