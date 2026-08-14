@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
 import { mkReading, saveReading, defaultVitalFlag } from './lib/vitals.js';
 import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
+import { wirePrintWindow } from './lib/printWindow.js';
 import LockScreen from './components/LockScreen.jsx';
 import OnboardingFlow from './components/onboarding/OnboardingFlow.jsx';
 import TaskCards from './components/onboarding/TaskCards.jsx';
@@ -239,9 +240,9 @@ function printRefills(meds, logoUrl) {
       <span>Insina Health &mdash; Medication Refill List</span>
       <span>${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
 
 // ── Dashboard hot-button row ──────────────────────────────────────────────────

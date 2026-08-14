@@ -24,6 +24,7 @@
 // mi_cards that ever put a non-base64 string in a src can't break out.
 import { escapeHtml } from "./renderAiText.js";
 import { latestWeightReading } from "../store.js";
+import { wirePrintWindow } from "./printWindow.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
 export function buildEmergencyHtml() {
@@ -184,7 +185,7 @@ export function buildEmergencyHtml() {
       @media (max-width:560px) { .cols, .cardgrid { grid-template-columns:1fr; } }
     </style>
   </head><body>
-    <button class="printbtn" onclick="window.print()">🖨 Print</button>
+    <button class="printbtn">🖨 Print / Save as PDF</button>
     <img src="${logoUrl}" class="logo" />
     <h1>${escapeHtml(profile.name || "Patient Emergency Information")}</h1>
     ${bloodType ? `<div class="bloodbadge">BLOOD TYPE ${escapeHtml(bloodType)}</div>` : ""}
@@ -207,7 +208,6 @@ export function buildEmergencyHtml() {
       <span>Insina Health &mdash; Emergency Information</span>
       <span>Printed ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`;
 }
 
@@ -216,4 +216,7 @@ export function printEmergency() {
   if (!win) return; // popup blocked — same convention as printMedicationList
   win.document.write(buildEmergencyHtml());
   win.document.close();
+  // v1.49.1: no inline scripts/handlers in the generated page — the app CSP
+  // blocks them in the popup. The opener wires the button + auto-print.
+  wirePrintWindow(win);
 }

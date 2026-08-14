@@ -11,6 +11,7 @@ import { callAI } from "../../lib/aiClient.js";
 import { formatDocumentBlock } from "../../prompts/documents.js";
 import { QUESTION_RULES } from "../../prompts/core.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
+import { wirePrintWindow } from "../../lib/printWindow.js";
 // DEC-046: reports the patient marked for this visit ride into the prep prompt;
 // completing the visit consumes the marks.
 import { markedReportsForAppointment, buildMarkedReportsSection, clearPrepMarksForAppointment } from "../../lib/prepMarks.js";
@@ -91,9 +92,9 @@ function printConsultationPrep(appt, analysis) {
       <span>Insina Health &mdash; Personal Health Intelligence</span>
       <span>Generated ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
 
 const URGENCY_CFG = {

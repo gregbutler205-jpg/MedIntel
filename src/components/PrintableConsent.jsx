@@ -1,3 +1,5 @@
+import { wirePrintWindow } from "../lib/printWindow.js";
+
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -170,10 +172,10 @@ export function printConsent(consentData = {}) {
     <span>Printed ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
   </div>
 
-  <script>window.onload = function() { window.print(); }<\/script>
 </body>
 </html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

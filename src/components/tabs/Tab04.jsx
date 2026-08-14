@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
 import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds, getLastImportLabel } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
+import { wirePrintWindow } from "../../lib/printWindow.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
@@ -99,9 +100,9 @@ function printRefillReport(meds) {
       <span>Insina Health — Personal Health Intelligence</span>
       <span>Printed ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
 
 

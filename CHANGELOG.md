@@ -12,6 +12,38 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.49.1 — 2026-08-14
+
+### Fixed
+- **The Emergency Card's Print button works again, and every report window
+  prints itself reliably.** Root cause: report popups inherit the app's
+  security policy (S-03), which forbids inline scripts — so the emergency
+  card's Print button (an inline onclick) and the auto-print inside every
+  print window (an inline script) were silently blocked in production. It
+  never showed in development because the dev server strips that policy.
+
+  All ten report windows now print via a shared opener-side wiring
+  (`wirePrintWindow`): the app itself fires the print dialog and wires the
+  button — no inline scripts anywhere in generated pages, which also
+  *strengthens* the XSS posture (the emergency card's escaping test now pins
+  ZERO script tags instead of exactly-one). Auto-print waits for the logo to
+  load so saved PDFs aren't missing it, and every report gets a visible
+  "Print / Save as PDF" button — cancel the dialog and you can reopen it,
+  and Chrome's Save-as-PDF suggests the report's title as the filename.
+  Covers: Emergency Card, Medication List, Refill Report, Lab Report, AI
+  Analysis (report, summary, and transcript), Consultation Prep, Advanced
+  Mode Consent. The Patient Profile print already used the safe pattern and
+  is unchanged.
+
+### Tests
+- `npm run test:print-csp` — 38 checks: the emergency card's generated HTML
+  is inline-script- and handler-free, all nine converted sites dropped their
+  inline triggers and wire through the opener, Tab02's existing safe pattern
+  pinned, and the helper's button-injection / image-wait / no-markup-writing
+  contracts. 18 suites / 605 cases.
+
+---
+
 ## v1.49.0 — 2026-08-13
 
 ### Added

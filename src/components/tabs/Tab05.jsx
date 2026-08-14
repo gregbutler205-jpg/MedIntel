@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import AppSidebar from "../AppSidebar.jsx";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
+import { wirePrintWindow } from "../../lib/printWindow.js";
 import { callAI } from "../../lib/aiClient.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceB1, buildSurfaceB2 } from "../../prompts/surfaceB.js";
@@ -317,9 +318,9 @@ function printAIResponse(question, answer, logoUrl) {
       <span>Insina Health &mdash; Personal Health Intelligence</span>
       <span>Generated ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
 
 function printLabReport(labs, logoUrl) {
@@ -397,9 +398,9 @@ function printLabReport(labs, logoUrl) {
       <span>Insina Health &mdash; Personal Health Intelligence</span>
       <span>Printed ${date} &nbsp;·&nbsp; ${tests.length} tests</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
 
 // Shared AI response renderer — strips emojis, renders bold/bullets/dividers cleanly

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import AIModeOnboardingModal from "../AIModeOnboardingModal";
 import { printConsent } from "../PrintableConsent";
+import { wirePrintWindow } from "../../lib/printWindow.js";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
@@ -337,6 +338,7 @@ function openPrintable(html, filenameBase) {
   if (win) {
     win.document.write(html);
     win.document.close();
+    wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
     return "printed";
   }
   try {
@@ -374,7 +376,6 @@ function buildSummaryHtml(summaryText, logoUrl, mode) {
       <span>Insina Health &mdash; Informational only. This is not medical advice. Always consult your physician.</span>
       <span>Generated ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`;
 }
 
@@ -399,7 +400,6 @@ function buildTranscriptHtml(convMessages, logoUrl, mode) {
       <span>Insina Health &mdash; Informational only. This is not medical advice. Always consult your physician.</span>
       <span>Generated ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`;
 }
 

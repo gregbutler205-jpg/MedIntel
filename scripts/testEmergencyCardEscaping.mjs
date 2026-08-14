@@ -62,10 +62,12 @@ ok(html.includes("&quot;&gt;&lt;script&gt;"), "the attribute-breakout payload is
 ok(html.includes(`src="data:image/jpeg;base64,/9j/4AAQ"`), "a legitimate base64 data URI still renders intact (escapeHtml is a no-op on base64 chars)");
 ok(!html.includes(CARD_SRC_ATTACK), "a tampered card image src (attribute breakout) never appears unescaped");
 ok(!html.includes("<img src=x"), "no live <img> tag was injected into the DOM structure");
-// The card legitimately ships ONE <script> (its own window.print() trigger) —
-// the payload attempted to inject a second; the count must stay at exactly 1.
+// v1.49.1 strengthened this invariant: the card ships ZERO <script> tags (the
+// print trigger moved to the CSP-safe opener-side wirePrintWindow — inline
+// scripts were blocked by the app CSP in the popup anyway). Any <script> in
+// the output can therefore only be an injection; the count must be exactly 0.
 const scriptTagCount = (html.match(/<script>/g) || []).length;
-ok(scriptTagCount === 1, `exactly one <script> tag present (the card's own print trigger) — got ${scriptTagCount}`);
+ok(scriptTagCount === 0, `zero <script> tags present (print trigger is opener-side since v1.49.1) — got ${scriptTagCount}`);
 
 console.log(`\n${pass} passed, ${fail} failed (emergency-card-escaping)`);
 process.exit(fail ? 1 : 0);

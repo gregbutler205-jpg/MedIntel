@@ -3,6 +3,8 @@
 // SPEC v1.1 §6) can invoke it from Phase 5 — the spec names first-artifact
 // invocation as a sanctioned integration point. Content unchanged.
 
+import { wirePrintWindow } from "./printWindow.js";
+
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
 export function printMedicationList(meds) {
@@ -74,7 +76,7 @@ export function printMedicationList(meds) {
       <span>Insina Health &mdash; Personal Health Intelligence</span>
       <span>Printed ${date}</span>
     </div>
-    <script>window.onload = function(){ window.print(); }<\/script>
   </body></html>`);
   win.document.close();
+  wirePrintWindow(win); // CSP-safe: the opener fires print; inline scripts are blocked in the popup
 }
