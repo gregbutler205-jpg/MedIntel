@@ -520,10 +520,15 @@ export default function ProfileTab() {
   }
 
   // Care team
+  // DEC-047: each item save stamps ONLY the saved item with updatedAt, opting
+  // it into the merge's newer-edit-wins rule (DEC-046) — an edit made here now
+  // beats the stale Drive copy on the next sync instead of being discarded.
+  // Untouched items keep their existing stamps (or none).
   function saveProvider(p) {
-    const updated = p.id && careTeam.find(x => x.id === p.id)
-      ? careTeam.map(x => x.id === p.id ? p : x)
-      : [...careTeam, p];
+    const s = { ...p, updatedAt: Date.now() };
+    const updated = s.id && careTeam.find(x => x.id === s.id)
+      ? careTeam.map(x => x.id === s.id ? s : x)
+      : [...careTeam, s];
     setCareTeamState(updated);
     setCareTeam(updated);
     setProviderModal(null);
@@ -541,8 +546,8 @@ export default function ProfileTab() {
   // Allergies
   function saveAllergy(a) {
     const updated = a.id && allergies.find(x => x.id === a.id)
-      ? allergies.map(x => x.id === a.id ? a : x)
-      : [...allergies, a];
+      ? allergies.map(x => x.id === a.id ? { ...a, updatedAt: Date.now() } : x)
+      : [...allergies, { ...a, updatedAt: Date.now() }];
     setAllergiesState(updated);
     setAllergies(updated);
     setAllergyModal(null);
@@ -558,8 +563,8 @@ export default function ProfileTab() {
   // Emergency contacts
   function saveContact(c) {
     const updated = c.id && contacts.find(x => x.id === c.id)
-      ? contacts.map(x => x.id === c.id ? c : x)
-      : [...contacts, c];
+      ? contacts.map(x => x.id === c.id ? { ...c, updatedAt: Date.now() } : x)
+      : [...contacts, { ...c, updatedAt: Date.now() }];
     setContactsState(updated);
     setEmergencyContacts(updated);
     setEcModal(null);
@@ -567,8 +572,8 @@ export default function ProfileTab() {
   // Pharmacies
   function savePharmacy(ph) {
     const updated = ph.id && pharmacies.find(x => x.id === ph.id)
-      ? pharmacies.map(x => x.id === ph.id ? ph : x)
-      : [...pharmacies, ph];
+      ? pharmacies.map(x => x.id === ph.id ? { ...ph, updatedAt: Date.now() } : x)
+      : [...pharmacies, { ...ph, updatedAt: Date.now() }];
     setPharmaciesState(updated);
     setPharmacies(updated);
     setPharmacyModal(null);
@@ -591,9 +596,10 @@ export default function ProfileTab() {
 
   // Insurance / ID cards
   function saveCardEntry(entry) {
-    const updated = entry.id && cards.find(x => x.id === entry.id)
-      ? cards.map(x => x.id === entry.id ? entry : x)
-      : [...cards, entry];
+    const stampedEntry = { ...entry, updatedAt: Date.now() };
+    const updated = stampedEntry.id && cards.find(x => x.id === stampedEntry.id)
+      ? cards.map(x => x.id === stampedEntry.id ? stampedEntry : x)
+      : [...cards, stampedEntry];
     setCards(updated);        // may throw on quota — CardModal catches and warns
     setCardsState(updated);
     setCardModal(null);

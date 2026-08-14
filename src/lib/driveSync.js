@@ -212,7 +212,21 @@ export async function mergeIntoLocal(driveData) {
         if (Array.isArray(value) && Array.isArray(local)) {
           await secureStorage.setEncrypted(key, JSON.stringify(_mergeArrays(local, value)));
         } else if (value && typeof value === "object" && !Array.isArray(value)) {
-          await secureStorage.setEncrypted(key, JSON.stringify({ ...local, ...value }));
+          // DEC-047 (extends DEC-046 to object stores): when BOTH copies carry
+          // a numeric updatedAt edit stamp, the newer OBJECT wins wholesale.
+          // The legacy shallow merge ({...local, ...drive}) let the Drive copy
+          // win every conflicting field and RESTORE fields the user had
+          // cleared — a Health Profile edit reverted on the next app open.
+          // Wholesale replacement is what makes a field DELETION stick: the
+          // newer object simply doesn't have the field. Only stamped stores
+          // opt in; everything unstamped keeps the legacy merge unchanged.
+          const lu = local && typeof local === "object" ? local.updatedAt : undefined;
+          const du = value.updatedAt;
+          if (typeof lu === "number" && typeof du === "number") {
+            await secureStorage.setEncrypted(key, JSON.stringify(du > lu ? value : local));
+          } else {
+            await secureStorage.setEncrypted(key, JSON.stringify({ ...local, ...value }));
+          }
         }
         // primitives: keep local
       }

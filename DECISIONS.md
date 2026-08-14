@@ -1719,3 +1719,39 @@ reopened), DEC-022 (AI-generated labeling), S-07 (document delimiting), OPEN-9 /
   Pre-existing, widened slightly by sessions persisting across restarts. Candidate fix: migrate
   the family to `mi_`-prefixed keys (encrypted + backed up) with an A-08-style rename migration.
   Session REPORTS are unaffected — they save into `mi_notes`, which is encrypted and backed up.
+
+---
+
+## DEC-047: Object stores adopt newer-edit-wins in the Drive merge (DEC-046 extended)
+
+**Status:** Settled and shipped (v1.48.1, 2026-08-13)
+
+**Problem (Greg, from use).** Editing or clearing a field on the Health Profile reverted "the
+next time I open the app" — the same reported symptom as the old Appointments/Medications
+resurrections, but a different mechanism. Those were ARRAY stores fixed by tombstones (deletes)
+and DEC-046 stamps (edits). The profile's Personal Info and Insurance are OBJECT stores, and
+`mergeIntoLocal`'s object rule was a shallow merge, `{ ...local, ...drive }`: the Drive copy won
+every conflicting scalar field and re-supplied any field the patient had cleared. Every app-open
+sync therefore un-did profile edits until the local upload happened to run first — a race the
+patient always eventually loses.
+
+**Decision.** Extend DEC-046's opt-in rule to object stores: when BOTH copies of an object store
+carry a numeric `updatedAt`, the newer OBJECT replaces the older wholesale. Unstamped objects
+keep the legacy shallow merge byte-for-byte — nothing else changes behavior. Stamping happens at
+the store setters (`setProfilePersonal` / `setProfileInsurance`), covering every caller,
+including future ones; onboarding's direct Tier-0 write stamps too so it never strips the stamp.
+The profile's per-item array saves (care team, allergies, contacts, pharmacies, cards) now stamp
+the SAVED item only, opting item edits into the existing DEC-046 array rule; their deletes were
+already tombstoned.
+
+**Why wholesale replacement, not field-level merge.** Field deletion is the case that matters: a
+cleared field is ABSENT from the newer object, and any field-union scheme would resurrect it —
+the exact reported bug. The trade-off (two devices editing DIFFERENT profile fields in the same
+sync gap: newer save wins, the other device's edit is lost) is accepted deliberately — the same
+trade DEC-046 made for array records, on a store edited rarely and almost always from one device.
+Field-level timestamps were rejected as complexity without a driving case.
+
+**Pinned by test** (`npm run test:profile-sync`): both-stamped newer-drive wins wholesale;
+both-stamped newer-local survives the boot merge (the reported bug); a cleared field stays
+cleared through a merge against a stale copy; unstamped objects keep the legacy shallow merge
+unchanged; structural checks that the setters and all five per-item saves stamp.

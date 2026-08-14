@@ -22,6 +22,7 @@ function writeTier0ToRecord(t) {
     const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}");
     if (t.name) p.name = t.name;
     if (t.dob) p.dob = t.dob;
+    p.updatedAt = Date.now(); // DEC-047: keep the object's merge stamp intact
     localStorage.setItem("mi_profile_personal", JSON.stringify(p));
   } catch { /* locked: unreachable post-unlock, fail quiet */ }
 

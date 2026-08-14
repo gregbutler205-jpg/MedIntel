@@ -12,6 +12,36 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.48.1 — 2026-08-13
+
+### Fixed
+- **Health Profile edits and cleared fields no longer revert on the next app
+  open (DEC-047).** Personal Info and Insurance are stored as objects, and the
+  Drive merge's object rule was a shallow merge where the Drive copy won every
+  conflicting field — and re-supplied any field you had cleared. Editing your
+  phone number or blanking a field held only until the next sync put the old
+  value back: the same symptom as the old Appointments/Medications
+  resurrections, by a different mechanism (those were array stores, fixed by
+  tombstones and DEC-046 stamps; the profile's objects had neither).
+
+  Now, when both copies of an object store carry an edit stamp, the newer
+  object wins wholesale — which is exactly what makes a *deletion* stick: the
+  newer object simply doesn't have the field. Profile saves stamp at the store
+  setter (covering every caller, onboarding included), and the profile's
+  per-item saves — care team, allergies, emergency contacts, pharmacies,
+  insurance cards — now stamp the saved item, so item *edits* ride the
+  existing newer-edit-wins rule too (their deletes were already tombstoned).
+  Unstamped stores keep the old merge behavior byte-for-byte, pinned by test.
+
+### Tests
+- `npm run test:profile-sync` — 18 checks through a REAL vault and the REAL
+  merge: the reported bug both directions (edit survives boot merge; cleared
+  field stays cleared), wholesale replacement, unstamped legacy behavior
+  pinned, insurance store, array-rule regression guard, and structural checks
+  that every profile save path stamps. 17 suites / 560 cases.
+
+---
+
 ## v1.48.0 — 2026-08-13
 
 ### Added

@@ -87,11 +87,14 @@ export function getPendingMeds() { return getStore('meds_pending'); }
 export function setPendingMeds(meds) { setStore('meds_pending', meds); }
 
 // ── Profile helpers ────────────────────────────────────────────────────────────
+// DEC-047: the two profile OBJECT stores stamp every save with updatedAt so
+// the Drive merge's newer-object-wins rule carries edits and field deletions
+// across syncs. Stamping here (the setter) covers every caller at once.
 export function getProfilePersonal() { return getStore('profile_personal') ?? {}; }
-export function setProfilePersonal(v) { setStore('profile_personal', v); }
+export function setProfilePersonal(v) { setStore('profile_personal', { ...v, updatedAt: Date.now() }); }
 
 export function getProfileInsurance() { return getStore('profile_insurance') ?? {}; }
-export function setProfileInsurance(v) { setStore('profile_insurance', v); }
+export function setProfileInsurance(v) { setStore('profile_insurance', { ...v, updatedAt: Date.now() }); }
 
 export function getCareTeam() { return getStore('care_team') ?? []; }
 export function setCareTeam(v) { setStore('care_team', v); }
