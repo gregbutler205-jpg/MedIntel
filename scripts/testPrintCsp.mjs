@@ -38,12 +38,40 @@ const ok = (c, m) => { if (c) { pass++; console.log("PASS — " + m); } else { f
 {
   localStorage.setItem("mi_profile_personal", JSON.stringify({ name: "Test Patient", dob: "1970-01-01", blood: "O+" }));
   localStorage.setItem("mi_readings", JSON.stringify([{ id: "w1", date: "2026-08-12", weight: "182" }]));
+  localStorage.setItem("mi_conditions", JSON.stringify([
+    { name: "Liver Transplant (2023)", status: "active" },
+    { name: "Hypertension", status: "active" },
+  ]));
+  localStorage.setItem("mi_meds_full", JSON.stringify([
+    { name: "Atorvastatin", dose: "20 mg", status: "active" },
+    { name: "Tacrolimus", dose: "2 mg", status: "active" },
+  ]));
+  localStorage.setItem("mi_allergies", JSON.stringify([{ allergen: "Penicillin", reaction: "hives" }]));
   const { buildEmergencyHtml } = await import("../src/lib/printEmergency.js");
   const html = buildEmergencyHtml();
   ok(!/<script\b/i.test(html), "emergency card HTML contains NO <script> (CSP would block it)");
   ok(!/\son[a-z]+\s*=/i.test(html), "emergency card HTML contains NO inline event handlers");
   ok(html.includes('class="printbtn"'), "emergency card still ships its visible Print button (wired by the opener)");
   ok(html.includes("182 lbs"), "emergency card carries the current Vitals weight");
+
+  // v1.49.2 hierarchy (Greg): banner > allergies > demoted blood type.
+  ok(html.includes("LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION"),
+     "banner derives transplant + immunosuppression from the record");
+  ok(html.includes("ALLERGIES: Penicillin"), "allergies strip sits under the banner");
+  ok(!html.includes("bloodbadge"), "the enlarged red blood-type badge is gone");
+  ok(html.includes("Blood Type O+"), "blood type demoted into the ID line, still present");
+  ok(html.indexOf("Tacrolimus") < html.indexOf("Atorvastatin"),
+     "immunosuppressants print before other medications");
+  ok(html.indexOf('class="alertbanner"') < html.indexOf("Active Medications"),
+     "banner precedes the sections");
+
+  // No transplant / no immuno meds → no synthetic banner, honest allergies line.
+  localStorage.setItem("mi_conditions", JSON.stringify([{ name: "Hypertension", status: "active" }]));
+  localStorage.setItem("mi_meds_full", JSON.stringify([{ name: "Atorvastatin", status: "active" }]));
+  localStorage.setItem("mi_allergies", JSON.stringify([]));
+  const plain = buildEmergencyHtml();
+  ok(!plain.includes('class="alertbanner"'), "no banner is fabricated for a record without transplant/immunosuppression");
+  ok(plain.includes("No allergies recorded"), "empty allergy list prints 'No allergies recorded' (never claims NKDA)");
 }
 
 // ── 2. No popup print generator ships inline print triggers ──────────────────

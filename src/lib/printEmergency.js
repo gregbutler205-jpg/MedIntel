@@ -47,6 +47,30 @@ export function buildEmergencyHtml() {
   const bloodType = profile.blood || profile.bloodType || "";
   const sex       = profile.sex || profile.gender || "";
 
+  // ── v1.49.2 (Greg): the "unmissable" slot belongs to what changes an ED's
+  // decisions in the first three seconds — not blood type (a patient-reported
+  // type is never transfused against; EDs type & crossmatch every time, and
+  // give O-neg in extremis). Blood type moves down into the ID line. The top
+  // banner derives from the record itself: transplant status from active
+  // conditions, immunosuppression from active meds by drug class or category.
+  const IMMUNOSUPPRESSANTS = /tacrolimus|prograf|envarsus|cyclosporin|neoral|sandimmune|mycophenolate|cellcept|myfortic|sirolimus|rapamune|everolimus|zortress|azathioprine|imuran|belatacept|nulojix/i;
+  const isImmunoMed = m => IMMUNOSUPPRESSANTS.test(m.name || "") || /immunosuppress/i.test(m.category || "");
+  const transplantCond = conditions.find(c => /transplant/i.test(c.name || ""));
+  const immunoMeds = meds.filter(isImmunoMed);
+  const organ = (() => {
+    const m = /(liver|kidney|heart|lung|pancreas|intestin\w*|multi[- ]?organ)/i.exec(transplantCond?.name || "");
+    return m ? m[1].toUpperCase() : "";
+  })();
+  const bannerText =
+    transplantCond && immunoMeds.length ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION` :
+    transplantCond                      ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT` :
+    immunoMeds.length                   ? "IMMUNOSUPPRESSED PATIENT" :
+    "";
+  // Allergies strip: names only, right under the banner (full reactions keep
+  // their own section below). "No allergies recorded" is deliberately NOT
+  // "no known allergies" — an empty list is absence of data, not NKDA.
+  const allergyNames = allergies.map(a => (a.allergen || a.name || "")).filter(Boolean);
+
   // ── Labs on the card: ONLY the most recent draw per panel ──────────────────
   // A clinician wants one coherent snapshot per panel — every value from the
   // same draw — not a mix of dates. Panels are ordered by the patient's own
@@ -119,7 +143,10 @@ export function buildEmergencyHtml() {
   ].filter(Boolean);
 
   const condRows = conditions.map(c => `<span class="badge cond">${escapeHtml(c.name)}</span>${c.severity ? ` <span class="dim">${escapeHtml(c.severity)}</span>` : ""}`);
-  const medRows  = meds.map(m => `<strong>${escapeHtml(m.name)}</strong>${m.dose ? ` ${escapeHtml(m.dose)}` : ""}${m.frequency ? ` — ${escapeHtml(m.frequency)}` : ""}${m.prescriber ? ` <span class="dim">(${escapeHtml(m.prescriber)})</span>` : ""}`);
+  // Immunosuppressants print first — they're the drugs an ED must not stop or
+  // interact with casually, and the banner above announces why they matter.
+  const medsSorted = [...meds].sort((a, b) => (isImmunoMed(a) ? 0 : 1) - (isImmunoMed(b) ? 0 : 1));
+  const medRows  = medsSorted.map(m => `<strong>${escapeHtml(m.name)}</strong>${m.dose ? ` ${escapeHtml(m.dose)}` : ""}${m.frequency ? ` — ${escapeHtml(m.frequency)}` : ""}${m.prescriber ? ` <span class="dim">(${escapeHtml(m.prescriber)})</span>` : ""}`);
   const algRows  = allergies.map(a => `<span class="badge allergy">${escapeHtml(a.allergen || a.name)}</span>${a.reaction ? ` <span class="dim">→ ${escapeHtml(a.reaction)}</span>` : ""}`);
   const ctRows   = contacts.map(c => `<strong>${escapeHtml(c.name)}</strong>${c.relationship ? ` (${escapeHtml(c.relationship)})` : ""} — <a href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a>`);
 
@@ -163,7 +190,9 @@ export function buildEmergencyHtml() {
       .logo { height:44px; margin-bottom:14px; }
       h1 { font-size:26px; font-weight:700; text-align:center; margin-bottom:6px; }
       .idline { font-size:12px; color:#555; text-align:center; margin-bottom:8px; font-family:monospace; }
-      .bloodbadge { display:block; width:max-content; margin:0 auto 6px; border:2.5px solid #dc2626; color:#dc2626; border-radius:8px; padding:3px 16px; font-size:16px; font-weight:800; letter-spacing:1px; }
+      .alertbanner { display:block; width:max-content; max-width:100%; margin:0 auto 7px; background:#dc2626; color:#fff; border-radius:8px; padding:6px 18px; font-size:15px; font-weight:800; letter-spacing:1px; text-align:center; }
+      .allergyline { display:block; width:max-content; max-width:100%; margin:0 auto 8px; border:2px solid #dc2626; background:#fef2f2; color:#7f1d1d; border-radius:8px; padding:4px 14px; font-size:12.5px; font-weight:700; text-align:center; }
+      .allergyline.none { border-color:#ddd; background:#fafafa; color:#777; font-weight:400; }
       .rule { border:none; border-top:3px solid #dc2626; margin:14px 0; }
       .section { margin-bottom:16px; break-inside:avoid; }
       .section-title { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#dc2626; margin-bottom:6px; border-bottom:1px solid #f5c6c6; padding-bottom:4px; }
@@ -188,20 +217,23 @@ export function buildEmergencyHtml() {
     <button class="printbtn">🖨 Print / Save as PDF</button>
     <img src="${logoUrl}" class="logo" />
     <h1>${escapeHtml(profile.name || "Patient Emergency Information")}</h1>
-    ${bloodType ? `<div class="bloodbadge">BLOOD TYPE ${escapeHtml(bloodType)}</div>` : ""}
-    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(profile.dob)}`, profile.age && `Age: ${escapeHtml(profile.age)}`, sex && escapeHtml(sex)].filter(Boolean).join("  ·  ")}</div>
+    ${bannerText ? `<div class="alertbanner">⚠ ${escapeHtml(bannerText)}</div>` : ""}
+    ${allergyNames.length
+      ? `<div class="allergyline">ALLERGIES: ${allergyNames.map(escapeHtml).join(" · ")}</div>`
+      : `<div class="allergyline none">No allergies recorded</div>`}
+    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(profile.dob)}`, profile.age && `Age: ${escapeHtml(profile.age)}`, sex && escapeHtml(sex), bloodType && `Blood Type ${escapeHtml(bloodType)}`].filter(Boolean).join("  ·  ")}</div>
     <hr class="rule" />
-    ${section("Patient Demographics &amp; Contact", demoRows)}
-    ${section("Emergency Contacts", ctRows)}
     ${statusRows.length ? `
     <div class="section">
       <div class="section-title">Code Status, Directives &amp; Devices</div>
       ${statusRows.map(r => `<div class="row">${r}</div>`).join("")}
     </div>` : ""}
-    ${section("Allergies", algRows)}
+    ${section(immunoMeds.length ? "Active Medications — immunosuppressants first" : "Active Medications", medRows)}
     ${section("Active Conditions", condRows)}
-    ${section("Active Medications", medRows)}
+    ${section("Allergies &amp; Reactions", algRows)}
     ${section("Care Team", teamRows)}
+    ${section("Emergency Contacts", ctRows)}
+    ${section("Patient Demographics &amp; Contact", demoRows)}
     ${labSections}
     ${cardSection}
     <div class="footer">

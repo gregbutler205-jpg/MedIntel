@@ -12,6 +12,37 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.49.2 — 2026-08-14
+
+### Changed
+- **The Emergency Card leads with what an ED needs, not blood type.** Greg's
+  question — "is blood type the most important thing about my medical
+  history?" — answered honestly: no. A patient-reported blood type is never
+  transfused against (EDs type and crossmatch every time), so the enlarged
+  red badge is gone. The unmissable slot now belongs to a banner derived from
+  the record itself — "⚠ LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION"
+  (transplant read from active conditions, immunosuppression from active
+  medications by drug class or category; no banner is fabricated for records
+  where neither applies) — with an allergies strip directly beneath it, and
+  blood type demoted to the ID line under the name.
+
+  Section order is now clinical-first: code status and directives, then
+  medications (immunosuppressants printed first — the drugs an ED must not
+  stop or interact with casually), conditions, allergy details with
+  reactions, care team, emergency contacts, and only then demographics,
+  labs, and cards. An empty allergy list prints "No allergies recorded" —
+  deliberately not "no known allergies," since absence of data is not NKDA.
+  Flagged for the upcoming clinical-advisor review alongside the rest of the
+  card.
+
+### Tests
+- Hierarchy cases added to `npm run test:print-csp` (46 checks): banner
+  derivation, no-banner-fabrication, allergies strip and honest empty
+  wording, blood-type demotion, immunosuppressants-first ordering.
+  18 suites / 613 cases.
+
+---
+
 ## v1.49.1 — 2026-08-14
 
 ### Fixed
