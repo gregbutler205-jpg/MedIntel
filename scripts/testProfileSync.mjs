@@ -179,5 +179,31 @@ const KEY = "mi_profile_personal";
   ok(emergency.includes("latestWeightReading"), "emergency packet prints the CURRENT weight from Vitals");
 }
 
+// ── 9. Age calculated from DOB (v1.49.3) ─────────────────────────────────────
+{
+  const { ageFromDob } = await import("../src/store.js");
+  const iso = d => d.toISOString().slice(0, 10);
+  const today = new Date();
+
+  const exactly30 = new Date(today.getFullYear() - 30, today.getMonth(), today.getDate());
+  ok(ageFromDob(iso(exactly30)) === 30, "birthday today → exact age");
+
+  const tomorrow31 = new Date(today.getFullYear() - 31, today.getMonth(), today.getDate() + 1);
+  ok(ageFromDob(iso(tomorrow31)) === 30, "birthday tomorrow → still the younger age");
+
+  const yesterday29 = new Date(today.getFullYear() - 29, today.getMonth(), today.getDate() - 1);
+  ok(ageFromDob(iso(yesterday29)) === 29, "birthday yesterday → new age");
+
+  ok(ageFromDob("") === null, "empty DOB → null (stored field is the fallback)");
+  ok(ageFromDob("not-a-date") === null, "unparseable DOB → null, never throws");
+  ok(ageFromDob(iso(new Date(today.getFullYear() + 1, 0, 1))) === null, "future DOB → null");
+
+  const tab02 = readFileSync(SRC("components/tabs/Tab02.jsx"), "utf8");
+  ok(tab02.includes("calculated from DOB"), "profile shows age as calculated, read-only");
+  ok(tab02.includes(">Health Profile</h1>"), "page header says Health Profile, matching the sidebar");
+  const emergency = readFileSync(SRC("lib/printEmergency.js"), "utf8");
+  ok(emergency.includes("ageFromDob(profile.dob)"), "emergency card computes age from DOB");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (profile-sync)`);
 assert.equal(fail, 0);

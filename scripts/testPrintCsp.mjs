@@ -65,6 +65,16 @@ const ok = (c, m) => { if (c) { pass++; console.log("PASS — " + m); } else { f
   ok(html.indexOf('class="alertbanner"') < html.indexOf("Active Medications"),
      "banner precedes the sections");
 
+  // v1.49.3: print output must not depend on background colors (printers drop
+  // them by default — the banner printed as faint gray), and age is computed.
+  const printBlock = html.slice(html.indexOf("@media print"), html.indexOf("</style>"));
+  ok(printBlock.includes(".alertbanner { background:transparent; color:#dc2626; border:2.5px solid #dc2626; }"),
+     "in print, the banner is red TYPE with a red border — no background dependence");
+  ok(printBlock.includes(".allergyline { background:transparent; }"),
+     "in print, the allergies strip drops its background too");
+  const { ageFromDob } = await import("../src/store.js");
+  ok(html.includes(`Age: ${ageFromDob("1970-01-01")}`), "emergency card age is calculated from the seeded DOB");
+
   // No transplant / no immuno meds → no synthetic banner, honest allergies line.
   localStorage.setItem("mi_conditions", JSON.stringify([{ name: "Hypertension", status: "active" }]));
   localStorage.setItem("mi_meds_full", JSON.stringify([{ name: "Atorvastatin", status: "active" }]));

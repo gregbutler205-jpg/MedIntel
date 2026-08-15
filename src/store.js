@@ -132,6 +132,23 @@ export function getLatestReading() {
   return readings.length > 0 ? readings[0] : null;
 }
 
+// v1.49.3: age is CALCULATED from DOB wherever it displays — the stored
+// profile "age" field goes stale every birthday. Same algorithm P-01's AI
+// identity payload has always used (identity.js getAge). The T12:00:00
+// anchor keeps an ISO date from sliding a day in western timezones.
+// Returns whole years, or null when DOB is missing/unparseable (callers
+// fall back to the stored field for legacy records without a DOB).
+export function ageFromDob(dobStr) {
+  if (!dobStr) return null;
+  const dob = new Date(String(dobStr).length === 10 ? dobStr + "T12:00:00" : dobStr);
+  if (isNaN(dob)) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age >= 0 && age < 150 ? age : null;
+}
+
 // v1.49.0: the patient's CURRENT weight lives in Vitals — the Health Profile
 // and the emergency packet auto-fill from the newest reading that actually
 // carries one (the newest reading overall may be BP-only). Returns the

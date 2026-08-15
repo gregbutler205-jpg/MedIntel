@@ -11,7 +11,7 @@ import {
   getEmergencyContacts, setEmergencyContacts,
   getPharmacies, setPharmacies,
   getDiagnostics,
-  getConditions, getSurgeries, getMedsFull, getLatestReading, latestWeightReading,
+  getConditions, getSurgeries, getMedsFull, getLatestReading, latestWeightReading, ageFromDob,
 } from "../../store.js";
 import { getCards, setCards, blankCard, compressImage, shareImageDataUrl } from "../../lib/cards.js";
 import { requestReport } from "../../rie/preflightChecks.js";
@@ -709,6 +709,10 @@ export default function ProfileTab() {
   const P = personal;
   const I = insurance;
 
+  // v1.49.3: age is calculated from DOB (stored field only a legacy fallback).
+  const computedAge = ageFromDob(P.dob);
+  const ageDisplay = computedAge ?? P.age;
+
   // v1.49.0: weight auto-fills from the newest Vitals reading that has one —
   // the profile field is only a fallback for records with no logged weights.
   const vitalsWeight = latestWeightReading();
@@ -762,7 +766,7 @@ export default function ProfileTab() {
       {/* Content */}
       <div style={{ flex:1, overflowY:"auto", padding:28 }}>
         <div style={{ marginBottom:24 }}>
-          <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:T.p, fontWeight:400, letterSpacing:"-0.5px" }}>Patient Profile</h1>
+          <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:28, color:T.p, fontWeight:400, letterSpacing:"-0.5px" }}>Health Profile</h1>
           <p style={{ fontSize:12, color:T.ghost, marginTop:5, fontFamily:"'DM Mono',monospace" }}>
             {P.name || "—"} · Last updated {new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
           </p>
@@ -784,6 +788,22 @@ export default function ProfileTab() {
               // been logged — shown read-only (in edit mode too) so the value
               // can never diverge from the Vitals tab. With no logged weight,
               // the normal editable field applies.
+              // v1.49.3: age is calculated from DOB — shown read-only (edit
+              // mode included) so it can never go stale; edit DOB to change it.
+              // Records without a parseable DOB keep the editable field.
+              if (field === "age" && computedAge != null) {
+                return (
+                  <div key={field} style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
+                    <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
+                    <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>
+                      {computedAge}
+                      <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginLeft:8 }}>
+                        calculated from DOB{edPersonal ? " — edit Date of Birth to change it" : ""}
+                      </span>
+                    </span>
+                  </div>
+                );
+              }
               if (field === "weight" && vitalsWeight) {
                 return (
                   <div key={field} style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
@@ -1168,7 +1188,7 @@ export default function ProfileTab() {
             {/* UI-23: only fields that have values print — no "—" placeholders
                 flagging optional blanks on the report */}
             <div style={{ fontSize:"9pt", color:"#555", fontFamily:"Arial, sans-serif" }}>
-              {[["DOB", P.dob], ["Age", P.age], ["Sex", P.sex], ["Blood Type", P.blood || P.bloodType]]
+              {[["DOB", P.dob], ["Age", ageDisplay], ["Sex", P.sex], ["Blood Type", P.blood || P.bloodType]]
                 .filter(([, v]) => v)
                 .map(([l, v]) => `${l}: ${v}`)
                 .join("  ·  ") || "Demographics not recorded"}

@@ -23,7 +23,7 @@
 // but they are escaped anyway (defense in depth): a tampered or restored
 // mi_cards that ever put a non-base64 string in a src can't break out.
 import { escapeHtml } from "./renderAiText.js";
-import { latestWeightReading } from "../store.js";
+import { latestWeightReading, ageFromDob } from "../store.js";
 import { wirePrintWindow } from "./printWindow.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
@@ -46,6 +46,8 @@ export function buildEmergencyHtml() {
   // ("blood" is what the Health Profile edits today; "bloodType" is legacy).
   const bloodType = profile.blood || profile.bloodType || "";
   const sex       = profile.sex || profile.gender || "";
+  // v1.49.3: age calculated from DOB (never stale); stored field is a legacy fallback.
+  const age       = ageFromDob(profile.dob) ?? profile.age ?? "";
 
   // ── v1.49.2 (Greg): the "unmissable" slot belongs to what changes an ED's
   // decisions in the first three seconds — not blood type (a patient-reported
@@ -130,7 +132,7 @@ export function buildEmergencyHtml() {
   })();
 
   const demoRows = [
-    kv("DOB", profile.dob), kv("Age", profile.age), kv("Sex", sex),
+    kv("DOB", profile.dob), kv("Age", age), kv("Sex", sex),
     kv("Height", profile.height), kv("Weight", weightNow),
     kv("Phone", profile.phone), kv("Email", profile.email), kv("Address", profile.address),
   ].filter(Boolean);
@@ -210,7 +212,17 @@ export function buildEmergencyHtml() {
       .idcard-lbl { font-size:10px; font-weight:700; color:#555; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.5px; }
       .printbtn { position:fixed; top:14px; right:14px; padding:9px 22px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.25); }
       .footer { margin-top:28px; border-top:1px solid #ddd; padding-top:10px; font-size:10px; color:#999; display:flex; justify-content:space-between; }
-      @media print { body { margin:20px; } .printbtn { display:none; } }
+      /* v1.49.3 (Greg): printers/PDF default to dropping background colors
+         ("Background graphics" off), which turned the banner's white-on-red
+         into faint gray. In print, both top strips render as red TYPE with a
+         red border — no background dependence, legible on every printer. */
+      @media print {
+        body { margin:20px; }
+        .printbtn { display:none; }
+        .alertbanner { background:transparent; color:#dc2626; border:2.5px solid #dc2626; }
+        .allergyline { background:transparent; }
+        .allergyline.none { background:transparent; }
+      }
       @media (max-width:560px) { .cols, .cardgrid { grid-template-columns:1fr; } }
     </style>
   </head><body>
@@ -221,7 +233,7 @@ export function buildEmergencyHtml() {
     ${allergyNames.length
       ? `<div class="allergyline">ALLERGIES: ${allergyNames.map(escapeHtml).join(" · ")}</div>`
       : `<div class="allergyline none">No allergies recorded</div>`}
-    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(profile.dob)}`, profile.age && `Age: ${escapeHtml(profile.age)}`, sex && escapeHtml(sex), bloodType && `Blood Type ${escapeHtml(bloodType)}`].filter(Boolean).join("  ·  ")}</div>
+    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(profile.dob)}`, age && `Age: ${escapeHtml(age)}`, sex && escapeHtml(sex), bloodType && `Blood Type ${escapeHtml(bloodType)}`].filter(Boolean).join("  ·  ")}</div>
     <hr class="rule" />
     ${statusRows.length ? `
     <div class="section">

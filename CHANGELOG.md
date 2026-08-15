@@ -12,6 +12,34 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.49.3 — 2026-08-14
+
+### Fixed
+- **The Emergency Card's banner prints in red on every printer.** Printers
+  and PDF export drop background colors by default ("Background graphics"
+  off), which turned the solid-red banner into faint gray on paper. In print,
+  both top strips now render as red type with a red border — no background
+  dependence — while the screen keeps the solid badge.
+
+### Changed
+- **Age is calculated from Date of Birth.** The profile's stored age went
+  stale every birthday. On screen, in the printed profile, and on the
+  emergency card, age now computes from DOB (shown read-only with
+  "calculated from DOB" — edit the DOB to change it). Records without a
+  parseable DOB keep the editable field. The AI identity payload always
+  computed age this way (P-01); the display surfaces now match it.
+- **The profile page header says "Health Profile,"** matching its sidebar
+  label. The printable artifact keeps its "Patient Profile" name — that's
+  what the document family is called across onboarding and report
+  provenance.
+
+### Tests
+- Age cases (birthday boundaries, invalid/future DOB → fallback) and
+  print-safe-banner checks added: `test:profile-sync` 34,
+  `test:print-csp` 49. 18 suites / 625 cases.
+
+---
+
 ## v1.49.2 — 2026-08-14
 
 ### Changed
