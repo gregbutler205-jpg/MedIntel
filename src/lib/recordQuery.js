@@ -100,6 +100,20 @@ export function matchesTerms(haystackFields, terms) {
   return terms.every(t => hay.includes(t));
 }
 
+/** Short excerpt of `text` around the first hit of `query`, for result
+ * subtitles. Lived inside SearchPopup until the v1.45.0 rewrite deleted the
+ * definition but kept its caller — typing any letter that matched a source
+ * document or AI message threw ReferenceError and blanked the app. */
+export function snippet(text, query, radius = 100) {
+  const t = String(text ?? "");
+  if (!t) return "";
+  const idx = t.toLowerCase().indexOf(String(query ?? "").toLowerCase());
+  if (idx === -1) return t.slice(0, radius * 2) + (t.length > radius * 2 ? "…" : "");
+  const s = Math.max(0, idx - radius);
+  const e = Math.min(t.length, idx + String(query ?? "").length + radius);
+  return (s > 0 ? "…" : "") + t.slice(s, e) + (e < t.length ? "…" : "");
+}
+
 const DATE_OF = r => String(r?.date || r?.record?.date || "");
 
 /** Sort matches by date; newest first unless `oldestFirst`. Undated sink. */

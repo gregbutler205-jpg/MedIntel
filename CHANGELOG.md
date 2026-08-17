@@ -12,7 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.49.4 — 2026-08-16
+## v1.49.5 — 2026-08-17
+
+### Fixed
+- **Search no longer blanks the app on the first keystroke.** Search results
+  that quote a matching excerpt (source documents and AI history) called a
+  text-snippet helper whose definition the v1.45.0 search rewrite deleted
+  while keeping the call — a crash that unmounted the whole app the moment a
+  typed letter matched any document or AI message. The helper is restored in
+  the record-query library (imported, not redefined locally) so the existing
+  test suite now pins it.
+
+### Tests
+- Snippet excerpt cases (match windowing, no-match truncation, empty/null
+  safety, the single-letter crash trigger) plus a structural check that
+  SearchPopup imports every record-query helper it calls:
+  `test:record-query` 54. 18 suites / 642 cases.
 
 ### Fixed
 - **AI Analysis no longer re-runs an old document analysis every time it

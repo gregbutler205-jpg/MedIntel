@@ -117,5 +117,36 @@ const res = (category, record, title, date) => ({ category, record, title, date:
   ok(sortByDate([a, b, u]).at(-1) === u, "undated entries sink to the bottom");
 }
 
+// ── snippet: the deleted-helper crash (v1.49.5) ──────────────────────────────
+// Greg: "as soon as I type a letter it goes to a blank screen." SearchPopup's
+// snippetOf called snippet(), whose definition the v1.45.0 rewrite deleted —
+// ReferenceError on the first keystroke matching a ref doc or AI message.
+{
+  const { snippet } = await import("../src/lib/recordQuery.js");
+  const text = "Tacrolimus trough was 7.1 this morning; the coordinator said the level looks stable.";
+  ok(snippet(text, "coordinator").includes("coordinator"), "excerpt contains the matched term");
+  ok(snippet(text, "t", 10).startsWith("Tacrolimus"), "single-letter query (the crash trigger) returns an excerpt, not a throw");
+  const long = "x".repeat(300);
+  ok(snippet(long, "zzz") === "x".repeat(200) + "…", "no match → truncated head with ellipsis");
+  ok(snippet(long, "zzz", 100).length === 201, "no-match truncation respects the radius");
+  ok(snippet("", "term") === "" && snippet(null, "term") === "", "empty/null text → empty string, never throws");
+  const mid = "a".repeat(150) + "NEEDLE" + "b".repeat(150);
+  const out = snippet(mid, "needle", 20);
+  ok(out.startsWith("…") && out.endsWith("…") && out.includes("NEEDLE"), "mid-text match is windowed with leading and trailing ellipses");
+
+  // Structural: SearchPopup must IMPORT every recordQuery helper it calls —
+  // a local definition deleted in a rewrite is exactly how this crash shipped.
+  const { readFileSync } = await import("node:fs");
+  const { fileURLToPath } = await import("node:url");
+  const { dirname, join } = await import("node:path");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const src = readFileSync(join(here, "..", "src", "components", "SearchPopup.jsx"), "utf8");
+  const importLine = src.match(/import \{([^}]+)\} from "\.\.\/lib\/recordQuery\.js"/)?.[1] || "";
+  const imported = importLine.split(",").map(s => s.trim());
+  for (const fn of ["extractTerms", "matchesTerms", "buildDirectAnswer", "sortByDate", "detectCategoryHint", "snippet"]) {
+    ok(imported.includes(fn), `SearchPopup imports ${fn} from recordQuery`);
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed (record-query)`);
 process.exit(fail ? 1 : 0);

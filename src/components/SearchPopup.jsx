@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { setPendingSelect } from "../lib/searchSelect.js";
-import { extractTerms, matchesTerms, buildDirectAnswer, sortByDate, detectCategoryHint } from "../lib/recordQuery.js";
+import { extractTerms, matchesTerms, buildDirectAnswer, sortByDate, detectCategoryHint, snippet } from "../lib/recordQuery.js";
 
 const C = {
   overlay: "rgba(0,0,0,.72)",
