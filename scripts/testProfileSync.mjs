@@ -205,5 +205,44 @@ const KEY = "mi_profile_personal";
   ok(emergency.includes("ageFromDob(profile.dob)"), "emergency card computes age from DOB");
 }
 
+// ── 10. One-shot AI-launch signals never resurrect (v1.49.4) ─────────────────
+// Greg: "Every time I open AI Analysis, this appears and Insina answers it."
+// A dermatology-report prompt captured into the Drive backup was restored by
+// every merge (scalar keys have no tombstones) and re-fired on every visit.
+{
+  const { collectLocalCiphertext, collectLocalData } = await import("../src/lib/driveSync.js");
+
+  // The reported loop: signal consumed locally, stale copy still in Drive.
+  const stalePending = await captureDriveCopy("mi_ai_pending", "Analyze my report");
+  const staleDoc = await captureDriveCopy("mi_auto_analyze_doc", "1755300000000");
+  localStorage.removeItem("mi_ai_pending");
+  localStorage.removeItem("mi_auto_analyze_doc");
+  await secureStorage.flushPendingWrites();
+  await mergeIntoLocal({ _exportedAt: "x", mi_ai_pending: stalePending, mi_auto_analyze_doc: staleDoc });
+  ok(localStorage.getItem("mi_ai_pending") === null,
+     "merge ignores a stale mi_ai_pending in the Drive file — the prompt cannot re-fire");
+  ok(localStorage.getItem("mi_auto_analyze_doc") === null,
+     "merge ignores a stale mi_auto_analyze_doc — the document analysis cannot re-fire");
+
+  // Upload side: a signal set at backup time never reaches the Drive file.
+  localStorage.setItem("mi_ai_pending", JSON.stringify("in-flight question"));
+  localStorage.setItem("mi_auto_analyze_doc", JSON.stringify("123"));
+  await secureStorage.flushPendingWrites();
+  const cipher = collectLocalCiphertext();
+  ok(!("mi_ai_pending" in cipher) && !("mi_auto_analyze_doc" in cipher),
+     "Drive upload payload excludes both launch signals");
+  const plain = collectLocalData();
+  ok(!("mi_ai_pending" in plain) && !("mi_auto_analyze_doc" in plain),
+     "local download-backup payload excludes them too");
+
+  // Boot purge: a copy already restored by a pre-fix merge dies at unlock.
+  localStorage.setItem("mi_schema_version", "3"); // fully migrated — purge must still run
+  const { runMigrations } = await import("../src/lib/migrations.js");
+  runMigrations();
+  ok(localStorage.getItem("mi_ai_pending") === null && localStorage.getItem("mi_auto_analyze_doc") === null,
+     "runMigrations purges stale launch signals even with no pending migrations");
+  localStorage.removeItem("mi_schema_version");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (profile-sync)`);
 assert.equal(fail, 0);

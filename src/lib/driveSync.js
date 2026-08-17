@@ -22,8 +22,17 @@ export const WEEKLY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;   // 7 days
 const DRIVE_API    = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
 
-// Keys excluded from backup (auth state, session flags, device-specific security)
-const EXCLUDE_KEYS = new Set(["mi_google_user", "mi_unlocked", "mi_auth_hash"]);
+// Keys excluded from backup (auth state, session flags, device-specific security).
+// mi_ai_pending / mi_auto_analyze_doc are one-shot AI-launch signals: set by a
+// click, consumed and deleted by Tab11 moments later. Scalar keys have no
+// tombstones, so a copy captured into the Drive file resurrected on every
+// merge — and the stale prompt re-fired, and was re-answered, on every visit
+// to AI Analysis. This set is checked on BOTH sides (upload and merge), so a
+// poisoned copy already sitting in a Drive backup is ignored from now on.
+const EXCLUDE_KEYS = new Set([
+  "mi_google_user", "mi_unlocked", "mi_auth_hash",
+  "mi_ai_pending", "mi_auto_analyze_doc",
+]);
 
 // ── Local data helpers ────────────────────────────────────────────────────────
 

@@ -12,7 +12,25 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.49.3 — 2026-08-14
+## v1.49.4 — 2026-08-16
+
+### Fixed
+- **AI Analysis no longer re-runs an old document analysis every time it
+  opens.** The "analyze this document" and "ask AI" quick actions hand their
+  prompt to the AI screen through a one-shot storage signal that the screen
+  consumes and deletes. A copy of that signal captured into the Drive backup
+  was restored by every sync (simple keys have no tombstones, so
+  local-deleted + Drive-present always restored), and the stale prompt
+  re-fired — and was re-answered, one paid AI call per visit. Both launch
+  signals (`mi_ai_pending`, `mi_auto_analyze_doc`) are now excluded from
+  Drive backup and merge on both sides, so copies already sitting in a Drive
+  file are ignored, and any copy already restored locally is purged at
+  unlock — launch signals never survive a boot.
+
+### Tests
+- Resurrection loop pinned: merge ignores stale signals in the Drive file,
+  upload and download-backup payloads exclude them, boot purge runs even
+  with no pending migrations: `test:profile-sync` 39. 18 suites / 630 cases.
 
 ### Fixed
 - **The Emergency Card's banner prints in red on every printer.** Printers

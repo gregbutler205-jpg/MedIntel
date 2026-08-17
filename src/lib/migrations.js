@@ -161,6 +161,17 @@ const MIGRATIONS = [
  * re-entrant-safe in case a prior attempt was interrupted mid-migration.
  */
 export function runMigrations() {
+  // Not version-gated: one-shot AI-launch signals (set by a click, consumed by
+  // Tab11 moments later) must never survive a boot. Copies restored by a
+  // pre-v1.49.4 Drive merge would otherwise re-fire — and be re-answered — on
+  // the next visit to AI Analysis. Runs at every call site (plain boot,
+  // web unlock, companion unlock), all of which precede any user click that
+  // could legitimately set these.
+  try {
+    localStorage.removeItem("mi_ai_pending");
+    localStorage.removeItem("mi_auto_analyze_doc");
+  } catch { /* storage unavailable — nothing to purge */ }
+
   let current = getVersion();
   const pending = MIGRATIONS.filter(m => m.version > current).sort((a, b) => a.version - b.version);
   if (pending.length === 0) return { ran: 0, version: current };
