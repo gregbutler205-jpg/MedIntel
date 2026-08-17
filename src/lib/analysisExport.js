@@ -47,6 +47,70 @@ export function saveAnalysisToNotes({ title, content, mode }) {
   return note;
 }
 
+// ── AI session transcript notes — AI_SESSION_SPEC v0.3 Sec 7 (DEC-C-TBD-9) ──
+// Verbatim transcript, append-only: the first save creates the note with an
+// About section; every save appends one section per newly-saved segment and
+// NEVER rewrites an existing section. No AI summary is produced at save time
+// (C9) — everything below is deterministic.
+
+import { unsavedSegments, CORPUS_VERSION } from "./aiSessions.js";
+import { buildSegmentSectionText } from "./aiSessionReport.js";
+
+/**
+ * Create-or-append the session's transcript note. Returns the note id.
+ * Mutates nothing on the session — the caller runs markSaved afterwards.
+ */
+export function saveSessionTranscriptToNotes(session) {
+  let notes;
+  try { notes = JSON.parse(localStorage.getItem("mi_notes") || "[]"); } catch { notes = []; }
+
+  const newSegs = unsavedSegments(session);
+  if (newSegs.length === 0 && session.noteId) return session.noteId;
+
+  let note = session.noteId ? notes.find(n => n.id === session.noteId) : null;
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (!note) {
+    note = {
+      id: Date.now().toString(),
+      title: `AI Session — ${session.title}`,
+      pinned: false,
+      tag: "General",
+      date: today,
+      preview: session.title.slice(0, 110),
+      aiGenerated: true,
+      aiMode: session.segments.flatMap(g => g.messages).find(m => m.mode)?.mode || "standard",
+      sessionId: session.id,
+      sections: [{
+        id: "s-about",
+        type: "text",
+        header: "About this session",
+        body:
+          `Started ${new Date(session.createdAt).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}. ` +
+          `Verbatim transcript — exactly what was asked and shown, in order, nothing summarized. ` +
+          `Reference set: ${CORPUS_VERSION}.\n\n${ANALYSIS_FOOTER}`,
+      }],
+    };
+    notes.unshift(note);
+  }
+
+  const already = session.savedSegments || 0;
+  newSegs.forEach((seg, i) => {
+    const absoluteIndex = already + i;               // 0-based across the session
+    const prev = absoluteIndex > 0 ? session.segments[absoluteIndex - 1] : null;
+    note.sections.push({
+      id: "s-seg-" + seg.id,
+      type: "text",
+      header: `Part ${absoluteIndex + 1} — ${new Date(seg.openedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
+      body: buildSegmentSectionText(seg, prev),
+    });
+  });
+  note.date = today;
+
+  localStorage.setItem("mi_notes", JSON.stringify(notes));
+  return note.id;
+}
+
 /** Markdown document for one analysis: title, date, freshness stamp, body, Surface H footer. */
 export function buildAnalysisMarkdown({ analysisType, content, mode }) {
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });

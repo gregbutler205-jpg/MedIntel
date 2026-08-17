@@ -163,3 +163,90 @@ export function buildSessionReportText({ convMessages = [], careTeam = [], start
     "Informational only. This is not medical advice. Always consult your physician before making any health decisions.",
   ].filter(Boolean).join("\n\n");
 }
+
+// ── AI_SESSION_SPEC v0.3 segment model (DEC-C-TBD-11, pre-merge) ─────────────
+// Session-document counterparts of the DEC-042 helpers above. The legacy
+// conv-id helpers stay for the archived insina_ai_messages data; nothing new
+// writes that store.
+
+import { segmentTransition, SESSION_COPY } from "./aiSessions.js";
+import { stripControlChars } from "../prompts/documents.js";
+
+const PRIOR_OPEN  = "[PRIOR SESSION SEGMENTS — BEGIN]";
+const PRIOR_CLOSE = "[PRIOR SESSION SEGMENTS — END]";
+
+/** The reopen context rule (spec Sec 2): prior segments enter context
+ * delimited by their stamps and marked as prior-state content. S-07
+ * delimiting conventions; control characters stripped so patient text can't
+ * fake a delimiter. */
+export function buildPriorSegmentBlock(priorSegments) {
+  const parts = [PRIOR_OPEN,
+    "The following earlier parts of this conversation were generated against " +
+    "PREVIOUS states of the patient's record. They are reference context only. " +
+    "Values in them may be superseded — always answer from the CURRENT record " +
+    "data in the system prompt, and note when something has changed."];
+  priorSegments.forEach((seg, i) => {
+    parts.push(`--- Segment ${i + 1} · ${seg.stamp?.ts || "undated"} · record-state ${seg.stamp?.recordHash || "unknown"} (superseded) ---`);
+    for (const m of seg.messages || []) {
+      const who = m.role === "user" ? "Patient" : "Assistant";
+      parts.push(`${who}: ${stripControlChars(String(m.text || ""))}`);
+    }
+  });
+  parts.push(PRIOR_CLOSE);
+  return parts.join("\n");
+}
+
+/** API messages for a session document: delimited prior segments (when any),
+ * then the CURRENT segment's turns. Mirrors apiMessagesForConv's contract —
+ * the caller supplies the record via the system prompt. */
+export function apiMessagesForSession(session) {
+  const segs = session?.segments || [];
+  if (segs.length === 0) return [];
+  const current = segs[segs.length - 1];
+  const prior = segs.slice(0, -1).filter(g => (g.messages || []).length > 0);
+  const msgs = [];
+  if (prior.length > 0) {
+    msgs.push({ role: "user", content: buildPriorSegmentBlock(prior) });
+    msgs.push({
+      role: "assistant",
+      content: "Understood. Those earlier segments reflect previous record states; I will treat them as reference only and answer from the current record.",
+    });
+  }
+  for (const m of current.messages || []) {
+    msgs.push({ role: m.role === "user" ? "user" : "assistant", content: m.text });
+  }
+  return msgs;
+}
+
+const fmtDay = iso => {
+  try { return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
+  catch { return String(iso || ""); }
+};
+
+/** One segment's verbatim transcript text (F-03-filtered, as displayed),
+ * prefixed with its stamp line and — when the record or corpus moved between
+ * the previous segment and this one — the divider sentence that persists
+ * into the note and print (spec Sec 6). */
+export function buildSegmentSectionText(segment, prevSegment) {
+  const lines = [];
+  const tr = segmentTransition(prevSegment, segment);
+  if (tr.divider) {
+    lines.push(`_${tr.recordChanged
+      ? SESSION_COPY.dividerRecordChanged(fmtDay(segment.stamp?.ts))
+      : SESSION_COPY.dividerCorpusChanged(fmtDay(segment.stamp?.ts))}_`);
+    lines.push("-----");
+  }
+  lines.push(`Record state ${segment.stamp?.recordHash || "unknown"} · reference set ${segment.stamp?.corpusVersion || "unknown"} · ${fmtTs(segment.stamp?.ts)}`);
+  const turns = (segment.messages || []).map(m => {
+    if (m.role === "user") return `**You asked (${fmtTs(m.ts)}):**\n${m.text}`;
+    const { redactedText } = scanForProhibitedDirectives(m.text || "");
+    return `**Insina AI (${fmtTs(m.ts)}):**\n${redactedText}`;
+  });
+  lines.push(turns.join("\n\n-----\n\n") || "_(no messages)_");
+  return lines.join("\n\n");
+}
+
+/** Every message across every segment, for cross-segment consolidation. */
+export function allSessionMessages(session) {
+  return (session?.segments || []).flatMap(g => g.messages || []);
+}
