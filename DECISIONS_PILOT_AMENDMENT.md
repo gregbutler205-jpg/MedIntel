@@ -1157,3 +1157,165 @@ safety rule**, because the app cannot tell which axis a given product sits on.
 | — | Thresholds against final M(A). Set before extraction. | GB |
 | DEC-P24 | Phase field: Tier 0 gate, transition UX (GB deferred) | GB |
 | — | Verify whether GB's Ochsner notes contain the 3–5 range | GB |
+
+---
+
+## DEC-P43 — Confirmation unit by data type for archive-to-reconciled promotion
+**Status:** Accepted (merged 2026-08-17; drafted 2026-08-16)
+**Relation:** clarifies the two-tier ingestion contract (History Builder decision
+set, pending merge — cross-reference to the originating entry completes when that
+appendix lands). Implementation: WO_LAB_BATCH_CONFIRM_01 →
+`feature/lab-batch-confirmation`.
+
+**Context:** The two-tier ingestion contract requires explicit patient
+confirmation of individual items before promotion from archive tier to
+reconciled record. Read literally against laboratory data, this means one
+confirmation action per analyte. At current record volume (approximately 3,000
+lab entries) this is unusable, and structured ingest (C-CDA, FHIR R4) will
+increase volume further. The safety invariant the contract protects is: no
+unreviewed data enters the reconciled record. It is not: one confirmation
+action per datum.
+
+**Decision:**
+1. The confirmation unit is defined per data type.
+2. Medications and allergies: per-item confirmation, unchanged, never batchable. This remains binding.
+3. Conditions, procedures, immunizations, encounters, and all other clinical assertions: per-item confirmation, unchanged. Per-item is the default for any data type not named in point 4.
+4. Laboratory results and vitals: the confirmation unit is the source document or panel (batch). Batch confirmation requires a row-level review interface presenting the extracted table side by side with the source document.
+5. Within batch review, the patient may exclude any row and may correct any row value, unit, or collection date before confirming. Corrections are patient actions. Extraction never auto-corrects. Flag, don't fix is preserved.
+6. Three row conditions require individual acknowledgment before the batch confirm control enables: (a) out of range against the extracted reference range, (b) low extraction confidence, (c) monitored analyte per the transplant monitoring list (initially tacrolimus only; extensions governed through CSC, population-level, never conditioned on an individual patient's record).
+7. Low-confidence rows default to excluded. Inclusion is an explicit patient action.
+8. Excluded rows remain in the archive tier and may be promoted later through the same review flow. Exclusion is not deletion.
+9. Every promoted row carries provenance: source document ID, page reference, extraction timestamp, confirmation event ID.
+10. Invariant restated: nothing enters the reconciled record without explicit patient confirmation. Reports read only the reconciled record. Unchanged.
+
+**Rationale:** Concentrates per-item friction where item-level error is directly
+dangerous (medications, allergies) and replaces it elsewhere with a review
+mechanism that preserves the invariant at real-world volumes. Prepares the
+confirmation UX for structured ingest before that work is scheduled.
+
+---
+
+# Decision Log Amendment — Response Composition & AI Session Lifecycle (DEC-C1 … DEC-C15)
+
+*Appended 2026-08-17 from DEC_DRAFT_RESPONSE_AND_SESSION.md rev 2 (drafted
+2026-08-16). The C-series is its own namespace: response-composition and
+session-lifecycle policy, distinct from the DEC-P corpus/pilot series.
+Companion design doc: AI_SESSION_SPEC.md v0.3. These entries gate precaution
+corpus extraction and INSINA_AI_PROMPTS.md v2.5. They do not gate, and are not
+gated by, the History Builder activation preconditions. Implementation of the
+deterministic shell: `feature/ai-session-shell`. [CONFIRM] markers inside
+entries are open founder items, tracked in the spec's Sec 11.*
+
+---
+
+# Part A. Response composition policy
+
+## DEC-C1: Claim typing. Numbers bind, mechanisms float
+
+**Decision:** Every claim in patient-facing AI output is one of two types, and the type determines what may produce it.
+
+A **bound claim** is any numeric clinical parameter: dose, daily ceiling, threshold, target range, frequency, duration, or count. Bound claims may originate only from (a) a cited corpus or handbook row, or (b) a fact in the patient's reconciled record. They render with their source visible. The AI may not compute, infer, convert, aggregate, or restate a bound claim outside its cited value. Unit conversion and arithmetic restatement (for example, expressing a ceiling as a tablet count) are prohibited: this is the C4P 3 g stated as six 650 mg tablets error, which is 3,900 mg.
+
+A **mechanism claim** carries no number. It describes categories, mechanisms, interactions in kind, where a risk hides, and what the patient should check. Mechanism claims may be generated from AI general knowledge under the existing question-form and non-directive rules, and require no row.
+
+**Considered and deferred:** a deterministic dose helper, system arithmetic computed from a cited row plus the reconciled tablet strength, is legitimately safe because it is not model output. Deferred until the validator has field history; the prohibition above applies to model restatement and should not fossilize into a ban on deterministic system arithmetic.
+
+**Rationale:** Observed failure mode, repeatedly, is that AI general knowledge is directionally correct on category and mechanism and specifically wrong on numbers. Typing the claim lets the model do what it does reliably and blocks what it does not. This is also what makes AI worth having: a corpus of tens of rows projected by the model across an unbounded product and phrasing space, rather than an enumerated static FAQ.
+
+## DEC-C2: Source hierarchy for bound claims, and gap disclosure
+
+**Decision:** Bound claims resolve in this order.
+
+1. **Tier 1.** The patient's own center or program document, when present in their record. Renders with document and page citation.
+2. **Tier 2.** Vetted general corpus row. Renders as a labeled default with source and version, and states that the patient's own program may differ.
+3. **Tier 3.** Neither available: the AI names the gap and does not supply a number. Example form: "Your center sets your daily ceiling; ask your coordinator what yours is."
+
+**Tier 1 activation mechanism:** a patient handbook becomes citable through the platform's own contract applied to documents. AI extraction proposes candidate rows from the uploaded handbook; the patient confirms each row one by one against the rendered source page; confirmed rows carry document and page citation and enter the patient's Tier 1 set. Unconfirmed candidates are inert. No handbook content becomes a bound-claim source without patient confirmation.
+
+Tier 2 rows are created offline: AI proposes candidate rows from reputable public sources (for example Mayo Clinic, UNOS, LiverTox, AASLD), a human reviewer verifies and cites, and the reviewed row enters the corpus with source, retrieval date, and version. **Live web retrieval is never a source for a bound claim in the response path.** Public sources may inform mechanism claims, which carry no numbers and therefore no binding risk.
+
+**Rationale:** General-population figures are wrong for this population; the 4,000 mg acetaminophen ceiling on a general health page is the standing example. Web pages change without notice and cannot be reproduced at audit. A stored, reviewed, versioned row is a controlled document; a live lookup is an unreviewed claim with a URL attached. Gap disclosure rather than confident silence is existing policy.
+
+**Unchanged:** drug-level trend interpretation content remains gated behind transplant-credentialed review regardless of source reputability. Sourcing does not substitute for that review.
+
+## DEC-C3: Deterministic numeric validator
+
+**Decision:** A deterministic post-pass scans every patient-facing AI response for numerals attached to clinical units (mg, g, mcg, mL, degrees F or C, mmHg, tablets, capsules, hours, days, ng/mL, and the maintained unit list). Each detected number must match a bound claim supplied in context, current versions only, either a cited row or a reconciled-record fact. An unmatched number blocks the response; the failure is logged and the patient sees a non-alarming retry or gap message. The validator contains no disease vocabulary: it knows a number appeared and looks for its source.
+
+**Rationale:** Model proposes, rules dispose, the same philosophy as the tripwire engine. Numbers are mechanically detectable, which is precisely why this policy is verifiable where a general "no bad advice" rule never could be.
+
+## DEC-C4: Tripwire independence and threshold row format
+
+**Decision:** The deterministic tripwire engine continues to own all urgency and appends red-flag content independently of whether the corpus answered the question. Every tripwire row carries an explicit comparator, numeric threshold, unit, and measurement condition, plus its citation. Symptom-named rows without a threshold are drafts, not rows, and may not be activated. Thresholds are program-specific by nature and always render with their source.
+
+**Rationale:** "Fever is a call" is unimplementable and clinically wrong; "temperature at or above 100.4 F, oral, single reading, call the coordinator" is deterministic and testable. Threshold variance across centers is real (100.4 versus 100.5, single versus repeated reading, call-now versus call-in-the-morning tiers) and the corpus must represent it faithfully rather than flatten it.
+
+## DEC-C5: Escalation restraint
+
+**Decision:** Questions answerable from a Tier 1 or Tier 2 row are answered with citation. Routing to a coordinator or physician is reserved for questions the corpus cannot answer and for tripwire-triggered urgency. Contacts render as a footer on corpus-answered responses, not as the headline.
+
+**Rationale:** Routing a question the center's own handbook answers on page one burns the coordinator channel on non-escalation traffic and teaches the patient that the platform cannot answer anything, which trains them to stop calling when a call is warranted. Escalation only works if it stays rare. This does not weaken the tripwire engine, which escalates independently.
+
+## DEC-C6: Patient posture
+
+**Decision:** Response composition assumes the person asking before acting is the careful one. Output arms the checking instinct: name the category, name where the risk hides, tell them what to read on the label. Never scold, never imply the question was reckless.
+
+## DEC-C7: Disease-agnostic engine, condition-scoped content
+
+**Decision:** The composition engine, prompts, and validator contain no condition-specific vocabulary. All condition specificity lives in corpus rows, which carry a condition-scope field; the engine selects rows by the patient's reconciled conditions and applies multiple scopes together where a patient carries several. Corpus row IDs are condition-namespaced. Source hierarchy language stays generic ("your center or program document"), not transplant-specific.
+
+**Rationale:** The policy above is general: bound numbers, floating mechanisms, deterministic urgency. Extending to anticoagulation, heart failure, dialysis, or oncology should require writing rows, not rebuilding architecture. The constraint is cheap now and expensive to retrofit after transplant assumptions harden into code. Per-condition tripwire thresholds and red flags still require the same clinician review as the transplant set; that gate does not generalize away.
+
+## DEC-C14: Response frame and body shapes
+
+**Decision:** Every response is an invariant safety frame plus a query-shaped body. The frame, identical for every response, carries claim typing, numeric validation, citations, the tripwire block, contacts placement, question-form rules, and session stamping; the model cannot alter, reorder, or suppress it. The body is presentation, selected by the model per query from a maintained shape set. v1 shapes: guidance (the full block stack, for symptom and what-can-I-take queries), lookup (direct answer with record citation, for questions about the patient's own data), and fallback. Explanation and visit prep are deferred; [CONFIRM] whether visit prep becomes a chat shape or routes to the Consultation Prep generator.
+
+**Rationale:** A single fixed format built from one query class forces hollow scaffolding onto every other class. Splitting frame from body keeps every safety property invariant while presentation fits the query. A wrong shape selection costs presentation, never safety, which is why shape selection needs no validator of its own: AI proposes, applied to formatting.
+
+---
+
+# Part B. AI session lifecycle
+
+## DEC-C8: Sessions replace the running AI Analysis feed
+
+**Decision:** AI Analysis becomes a session index rather than a continuous feed. Opening or starting a session takes over the screen as a focused surface. The conversation continues within the session until the patient ends it. End actions: Save to Notes, Save and Print, Close.
+
+*(Supersedes the running-feed surface of DEC-042. DEC-042's context-isolation rule — the API sees this session's turns only — continues, extended by DEC-C11's delimited prior-segment inclusion.)*
+
+## DEC-C9: Saved sessions store the verbatim transcript, and print requires save
+
+**Decision:** Saving stores the full verbatim transcript. No AI-generated summary is produced at save time or print time. Readability comes from a deterministic, system-composed header and the shape structure, not from summarization. Print is reachable only through Save and Print: every printed artifact has a stored counterpart. [CONFIRM] the print-requires-save rule; flagged for explicit founder confirmation.
+
+**Rationale:** A summary is a second generation pass over content the numeric validator already cleared, and it can restate a bound number outside its citation and outside the check. The artifact's value is reproducibility: what the patient saw is what prints, and a printout handed to a physician must be reproducible from the stored record.
+
+## DEC-C10: Close without saving warns, then discards
+
+**Decision:** Closing without saving presents a warning and, on confirmation, discards the session content. Only the fact that a session occurred is logged; no content is retained.
+
+## DEC-C11: Saved sessions reopen in-thread, append-only, with delimited prior context
+
+**Decision:** A saved session reopens and continues in the same thread. Continuation appends a new segment with its own timestamp; existing segments are immutable and are never rewritten, re-rendered, or regenerated. On continuation, prior segments enter model context delimited by their stamps and marked as prior-state content; the numeric validator resolves bound claims only against current corpus rows and the current reconciled record, so a superseded value restated from an earlier segment blocks.
+
+**Rationale:** Without prior segments in context, in-thread continuation is cosmetic. With them included naively, stale reasoning contaminates generation. Delimited inclusion plus current-only validation gives continuity without carrying forward superseded numbers.
+
+## DEC-C12: Segment-level record-state and corpus-version stamping
+
+**Decision:** Every session segment carries a stamp recording the record-state hash (DEC-C15) and corpus version in effect when it was generated. Reopening a session after either has changed renders a visible divider in the thread noting the continuation date and that the record has changed since the prior segment. Printed output carries the same dividers and stamps.
+
+**Rationale:** Answers computed months ago were computed against a record that no longer exists. Without segment stamping, a printed transcript silently mixes stale and current reasoning under a single date, which is the C4P confident-presentation failure in a different form.
+
+## DEC-C15: Record-state hash
+
+**Decision:** The record-state hash is a deterministic serialization of the reconciled record only, in canonical field order, hashed. Archive-tier content, session content, and UI state are excluded. Any reconciled-record mutation changes the hash. This hash is the record-state component of every segment stamp.
+
+**Rationale:** The reconciled record is the only tier the AI reads, so it is the only state whose change invalidates prior reasoning. A formal definition prevents the staleness feature from resting on an improvised versioning scheme.
+
+## DEC-C13: Session print is the reference handoff format
+
+**Decision:** Session print output is the reference implementation of the handoff document format: shield logo, patient identity block, generation timestamp, provenance and disclaimer furniture. The caregiver handoff feature, when built, reuses this format. The dependency runs from caregiver to session, not the reverse.
+
+**Rationale:** The prior draft depended on a format that does not exist yet, since the caregiver feature is designed but unbuilt. Flipping the direction removes a backward dependency and gives the caregiver feature a shipped format to inherit.
+
+---
+
+**C-series open items:** [CONFIRM] print-requires-save (C9). [CONFIRM] visit prep routing (C14). [CONFIRM] session content encryption gate inheritance (assumed yes; the shell implements sessions in the vaulted store). [CONFIRM] retention behavior for saved sessions on record deletion. [CONFIRM] all patient-facing copy strings, including the warn-on-close text and the record-changed divider (provisional drafts live in src/lib/aiSessions.js SESSION_COPY).
