@@ -12,7 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.50.0 — 2026-08-18
+## v1.50.1 — 2026-08-18
+
+### Fixed
+- **Reports and printouts keep their bullet points.** Opening a response as
+  a report (and printing it) ran the whole message through the safety filter
+  at once, and the filter's sentence scan re-joined text with plain spaces —
+  eating the line break after any sentence that ended in a period. Bullet
+  lists flattened into run-on paragraphs and `-----` dividers printed as
+  literal dashes, while the chat screen (which filters line by line) looked
+  fine. The filter now reassembles text with exactly the whitespace it
+  arrived with; what it flags and redacts is unchanged.
+
+### Tests
+- Filter and session-report suites pass unmodified (49 cases) — detection
+  behavior is byte-identical; only layout survives now.
 
 ### Added
 - **Lab results now stop for your review before joining your record**

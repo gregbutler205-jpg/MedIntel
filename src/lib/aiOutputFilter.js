@@ -48,9 +48,18 @@ const DIRECTIVE_PATTERNS = [
 
 /** Split into rough sentences, keeping the terminator so pattern anchors on
  * sentence-start (`^|[.!?]\s+`) still line up. Good enough for a deterministic
- * heuristic scan — not a full NLP sentence tokenizer. */
+ * heuristic scan — not a full NLP sentence tokenizer.
+ *
+ * The separators are CAPTURED (kept in the returned array) so the scan can
+ * reassemble the text with exactly the whitespace it arrived with. The old
+ * separator-discarding split + join(" ") ate the newline after any
+ * sentence-ending period, which flattened AI bullet lists into run-on
+ * paragraphs everywhere the filter runs on a whole message — the report
+ * overlay, its print, and saved transcripts — while the chat screen, which
+ * filters line by line, kept its bullets. Detection is unchanged: the split
+ * points are identical and redaction still replaces whole sentences. */
 function splitSentences(text) {
-  const parts = text.split(/(?<=[.!?])\s+/);
+  const parts = text.split(/((?<=[.!?])\s+)/);
   return parts.length ? parts : [text];
 }
 
@@ -74,6 +83,8 @@ export function scanForProhibitedDirectives(text) {
   const matches = [];
 
   const out = sentences.map(sentence => {
+    if (/^\s*$/.test(sentence)) return sentence; // captured separator — pass through untouched
+
     const isSafeGuard = SAFE_GUARD_MARKERS.some(re => re.test(sentence));
     if (isSafeGuard) return sentence; // caution/guardrail sentence — never flag
 
@@ -84,5 +95,7 @@ export function scanForProhibitedDirectives(text) {
     return REDACTION_NOTE;
   });
 
-  return { flagged: matches.length > 0, redactedText: out.join(" "), matches };
+  // join("") — the separators between sentences are already in `out`,
+  // preserved verbatim by the capturing split above.
+  return { flagged: matches.length > 0, redactedText: out.join(""), matches };
 }
