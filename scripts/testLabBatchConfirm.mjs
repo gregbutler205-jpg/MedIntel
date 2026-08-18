@@ -1,4 +1,4 @@
-// ── Lab batch confirmation tests (WO_LAB_BATCH_CONFIRM_01 / DEC-P-TBD) ──────
+// ── Lab batch confirmation tests (WO_LAB_BATCH_CONFIRM_01 / DEC-P43) ──────
 // The real data layer end to end: flag computation, archive creation,
 // read-time migration, corrections preserving originals, the confirm gate,
 // provenance stamping, persistence, exclusion + later promotion, and the

@@ -1,4 +1,4 @@
-// ── Lab batch review (WO_LAB_BATCH_CONFIRM_01 / DEC-P-TBD) ───────────────────
+// ── Lab batch review (WO_LAB_BATCH_CONFIRM_01 / DEC-P43) ───────────────────
 // Row-level review of one extracted lab/vitals document before anything
 // reaches the reconciled record. Left pane: the source document's pages
 // (rendered from the in-session File; on a later revisit the file is gone and

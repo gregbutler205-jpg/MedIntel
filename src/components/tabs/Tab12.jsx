@@ -248,7 +248,7 @@ export default function ImportTab({ onImport, onNavChange }) {
   const fileInputRef = useRef(null);
   const pdfFileRef   = useRef(null); // v1.48.0: original File from the single-file flow, for the Drive archive
 
-  // DEC-P-TBD (lab batch confirmation): extracted lab rows land in the archive
+  // DEC-P43 (lab batch confirmation): extracted lab rows land in the archive
   // store and pass through row-level review — nothing reaches mi_labs without
   // a ConfirmationEvent. labReview drives the open review overlay; the files
   // map keeps this session's original Files so the review can show source
@@ -360,7 +360,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           extracted.forEach(l => {
             try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null, readingId: l.id ?? null }); } catch { /* never blocks import */ }
           });
-          // DEC-P-TBD: rows land in the archive tier and open row-level review.
+          // DEC-P43: rows land in the archive tier and open row-level review.
           const archiveDoc = upsertArchiveDoc(createArchiveDoc({
             title: file.name.replace(/\.pdf$/i, "") || "Lab Report",
             fileName: file.name,
@@ -402,7 +402,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           extracted.forEach(l => {
             try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null, readingId: l.id ?? null }); } catch { /* never blocks import */ }
           });
-          // DEC-P-TBD: batch files no longer auto-save — each becomes an archive
+          // DEC-P43: batch files no longer auto-save — each becomes an archive
           // document and passes through the same row-level review, one at a time.
           // (The Drive original archives at confirm, alongside its Records entry.)
           const archiveDoc = upsertArchiveDoc(createArchiveDoc({
@@ -453,7 +453,7 @@ export default function ImportTab({ onImport, onNavChange }) {
     setBatchSummary(summary);
 
     if (isLabs && allLabs.length > 0) {
-      // DEC-P-TBD: nothing auto-saves. Every extracted document is now in the
+      // DEC-P43: nothing auto-saves. Every extracted document is now in the
       // archive tier; review opens for the first one and advances through the
       // rest (Records entries, Drive archiving, and import-log entries are
       // written per document at confirm time).
@@ -550,7 +550,7 @@ export default function ImportTab({ onImport, onNavChange }) {
     if (onNavChange) onNavChange("ai");
   }
 
-  // ── DEC-P-TBD: batch review handlers ───────────────────────────────────────
+  // ── DEC-P43: batch review handlers ───────────────────────────────────────
   // Called by LabBatchReview after confirmDoc + persistConfirmation succeeded:
   // the archive doc is stamped, the ConfirmationEvent written, and promoted
   // rows are already in mi_labs. This handler owns the Tab12-side effects —
@@ -820,7 +820,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           </div>
         )}
 
-        {/* DEC-P-TBD: lab documents with rows still awaiting review (or excluded
+        {/* DEC-P43: lab documents with rows still awaiting review (or excluded
             rows promotable later) re-enter the same review flow from here. */}
         {!labReview && (() => {
           const waiting = reviewableArchiveDocs();
@@ -871,7 +871,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           </div>
         )}
 
-        {/* DEC-P-TBD: the old lab preview grid is replaced by the row-level
+        {/* DEC-P43: the old lab preview grid is replaced by the row-level
             batch review overlay (LabBatchReview) — rendered at the end of this
             component so it overlays the whole screen. */}
 
@@ -1057,7 +1057,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         )}
       </div>
 
-      {/* DEC-P-TBD: row-level batch review — no lab row reaches the record
+      {/* DEC-P43: row-level batch review — no lab row reaches the record
           without passing through this overlay's ConfirmationEvent. */}
       {labReview && (() => {
         const reviewDoc = readArchive().find(d => d.id === labReview.docId);

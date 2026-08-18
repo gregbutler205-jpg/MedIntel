@@ -1,4 +1,4 @@
-// ── Monitored analyte list (WO_LAB_BATCH_CONFIRM_01 / DEC-P-TBD) ─────────────
+// ── Monitored analyte list (WO_LAB_BATCH_CONFIRM_01 / DEC-P43) ─────────────
 // Analytes whose rows ALWAYS require individual acknowledgment during batch
 // confirmation, regardless of range or confidence — the transplant monitoring
 // list. Matched via canonicalLabId(), so facility aliases (FK506, "Tacrolimus

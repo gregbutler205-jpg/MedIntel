@@ -143,7 +143,7 @@ const lib   = readFileSync(SRC("lib/driveReports.js"), "utf8");
 
 // 7b. Every Tab12 save path archives the original.
 ok((tab12.match(/archiveOriginal\(/g) || []).length >= 5, "Tab12: archiveOriginal defined + called from all record paths");
-// DEC-P-TBD (lab batch confirmation): batch lab PDFs no longer upload at
+// DEC-P43 (lab batch confirmation): batch lab PDFs no longer upload at
 // extract time — each document's original archives at CONFIRM time through
 // handleLabReviewDone's archiveOriginal call (counted above), keyed by the
 // session file map so batch and single files take the same path.

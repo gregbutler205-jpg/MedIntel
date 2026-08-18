@@ -1,5 +1,5 @@
 # VALIDATION_LAB_BATCH.md
-Founder click-through script for WO_LAB_BATCH_CONFIRM_01 (DEC-P-TBD). The flow
+Founder click-through script for WO_LAB_BATCH_CONFIRM_01 (DEC-P43). The flow
 lives at Import Records: upload a lab PDF under Labs (single file or batch).
 Every lab document now stops in an archive review step — nothing reaches the
 Labs list until the batch is confirmed. Run scenarios in order on one profile,

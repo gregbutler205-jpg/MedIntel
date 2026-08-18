@@ -1,4 +1,4 @@
-// ── Lab batch confirmation — data layer (WO_LAB_BATCH_CONFIRM_01 / DEC-P-TBD) ─
+// ── Lab batch confirmation — data layer (WO_LAB_BATCH_CONFIRM_01 / DEC-P43) ─
 // The confirmation unit for laboratory and vitals rows is the source DOCUMENT
 // (batch), not the individual analyte — with row-level review, exclusion,
 // correction, and forced acknowledgment of flagged rows. Medications and
