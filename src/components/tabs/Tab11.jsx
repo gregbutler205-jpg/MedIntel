@@ -27,7 +27,7 @@ import { DAILY_QUESTION_LIMIT, dailyLimitReached, questionsRemainingToday, recor
 
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
-// AI_SESSION_SPEC v0.3 (DEC-C-TBD-8): AI Analysis is a session index plus a
+// AI_SESSION_SPEC v0.3 (DEC-C8): AI Analysis is a session index plus a
 // focused session surface. The legacy running-feed keys (insina_ai_messages,
 // insina_ai_session) are no longer written or rendered — the data stays on
 // disk untouched, searchable via the existing Search index, and OPEN-17(b)
@@ -307,7 +307,7 @@ const CONTEXT_TAGS = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Print plumbing (the document itself is built in src/lib/printSession.js —
-// the reference handoff format per DEC-C-TBD-13 rev)
+// the reference handoff format per DEC-C13 rev)
 // ─────────────────────────────────────────────────────────────────────────────
 // Open the printable HTML in a new window and trigger print. If the pop-up is
 // blocked, download the HTML so it is never silently lost.
@@ -611,10 +611,10 @@ export default function AIAnalysis({ onNavChange }) {
     setError("");
     const mode = loadModeData()?.mode || "standard";
 
-    // Start (DEC-C-TBD-8): typing into an empty surface creates the session;
+    // Start (DEC-C8): typing into an empty surface creates the session;
     // its first segment stamp was captured at open. Reopening a saved thread
     // leaves closed segments immutable — ensureOpenSegment opens a fresh one
-    // with a freshly captured stamp (DEC-C-TBD-11/12).
+    // with a freshly captured stamp (DEC-C11/12).
     let s = sessionRef.current;
     if (!s) {
       s = newSession(trimmed);
@@ -777,7 +777,7 @@ export default function AIAnalysis({ onNavChange }) {
     refreshSessions();
   };
 
-  // Save to Notes: verbatim transcript, append-only (DEC-C-TBD-9). Closes the
+  // Save to Notes: verbatim transcript, append-only (DEC-C9). Closes the
   // open segment first so it is immutable from here on; the composer stays
   // live — the next turn opens a freshly stamped segment.
   const saveToNotes = () => {
@@ -792,7 +792,7 @@ export default function AIAnalysis({ onNavChange }) {
     return noteId;
   };
 
-  // Save and Print (DEC-C-TBD-9 rev): persists first — every printed artifact
+  // Save and Print (DEC-C9 rev): persists first — every printed artifact
   // has a stored, reproducible counterpart. There is no print-without-save.
   const saveAndPrint = () => {
     const s = sessionRef.current;
@@ -809,7 +809,7 @@ export default function AIAnalysis({ onNavChange }) {
   };
 
   // Close: saved-and-current sessions close quietly; anything unsaved warns
-  // first (DEC-C-TBD-10) and discards on confirmation. Content-free sessions
+  // first (DEC-C10) and discards on confirmation. Content-free sessions
   // just leave.
   const closeSession = () => {
     const s = sessionRef.current;
@@ -835,7 +835,7 @@ export default function AIAnalysis({ onNavChange }) {
       s.segments = s.segments.slice(0, s.savedSegments || 0);
       saveSession(s);
     } else {
-      discardSession(s.id); // occurrence logged, content gone (DEC-C-TBD-10)
+      discardSession(s.id); // occurrence logged, content gone (DEC-C10)
     }
     exitToIndex();
   };
@@ -986,7 +986,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         />
       )}
 
-      {/* Close-without-saving warning (DEC-C-TBD-10; copy PROVISIONAL) */}
+      {/* Close-without-saving warning (DEC-C10; copy PROVISIONAL) */}
       {closeWarn && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.72)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ width: "100%", maxWidth: 440, background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "22px 24px" }}>

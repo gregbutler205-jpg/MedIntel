@@ -1,4 +1,4 @@
-// ── Session print — AI_SESSION_SPEC v0.3 Sec 7 (DEC-C-TBD-13 rev) ───────────
+// ── Session print — AI_SESSION_SPEC v0.3 Sec 7 (DEC-C13 rev) ───────────
 // The REFERENCE implementation of the handoff document format: shield logo,
 // patient identity block, generation timestamp, provenance and disclaimer
 // furniture. The caregiver handoff feature reuses THIS format when built —

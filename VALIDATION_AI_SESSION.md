@@ -1,6 +1,6 @@
 # VALIDATION_AI_SESSION.md
 Founder click-through script for the AI session shell (AI_SESSION_SPEC v0.3,
-DEC-C-TBD pending final IDs). The surface lives at AI Analysis. Run scenarios
+DEC-C1..C15 pending final IDs). The surface lives at AI Analysis. Run scenarios
 in order on one profile. What this branch builds is the deterministic shell —
 session lifecycle, stamping, artifacts, and the validator engine; claim-typed
 generation, corpus rows, and the tripwire block inside responses wait on

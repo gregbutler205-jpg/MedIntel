@@ -1,5 +1,5 @@
 // ── Deterministic numeric validator — AI_SESSION_SPEC v0.3 Sec 4 step 3 ─────
-// (DEC-C-TBD-3, placeholder ID pending DEC tail merge.) Model proposes,
+// (DEC-C3, placeholder ID pending DEC tail merge.) Model proposes,
 // rules dispose — same philosophy as the tripwire engine. The validator
 // contains no disease vocabulary and no unit vocabulary: it knows a number
 // appeared next to a unit from the maintained list (validatorUnits.js) and
@@ -9,7 +9,7 @@
 // It is NOT wired into the live generation path — that wiring belongs to the
 // composition pipeline, which waits on corpus v1 and prompts v2.5.
 //
-// Resolution rules (DEC-C-TBD-1):
+// Resolution rules (DEC-C1):
 //   · A detected (value, unit) matches only a supplied claim with the SAME
 //     canonical unit and numerically equal value. Verbatim restatement only.
 //   · Arithmetic restatement is unmatched BY CONSTRUCTION: unit conversion

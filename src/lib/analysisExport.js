@@ -47,7 +47,7 @@ export function saveAnalysisToNotes({ title, content, mode }) {
   return note;
 }
 
-// ── AI session transcript notes — AI_SESSION_SPEC v0.3 Sec 7 (DEC-C-TBD-9) ──
+// ── AI session transcript notes — AI_SESSION_SPEC v0.3 Sec 7 (DEC-C9) ──
 // Verbatim transcript, append-only: the first save creates the note with an
 // About section; every save appends one section per newly-saved segment and
 // NEVER rewrites an existing section. No AI summary is produced at save time

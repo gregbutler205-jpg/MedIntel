@@ -1,4 +1,4 @@
-// ── AI session shell tests — AI_SESSION_SPEC v0.3 (DEC-C-TBD, pre-merge) ────
+// ── AI session shell tests — AI_SESSION_SPEC v0.3 (DEC-C1..C15, pre-merge) ────
 // Covers the deterministic shell: session lifecycle, immutable segments,
 // record-state hash (C15), staleness (C12), discard occurrence log (C10),
 // vault round-trip, and the numeric validator engine (C3) against the spec's
@@ -35,7 +35,7 @@ const ok = (c, m) => { if (c) { pass++; console.log("PASS — " + m); } else { f
 const S = await import("../src/lib/aiSessions.js");
 const V = await import("../src/lib/numericValidator.js");
 
-// ── 1. Record-state hash (DEC-C-TBD-15) ──────────────────────────────────────
+// ── 1. Record-state hash (DEC-C15) ──────────────────────────────────────
 {
   localStorage.clear();
   const h0 = S.recordStateHash();
@@ -97,7 +97,7 @@ const V = await import("../src/lib/numericValidator.js");
      "unsavedSegments returns only the segments the note has not seen (append-only)");
 }
 
-// ── 4. Staleness + dividers (DEC-C-TBD-12) ───────────────────────────────────
+// ── 4. Staleness + dividers (DEC-C12) ───────────────────────────────────
 {
   localStorage.clear();
   const s = S.newSession("stale?");
@@ -118,7 +118,7 @@ const V = await import("../src/lib/numericValidator.js");
      "no divider when nothing changed between segments");
 }
 
-// ── 5. Store, discard occurrence log (DEC-C-TBD-10) ──────────────────────────
+// ── 5. Store, discard occurrence log (DEC-C10) ──────────────────────────
 {
   localStorage.clear();
   const s = S.newSession("to discard");
@@ -185,7 +185,7 @@ const V = await import("../src/lib/numericValidator.js");
 // ── 9. Validator: arithmetic restatement is unmatched by construction ────────
 {
   const threeG = [{ value: 3, unit: "g" }];
-  // "six" is a word, not a numeral — DEC-C-TBD-3 scopes detection to numerals,
+  // "six" is a word, not a numeral — DEC-C3 scopes detection to numerals,
   // so the block comes from the unlicensed 650 mg. (Word-number forms are a
   // known detection boundary, flagged in the session report.)
   let r = V.validateNumerics("That's six 650 mg tablets.", threeG);
@@ -228,7 +228,7 @@ const V = await import("../src/lib/numericValidator.js");
   ok(!tab11.includes("numericValidator"), "validator is NOT wired into live generation (engine-only branch)");
 
   const sessions = readFileSync(SRC("lib/aiSessions.js"), "utf8");
-  ok(sessions.includes("DEC-C-TBD"), "session lib cites the placeholder DEC namespace");
+  ok(/DEC-C\d/.test(sessions), "session lib cites the final DEC-C series");
   ok(sessions.includes("PROVISIONAL"), "session copy strings are marked provisional");
 
   const sync = readFileSync(SRC("lib/driveSync.js"), "utf8");

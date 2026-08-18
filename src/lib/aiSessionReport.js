@@ -164,7 +164,7 @@ export function buildSessionReportText({ convMessages = [], careTeam = [], start
   ].filter(Boolean).join("\n\n");
 }
 
-// ── AI_SESSION_SPEC v0.3 segment model (DEC-C-TBD-11, pre-merge) ─────────────
+// ── AI_SESSION_SPEC v0.3 segment model (DEC-C11, pre-merge) ─────────────
 // Session-document counterparts of the DEC-042 helpers above. The legacy
 // conv-id helpers stay for the archived insina_ai_messages data; nothing new
 // writes that store.
