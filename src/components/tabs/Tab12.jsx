@@ -9,7 +9,9 @@ import ReviewQueue from "../onboarding/ReviewQueue.jsx";
 import { getStagedStore } from "../../lib/onboardingStaging.js";
 import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
 import { canonicalLabId } from "../../lib/labCanonical.js";
-import { uploadReportToDrive, areaForRecordType, getReportFolderState } from "../../lib/driveReports.js";
+import { uploadReportToDrive, areaForRecordType } from "../../lib/driveReports.js";
+import { createArchiveDoc, upsertArchiveDoc, readArchive, reviewableArchiveDocs } from "../../lib/labBatchConfirm.js";
+import LabBatchReview from "../LabBatchReview.jsx";
 
 // v1.48.0: after a record is saved, file its original PDF in the patient's
 // Drive archive and attach the link. Fire-and-forget — record saves never
@@ -237,8 +239,6 @@ export default function ImportTab({ onImport, onNavChange }) {
   // PDF upload state
   const [pdfStatus, setPdfStatus]   = useState("idle"); // idle | extracting | parsing | done | error
   const [pdfError, setPdfError]     = useState("");
-  const [pdfPreview, setPdfPreview] = useState([]); // extracted labs pending save
-  const [pdfInitialCount, setPdfInitialCount] = useState(0); // UI-20: extraction count, for excluded-in-review history
   const [docPreview, setDocPreview] = useState(null); // extracted non-lab doc pending save
   const [pdfText, setPdfText]       = useState(""); // raw text (kept for AI handoff)
   const [pdfFileName, setPdfFileName] = useState("");
@@ -247,6 +247,15 @@ export default function ImportTab({ onImport, onNavChange }) {
   const [batchSummary, setBatchSummary]   = useState([]);   // [{ name, ok, title?, date?, color?, count?, error? }]
   const fileInputRef = useRef(null);
   const pdfFileRef   = useRef(null); // v1.48.0: original File from the single-file flow, for the Drive archive
+
+  // DEC-P43 (lab batch confirmation): extracted lab rows land in the archive
+  // store and pass through row-level review — nothing reaches mi_labs without
+  // a ConfirmationEvent. labReview drives the open review overlay; the files
+  // map keeps this session's original Files so the review can show source
+  // pages (revisits after reload fall back to the archive copy pointer).
+  const [labReview, setLabReview] = useState(null); // null | { docId, file }
+  const labFilesRef   = useRef(new Map()); // docId -> File (session only)
+  const sessionLabDocsRef = useRef(new Set()); // docIds created this session (auto-advance order)
 
   const DOC_TYPES = [
     { label: "Lab Results",     type: "Lab Report", color: "#10b981" },
@@ -327,7 +336,6 @@ export default function ImportTab({ onImport, onNavChange }) {
     const docTypeMeta = DOC_TYPES.find(d => d.label === uploadDocType) || DOC_TYPES[DOC_TYPES.length - 1];
 
     setPdfError("");
-    setPdfPreview([]);
     setDocPreview(null);
     setPdfText("");
     setBatchSummary([]);
@@ -346,16 +354,23 @@ export default function ImportTab({ onImport, onNavChange }) {
           const extracted = await parseLabsWithClaude(text);
           if (!Array.isArray(extracted) || extracted.length === 0)
             throw new Error("No lab results found in PDF. If this is an imaging report or clinical note, select that type before uploading.");
-          setPdfPreview(extracted.map((l, i) => ({ ...l, _previewId: i, id: Date.now() + i })));
           // §2 tripwire advisory: evaluate each extracted lab before the user
           // confirms it into the record. Flag-gated (no-op until enabled); a
           // recent critical fires the takeover, older ones are inert here.
           extracted.forEach(l => {
             try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null, readingId: l.id ?? null }); } catch { /* never blocks import */ }
           });
-          setPdfInitialCount(extracted.length); // UI-20: for the excluded-in-review count
-          setPdfStatus("done");
-          showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review and confirm below.`);
+          // DEC-P43: rows land in the archive tier and open row-level review.
+          const archiveDoc = upsertArchiveDoc(createArchiveDoc({
+            title: file.name.replace(/\.pdf$/i, "") || "Lab Report",
+            fileName: file.name,
+            rows: extracted,
+          }));
+          labFilesRef.current.set(archiveDoc.id, file);
+          sessionLabDocsRef.current.add(archiveDoc.id);
+          setPdfStatus("idle");
+          setLabReview({ docId: archiveDoc.id, file });
+          showToast(`Found ${extracted.length} lab result${extracted.length !== 1 ? "s" : ""} — review before they join your record.`);
         } else {
           const extracted = await parseDocWithClaude(text, uploadDocType);
           if (!extracted || !extracted.title) throw new Error("Could not extract document information from PDF.");
@@ -383,9 +398,21 @@ export default function ImportTab({ onImport, onNavChange }) {
         if (isLabs) {
           const extracted = await parseLabsWithClaude(text);
           if (extracted.length === 0) throw new Error("No lab results found");
+          // §2 tripwire advisory on staged values — same hook as the single-file path.
+          extracted.forEach(l => {
+            try { evaluateAndFire(canonicalLabId(l.name), l.value, { source: "staged", resultDate: l.date || null, readingId: l.id ?? null }); } catch { /* never blocks import */ }
+          });
+          // DEC-P43: batch files no longer auto-save — each becomes an archive
+          // document and passes through the same row-level review, one at a time.
+          // (The Drive original archives at confirm, alongside its Records entry.)
+          const archiveDoc = upsertArchiveDoc(createArchiveDoc({
+            title: file.name.replace(/\.pdf$/i, "") || "Lab Report",
+            fileName: file.name,
+            rows: extracted,
+          }));
+          labFilesRef.current.set(archiveDoc.id, file);
+          sessionLabDocsRef.current.add(archiveDoc.id);
           allLabs.push(...extracted);
-          // v1.48.0: archive each original lab PDF (the batch record links to the folder)
-          uploadReportToDrive(file, { area: "Lab Reports", dateISO: extracted[0]?.date, title: file.name.replace(/\.pdf$/i, "") });
           summary.push({ name: file.name, ok: true, count: extracted.length });
         } else {
           const extracted = await parseDocWithClaude(text, uploadDocType);
@@ -426,32 +453,15 @@ export default function ImportTab({ onImport, onNavChange }) {
     setBatchSummary(summary);
 
     if (isLabs && allLabs.length > 0) {
-      // Auto-save in batch mode — no "Save All" confirmation step needed for large batches
-      const labeled = allLabs.map((l, idx) => ({ ...l, id: Date.now() + idx }));
-      const updatedLabs = [...labeled, ...getLabs()].sort((a, b) => new Date(b.date) - new Date(a.date));
-      saveLabs(updatedLabs);
-      setLabs(updatedLabs); // force list to refresh immediately
+      // DEC-P43: nothing auto-saves. Every extracted document is now in the
+      // archive tier; review opens for the first one and advances through the
+      // rest (Records entries, Drive archiving, and import-log entries are
+      // written per document at confirm time).
       const ok   = summary.filter(s => s.ok).length;
       const fail = summary.filter(s => !s.ok).length;
-      // Single Records entry for the whole batch. v1.48.0: each original PDF is
-      // archived to Drive individually; one record can't point at N files, so
-      // it links to the Lab Reports FOLDER when the archive is set up.
-      const labFolderLink = getReportFolderState()?.areas?.["Lab Reports"]?.link || "";
-      mergeRecords([{
-        id: Date.now(),
-        title: `Lab Import — ${ok} file${ok !== 1 ? "s" : ""}`,
-        type: "Lab Report",
-        date: labeled[0]?.date || new Date().toISOString().split("T")[0],
-        facility: labeled[0]?.facility || "",
-        provider: "",
-        summary: `${labeled.length} lab result${labeled.length !== 1 ? "s" : ""} imported from ${ok} PDF${ok !== 1 ? "s" : ""}${fail ? ` (${fail} file${fail !== 1 ? "s" : ""} failed)` : ""}.`,
-        source: "Imported from PDF", // UI-19: truthful source label
-        addedAt: new Date().toISOString(),
-        ...(labFolderLink ? { reportLink: labFolderLink, updatedAt: Date.now() } : {}),
-      }]);
-      showToast(`${labeled.length} lab results from ${ok} file${ok !== 1 ? "s" : ""} saved.${fail ? ` ${fail} failed — see summary.` : ""}`);
-      // UI-20: Import History entry for the batch
-      addImportLog({ ts: new Date().toISOString(), source: `${ok + fail} PDF file${ok + fail !== 1 ? "s" : ""} (batch)`, records: labeled.length, status: fail ? `Saved (${fail} file${fail !== 1 ? "s" : ""} failed)` : "Saved" });
+      const firstDocId = [...sessionLabDocsRef.current][0];
+      if (firstDocId) setLabReview({ docId: firstDocId, file: labFilesRef.current.get(firstDocId) || null });
+      showToast(`${allLabs.length} lab result${allLabs.length !== 1 ? "s" : ""} extracted from ${ok} file${ok !== 1 ? "s" : ""} — review each before they join your record.${fail ? ` ${fail} file${fail !== 1 ? "s" : ""} failed.` : ""}`);
     } else if (!isLabs) {
       const ok   = summary.filter(s => s.ok).length;
       const fail = summary.filter(s => !s.ok).length;
@@ -540,51 +550,52 @@ export default function ImportTab({ onImport, onNavChange }) {
     if (onNavChange) onNavChange("ai");
   }
 
-  function confirmPdfLabs() {
-    const newLabs = pdfPreview.map(({ _previewId, ...l }) => l);
-    const updated = [...newLabs, ...labs].sort((a, b) => new Date(b.date) - new Date(a.date));
-    saveLabs(updated);
-    setLabs(updated);
+  // ── DEC-P43: batch review handlers ───────────────────────────────────────
+  // Called by LabBatchReview after confirmDoc + persistConfirmation succeeded:
+  // the archive doc is stamped, the ConfirmationEvent written, and promoted
+  // rows are already in mi_labs. This handler owns the Tab12-side effects —
+  // Records entry, Drive archive of the original, import log — then advances
+  // to the next document from this session, if any.
+  function handleLabReviewDone({ doc, event, promotedLabRows }) {
+    setLabs(getLabs()); // reconciled store changed underneath — refresh the list
 
-    // Save a reference record to Records tab so it shows in Medical Records
-    const labDate = newLabs[0]?.date || new Date().toISOString().split("T")[0];
-    const facility = newLabs[0]?.facility || "";
-    const labRecord = {
-      id: Date.now(),
-      title: pdfFileName ? pdfFileName.replace(/\.pdf$/i, "") : "Lab Report",
-      type: "Lab Report",
-      date: labDate,
-      facility,
-      provider: facility,
-      summary: `${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} imported from PDF. Tests: ${newLabs.slice(0,5).map(l=>l.name).join(", ")}${newLabs.length > 5 ? "…" : "."}`,
-      source: "Imported from PDF", // UI-19: truthful source label
-      addedAt: new Date().toISOString(),
-    };
-    mergeRecords([labRecord]);
-    archiveOriginal(labRecord, pdfFileRef.current); // v1.48.0: Drive archive + link, best-effort
+    if (promotedLabRows.length > 0) {
+      const labRecord = {
+        id: Date.now(),
+        title: doc.title,
+        type: "Lab Report",
+        date: promotedLabRows[0]?.date || new Date().toISOString().split("T")[0],
+        facility: promotedLabRows[0]?.facility || "",
+        provider: promotedLabRows[0]?.facility || "",
+        summary: `${promotedLabRows.length} lab result${promotedLabRows.length !== 1 ? "s" : ""} confirmed from PDF${event.excludedRowIds.length ? ` (${event.excludedRowIds.length} excluded in review)` : ""}. Tests: ${promotedLabRows.slice(0, 5).map(l => l.name).join(", ")}${promotedLabRows.length > 5 ? "…" : "."}`,
+        source: "Imported from PDF", // UI-19: truthful source label
+        addedAt: new Date().toISOString(),
+      };
+      mergeRecords([labRecord]);
+      archiveOriginal(labRecord, labFilesRef.current.get(doc.id) || null); // v1.48.0: Drive archive + link, best-effort
+    }
 
-    // UI-20: Import History entry (excluded = removed during review)
+    // UI-20: Import History entry (excluded = rows excluded during review)
     addImportLog({
       ts: new Date().toISOString(),
-      source: pdfFileName || "PDF upload",
-      records: newLabs.length,
-      excluded: Math.max(0, pdfInitialCount - newLabs.length),
-      status: "Saved",
+      source: doc.fileName || "PDF upload",
+      records: promotedLabRows.length,
+      excluded: event.excludedRowIds.length,
+      status: promotedLabRows.length > 0 ? "Confirmed" : "All rows excluded",
     });
+    showToast(`${promotedLabRows.length} lab result${promotedLabRows.length !== 1 ? "s" : ""} added to your record${event.excludedRowIds.length ? ` · ${event.excludedRowIds.length} excluded` : ""}.`);
 
-    setPdfPreview([]);
-    setPdfStatus("idle");
-    showToast(`${newLabs.length} lab result${newLabs.length !== 1 ? "s" : ""} saved to Labs & Records.`);
+    // Auto-advance through this session's remaining documents (batch import).
+    sessionLabDocsRef.current.delete(doc.id);
+    const remaining = reviewableArchiveDocs().find(d => sessionLabDocsRef.current.has(d.id));
+    setLabReview(remaining ? { docId: remaining.id, file: labFilesRef.current.get(remaining.id) || null } : null);
   }
 
-  function discardPdfLabs() {
-    // UI-20: a discarded review still traces in history
-    if (pdfPreview.length || pdfInitialCount) {
-      addImportLog({ ts: new Date().toISOString(), source: pdfFileName || "PDF upload", records: 0, excluded: pdfInitialCount, status: "Discarded" });
-    }
-    setPdfPreview([]);
-    setPdfStatus("idle");
-    setPdfError("");
+  function handleLabReviewClose() {
+    // "Review later": the working state (exclusions, corrections) was already
+    // persisted by the review; the document stays in the archive tier and the
+    // re-entry card below brings the patient back to this same flow.
+    setLabReview(null);
   }
 
   const [expandedGroups, setExpandedGroups] = useState(new Set());
@@ -805,9 +816,32 @@ export default function ImportTab({ onImport, onNavChange }) {
         {/* PDF error */}
         {pdfStatus === "error" && (
           <div style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.25)", borderRadius:10, padding:"12px 16px", marginBottom:20, fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
-            ⚠ {pdfError} <button onClick={discardPdfLabs} style={{ marginLeft:12, background:"transparent", border:"none", color:"#f87171", cursor:"pointer", textDecoration:"underline", fontSize:11 }}>Dismiss</button>
+            ⚠ {pdfError} <button onClick={() => { setPdfStatus("idle"); setPdfError(""); }} style={{ marginLeft:12, background:"transparent", border:"none", color:"#f87171", cursor:"pointer", textDecoration:"underline", fontSize:11 }}>Dismiss</button>
           </div>
         )}
+
+        {/* DEC-P43: lab documents with rows still awaiting review (or excluded
+            rows promotable later) re-enter the same review flow from here. */}
+        {!labReview && (() => {
+          const waiting = reviewableArchiveDocs();
+          if (waiting.length === 0) return null;
+          const pendingRows = waiting.reduce((n, d) => n + d.rows.filter(r => r.state === "pending").length, 0);
+          const excludedRows = waiting.reduce((n, d) => n + d.rows.filter(r => r.state === "excluded").length, 0);
+          return (
+            <div style={{ background:"#0b1220", border:"1px solid rgba(245,158,11,.3)", borderRadius:12, padding:"12px 18px", marginBottom:20, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+              <span style={{ flex:1, fontSize:13, color:"#c4d8ee", minWidth:220 }}>
+                <strong>{waiting.length} lab document{waiting.length !== 1 ? "s" : ""}</strong> in the archive
+                {pendingRows > 0 ? <> with <strong>{pendingRows} row{pendingRows !== 1 ? "s" : ""}</strong> awaiting review</> : null}
+                {excludedRows > 0 ? <>{pendingRows > 0 ? " and" : " with"} {excludedRows} excluded row{excludedRows !== 1 ? "s" : ""} you can still add later</> : null}
+                . Nothing joins your record until you confirm it.
+              </span>
+              <button className="imp-btn" onClick={() => setLabReview({ docId: waiting[0].id, file: labFilesRef.current.get(waiting[0].id) || null })}
+                style={{ padding:"8px 18px", borderRadius:9, fontSize:12, fontWeight:600, cursor:"pointer", background:"rgba(245,158,11,.14)", border:"1px solid rgba(245,158,11,.4)", color:"#f59e0b", fontFamily:"'Sora',sans-serif" }}>
+                Review now
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Non-lab document preview */}
         {docPreview && (
@@ -837,39 +871,9 @@ export default function ImportTab({ onImport, onNavChange }) {
           </div>
         )}
 
-        {/* PDF preview — labs to confirm */}
-        {pdfPreview.length > 0 && (
-          <div style={{ background:"rgba(167,139,250,.05)", border:"1px solid rgba(167,139,250,.2)", borderRadius:12, padding:20, marginBottom:24 }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <div style={{ fontSize:13, color:"#a78bfa", fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
-                ✦ {pdfPreview.length} lab result{pdfPreview.length !== 1 ? "s" : ""} extracted — review then confirm
-              </div>
-              <div style={{ display:"flex", gap:8 }}>
-                <button onClick={discardPdfLabs} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
-                <button onClick={confirmPdfLabs} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:7, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save All</button>
-              </div>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:10 }}>
-              {pdfPreview.map((l, i) => (
-                <div key={l._previewId} style={{ background:"#0b1220", border:`1px solid ${l.flag ? "rgba(239,68,68,.3)" : "#111e30"}`, borderRadius:10, padding:"12px 14px" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                    <span style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{l.name}</span>
-                    {l.flag && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", color:"#ef4444", padding:"1px 7px", borderRadius:8, fontFamily:"'DM Mono',monospace" }}>OUT OF RANGE</span>}
-                  </div>
-                  <div style={{ fontSize:14, fontWeight:700, color: l.flag ? "#f59e0b" : "#10b981" }}>{l.value} <span style={{ fontSize:11, color:"#98afc4", fontWeight:400 }}>{l.unit}</span></div>
-                  <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:3 }}>
-                    {l.refRange && <span>ref: {l.refRange} · </span>}
-                    {l.category}
-                  </div>
-                  <button onClick={() => setPdfPreview(prev => prev.filter(x => x._previewId !== l._previewId))}
-                    style={{ marginTop:8, background:"transparent", border:"1px solid #111e30", borderRadius:5, color:"#6a8090", fontSize:10, padding:"2px 8px", cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* DEC-P43: the old lab preview grid is replaced by the row-level
+            batch review overlay (LabBatchReview) — rendered at the end of this
+            component so it overlays the whole screen. */}
 
         {/* UI-20: Import History — document name, date, records created,
             excluded/review counts where available, source doc, final status */}
@@ -1052,6 +1056,21 @@ export default function ImportTab({ onImport, onNavChange }) {
         </div>
         )}
       </div>
+
+      {/* DEC-P43: row-level batch review — no lab row reaches the record
+          without passing through this overlay's ConfirmationEvent. */}
+      {labReview && (() => {
+        const reviewDoc = readArchive().find(d => d.id === labReview.docId);
+        if (!reviewDoc) return null;
+        return (
+          <LabBatchReview
+            doc={reviewDoc}
+            file={labReview.file}
+            onDone={handleLabReviewDone}
+            onClose={handleLabReviewClose}
+          />
+        );
+      })()}
     </div>
   );
 }

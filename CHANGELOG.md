@@ -12,7 +12,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.49.5 — 2026-08-17
+## v1.50.0 — 2026-08-18
+
+### Added
+- **Lab results now stop for your review before joining your record**
+  (DEC-P43). Importing a lab PDF — single file or batch — opens a review
+  screen: the extracted rows beside the source document, one row per
+  analyte. You can exclude any row, correct a misread value, unit, or date
+  (the original stays stored alongside your correction), and out-of-range,
+  low-confidence, and tacrolimus rows each require an explicit
+  acknowledgment before the batch confirm button enables. Excluded rows are
+  kept — not deleted — and can be added later through the same review.
+  Every confirmed row carries provenance back to its source document and
+  confirmation event. Batch imports no longer auto-save rows; nothing joins
+  your record until you confirm it. Medications and allergies keep their
+  per-item confirmation, unchanged.
+
+### Tests
+- 68-case lab-batch suite (flags, gating, corrections, re-promotion,
+  persistence invariants) wired into the build gate: `test:lab-batch`.
+  19 suites / 710 cases.
 
 ### Fixed
 - **Search no longer blanks the app on the first keystroke.** Search results

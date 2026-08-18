@@ -142,8 +142,12 @@ const lib   = readFileSync(SRC("lib/driveReports.js"), "utf8");
 }
 
 // 7b. Every Tab12 save path archives the original.
-ok((tab12.match(/archiveOriginal\(/g) || []).length >= 5, "Tab12: archiveOriginal defined + called from all four record paths");
-ok(tab12.includes('uploadReportToDrive(file, { area: "Lab Reports"'), "Tab12: batch lab PDFs archived individually");
+ok((tab12.match(/archiveOriginal\(/g) || []).length >= 5, "Tab12: archiveOriginal defined + called from all record paths");
+// DEC-P43 (lab batch confirmation): batch lab PDFs no longer upload at
+// extract time — each document's original archives at CONFIRM time through
+// handleLabReviewDone's archiveOriginal call (counted above), keyed by the
+// session file map so batch and single files take the same path.
+ok(tab12.includes("archiveOriginal(labRecord, labFilesRef.current.get(doc.id)"), "Tab12: confirmed lab documents archive their original via the session file map");
 // 7c. Tab09 upload passes the original through.
 ok(tab09.includes("uploadReportToDrive(file, { area: areaForDocCategory(doc.category)"), "Tab09: upload pass-through wired");
 // 7d. Settings row exists and is demo-gated.
