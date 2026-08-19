@@ -1351,17 +1351,18 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               style={{ background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", color: "#7eb8d8" }}>
               Save &amp; Print
             </button>
-            <span style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
-              {activeSession?.state === "saved"
-                ? (unsaved ? "new turns not yet saved" : "saved to Notes")
-                : (activeSession ? "not saved yet" : "")}
-            </span>
-            <div style={{ flex: 1 }} />
+            {/* Founder review 2026-08-18: Close sits WITH its siblings, not
+                across the screen — the three end-actions read as one group. */}
             <button className="end-btn" onClick={closeSession} disabled={streaming}
               title="Close this session"
               style={{ background: "transparent", border: "1px solid #111e30", color: "#98afc4" }}>
               Close
             </button>
+            <span style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+              {activeSession?.state === "saved"
+                ? (unsaved ? "new turns not yet saved" : "saved to Notes")
+                : (activeSession ? "not saved yet" : "")}
+            </span>
           </div>
 
           {/* Composer */}
