@@ -1,47 +1,40 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import AIModeOnboardingModal from "../AIModeOnboardingModal";
-import { printConsent } from "../PrintableConsent";
-import { wirePrintWindow } from "../../lib/printWindow.js";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
-import { renderAiMarkdownToHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
+import { applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { callAI, MODEL_MAP } from "../../lib/aiClient.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
 import AnalysisOverlay from "../AnalysisOverlay.jsx";
-import { mkAnalysisNote } from "../../lib/analysisExport.js";
-import { PrintLabel, PrinterIcon, TrashIcon } from "../icons.jsx";
+import { PrinterIcon } from "../icons.jsx";
+import { wirePrintWindow } from "../../lib/printWindow.js";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName } from "../../lib/tripwire.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 import { formatDocumentBlock, stripControlChars } from "../../prompts/documents.js";
 import { sortReadingsByRecency } from "../../lib/vitals.js";
-import { apiMessagesForConv, buildSessionReportText } from "../../lib/aiSessionReport.js";
+import { apiMessagesForSession } from "../../lib/aiSessionReport.js";
+import {
+  newSession, ensureOpenSegment, appendTurn, closeOpenSegment, totalMessages,
+  hasUnsavedTurns, markSaved, discardSession, saveSession, loadSessions,
+  stalenessOf, segmentTransition, recordStateHash, CORPUS_VERSION, SESSION_COPY,
+} from "../../lib/aiSessions.js";
+import { saveSessionTranscriptToNotes } from "../../lib/analysisExport.js";
+import { buildSessionPrintHtml } from "../../lib/printSession.js";
 import { DAILY_QUESTION_LIMIT, dailyLimitReached, questionsRemainingToday, recordQuestionSent } from "../../lib/dailyQuestionLimit.js";
 
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
-const STORAGE_KEY    = "insina_ai_messages";
+// AI_SESSION_SPEC v0.3 (DEC-C8): AI Analysis is a session index plus a
+// focused session surface. The legacy running-feed keys (insina_ai_messages,
+// insina_ai_session) are no longer written or rendered — the data stays on
+// disk untouched, searchable via the existing Search index, and OPEN-17(b)
+// still tracks that key family. Sessions live in the vaulted mi_ai_sessions
+// store (src/lib/aiSessions.js).
 const AI_MODE_KEY    = "insina_ai_mode";
 const AI_LOG_KEY     = "insina_ai_log";
-// DEC-042: the open-session marker — { conv, startedAt }. Present = a session
-// is open (survives tab navigation and app restarts); cleared on End & Save
-// Report or explicit discard. NOTE: like its siblings above, this key sits
-// outside the P-02 vault (insina_ prefix) — OPEN-17(b) tracks migrating the
-// whole family to managed mi_* keys.
-const AI_SESSION_KEY = "insina_ai_session";
-
-function loadSessionMarker() {
-  try { const s = JSON.parse(localStorage.getItem(AI_SESSION_KEY)); return s && typeof s.conv === "number" ? s : null; }
-  catch { return null; }
-}
-function saveSessionMarker(s) {
-  try { localStorage.setItem(AI_SESSION_KEY, JSON.stringify(s)); } catch {}
-}
-function clearSessionMarker() {
-  try { localStorage.removeItem(AI_SESSION_KEY); } catch {}
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Mode helpers
@@ -313,23 +306,9 @@ const CONTEXT_TAGS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Print helpers
+// Print plumbing (the document itself is built in src/lib/printSession.js —
+// the reference handoff format per DEC-C13 rev)
 // ─────────────────────────────────────────────────────────────────────────────
-const PRINT_STYLE = `
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Georgia,serif; max-width:760px; margin:48px auto; color:#1a1a1a; font-size:14px; line-height:1.65; padding:0 24px; }
-  .logo { height:52px; margin-bottom:18px; }
-  h1 { text-align:center; font-size:28px; font-weight:700; letter-spacing:-.5px; margin-bottom:8px; }
-  .subtitle { text-align:center; font-size:12px; color:#555; margin-bottom:22px; }
-  .rule { border:none; border-top:2px solid #2563eb; margin-bottom:24px; }
-  .mode-badge { display:inline-block; background:#f0f6ff; border:1px solid #2563eb; border-radius:4px; padding:2px 8px; font-size:9px; font-family:monospace; color:#2563eb; margin-bottom:18px; }
-  .q-label { font-weight:700; font-size:13px; margin:18px 0 5px; color:#2563eb; }
-  .q-text { margin-bottom:6px; font-size:14px; }
-  .a-block { margin-bottom:8px; padding-bottom:14px; border-bottom:1px solid #eee; }
-  .footer { margin-top:48px; border-top:1px solid #ddd; padding-top:12px; font-size:10px; color:#777; display:flex; justify-content:space-between; }
-  @media print { body { margin:28px; } }
-`;
-
 // Open the printable HTML in a new window and trigger print. If the pop-up is
 // blocked, download the HTML so it is never silently lost.
 // Returns "printed", "downloaded", or "failed".
@@ -355,52 +334,6 @@ function openPrintable(html, filenameBase) {
   } catch {
     return "failed";
   }
-}
-
-const esc = s => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-// AI-written summary of one conversation.
-function buildSummaryHtml(summaryText, logoUrl, mode) {
-  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
-  const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <title>AI Analysis Summary — Insina Health</title><style>${PRINT_STYLE}</style>
-  </head><body>
-    <img src="${logoUrl}" class="logo" alt="Insina Health" />
-    <h1>AI Analysis Summary</h1>
-    <div class="subtitle">Insina Health &mdash; Personal Health Intelligence</div>
-    <hr class="rule" />
-    <div class="mode-badge">${modeLabel}</div>
-    ${summaryText ? renderAiMarkdownToHtml(summaryText) : "<p style='color:#777;font-style:italic'>Summary could not be generated.</p>"}
-    <div class="footer">
-      <span>Insina Health &mdash; Informational only. This is not medical advice. Always consult your physician.</span>
-      <span>Generated ${date}</span>
-    </div>
-  </body></html>`;
-}
-
-// Verbatim transcript of one conversation (your questions + full AI replies).
-function buildTranscriptHtml(convMessages, logoUrl, mode) {
-  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
-  const modeLabel = mode === "advanced" ? "Advanced Mode — Claude Opus" : "Standard Mode — Claude Sonnet";
-  const bodyHtml = convMessages.map(m => m.role === "user"
-    ? `<div class="q-label">You asked:</div><div class="q-text">${esc(m.text)}</div>`
-    : `<div class="a-block">${renderAiMarkdownToHtml(m.text)}</div>`
-  ).join("");
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <title>AI Analysis Transcript — Insina Health</title><style>${PRINT_STYLE}</style>
-  </head><body>
-    <img src="${logoUrl}" class="logo" alt="Insina Health" />
-    <h1>AI Analysis Transcript</h1>
-    <div class="subtitle">Insina Health &mdash; Personal Health Intelligence</div>
-    <hr class="rule" />
-    <div class="mode-badge">${modeLabel}</div>
-    ${bodyHtml}
-    <div class="footer">
-      <span>Insina Health &mdash; Informational only. This is not medical advice. Always consult your physician.</span>
-      <span>Generated ${date}</span>
-    </div>
-  </body></html>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -478,7 +411,7 @@ function renderMarkdown(rawText) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Message component
 // ─────────────────────────────────────────────────────────────────────────────
-function Message({ role, text, streaming, mode, ts, onOpenReport }) {
+function Message({ role, text, streaming, mode, ts, onOpenReport, isAdvancedUi }) {
   const isUser = role === "user";
   const isAdvanced = mode === "advanced";
   const tsLabel = ts ? new Date(ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : null;
@@ -535,7 +468,7 @@ function Message({ role, text, streaming, mode, ts, onOpenReport }) {
               {/* Footer disclaimer — all responses */}
               {!streaming && text && (
                 <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
-                  {isAdvanced ? "Advanced Mode" : "Standard Mode"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
+                  {isAdvancedUi ? "Advanced Mode" : "Standard Mode"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
                 </div>
               )}
             </div>
@@ -558,46 +491,30 @@ function TypingIndicator() {
   );
 }
 
+// Divider between session segments whose record/corpus stamp moved (spec Sec 6).
+function SegmentDivider({ recordChanged, dateIso }) {
+  const dateStr = (() => { try { return new Date(dateIso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); } catch { return ""; } })();
+  return (
+    <div style={{ borderTop: "1.5px dashed rgba(245,158,11,.4)", margin: "22px 0 18px", paddingTop: 8, fontSize: 10.5, color: "#c4a060", fontFamily: "'DM Mono',monospace", lineHeight: 1.5, fontStyle: "italic" }}>
+      {recordChanged ? SESSION_COPY.dividerRecordChanged(dateStr) : SESSION_COPY.dividerCorpusChanged(dateStr)}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AIAnalysis({ onNavChange }) {
-  const [messages, setMessages]       = useState(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      // Migrate pre-v1.8 messages (no conversation id) into conversation 0.
-      return raw.map(m => ({ ...m, conv: m.conv ?? 0 }));
-    } catch { return []; }
-  });
-  // DEC-042 session model: which conversation new messages are added to.
-  // An OPEN session resumes its own conv; otherwise start on a FRESH conv id
-  // (max+1) so ended/archived conversations are never appended to — the old
-  // "resume the max conv" init silently reopened archives after an End & Save.
-  const [currentConv, setCurrentConv] = useState(() => {
-    try {
-      const marker = loadSessionMarker();
-      if (marker) return marker.conv;
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      if (raw.length === 0) return 0;
-      return raw.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1;
-    } catch { return 0; }
-  });
-  // Open-session marker (null = no session open). The resume banner shows on
-  // arrival whenever an open session with messages exists; resuming, sending,
-  // ending, or discarding dismisses it.
-  const [session, setSession] = useState(() => loadSessionMarker());
-  const [resumeBanner, setResumeBanner] = useState(() => {
-    try {
-      const marker = loadSessionMarker();
-      if (!marker) return false;
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      return raw.some(m => (m.conv ?? 0) === marker.conv);
-    } catch { return false; }
-  });
-  const [discardConfirm, setDiscardConfirm] = useState(false);
+  // AI_SESSION_SPEC v0.3: index of saved sessions, or one focused session.
+  const [view, setView]               = useState("index"); // "index" | "session"
+  const [sessionsList, setSessionsList] = useState(() => loadSessions());
+  const [activeSession, setActiveSession] = useState(null); // render mirror of sessionRef.current
+  const sessionRef                    = useRef(null);
+  const [liveText, setLiveText]       = useState(null);  // in-flight assistant text (ephemeral until appended)
+  const [liveMode, setLiveMode]       = useState("standard");
+  const [closeWarn, setCloseWarn]     = useState(false);
   // OPEN-17a: 15 conversation questions per day; counted on successful sends.
   const [questionsLeft, setQuestionsLeft] = useState(() => questionsRemainingToday());
-  const [summaryBusyConv, setSummaryBusyConv] = useState(null); // conv id being summarized
   const [input, setInput]             = useState("");
   const [streaming, setStreaming]     = useState(false);
   const [error, setError]             = useState("");
@@ -612,7 +529,6 @@ export default function AIAnalysis({ onNavChange }) {
   const textareaRef                   = useRef(null);
   const contextCounts                 = getContextCounts();
   const [summaryNote, setSummaryNote] = useState("");
-  const [newConvConfirm, setNewConvConfirm]   = useState(false);
   // A-13: per-response report overlay — { title, content, mode, timestamp } | null.
   const [analysisOverlay, setAnalysisOverlay] = useState(null);
   // UI-15: collapsible sidebar panels.
@@ -628,6 +544,9 @@ export default function AIAnalysis({ onNavChange }) {
   const [coldStartRetry, setColdStartRetry] = useState(null); // text to retry
 
   const currentMode = modeData?.mode || "standard";
+
+  const refreshSessions = () => setSessionsList(loadSessions());
+  const mirror = () => { if (sessionRef.current) setActiveSession({ ...sessionRef.current }); };
 
   // ── Consent version check on mount ────────────────────────────────────────
   useEffect(() => {
@@ -673,27 +592,10 @@ export default function AIAnalysis({ onNavChange }) {
   }, [modeData]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
-  }, [messages]);
-
-  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming]);
+  }, [activeSession, liveText, streaming]);
 
-  // Auto-send pending prompt from Dashboard AI buttons
-  const pendingSentRef = useRef(false);
-  useEffect(() => {
-    if (pendingSentRef.current) return;
-    const pending = localStorage.getItem("mi_ai_pending");
-    if (pending) {
-      localStorage.removeItem("mi_ai_pending");
-      pendingSentRef.current = true;
-      setTimeout(() => sendMessage(pending), 300);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const sendMessage = useCallback(async (text, messagesOverride = null) => {
+  const sendMessage = useCallback(async (text) => {
     const trimmed = text.trim();
     if (!trimmed || streaming) return;
     // Block if stale consent is active
@@ -709,31 +611,31 @@ export default function AIAnalysis({ onNavChange }) {
     setError("");
     const mode = loadModeData()?.mode || "standard";
 
-    const conv = currentConv;
-    // DEC-042: typing into a fresh thread opens the session implicitly — the
-    // explicit "New Conversation" action does the same thing up front.
-    if (!session || session.conv !== conv) {
-      const marker = { conv, startedAt: new Date().toISOString() };
-      saveSessionMarker(marker);
-      setSession(marker);
+    // Start (DEC-C8): typing into an empty surface creates the session;
+    // its first segment stamp was captured at open. Reopening a saved thread
+    // leaves closed segments immutable — ensureOpenSegment opens a fresh one
+    // with a freshly captured stamp (DEC-C11/12).
+    let s = sessionRef.current;
+    if (!s) {
+      s = newSession(trimmed);
+      sessionRef.current = s;
+      setView("session");
     }
-    setResumeBanner(false); // sending IS resuming
-    const userMsg  = { role: "user", text: trimmed, conv, ts: new Date().toISOString() };
-    const baseMessages = messagesOverride !== null ? messagesOverride : messages;
-    const newMsgs  = [...baseMessages, userMsg];
-    setMessages(newMsgs);
+    ensureOpenSegment(s);
+    appendTurn(s, { role: "user", text: trimmed, mode });
+    saveSession(s);
+    mirror();
     setInput("");
     setStreaming(true);
+    setLiveMode(mode);
+    setLiveText("");
 
-    // DEC-042 context rule: the API sees the record (system prompt) + THIS
-    // session's turns only. Prior conversations rendered above are archive UI
-    // and never enter context (unit-tested in aiSessionReport.js).
-    const apiMessages = apiMessagesForConv(newMsgs, conv);
+    // Context rule: the record arrives via the system prompt; the thread
+    // contributes the CURRENT segment's turns, with earlier segments included
+    // as stamp-delimited prior-state content (spec Sec 2 reopen context rule).
+    const apiMessages = apiMessagesForSession(s);
 
     let accum = "";
-    const assistantIdx = newMsgs.length;
-
-    setMessages(prev => [...prev, { role: "assistant", text: "", streaming: true, mode, conv }]);
 
     // Build system prompt with prompt caching blocks
     const { userId, age, sex } = getIdentity();
@@ -767,14 +669,12 @@ export default function AIAnalysis({ onNavChange }) {
         // the old path reported the blocked request as a Render cold start and
         // told visitors to wait and retry, which could never succeed.
         if (err?.demo) {
-          setMessages(prev => {
-            const copy = [...prev];
-            copy[assistantIdx] = {
-              role: "assistant", mode, conv, ts: new Date().toISOString(),
-              text: "**AI is turned off in this demo**\n\nThis public demo runs on its own domain, kept off the AI service on purpose so a public page can't run up an API bill. Everything else here is fully interactive — your record, labs, medications, search, reports and the Emergency Card all work.\n\nTo see what the analysis actually produces, open **My Notes**. A saved example is pinned at the top, showing the full format: what your data shows, what may need attention, the questions it drafts for your care team, and why you're asking each one.",
-            };
-            return copy;
+          appendTurn(s, {
+            role: "assistant", mode,
+            text: "**AI is turned off in this demo**\n\nThis public demo runs on its own domain, kept off the AI service on purpose so a public page can't run up an API bill. Everything else here is fully interactive — your record, labs, medications, search, reports and the Emergency Card all work.\n\nTo see what the analysis actually produces, open **My Notes**. A saved example is pinned at the top, showing the full format: what your data shows, what may need attention, the questions it drafts for your care team, and why you're asking each one.",
           });
+          saveSession(s);
+          mirror();
           return; // the finally block clears the streaming state
         }
         throw new Error(err?.error || `Server error ${res.status}`);
@@ -803,248 +703,175 @@ export default function AIAnalysis({ onNavChange }) {
             const parsed = JSON.parse(data);
             if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
               accum += parsed.delta.text;
-              setMessages(prev => {
-                const copy = [...prev];
-                copy[assistantIdx] = { role: "assistant", text: accum, streaming: true, mode, conv };
-                return copy;
-              });
+              setLiveText(accum);
             }
           } catch {}
         }
       }
 
-      setMessages(prev => {
-        const copy = [...prev];
-        copy[assistantIdx] = { role: "assistant", text: accum, mode, conv, ts: new Date().toISOString() };
-        return copy;
-      });
+      appendTurn(s, { role: "assistant", text: accum, mode });
+      saveSession(s);
+      mirror();
+      refreshSessions();
 
       appendAuditLog({ event: "message_sent", mode, model: MODEL_MAP[mode] || MODEL_MAP.standard, tokens: accum.length });
 
     } catch (e) {
       if (e.name === "AbortError") {
-        setMessages(prev => {
-          const copy = [...prev];
-          copy[assistantIdx] = { role: "assistant", text: accum || "_(stopped)_", mode, conv };
-          return copy;
-        });
+        appendTurn(s, { role: "assistant", text: accum || "_(stopped)_", mode });
+        saveSession(s);
+        mirror();
       } else {
         const isColdStart = e.name === "TypeError" || e.message?.includes("Failed to fetch") || e.message?.includes("503") || e.message?.includes("NetworkError");
         if (isColdStart) {
+          // The turn never reached the model: withdraw the user turn so Retry
+          // re-sends it cleanly instead of doubling it in the transcript.
+          const seg = s.segments[s.segments.length - 1];
+          if (seg?.messages[seg.messages.length - 1]?.role === "user") seg.messages.pop();
+          saveSession(s);
+          mirror();
           setColdStartRetry(trimmed);
-          setMessages(prev => {
-            const copy = [...prev];
-            copy[assistantIdx] = { role: "assistant", text: "**Server is waking up** (Render free tier sleeps after 15 minutes of inactivity).\n\nThis takes about 30–60 seconds. Click **Retry** when ready.", mode, conv };
-            return copy;
-          });
         } else {
-          setMessages(prev => {
-            const copy = [...prev];
-            copy[assistantIdx] = { role: "assistant", text: `Error: ${e.message}`, mode, conv };
-            return copy;
-          });
+          appendTurn(s, { role: "assistant", text: `Error: ${e.message}`, mode });
+          saveSession(s);
+          mirror();
           setError(e.message);
         }
       }
     } finally {
       setStreaming(false);
+      setLiveText(null);
       abortRef.current = null;
     }
-  }, [messages, streaming, staleConsent, currentConv, session]);
+  }, [streaming, staleConsent]);
+
+  // Auto-send pending prompt from Dashboard AI buttons — opens a NEW session
+  // pre-seeded with that question (spec Sec 1 [CONFIRM], stated assumption).
+  const pendingSentRef = useRef(false);
+  useEffect(() => {
+    if (pendingSentRef.current) return;
+    const pending = localStorage.getItem("mi_ai_pending");
+    if (pending) {
+      localStorage.removeItem("mi_ai_pending");
+      pendingSentRef.current = true;
+      setTimeout(() => sendMessage(pending), 300);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
   };
 
-  // DEC-022: saved conversations carry the explicit AI-generated label, in
-  // Tab10's canonical note shape (the previous writer here used a `heading`
-  // field Tab10's editor doesn't read).
-  const saveConversationToNotes = (msgs) => {
-    if (!msgs || msgs.length === 0) return;
-    try {
-      const notes = JSON.parse(localStorage.getItem("mi_notes") || "[]");
-      const title = `AI Analysis — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
-      const content = msgs.map(m => `${m.role === "user" ? "You" : "AI"}: ${m.text}`).join("\n\n---\n\n");
-      const note = mkAnalysisNote({ title, content, mode: msgs.find(m => m.mode)?.mode || currentMode });
-      notes.unshift(note);
-      localStorage.setItem("mi_notes", JSON.stringify(notes));
-    } catch {}
+  // ── Session actions (AI_SESSION_SPEC v0.3 Sec 2) ───────────────────────────
+
+  const exitToIndex = () => {
+    sessionRef.current = null;
+    setActiveSession(null);
+    setView("index");
+    setInput("");
+    setError("");
+    setColdStartRetry(null);
+    setCloseWarn(false);
+    setSummaryNote("");
+    refreshSessions();
   };
 
-  // ── DEC-042 session actions ────────────────────────────────────────────────
+  // Save to Notes: verbatim transcript, append-only (DEC-C9). Closes the
+  // open segment first so it is immutable from here on; the composer stays
+  // live — the next turn opens a freshly stamped segment.
+  const saveToNotes = () => {
+    const s = sessionRef.current;
+    if (!s || streaming || totalMessages(s) === 0) return null;
+    closeOpenSegment(s);
+    const noteId = saveSessionTranscriptToNotes(s);
+    markSaved(s, noteId);
+    saveSession(s);
+    mirror();
+    refreshSessions();
+    return noteId;
+  };
 
-  // End & Save Report: close the open session and generate ONE discussion
-  // report for the whole session — header, verbatim timestamped transcript
-  // (as displayed, F-03-filtered), consolidated deduped Questions / Why
-  // you're asking, single contact block. Saves to My Notes with the
-  // AI-generated label (DEC-022) and opens in the report overlay. No AI call.
-  const endAndSaveReport = () => {
-    if (streaming || !session) return;
-    const convMsgs = messages.filter(m => (m.conv ?? 0) === session.conv && !m.streaming);
-    if (convMsgs.length === 0) {
-      // Nothing was said — just close the empty session, no report to save.
-      clearSessionMarker();
-      setSession(null);
-      setResumeBanner(false);
-      return;
+  // Save and Print (DEC-C9 rev): persists first — every printed artifact
+  // has a stored, reproducible counterpart. There is no print-without-save.
+  const saveAndPrint = () => {
+    const s = sessionRef.current;
+    if (!s || streaming || totalMessages(s) === 0) return;
+    saveToNotes();
+    let careTeam = [];
+    try { careTeam = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
+    const how = openPrintable(buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO, careTeam }), "Insina Health — AI Session");
+    if (how === "downloaded") {
+      setSummaryNote("Your browser blocked the print pop-up, so the session was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site. It is also saved in Notes.");
+    } else if (how === "failed") {
+      setSummaryNote("Couldn't open or save the print view. The session IS saved to Notes — check that pop-ups and downloads are allowed for this site, then try Save & Print again.");
     }
-    const endedAt = new Date().toISOString();
-    const careTeam = (() => { try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; } })();
-    const reportText = buildSessionReportText({ convMessages: convMsgs, careTeam, startedAt: session.startedAt, endedAt });
-    const mode = convMsgs.find(m => m.mode)?.mode || currentMode;
-    const title = `AI Conversation Report — ${new Date(endedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
-    let savedNoteId = null;
-    try {
-      const notes = JSON.parse(localStorage.getItem("mi_notes") || "[]");
-      const note = mkAnalysisNote({ title, content: reportText, mode });
-      notes.unshift(note);
-      localStorage.setItem("mi_notes", JSON.stringify(notes));
-      savedNoteId = note.id; // DEC-046: lets the overlay offer prep marking
-    } catch {}
-    setAnalysisOverlay({ title, content: reportText, mode, timestamp: endedAt, savedNoteId });
-    clearSessionMarker();
-    setSession(null);
-    setResumeBanner(false);
-    setDiscardConfirm(false);
-    // The ended conversation stays above as archive; new sends go to a fresh id.
-    setCurrentConv(messages.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1);
-    setError("");
   };
 
-  // Discard: drop the open session WITHOUT a report (explicit option per the
-  // work order). Two-step confirm — the messages are deleted, not archived.
-  const discardSession = () => {
-    if (streaming || !session) return;
-    if (!discardConfirm) { setDiscardConfirm(true); return; }
-    const remaining = messages.filter(m => (m.conv ?? 0) !== session.conv);
-    setMessages(remaining);
-    clearSessionMarker();
-    setSession(null);
-    setResumeBanner(false);
-    setDiscardConfirm(false);
-    setCurrentConv(remaining.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + (remaining.length ? 1 : 0));
-    setError("");
-  };
-
-  // Resume: point the composer back at the open session's thread.
-  const resumeSession = () => {
-    if (!session) return;
-    setCurrentConv(session.conv);
-    setResumeBanner(false);
-    setDiscardConfirm(false);
-  };
-
-  // New Conversation — the primary action. If a session with messages is
-  // open, it is ended-and-saved FIRST (explicit end; nothing silently
-  // dropped), then a fresh session opens immediately.
-  const startNewConversation = () => {
+  // Close: saved-and-current sessions close quietly; anything unsaved warns
+  // first (DEC-C10) and discards on confirmation. Content-free sessions
+  // just leave.
+  const closeSession = () => {
+    const s = sessionRef.current;
+    if (!s) { exitToIndex(); return; }
     if (streaming) return;
-    if (session && messages.some(m => (m.conv ?? 0) === session.conv)) {
-      endAndSaveReport(); // also advances currentConv to a fresh id
-      const nextId = messages.reduce((mx, m) => Math.max(mx, m.conv ?? 0), 0) + 1;
-      const marker = { conv: nextId, startedAt: new Date().toISOString() };
-      saveSessionMarker(marker);
-      setSession(marker);
+    if (totalMessages(s) === 0) {
+      if (!s.noteId) discardSession(s.id);
+      exitToIndex();
       return;
     }
-    // No open thread with content: open (or re-stamp) a session on the
-    // current fresh conv so the thread is explicitly live.
-    const marker = { conv: currentConv, startedAt: new Date().toISOString() };
-    saveSessionMarker(marker);
-    setSession(marker);
-    setResumeBanner(false);
-    setError("");
+    if (hasUnsavedTurns(s)) { setCloseWarn(true); return; }
+    closeOpenSegment(s);
+    saveSession(s);
+    exitToIndex();
   };
 
-  // Wipe every conversation from the screen (saved to Notes first).
-  const clearAll = () => {
-    if (!newConvConfirm) { setNewConvConfirm(true); return; }
-    if (streaming) abortRef.current?.abort();
-    saveConversationToNotes(messages);
-    setMessages([]);
-    setCurrentConv(0);
+  const confirmDiscard = () => {
+    const s = sessionRef.current;
+    if (!s) { exitToIndex(); return; }
+    if (s.state === "saved") {
+      // Only the turns since the last save are unsaved — the note keeps what
+      // was already persisted; the un-persisted segments are dropped.
+      s.segments = s.segments.slice(0, s.savedSegments || 0);
+      saveSession(s);
+    } else {
+      discardSession(s.id); // occurrence logged, content gone (DEC-C10)
+    }
+    exitToIndex();
+  };
+
+  const openSession = (s) => {
+    if (streaming) return;
+    sessionRef.current = s;
+    setActiveSession({ ...s });
+    setView("session");
     setError("");
-    setStreaming(false);
-    setNewConvConfirm(false);
+    setSummaryNote("");
+  };
+
+  const startNewSession = () => {
+    if (streaming || staleConsent) return;
+    // The session document is created on the first send — an abandoned empty
+    // surface leaves nothing behind.
+    sessionRef.current = null;
+    setActiveSession(null);
+    setView("session");
+    setError("");
+    setSummaryNote("");
+  };
+
+  const startSessionWithPrompt = (prompt) => {
+    if (streaming || staleConsent) return;
+    sessionRef.current = null;
+    setActiveSession(null);
+    setView("session");
+    setInput(prompt);
   };
 
   // Reset textarea height after send
   useEffect(() => {
     if (!input && textareaRef.current) textareaRef.current.style.height = "auto";
   }, [input]);
-
-  // Print one conversation verbatim — instant, no AI call.
-  const printConversationTranscript = (convMessages) => {
-    setSummaryNote("");
-    const mode = convMessages.find(m => m.mode)?.mode || currentMode;
-    const how = openPrintable(buildTranscriptHtml(convMessages, PRINT_LOGO, mode), "Insina Health — AI Analysis Transcript");
-    if (how === "downloaded") {
-      setSummaryNote("Your browser blocked the print pop-up, so the transcript was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site.");
-    } else if (how === "failed") {
-      setSummaryNote("Couldn't open or save the transcript. Check that pop-ups and downloads are allowed for this site, then try again.");
-    }
-  };
-
-  // Print an AI-written summary of one conversation — makes one AI call.
-  const printConversationSummary = async (convId, convMessages) => {
-    if (!convMessages.length || summaryBusyConv !== null || streaming) return;
-    setSummaryBusyConv(convId);
-    setSummaryNote("");
-    const mode = loadModeData()?.mode || "standard";
-    const summaryPrompt = `Based on the conversation above, write a structured summary the patient can bring to their next medical appointment. Use this exact format:
-
-**Conversation Summary**
-A brief paragraph (3–5 sentences) describing the overall topics and themes we discussed.
-
------
-
-**Your Questions**
-List every question the patient asked in this conversation, verbatim, numbered.
-
------
-
-**Key Findings & Insights**
-Bullet-point list of the most important health information, patterns, or concerns surfaced during this conversation.
-
------
-
-**Topics to Raise with Your Doctor**
-Numbered list of specific talking points for the patient's next appointment, framed as patient-initiated conversation starters — not clinical recommendations.
-
------
-
-**Bottom Line**
-One paragraph: what matters most from this conversation and which doctor to contact.
-
-Keep the summary concise — it should fit on one to two printed pages.`;
-    const apiMessages = [
-      ...convMessages.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
-      { role: "user", content: summaryPrompt },
-    ];
-    try {
-      const res = await callAI({
-        surface: "chat.summary",
-        mode,
-        stream: false,
-        system: [{ type: "text", text: buildSurfaceA({ ...getIdentity(), dataSections: buildDataSections() }).system, cache_control: { type: "ephemeral" } }],
-        messages: apiMessages,
-      });
-      if (!res.ok) throw new Error("server");
-      const data = await res.json();
-      const text = data.content?.[0]?.text || "";
-      if (!text) throw new Error("empty");
-      const how = openPrintable(buildSummaryHtml(text, PRINT_LOGO, mode), "Insina Health — AI Analysis Summary");
-      if (how === "downloaded") {
-        setSummaryNote("Your browser blocked the print pop-up, so the summary was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site and click Summary again.");
-      } else if (how === "failed") {
-        setSummaryNote("Couldn't open or save the summary. Check that pop-ups and downloads are allowed for this site, then try again.");
-      }
-    } catch {
-      setSummaryNote("Couldn't generate the summary — the AI server may be waking up (about 30 seconds on the free tier). Wait a moment, then click Summary again.");
-    } finally {
-      setSummaryBusyConv(null);
-    }
-  };
 
   const handleRefDocUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -1103,9 +930,22 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         setTimeout(() => analyzeDoc(doc), 400);
       }
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streaming, showOnboarding]); // re-check once streaming/onboarding state settles
 
   const isAdvanced = currentMode === "advanced";
+
+  // Session-surface derivations
+  const patientName = (() => { try { return JSON.parse(localStorage.getItem("mi_profile_personal") || "{}").name || ""; } catch { return ""; } })();
+  const headerStamp = activeSession
+    ? activeSession.segments[activeSession.segments.length - 1]?.stamp
+    : { recordHash: recordStateHash(), corpusVersion: CORPUS_VERSION, ts: new Date().toISOString() };
+  const reopenStale = activeSession && activeSession.segments[activeSession.segments.length - 1]?.closedAt
+    ? stalenessOf(activeSession) : { stale: false };
+  const canAct = activeSession && totalMessages(activeSession) > 0 && !streaming;
+  const unsaved = activeSession ? hasUnsavedTurns(activeSession) : false;
+
+  const fmtShort = iso => { try { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); } catch { return ""; } };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#07090f", fontFamily: "'Sora',sans-serif", color: "#d4e2f0", overflow: "hidden", position: "relative" }}>
@@ -1125,17 +965,10 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         .chat-input { flex:1; min-width:0; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
         .chat-input::placeholder { color:#98afc4; }
         .chat-input:focus { border-color:#1a2f4a; }
-        .icon-btn { background:transparent; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; font-size:13px; flex-shrink:0; }
-        .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
-        .new-conv-btn { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:transparent; border:1px solid #111e30; border-radius:12px; color:#98afc4; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; }
-        .new-conv-btn:hover { border-color:#1a2f4a; color:#b0c4d8; }
-        .conv-head { display:flex; align-items:center; gap:10px; margin:0 0 14px; }
-        .conv-head .line { flex:1; height:1px; background:#1a2840; }
-        .conv-label { font-size:10px; color:#6a8090; font-family:'DM Mono',monospace; letterSpacing:.5px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .conv-print-btn { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; background:rgba(79,142,247,.08); border:1px solid rgba(79,142,247,.25); border-radius:6px; color:#7eb8d8; font-size:10px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; white-space:nowrap; }
-        .conv-print-btn:hover { background:rgba(79,142,247,.16); border-color:rgba(79,142,247,.45); }
-        .conv-print-btn:disabled { opacity:.5; cursor:default; }
-        @media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }
+        .end-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; }
+        .end-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .sess-row { width:100%; text-align:left; background:#0b1220; border:1px solid #111e30; border-radius:10px; padding:13px 16px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:14px; margin-bottom:8px; }
+        .sess-row:hover { border-color:#1a2f4a; background:#0d1828; }
       `}</style>
 
       {/* First-run onboarding modal */}
@@ -1153,9 +986,42 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         />
       )}
 
+      {/* Close-without-saving warning (DEC-C10; copy PROVISIONAL) */}
+      {closeWarn && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.72)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 440, background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "22px 24px" }}>
+            <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5", marginBottom: 10 }}>{SESSION_COPY.warnOnCloseTitle}</div>
+            <div style={{ fontSize: 12, color: "#98afc4", lineHeight: 1.65, marginBottom: 18 }}>
+              {activeSession?.state === "saved" ? SESSION_COPY.warnUnsavedTurnsBody : SESSION_COPY.warnOnCloseBody}
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="end-btn" onClick={() => setCloseWarn(false)}
+                style={{ background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.35)", color: "#7eb8d8" }}>
+                {SESSION_COPY.warnOnCloseKeep}
+              </button>
+              <button className="end-btn" onClick={confirmDiscard}
+                style={{ background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", color: "#ef4444" }}>
+                {SESSION_COPY.warnOnCloseDiscard}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Topbar */}
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
-        {onNavChange && (
+        {view === "session" ? (
+          <button
+            onClick={closeSession}
+            title="Back to your sessions"
+            style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:11, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:4 }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#4a5c6a"; e.currentTarget.style.background = "none"; }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Sessions
+          </button>
+        ) : onNavChange && (
           <button
             onClick={() => onNavChange("dashboard")}
             title="Back to Dashboard"
@@ -1175,21 +1041,13 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
-        {/* DEC-042: New Conversation is the PRIMARY action (not buried), and
-            End & Save Report is always visible while a session is open. */}
-        <button
-          onClick={startNewConversation}
-          disabled={streaming || staleConsent}
-          title="Start a new conversation session (an open one is ended & saved first)"
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: streaming || staleConsent ? "not-allowed" : "pointer", flexShrink: 0, opacity: streaming || staleConsent ? 0.5 : 1 }}
-        >＋ New Conversation</button>
-        {session && (
+        {view === "index" && (
           <button
-            onClick={endAndSaveReport}
-            disabled={streaming}
-            title="Close this conversation and save one discussion report covering the whole session"
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: streaming ? "not-allowed" : "pointer", flexShrink: 0, opacity: streaming ? 0.5 : 1 }}
-          >■ End &amp; Save Report</button>
+            onClick={startNewSession}
+            disabled={streaming || staleConsent}
+            title="Start a new AI session"
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: streaming || staleConsent ? "not-allowed" : "pointer", flexShrink: 0, opacity: streaming || staleConsent ? 0.5 : 1 }}
+          >＋ New session</button>
         )}
       </div>
 
@@ -1241,206 +1099,216 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         </div>
       )}
 
-      {/* Body */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+      {view === "index" ? (
+        /* ── SESSION INDEX (spec Sec 1: replaces the running feed) ─────────── */
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {/* Sidebar — Quick Prompts and Data Used collapse (UI-15), keeping the
-            conversation workspace dominant. */}
-        <div style={{ width: 236, minWidth: 236, borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", padding: "16px 12px", overflowY: "auto" }}>
-          <button
-            onClick={() => setQuickPromptsOpen(o => !o)}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 8 }}
-          >
-            <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Quick Prompts</span>
-            <span style={{ fontSize: 9, color: "#4a5c6a" }}>{quickPromptsOpen ? "▾" : "▸"}</span>
-          </button>
-          {quickPromptsOpen && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
-              {PRESETS.map((p, i) => (
-                <button key={i} className="preset-btn" onClick={() => setInput(p.prompt)} disabled={streaming}>
-                  <span style={{ color: "#4f8ef7", fontSize: 12, flexShrink: 0 }}>✦</span>
-                  <span>{p.label}</span>
-                </button>
+          {/* Sidebar — Quick Prompts and Data Used collapse (UI-15). */}
+          <div style={{ width: 236, minWidth: 236, borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", padding: "16px 12px", overflowY: "auto" }}>
+            <button
+              onClick={() => setQuickPromptsOpen(o => !o)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 8 }}
+            >
+              <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Quick Prompts</span>
+              <span style={{ fontSize: 9, color: "#4a5c6a" }}>{quickPromptsOpen ? "▾" : "▸"}</span>
+            </button>
+            {quickPromptsOpen && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
+                {PRESETS.map((p, i) => (
+                  <button key={i} className="preset-btn" onClick={() => startSessionWithPrompt(p.prompt)} disabled={streaming}>
+                    <span style={{ color: "#4f8ef7", fontSize: 12, flexShrink: 0 }}>✦</span>
+                    <span>{p.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
+              <button
+                onClick={() => setDataUsedOpen(o => !o)}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 10 }}
+              >
+                <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>Data used in this analysis</span>
+                <span style={{ fontSize: 9, color: "#4a5c6a" }}>{dataUsedOpen ? "▾" : "▸"}</span>
+              </button>
+              {dataUsedOpen && contextCounts.map(({ label, color }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                  {label}
+                </div>
               ))}
             </div>
-          )}
 
-          <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
-            <button
-              onClick={() => setDataUsedOpen(o => !o)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 10 }}
-            >
-              <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>Data used in this analysis</span>
-              <span style={{ fontSize: 9, color: "#4a5c6a" }}>{dataUsedOpen ? "▾" : "▸"}</span>
-            </button>
-            {dataUsedOpen && contextCounts.map(({ label, color }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                {label}
+            {/* Reference Documents */}
+            <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Reference Docs</div>
+                <button
+                  onClick={() => refFileRef.current?.click()}
+                  disabled={refUploading}
+                  style={{ fontSize: 9, padding: "2px 8px", background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                >{refUploading ? "…" : "+ PDF"}</button>
+                <input ref={refFileRef} type="file" accept="application/pdf" onChange={handleRefDocUpload} style={{ display: "none" }} />
               </div>
-            ))}
-          </div>
-
-          {/* Reference Documents */}
-          <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Reference Docs</div>
-              <button
-                onClick={() => refFileRef.current?.click()}
-                disabled={refUploading}
-                style={{ fontSize: 9, padding: "2px 8px", background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
-              >{refUploading ? "…" : "+ PDF"}</button>
-              <input ref={refFileRef} type="file" accept="application/pdf" onChange={handleRefDocUpload} style={{ display: "none" }} />
-            </div>
-            {refError && <div style={{ fontSize: 9, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
-            {refDocs.length === 0
-              ? <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>No reference docs.<br />Upload a PDF to include it in AI context.</div>
-              : refDocs.map(d => (
-                <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 6, background: "#0b1220", border: "1px solid rgba(167,139,250,.15)", borderRadius: 7, padding: "6px 8px" }}>
-                  <span style={{ fontSize: 10, color: "#a78bfa", flexShrink: 0, marginTop: 1 }}>▣</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 10, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
-                    <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {d.addedDate}</div>
-                    <button
-                      onClick={() => analyzeDoc(d)}
-                      disabled={streaming}
-                      style={{ marginTop: 4, background: "none", border: "none", color: streaming ? "#3a4c5a" : "#a78bfa", fontSize: 9, fontFamily: "'DM Mono',monospace", cursor: streaming ? "not-allowed" : "pointer", padding: 0, letterSpacing: "0.3px" }}
-                    >Analyze ▸</button>
+              {refError && <div style={{ fontSize: 9, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
+              {refDocs.length === 0
+                ? <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>No reference docs.<br />Upload a PDF to include it in AI context.</div>
+                : refDocs.map(d => (
+                  <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 6, background: "#0b1220", border: "1px solid rgba(167,139,250,.15)", borderRadius: 7, padding: "6px 8px" }}>
+                    <span style={{ fontSize: 10, color: "#a78bfa", flexShrink: 0, marginTop: 1 }}>▣</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 10, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
+                      <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {d.addedDate}</div>
+                      <button
+                        onClick={() => analyzeDoc(d)}
+                        disabled={streaming}
+                        style={{ marginTop: 4, background: "none", border: "none", color: streaming ? "#3a4c5a" : "#a78bfa", fontSize: 9, fontFamily: "'DM Mono',monospace", cursor: streaming ? "not-allowed" : "pointer", padding: 0, letterSpacing: "0.3px" }}
+                      >Analyze ▸</button>
+                    </div>
+                    <button onClick={() => removeRefDoc(d.id)} style={{ background: "transparent", border: "none", color: "#6a8090", cursor: "pointer", fontSize: 11, flexShrink: 0, padding: 0 }}>✕</button>
                   </div>
-                  <button onClick={() => removeRefDoc(d.id)} style={{ background: "transparent", border: "none", color: "#6a8090", cursor: "pointer", fontSize: 11, flexShrink: 0, padding: 0 }}>✕</button>
-                </div>
-              ))
-            }
+                ))
+              }
+            </div>
           </div>
 
-          <div style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #0d1a28" }}>
-            {newConvConfirm ? (
-              <div>
-                <div style={{ fontSize: 10, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 8, textAlign: "center", lineHeight: 1.5 }}>
-                  Save all conversations to Notes and clear the screen?
+          {/* Session list */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+            {error && (
+              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+                ⚠ {error}
+              </div>
+            )}
+            {sessionsList.length === 0 ? (
+              <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                <div style={{ fontSize: 32, color: "#1a2840" }}>✦</div>
+                <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#98afc4", fontWeight: 400 }}>How can I help today?</div>
+                <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}>
+                  Start a session to ask about your health data, labs, medications, or upcoming appointments. Saved sessions appear here and in Notes.
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={clearAll} style={{ flex: 1, padding: "6px 0", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Yes, clear all</button>
-                  <button onClick={() => setNewConvConfirm(false)} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Cancel</button>
-                </div>
+                <button
+                  onClick={startNewSession}
+                  disabled={streaming || staleConsent}
+                  style={{ marginTop: 6, padding: "10px 22px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 9, color: "#7eb8d8", fontSize: 13, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}
+                >＋ New session</button>
               </div>
             ) : (
               <>
-                <button
-                  className="new-conv-btn"
-                  onClick={clearAll}
-                  disabled={messages.length === 0}
-                  style={{ width: "100%", justifyContent: "center", opacity: messages.length === 0 ? 0.4 : 1 }}
-                >
-                  <TrashIcon size={12} style={{ marginRight: 5, verticalAlign: "-1px" }} /> Clear All
-                </button>
-                {messages.length > 0 && (
-                  <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", textAlign: "center", marginTop: 7, lineHeight: 1.5 }}>
-                    {messages.length} message{messages.length !== 1 ? "s" : ""} · saves to Notes on clear
-                  </div>
-                )}
+                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>
+                  Your sessions — newest first
+                </div>
+                {[...sessionsList]
+                  .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                  .map(s => {
+                    const st = stalenessOf(s);
+                    const msgCount = totalMessages(s);
+                    return (
+                      <button key={s.id} className="sess-row" onClick={() => openSession(s)}>
+                        <span style={{ fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: "block", fontSize: 13, color: "#dde8f5", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+                          <span style={{ display: "block", fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>
+                            {fmtShort(s.createdAt)} · {s.segments.length} part{s.segments.length !== 1 ? "s" : ""} · {msgCount} message{msgCount !== 1 ? "s" : ""}
+                          </span>
+                        </span>
+                        {st.stale && (
+                          <span title="Your record has changed since this session's last part"
+                            style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "rgba(245,158,11,.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,.3)", padding: "2px 8px", borderRadius: 9, flexShrink: 0 }}>
+                            record changed
+                          </span>
+                        )}
+                        <span style={{
+                          fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 8px", borderRadius: 9, flexShrink: 0,
+                          background: s.state === "saved" ? "rgba(16,185,129,.1)" : "rgba(79,142,247,.1)",
+                          color: s.state === "saved" ? "#10b981" : "#7eb8d8",
+                          border: `1px solid ${s.state === "saved" ? "rgba(16,185,129,.3)" : "rgba(79,142,247,.3)"}`,
+                        }}>{s.state === "saved" ? "saved" : "open"}</span>
+                      </button>
+                    );
+                  })}
               </>
             )}
           </div>
         </div>
-
-        {/* Chat */}
+      ) : (
+        /* ── SESSION SURFACE (spec Sec 1: takes over the screen) ───────────── */
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
-            {/* DEC-042: abandoned-session recovery — an open session survives
-                navigation and restarts; on return, offer resume / end / discard. */}
-            {resumeBanner && session && (
-              <div className="no-print" style={{ background: "rgba(79,142,247,.07)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</span>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5" }}>You have an open conversation</div>
-                  <div style={{ fontSize: 10.5, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>
-                    Started {session.startedAt ? new Date(session.startedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "earlier"} — resume where you left off, or close it out.
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
-                  <button onClick={resumeSession} style={{ padding: "6px 13px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 7, color: "#7eb8d8", fontSize: 11, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Resume conversation</button>
-                  <button onClick={endAndSaveReport} style={{ padding: "6px 13px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, color: "#10b981", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>End &amp; save report</button>
-                  {discardConfirm ? (
-                    <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <span style={{ fontSize: 10, color: "#c4a060", fontFamily: "'DM Mono',monospace" }}>Delete without a report?</span>
-                      <button onClick={discardSession} style={{ padding: "6px 10px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Discard</button>
-                      <button onClick={() => setDiscardConfirm(false)} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Keep</button>
-                    </span>
-                  ) : (
-                    <button onClick={discardSession} title="Delete this open conversation without saving a report" style={{ padding: "6px 10px", background: "transparent", border: "1px solid #111e30", borderRadius: 7, color: "#6a8090", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>Discard</button>
-                  )}
-                </div>
-              </div>
-            )}
+          {/* Deterministic session header — system-composed, never model text */}
+          <div style={{ borderBottom: "1px solid #0d1a28", padding: "10px 28px", flexShrink: 0, background: "#080c14" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: "'DM Serif Display',serif", fontSize: 15, color: "#dde8f5" }}>
+                {activeSession ? activeSession.title : "New session"}
+              </span>
+              <span style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
+                {patientName}{patientName ? " · " : ""}started {fmtShort(activeSession?.createdAt || new Date().toISOString())}
+              </span>
+              <div style={{ flex: 1 }} />
+              <span style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+                record {headerStamp?.recordHash || "—"} · reference set {headerStamp?.corpusVersion || CORPUS_VERSION}
+              </span>
+            </div>
+            <div style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>
+              {SESSION_COPY.headerFooter}
+            </div>
+          </div>
 
-            {messages.length === 0 && (
+          {/* Reopen staleness notice (UI hint; the persisted divider renders
+              in-thread once the next turn opens its freshly stamped segment) */}
+          {reopenStale.stale && (
+            <div style={{ background: "rgba(245,158,11,.07)", borderBottom: "1px solid rgba(245,158,11,.2)", padding: "8px 28px", fontSize: 10.5, color: "#c4a060", fontFamily: "'DM Mono',monospace", flexShrink: 0, lineHeight: 1.5 }}>
+              {SESSION_COPY.staleReopenNotice}
+            </div>
+          )}
+
+          {/* Thread */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+            {!activeSession && (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
                 <div style={{ fontSize: 32, color: "#1a2840" }}>✦</div>
                 <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#98afc4", fontWeight: 400 }}>How can I help today?</div>
                 <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "center", maxWidth: 320, lineHeight: 1.6 }}>
-                  Ask anything about your health data, labs, medications, or upcoming appointments.
+                  Ask anything about your health data, labs, medications, or upcoming appointments. The session is created when you send your first question.
                 </div>
-                <button
-                  onClick={startNewConversation}
-                  disabled={streaming || staleConsent}
-                  style={{ marginTop: 6, padding: "10px 22px", background: "rgba(79,142,247,.14)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 9, color: "#7eb8d8", fontSize: 13, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}
-                >＋ New Conversation</button>
               </div>
             )}
 
-            {(() => {
-              // Group messages into conversations by their conv id (consecutive).
-              const groups = [];
-              messages.forEach((m, idx) => {
-                const last = groups[groups.length - 1];
-                if (last && last.conv === (m.conv ?? 0)) last.items.push({ m, idx });
-                else groups.push({ conv: m.conv ?? 0, items: [{ m, idx }] });
-              });
-              return groups.map((g, gi) => {
-                const convMsgs = g.items.map(x => x.m);
-                const firstQ = convMsgs.find(m => m.role === "user")?.text || "Conversation";
-                const label = firstQ.length > 42 ? firstQ.slice(0, 42) + "…" : firstQ;
-                const busy = summaryBusyConv === g.conv;
-                return (
-                  <div key={g.conv} style={{ marginTop: gi === 0 ? 0 : 26 }}>
-                    {/* Conversation header with its own print controls */}
-                    <div className="conv-head no-print">
-                      <span className="conv-label" title={firstQ}>{gi + 1}. {label}</span>
-                      <div className="line" />
-                      <button className="conv-print-btn" onClick={() => printConversationTranscript(convMsgs)} title="Print this conversation word-for-word"><PrintLabel size={11}>Transcript</PrintLabel></button>
-                      <button className="conv-print-btn" disabled={busy || streaming} onClick={() => printConversationSummary(g.conv, convMsgs)} title="Print an AI summary of this conversation">
-                        {busy ? "⏳ …" : <PrintLabel size={11}>Summary</PrintLabel>}
-                      </button>
-                    </div>
-                    {g.items.map(({ m, idx }, j) => {
-                      const prev = j > 0 ? g.items[j - 1].m : null;
-                      const isNewTurn = m.role === "user" && prev?.role === "assistant";
-                      return (
-                        <div key={idx}>
-                          {isNewTurn && (
-                            <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 20px" }} />
-                          )}
-                          <Message
-                            role={m.role} text={m.text}
-                            streaming={m.streaming && idx === messages.length - 1}
-                            mode={m.mode || currentMode}
-                            ts={m.ts}
-                            onOpenReport={m.role === "assistant" && !m.streaming && m.text
-                              ? () => setAnalysisOverlay({ title: "AI Analysis", content: m.text, mode: m.mode || currentMode, timestamp: m.ts || new Date().toISOString() })
-                              : null}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              });
-            })()}
+            {activeSession && activeSession.segments.map((seg, si) => {
+              const prev = si > 0 ? activeSession.segments[si - 1] : null;
+              const tr = segmentTransition(prev, seg);
+              return (
+                <div key={seg.id}>
+                  {tr.divider && <SegmentDivider recordChanged={tr.recordChanged} dateIso={seg.stamp?.ts} />}
+                  {seg.messages.map((m, mi) => {
+                    const prevM = mi > 0 ? seg.messages[mi - 1] : null;
+                    const isNewTurn = m.role === "user" && prevM?.role === "assistant";
+                    return (
+                      <div key={mi}>
+                        {isNewTurn && (
+                          <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 20px" }} />
+                        )}
+                        <Message
+                          role={m.role} text={m.text}
+                          streaming={false}
+                          mode={m.mode || currentMode}
+                          ts={m.ts}
+                          isAdvancedUi={isAdvanced}
+                          onOpenReport={m.role === "assistant" && m.text
+                            ? () => setAnalysisOverlay({ title: "AI Analysis", content: m.text, mode: m.mode || currentMode, timestamp: m.ts || new Date().toISOString() })
+                            : null}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
 
-            {streaming && messages[messages.length - 1]?.text === "" && <TypingIndicator />}
+            {/* In-flight assistant turn (appended to the segment on completion) */}
+            {streaming && liveText === "" && <TypingIndicator />}
+            {streaming && liveText && (
+              <Message role="assistant" text={liveText} streaming mode={liveMode} isAdvancedUi={isAdvanced} />
+            )}
 
             {coldStartRetry && !streaming && (
               <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.25)", borderRadius:8, padding:"10px 14px", fontSize:11, color:"#c4a060", fontFamily:"'DM Mono',monospace", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
@@ -1448,7 +1316,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 <button onClick={() => {
                   const text = coldStartRetry;
                   setColdStartRetry(null);
-                  sendMessage(text, messages.slice(0, -2));
+                  sendMessage(text);
                 }} style={{ padding:"5px 14px", background:"rgba(245,158,11,.15)", border:"1px solid rgba(245,158,11,.35)", borderRadius:6, color:"#f59e0b", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
                   ↺ Retry
                 </button>
@@ -1471,23 +1339,34 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
+          {/* End-actions bar (spec Sec 1: Save to Notes, Save and Print, Close) */}
+          <div style={{ borderTop: "1px solid #0d1a28", padding: "10px 24px", background: "#080c14", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+            <button className="end-btn" onClick={saveToNotes} disabled={!canAct}
+              title="Save this session's verbatim transcript to My Notes"
+              style={{ background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", color: "#10b981" }}>
+              Save to Notes{activeSession?.state === "saved" && !unsaved ? " ✓" : ""}
+            </button>
+            <button className="end-btn" onClick={saveAndPrint} disabled={!canAct}
+              title="Save to Notes, then print — every printout has a stored counterpart"
+              style={{ background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", color: "#7eb8d8" }}>
+              Save &amp; Print
+            </button>
+            {/* Founder review 2026-08-18: Close sits WITH its siblings, not
+                across the screen — the three end-actions read as one group. */}
+            <button className="end-btn" onClick={closeSession} disabled={streaming}
+              title="Close this session"
+              style={{ background: "transparent", border: "1px solid #111e30", color: "#98afc4" }}>
+              Close
+            </button>
+            <span style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+              {activeSession?.state === "saved"
+                ? (unsaved ? "new turns not yet saved" : "saved to Notes")
+                : (activeSession ? "not saved yet" : "")}
+            </span>
+          </div>
+
+          {/* Composer */}
           <div style={{ borderTop: "1px solid #0d1a28", padding: "14px 24px", background: "#07090f", flexShrink: 0 }}>
-            {messages.some(m => (m.conv ?? 0) === currentConv) && (
-              <div style={{ marginBottom: 10 }}>
-                <button
-                  className="new-conv-btn"
-                  onClick={startNewConversation}
-                  disabled={streaming}
-                  title="End & save this conversation's report, then start a fresh one"
-                >
-                  ＋ New Conversation
-                </button>
-                <span style={{ marginLeft: 10, fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
-                  ends &amp; saves the open conversation's report first — earlier ones stay above as archive (never sent to the AI)
-                </span>
-              </div>
-            )}
             {/* WO-3: paddingRight keeps Send clear of the floating Record
                 Integrity button (fixed at right:18, 48px wide). That button is
                 functional — pointer-events:none would break it — so the input
@@ -1524,7 +1403,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

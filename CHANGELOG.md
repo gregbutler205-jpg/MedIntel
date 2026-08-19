@@ -12,7 +12,32 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.50.1 — 2026-08-18
+## v1.51.0 — 2026-08-18
+
+### Added
+- **AI Analysis is now a session workspace** (DEC-C1…C15). The running feed
+  is replaced by a session index — your saved conversations listed newest
+  first, with a "record changed" badge when your record has moved since a
+  session's last part. Opening or starting a session takes over the screen:
+  a focused thread with a deterministic header (your question, your name,
+  record-state stamp, reference-set version), a composer, and one action
+  group — Save to Notes, Save & Print, Close. Saving writes the verbatim
+  transcript to My Notes (append-only, never summarized); printing always
+  saves first, so every printout has a stored counterpart; closing an
+  unsaved session warns before discarding and keeps only the fact that a
+  session happened. Reopening a saved session continues the same thread in
+  a new, freshly-stamped part, with a divider wherever your record changed
+  between parts — old answers stay exactly as they were. Old feed
+  conversations remain in Notes and searchable; the feed itself is retired.
+- **Groundwork for cited answers** (not yet active): a deterministic
+  numeric validator engine and its maintained unit list ship in this
+  release, tested but deliberately unwired — they activate with the
+  reference corpus in a future release.
+
+### Tests
+- 56-case session-shell suite (lifecycle, stamping, staleness, discard
+  logging, vault round-trip, validator fixtures) wired into the build gate:
+  `test:ai-session-shell`. 20 suites / 766 cases.
 
 ### Fixed
 - **Reports and printouts keep their bullet points.** Opening a response as
