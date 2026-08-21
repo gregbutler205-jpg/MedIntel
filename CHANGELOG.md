@@ -12,6 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.52.1 — 2026-08-19
+
+### Fixed
+- **AI questions work again — model upgrade rolled back pending a proxy
+  deploy.** v1.52.0 pointed the app at the Claude 5 models, but the Render
+  proxy does not auto-deploy from this repository, so its live allowlist
+  still rejected them and every AI question errored. The app is back on the
+  4.6 models (which the live proxy accepts) and the consent version returns
+  to 1.0 — no user had re-consented in the interim. The proxy's updated
+  allowlist (which accepts BOTH generations) remains in the repo; after a
+  manual Render deploy, the Claude 5 switch re-ships as a strings-only
+  change. Operational lesson recorded: proxy changes deploy manually, and
+  model bumps ship proxy-first, client-second.
+
+---
+
 ## v1.52.0 — 2026-08-19
 
 ### Changed

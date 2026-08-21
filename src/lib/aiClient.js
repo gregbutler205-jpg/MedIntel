@@ -57,11 +57,17 @@ const PROXY_URL = import.meta.env?.VITE_PROXY_URL || "http://localhost:3001";
 // short visit summaries). Promoting it into MODEL_MAP here doesn't add a new
 // capability, it just stops the companion from hardcoding its own copy of
 // the model string.
+// v1.52.1 rollback: the Render proxy does NOT auto-deploy from this repo, so
+// its live allowlist still rejects the Claude 5 ids — the v1.52.0 bundle made
+// every AI question error. Client stays on 4.6 until the proxy is manually
+// redeployed (Render dashboard → insina-health → Deploy latest commit); the
+// proxy's allowlist in this repo already accepts BOTH generations, so the
+// re-upgrade is a strings-only change here once that click happens.
 export const MODEL_MAP = {
-  standard:   "claude-sonnet-5",
-  advanced:   "claude-opus-5",
-  extraction: "claude-sonnet-5",
-  lite:       "claude-haiku-4-5", // still the newest Haiku
+  standard:   "claude-sonnet-4-6",
+  advanced:   "claude-opus-4-6",
+  extraction: "claude-sonnet-4-6",
+  lite:       "claude-haiku-4-5",
 };
 
 // Per-surface max_tokens, promoted from the literal each call site already
