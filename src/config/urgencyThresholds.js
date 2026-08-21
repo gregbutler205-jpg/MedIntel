@@ -9,4 +9,7 @@
 // reasons — it is Advanced-mode AI consent versioning, unrelated to labs.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const CONSENT_VERSION = "1.0";
+// "2.0": Advanced mode moved from Claude Opus 4.6 to Claude Opus 5 — a
+// material model change, so existing Advanced users are switched to Standard
+// and asked to re-consent (the designed stale-consent path, not a silent swap).
+export const CONSENT_VERSION = "2.0";

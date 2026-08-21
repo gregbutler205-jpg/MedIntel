@@ -12,7 +12,17 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.51.0 — 2026-08-18
+## v1.52.0 — 2026-08-19
+
+### Changed
+- **AI models upgraded to the Claude 5 generation.** Standard mode now runs
+  Claude Sonnet 5, Advanced mode Claude Opus 5, and document extraction
+  Sonnet 5 (the companion's light tier stays on Haiku 4.5, still its newest).
+  Because the model behind Advanced mode materially changed, the consent
+  version is bumped: Advanced users are switched to Standard and asked to
+  re-consent on their next visit — the designed stale-consent path, never a
+  silent swap. The proxy keeps the previous generation on its allowlist so a
+  cached older app bundle keeps working through the upgrade window.
 
 ### Added
 - **AI Analysis is now a session workspace** (DEC-C1…C15). The running feed

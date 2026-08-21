@@ -58,10 +58,10 @@ const PROXY_URL = import.meta.env?.VITE_PROXY_URL || "http://localhost:3001";
 // capability, it just stops the companion from hardcoding its own copy of
 // the model string.
 export const MODEL_MAP = {
-  standard:   "claude-sonnet-4-6",
-  advanced:   "claude-opus-4-6",
-  extraction: "claude-sonnet-4-6",
-  lite:       "claude-haiku-4-5",
+  standard:   "claude-sonnet-5",
+  advanced:   "claude-opus-5",
+  extraction: "claude-sonnet-5",
+  lite:       "claude-haiku-4-5", // still the newest Haiku
 };
 
 // Per-surface max_tokens, promoted from the literal each call site already
@@ -139,7 +139,7 @@ export async function callAI({ surface, mode, model, maxTokens, system, messages
  * attaches auth once S-05 item 3 requires a bearer token on this route too
  * (per S-05: "the proxy rejects missing or unknown tokens on /api/chat AND
  * /api/extract-pdf"). Model is fixed server-side for this route (proxy
- * hardcodes claude-sonnet-4-6 for Vision OCR), so there is no model param.
+ * hardcodes claude-sonnet-5 for Vision OCR), so there is no model param.
  *
  * @param {Array<{pageNum:number, imageBase64:string}>} pages
  * @returns {Promise<{text:string, pageCount:number}>}

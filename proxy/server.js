@@ -137,10 +137,13 @@ app.post("/api/chat", express.json({ limit: "1mb" }), limiter, pilotAuth, async 
     return res.status(400).json({ error: "Invalid request: model and messages are required." });
   }
 
-  // Only allow approved models
+  // Only allow approved models. The prior generation stays allowed so a
+  // stale cached app bundle keeps working through the upgrade window.
   const ALLOWED_MODELS = [
     "claude-haiku-4-5",   // companion: cheap/short work (AI Lite, Quick Log, short visit summaries)
-    "claude-sonnet-4-6",
+    "claude-sonnet-5",
+    "claude-opus-5",
+    "claude-sonnet-4-6",  // previous generation — remove after the 5-family bundle is everywhere
     "claude-opus-4-6",
   ];
   if (!ALLOWED_MODELS.includes(model)) {
@@ -266,7 +269,7 @@ app.post("/api/extract-pdf", express.json({ limit: "30mb" }), extractLimiter, pi
         // No prompt-caching header here — image content is unique per upload
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: "claude-sonnet-5",
         max_tokens: 4096,
         messages: [{ role: "user", content }],
       }),
