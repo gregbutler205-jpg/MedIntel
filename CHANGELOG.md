@@ -12,7 +12,22 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.52.1 — 2026-08-19
+## v1.53.0 — 2026-08-19
+
+### Added
+- **The demo now shows real AI prep reports** (DEC-048). Clicking Generate
+  on Consultation Prep for any of the demo's seeded appointments plays a
+  brief generating pause and then a full report — printable, saved to the
+  visit like the real thing. The reports are genuine Insina AI output,
+  pre-generated once from the demo record; each ends with an "About this
+  sample" note saying so. Live AI stays off on the demo origin, and
+  appointments a visitor adds themselves keep the standard AI-off
+  explanation.
+
+### Tests
+- Demo replay coverage pinned (every seeded appointment covered, honesty
+  tail present, demo-mode gate): `test:demo-seeder` 51. 20 suites /
+  772 cases.
 
 ### Fixed
 - **AI questions work again — model upgrade rolled back pending a proxy

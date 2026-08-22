@@ -1755,3 +1755,28 @@ Field-level timestamps were rejected as complexity without a driving case.
 both-stamped newer-local survives the boot merge (the reported bug); a cleared field stays
 cleared through a merge against a stale copy; unstamped objects keep the legacy shallow merge
 unchanged; structural checks that the setters and all five per-item saves stamp.
+
+## DEC-048: The demo replays pre-generated, real AI prep reports (DEC-045 refined)
+
+**Status: Settled** (founder-directed, 2026-08-19)
+
+A demo visitor clicking Generate on Consultation Prep now sees a brief
+generating pause and then a full prep report — savable and printable — for any
+of the seeded appointments. The reports are REAL Insina AI output (Standard
+tier), generated once against the demo dataset through the production proxy
+and baked into the bundle (`src/config/demoPrepReports.js`, keyed by the
+seeder's stable appointment ids).
+
+DEC-045's principle — the demo tells the truth about AI being off — is
+refined, not reversed: live AI remains off on the demo origin (aiClient's
+demo short-circuit is untouched), every sample ends with an "About this
+sample" section stating it was pre-generated from the demo record, and
+visitor-created appointments (which have no sample) keep the standard
+AI-off explanation. The demo now *shows* what the AI produces instead of
+only describing it.
+
+Regeneration duty: any change to the demo dataset's conditions, medications,
+or appointments regenerates the samples (see the header of
+demoPrepReports.js). Pinned by `npm run test:demo-seeder`: full appointment
+coverage, substantial content, honesty tail present, replay gated to demo
+mode only.

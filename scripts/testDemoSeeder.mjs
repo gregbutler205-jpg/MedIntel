@@ -193,5 +193,39 @@ ok(!/localStorage\.clear\(\)/.test(SEEDER_SRC), "the seeder never calls localSto
 ok(SEEDER_SRC.indexOf("setItem(DEMO_VERSION_KEY, DEMO_DATASET_VERSION)") > SEEDER_SRC.indexOf("Object.entries(DEMO)"),
    "version is stamped AFTER the dataset — a throw mid-seed leaves it stale so the next visit retries");
 
+// ── DEC-048: pre-generated Consultation Prep replays ─────────────────────────
+// The demo replays a REAL, pre-generated AI prep for every seeded appointment
+// instead of erroring (AI itself stays off per DEC-045). These pin: coverage
+// of every dataset appointment, the honesty tail on every sample, and the
+// Tab14 gate that keeps the replay demo-only.
+{
+  const { DEMO_PREP_REPORTS } = await import("../src/config/demoPrepReports.js");
+  const grabArr = (key) => {
+    const i = HTML.indexOf(key + ": [");
+    if (i < 0) return null;
+    let d = 0; const s = HTML.indexOf("[", i);
+    for (let j = s; j < HTML.length; j++) {
+      if (HTML[j] === "[") d++;
+      if (HTML[j] === "]") { d--; if (d === 0) return JSON.parse(HTML.slice(s, j + 1)); }
+    }
+    return null;
+  };
+  const appts = grabArr("mi_appointments") || [];
+  ok(appts.length > 0, `seeder dataset has appointments to cover (found ${appts.length})`);
+  const missing = appts.filter(a => !DEMO_PREP_REPORTS[String(a.id)]);
+  ok(missing.length === 0,
+     `every seeded appointment has a pre-generated prep replay (missing: ${missing.map(a => a.id).join(",") || "none"})`);
+  const weak = Object.entries(DEMO_PREP_REPORTS).filter(([, v]) => !(typeof v === "string" && v.length > 1000));
+  ok(weak.length === 0, "every replay is a substantial report, not a stub");
+  ok(Object.values(DEMO_PREP_REPORTS).every(v => v.includes("About this sample")),
+     "every replay carries the pre-generated honesty tail (DEC-045 preserved)");
+
+  const tab14 = readFileSync(new URL("../src/components/tabs/Tab14.jsx", import.meta.url), "utf-8");
+  ok(tab14.includes("isDemoMode() ? DEMO_PREP_REPORTS"), "Tab14 replays ONLY in demo mode");
+  ok(tab14.indexOf("DEMO_PREP_REPORTS[String(appt.id)]") < tab14.indexOf("await callAI({\n        surface: \"appointments.prep\"")
+     || tab14.indexOf("demoSample") < tab14.indexOf("appointments.prep"),
+     "the demo branch resolves before any AI call is attempted");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (demo-seeder)`);
 assert.equal(fail, 0);

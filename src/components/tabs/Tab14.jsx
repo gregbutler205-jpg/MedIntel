@@ -15,6 +15,10 @@ import { wirePrintWindow } from "../../lib/printWindow.js";
 // DEC-046: reports the patient marked for this visit ride into the prep prompt;
 // completing the visit consumes the marks.
 import { markedReportsForAppointment, buildMarkedReportsSection, clearPrepMarksForAppointment } from "../../lib/prepMarks.js";
+// DEC-048: the demo replays pre-generated (real) AI prep reports instead of
+// erroring — AI itself stays off in the demo (DEC-045); each sample says so.
+import { isDemoMode } from "../../lib/secureStorage.js";
+import { DEMO_PREP_REPORTS } from "../../config/demoPrepReports.js";
 
 const PRINT_LOGO = import.meta.env.BASE_URL + "logo.png";
 
@@ -977,6 +981,19 @@ Please provide:
 
   const runAnalysis = async () => {
     setLoading(true); setError(""); setAnalysis("");
+    // DEC-048: demo visitors get the pre-generated sample for the seeded
+    // appointments — a short generating pause, then the replay, savable and
+    // printable like the real thing. Visitor-created appointments have no
+    // sample and fall through to the standard demo AI-off path.
+    const demoSample = isDemoMode() ? DEMO_PREP_REPORTS[String(appt.id)] : null;
+    if (demoSample) {
+      await new Promise(r => setTimeout(r, 1900));
+      setAnalysis(demoSample);
+      saveVisitPrep(appt.id, { text: demoSample, sig });
+      setStale(false);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await callAI({
         surface: "appointments.prep",
