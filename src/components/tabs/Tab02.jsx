@@ -678,7 +678,9 @@ export default function ProfileTab() {
     body { padding: 32pt 40pt; }
     h1 { font-size: 18pt; color: #000; margin-bottom: 3pt; }
     h2 { font-size: 10.5pt; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #000; border-bottom: 1.5pt solid #000; padding-bottom: 3pt; margin: 16pt 0 8pt; }
-    .transplant-banner { display: block; width: max-content; max-width: 100%; margin: 0 0 10pt; color: #b91c1c; border: 2pt solid #b91c1c; border-radius: 6pt; padding: 4pt 12pt; font-family: Arial, sans-serif; font-weight: 800; font-size: 11.5pt; letter-spacing: 1px; }
+    .print-notice { text-align: center; margin: 12pt 0 14pt; }
+    .transplant-banner { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 800; font-size: 14pt; letter-spacing: 1px; }
+    .notice-allergies { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 700; font-size: 10pt; margin-top: 3pt; }
     .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12pt; }
     .header-meta { font-size: 9pt; color: #444; font-family: Arial, sans-serif; margin-top: 4pt; }
     .brand { text-align: right; font-family: Arial, sans-serif; }
@@ -1189,12 +1191,6 @@ export default function ProfileTab() {
 
       {/* ── Print layout (screen:hidden, print:visible) ── */}
       <div id="print-profile">
-        {/* v1.53.1 (Greg): transplant status identified at the very top — the
-            same record-derived banner the Emergency Card carries, red type +
-            border (print-safe: no background dependence). */}
-        {transplantBanner && (
-          <div className="transplant-banner">⚠ {transplantBanner}</div>
-        )}
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
           <div>
@@ -1214,6 +1210,18 @@ export default function ProfileTab() {
             </div>
             <div>Personal Health Record</div>
             <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+          </div>
+        </div>
+
+        {/* v1.53.2 (Greg): transplant + allergies notice, centered between the
+            header and the first section — 14pt red type (no box), same shared
+            derivation as the Emergency Card; allergies as names-only, with
+            "No allergies recorded" stated rather than silence (absence of
+            data is not NKDA). */}
+        <div className="print-notice">
+          {transplantBanner && <div className="transplant-banner">⚠ {transplantBanner}</div>}
+          <div className="notice-allergies">
+            ALLERGIES: {allergies.map(a => a.allergen || a.name).filter(Boolean).join(", ") || "No allergies recorded"}
           </div>
         </div>
 

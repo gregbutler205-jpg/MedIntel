@@ -12,7 +12,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.53.1 — 2026-08-19
+## v1.53.2 — 2026-08-19
+
+### Changed
+- **Profile-printout notice restyled per founder review.** The transplant
+  line is now 14pt red type with no box, centered between the header and the
+  Demographics section, and an allergies line joins it (names only — "No
+  allergies recorded" stated explicitly when the list is empty, since absent
+  data is not the same as no known allergies). The em dash is gone from the
+  banner wording on BOTH documents: "LIVER TRANSPLANT RECIPIENT ON
+  IMMUNOSUPPRESSION" — the Emergency Card keeps its boxed style otherwise.
+
+### Tests
+- Pins updated to the new wording and layout: `test:emergency-card` 12,
+  `test:profile-sync` 44, `test:print-csp` 49. 20 suites / 783 cases.
 
 ### Added
 - **The Patient Profile printout identifies transplant status at the top.**

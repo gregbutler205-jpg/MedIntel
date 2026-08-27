@@ -40,7 +40,7 @@ const IMMUNOSUPPRESSANTS = /tacrolimus|prograf|envarsus|cyclosporin|neoral|sandi
 export const isImmunosuppressant = m =>
   IMMUNOSUPPRESSANTS.test(m?.name || "") || /immunosuppress/i.test(m?.category || "");
 
-/** "LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION"-style banner text, or
+/** "LIVER TRANSPLANT RECIPIENT ON IMMUNOSUPPRESSION"-style banner text, or
  * "" when the record supports no such claim. Pass ACTIVE conditions/meds. */
 export function deriveTransplantBanner(conditions, meds) {
   const transplantCond = (conditions || []).find(c => /transplant/i.test(c.name || ""));
@@ -49,8 +49,9 @@ export function deriveTransplantBanner(conditions, meds) {
     const m = /(liver|kidney|heart|lung|pancreas|intestin\w*|multi[- ]?organ)/i.exec(transplantCond?.name || "");
     return m ? m[1].toUpperCase() : "";
   })();
+  // v1.53.2 (Greg): no em dash — plain "RECIPIENT ON IMMUNOSUPPRESSION".
   return (
-    transplantCond && immunoMeds.length ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION` :
+    transplantCond && immunoMeds.length ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT ON IMMUNOSUPPRESSION` :
     transplantCond                      ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT` :
     immunoMeds.length                   ? "IMMUNOSUPPRESSED PATIENT" :
     ""

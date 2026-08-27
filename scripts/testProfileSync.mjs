@@ -253,12 +253,16 @@ const KEY = "mi_profile_personal";
   ok(tab02.includes('import { deriveTransplantBanner } from "../../lib/printEmergency.js"'),
      "profile print IMPORTS the shared banner derivation (no local copy)");
   const printBlock = tab02.slice(tab02.indexOf('id="print-profile"'));
-  ok(printBlock.includes("transplant-banner"),
-     "the banner renders inside the printed profile block");
-  ok(tab02.indexOf("transplant-banner") < tab02.indexOf('id="print-profile"') || printBlock.indexOf("transplant-banner") < printBlock.indexOf("Header"),
-     "the banner sits at the TOP of the printout, before the header");
-  ok(/\.transplant-banner \{[^}]*color: #b91c1c[^}]*border: 2pt solid #b91c1c/.test(tab02),
-     "banner prints as red TYPE + border — no background dependence (printers drop backgrounds)");
+  const noticeIdx = printBlock.indexOf("print-notice");
+  ok(noticeIdx > 0, "the notice block renders inside the printed profile");
+  ok(noticeIdx > printBlock.indexOf("Printed:") && noticeIdx < printBlock.indexOf("Demographics &amp; Contact"),
+     "the notice sits BETWEEN the header block and the Demographics section (v1.53.2 placement)");
+  ok(printBlock.slice(noticeIdx, noticeIdx + 700).includes("No allergies recorded"),
+     "the notice includes allergies, stating absence explicitly (never silence)");
+  ok(/\.print-notice \{ text-align: center/.test(tab02) &&
+     /\.transplant-banner \{ color: #b91c1c;[^}]*font-size: 14pt/.test(tab02) &&
+     !/\.transplant-banner \{[^}]*border/.test(tab02),
+     "banner is centered 14pt red TYPE with no box (v1.53.2 founder styling)");
 }
 
 console.log(`\n${pass} passed, ${fail} failed (profile-sync)`);

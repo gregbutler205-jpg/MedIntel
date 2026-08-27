@@ -55,7 +55,7 @@ const ok = (c, m) => { if (c) { pass++; console.log("PASS — " + m); } else { f
   ok(html.includes("182 lbs"), "emergency card carries the current Vitals weight");
 
   // v1.49.2 hierarchy (Greg): banner > allergies > demoted blood type.
-  ok(html.includes("LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION"),
+  ok(html.includes("LIVER TRANSPLANT RECIPIENT ON IMMUNOSUPPRESSION"),
      "banner derives transplant + immunosuppression from the record");
   ok(html.includes("ALLERGIES: Penicillin"), "allergies strip sits under the banner");
   ok(!html.includes("bloodbadge"), "the enlarged red blood-type badge is gone");

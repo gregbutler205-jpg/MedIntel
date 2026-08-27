@@ -75,8 +75,8 @@ ok(scriptTagCount === 0, `zero <script> tags present (print trigger is opener-si
   ok(deriveTransplantBanner(
        [{ name: "Status Post Liver Transplant" }],
        [{ name: "Tacrolimus" }]
-     ) === "LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION",
-     "liver transplant + tacrolimus → full banner with organ");
+     ) === "LIVER TRANSPLANT RECIPIENT ON IMMUNOSUPPRESSION",
+     "liver transplant + tacrolimus → full banner with organ (no em dash, v1.53.2)");
   ok(deriveTransplantBanner([{ name: "Kidney Transplant 2019" }], []) === "KIDNEY TRANSPLANT RECIPIENT",
      "transplant without immunosuppressants → recipient-only banner");
   ok(deriveTransplantBanner([], [{ name: "Mycophenolate Mofetil" }]) === "IMMUNOSUPPRESSED PATIENT",
