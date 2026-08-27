@@ -69,5 +69,21 @@ ok(!html.includes("<img src=x"), "no live <img> tag was injected into the DOM st
 const scriptTagCount = (html.match(/<script>/g) || []).length;
 ok(scriptTagCount === 0, `zero <script> tags present (print trigger is opener-side since v1.49.1) — got ${scriptTagCount}`);
 
+// ── v1.53.1: the banner derivation is shared with the Patient Profile print ──
+{
+  const { deriveTransplantBanner } = await import("../src/lib/printEmergency.js");
+  ok(deriveTransplantBanner(
+       [{ name: "Status Post Liver Transplant" }],
+       [{ name: "Tacrolimus" }]
+     ) === "LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION",
+     "liver transplant + tacrolimus → full banner with organ");
+  ok(deriveTransplantBanner([{ name: "Kidney Transplant 2019" }], []) === "KIDNEY TRANSPLANT RECIPIENT",
+     "transplant without immunosuppressants → recipient-only banner");
+  ok(deriveTransplantBanner([], [{ name: "Mycophenolate Mofetil" }]) === "IMMUNOSUPPRESSED PATIENT",
+     "immunosuppressant without a transplant condition → immunosuppressed banner");
+  ok(deriveTransplantBanner([{ name: "Hypertension" }], [{ name: "Amlodipine" }]) === "",
+     "no transplant, no immunosuppressant → no banner (never invents status)");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (emergency-card-escaping)`);
 process.exit(fail ? 1 : 0);

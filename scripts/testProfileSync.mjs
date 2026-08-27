@@ -244,5 +244,22 @@ const KEY = "mi_profile_personal";
   localStorage.removeItem("mi_schema_version");
 }
 
+// ── 11. Patient Profile printout carries the transplant banner (v1.53.1) ─────
+// Greg: "On the Patient Profile printout there needs to be a place at the top
+// to identify that I'm a Liver Transplant." Same derivation as the Emergency
+// Card — one clinically-reviewed list, never two drifting copies.
+{
+  const tab02 = readFileSync(SRC("components/tabs/Tab02.jsx"), "utf8");
+  ok(tab02.includes('import { deriveTransplantBanner } from "../../lib/printEmergency.js"'),
+     "profile print IMPORTS the shared banner derivation (no local copy)");
+  const printBlock = tab02.slice(tab02.indexOf('id="print-profile"'));
+  ok(printBlock.includes("transplant-banner"),
+     "the banner renders inside the printed profile block");
+  ok(tab02.indexOf("transplant-banner") < tab02.indexOf('id="print-profile"') || printBlock.indexOf("transplant-banner") < printBlock.indexOf("Header"),
+     "the banner sits at the TOP of the printout, before the header");
+  ok(/\.transplant-banner \{[^}]*color: #b91c1c[^}]*border: 2pt solid #b91c1c/.test(tab02),
+     "banner prints as red TYPE + border — no background dependence (printers drop backgrounds)");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (profile-sync)`);
 assert.equal(fail, 0);

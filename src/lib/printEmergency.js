@@ -27,6 +27,36 @@ import { latestWeightReading, ageFromDob } from "../store.js";
 import { wirePrintWindow } from "./printWindow.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
+// ── v1.49.2 (Greg): the "unmissable" slot belongs to what changes an ED's
+// decisions in the first three seconds — not blood type (a patient-reported
+// type is never transfused against; EDs type & crossmatch every time, and
+// give O-neg in extremis). The banner derives from the record itself:
+// transplant status from active conditions, immunosuppression from active
+// meds by drug class or category. Exported (v1.53.1) so the Patient Profile
+// printout carries the SAME banner from the same clinically-reviewed list —
+// one source of truth, never two drifting copies.
+const IMMUNOSUPPRESSANTS = /tacrolimus|prograf|envarsus|cyclosporin|neoral|sandimmune|mycophenolate|cellcept|myfortic|sirolimus|rapamune|everolimus|zortress|azathioprine|imuran|belatacept|nulojix/i;
+
+export const isImmunosuppressant = m =>
+  IMMUNOSUPPRESSANTS.test(m?.name || "") || /immunosuppress/i.test(m?.category || "");
+
+/** "LIVER TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION"-style banner text, or
+ * "" when the record supports no such claim. Pass ACTIVE conditions/meds. */
+export function deriveTransplantBanner(conditions, meds) {
+  const transplantCond = (conditions || []).find(c => /transplant/i.test(c.name || ""));
+  const immunoMeds = (meds || []).filter(isImmunosuppressant);
+  const organ = (() => {
+    const m = /(liver|kidney|heart|lung|pancreas|intestin\w*|multi[- ]?organ)/i.exec(transplantCond?.name || "");
+    return m ? m[1].toUpperCase() : "";
+  })();
+  return (
+    transplantCond && immunoMeds.length ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION` :
+    transplantCond                      ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT` :
+    immunoMeds.length                   ? "IMMUNOSUPPRESSED PATIENT" :
+    ""
+  );
+}
+
 export function buildEmergencyHtml() {
   const safe = k => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
   const safeObj = k => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
@@ -49,25 +79,8 @@ export function buildEmergencyHtml() {
   // v1.49.3: age calculated from DOB (never stale); stored field is a legacy fallback.
   const age       = ageFromDob(profile.dob) ?? profile.age ?? "";
 
-  // ── v1.49.2 (Greg): the "unmissable" slot belongs to what changes an ED's
-  // decisions in the first three seconds — not blood type (a patient-reported
-  // type is never transfused against; EDs type & crossmatch every time, and
-  // give O-neg in extremis). Blood type moves down into the ID line. The top
-  // banner derives from the record itself: transplant status from active
-  // conditions, immunosuppression from active meds by drug class or category.
-  const IMMUNOSUPPRESSANTS = /tacrolimus|prograf|envarsus|cyclosporin|neoral|sandimmune|mycophenolate|cellcept|myfortic|sirolimus|rapamune|everolimus|zortress|azathioprine|imuran|belatacept|nulojix/i;
-  const isImmunoMed = m => IMMUNOSUPPRESSANTS.test(m.name || "") || /immunosuppress/i.test(m.category || "");
-  const transplantCond = conditions.find(c => /transplant/i.test(c.name || ""));
-  const immunoMeds = meds.filter(isImmunoMed);
-  const organ = (() => {
-    const m = /(liver|kidney|heart|lung|pancreas|intestin\w*|multi[- ]?organ)/i.exec(transplantCond?.name || "");
-    return m ? m[1].toUpperCase() : "";
-  })();
-  const bannerText =
-    transplantCond && immunoMeds.length ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION` :
-    transplantCond                      ? `${organ ? organ + " " : ""}TRANSPLANT RECIPIENT` :
-    immunoMeds.length                   ? "IMMUNOSUPPRESSED PATIENT" :
-    "";
+  const bannerText = deriveTransplantBanner(conditions, meds);
+  const immunoMeds = meds.filter(isImmunosuppressant); // also drives the meds-section title + immuno-first sort
   // Allergies strip: names only, right under the banner (full reactions keep
   // their own section below). "No allergies recorded" is deliberately NOT
   // "no known allergies" — an empty list is absence of data, not NKDA.
@@ -147,7 +160,7 @@ export function buildEmergencyHtml() {
   const condRows = conditions.map(c => `<span class="badge cond">${escapeHtml(c.name)}</span>${c.severity ? ` <span class="dim">${escapeHtml(c.severity)}</span>` : ""}`);
   // Immunosuppressants print first — they're the drugs an ED must not stop or
   // interact with casually, and the banner above announces why they matter.
-  const medsSorted = [...meds].sort((a, b) => (isImmunoMed(a) ? 0 : 1) - (isImmunoMed(b) ? 0 : 1));
+  const medsSorted = [...meds].sort((a, b) => (isImmunosuppressant(a) ? 0 : 1) - (isImmunosuppressant(b) ? 0 : 1));
   const medRows  = medsSorted.map(m => `<strong>${escapeHtml(m.name)}</strong>${m.dose ? ` ${escapeHtml(m.dose)}` : ""}${m.frequency ? ` — ${escapeHtml(m.frequency)}` : ""}${m.prescriber ? ` <span class="dim">(${escapeHtml(m.prescriber)})</span>` : ""}`);
   const algRows  = allergies.map(a => `<span class="badge allergy">${escapeHtml(a.allergen || a.name)}</span>${a.reaction ? ` <span class="dim">→ ${escapeHtml(a.reaction)}</span>` : ""}`);
   const ctRows   = contacts.map(c => `<strong>${escapeHtml(c.name)}</strong>${c.relationship ? ` (${escapeHtml(c.relationship)})` : ""} — <a href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a>`);

@@ -12,7 +12,21 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.53.0 — 2026-08-19
+## v1.53.1 — 2026-08-19
+
+### Added
+- **The Patient Profile printout identifies transplant status at the top.**
+  The same record-derived banner the Emergency Card carries — "LIVER
+  TRANSPLANT RECIPIENT — ON IMMUNOSUPPRESSION" — now opens the printed
+  profile, in red type with a red border (print-safe on every printer). One
+  shared derivation drives both documents: transplant status from active
+  conditions, immunosuppression from the active medication list. Records
+  with neither print no banner — the report never invents a status.
+
+### Tests
+- Banner derivation cases (organ extraction, recipient-only,
+  immunosuppressed-only, no-banner) and profile-print structure pinned:
+  `test:emergency-card` 12, `test:profile-sync` 43. 20 suites / 782 cases.
 
 ### Added
 - **The demo now shows real AI prep reports** (DEC-048). Clicking Generate
