@@ -267,5 +267,23 @@ const KEY = "mi_profile_personal";
      "profile shows the SHORT banner — suffix trimmed for display, shared derivation intact (Emergency Card keeps the full text)");
 }
 
+// ── 12. Saves merge over a FRESH read, never mount-time state (v1.53.4) ──────
+// Greg: "My address is still not changing to my new address." A save made
+// after a background Drive sync rebuilt the whole object from the PRE-sync
+// React snapshot — resurrecting every untouched field with a fresh updatedAt
+// that then WON the newer-edit-wins merge everywhere. The base must be the
+// store, read at save time.
+{
+  const tab02 = readFileSync(SRC("components/tabs/Tab02.jsx"), "utf8");
+  ok(tab02.includes("const merged = { ...getProfilePersonal(), ...tempPersonal }"),
+     "savePersonal merges the edits over a fresh store read");
+  ok(tab02.includes("const merged = { ...getProfileInsurance(), ...tempInsurance }"),
+     "saveInsurance merges the edits over a fresh store read");
+  ok(!/\{ \.\.\.personal, \.\.\.tempPersonal \}/.test(tab02) && !/\{ \.\.\.insurance, \.\.\.tempInsurance \}/.test(tab02),
+     "no save path uses mount-time React state as its base");
+  ok(tab02.includes('window.addEventListener("mi-data-synced", refresh)'),
+     "Tab02 refreshes profile state when a background sync lands");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (profile-sync)`);
 assert.equal(fail, 0);

@@ -12,7 +12,23 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.53.3 — 2026-08-19
+## v1.53.4 — 2026-08-19
+
+### Fixed
+- **Profile edits stop resurrecting old values of other fields.** Saving any
+  Health Profile section rebuilt the whole stored object from the screen's
+  state as loaded when the tab opened — so if a background Drive sync had
+  landed newer values meanwhile (a changed address, say), the save silently
+  wrote the old values back with a fresh edit stamp, which then WON the
+  newer-edit-wins merge on every device. This is how an updated address kept
+  reverting. Saves now merge the typed edits over a fresh read of the stored
+  record, and the screen picks up background syncs the moment they land.
+  Verified live: with a newer address landed mid-session, a phone-only save
+  keeps the new address; under the old code it restored the stale one.
+
+### Tests
+- The fresh-read save base and sync-refresh listener pinned:
+  `test:profile-sync` 49. 20 suites / 788 cases.
 
 ### Changed
 - **Profile-printout notice, third pass per founder review:** 10pt (down

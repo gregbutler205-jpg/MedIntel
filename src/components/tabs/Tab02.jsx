@@ -504,16 +504,36 @@ export default function ProfileTab() {
     setLatestVitals(getLatestReading());
   }, []);
 
+  // v1.53.4: a background Drive merge can land while this tab is open — pick
+  // up the merged profile so the screen (and any subsequent save's base via
+  // the fresh-read helpers above) never shows pre-sync values.
+  useEffect(() => {
+    const refresh = () => {
+      setPersonal(getProfilePersonal());
+      setInsurance(getProfileInsurance());
+      setConditions(getConditions());
+      setMeds(getMedsFull());
+    };
+    window.addEventListener("mi-data-synced", refresh);
+    return () => window.removeEventListener("mi-data-synced", refresh);
+  }, []);
+
   // ── Save helpers ──────────────────────────────────────────────────────────────
+  // v1.53.4 (Greg: "my address is still not changing"): merge the typed edits
+  // over a FRESH store read, never over React state captured at mount. The old
+  // base meant a save made after a background Drive sync re-wrote every
+  // untouched field from the pre-sync snapshot — with a fresh updatedAt, so
+  // the resurrected values then WON the DEC-047 newer-edit-wins merge on every
+  // device. Only the fields the patient actually edited ride the save.
   function savePersonal() {
-    const merged = { ...personal, ...tempPersonal };
+    const merged = { ...getProfilePersonal(), ...tempPersonal };
     setPersonal(merged);
     setProfilePersonal(merged);
     setEdPersonal(false);
     setTempPersonal({});
   }
   function saveInsurance() {
-    const merged = { ...insurance, ...tempInsurance };
+    const merged = { ...getProfileInsurance(), ...tempInsurance };
     setInsurance(merged);
     setProfileInsurance(merged);
     setEdInsurance(false);
