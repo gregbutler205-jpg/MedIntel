@@ -678,8 +678,8 @@ export default function ProfileTab() {
     body { padding: 32pt 40pt; }
     h1 { font-size: 18pt; color: #000; margin-bottom: 3pt; }
     h2 { font-size: 10.5pt; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #000; border-bottom: 1.5pt solid #000; padding-bottom: 3pt; margin: 16pt 0 8pt; }
-    .print-notice { text-align: center; margin: 12pt 0 14pt; }
-    .transplant-banner { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 800; font-size: 14pt; letter-spacing: 1px; }
+    .print-notice { text-align: right; margin: 12pt 0 14pt; }
+    .transplant-banner { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 800; font-size: 10pt; letter-spacing: 1px; }
     .notice-allergies { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 700; font-size: 10pt; margin-top: 3pt; }
     .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12pt; }
     .header-meta { font-size: 9pt; color: #444; font-family: Arial, sans-serif; margin-top: 4pt; }
@@ -718,10 +718,14 @@ export default function ProfileTab() {
   const ageDisplay = computedAge ?? P.age;
 
   // v1.53.1: same record-derived banner as the Emergency Card, for the printout.
+  // v1.53.3 (Greg): the profile shows the short form — "LIVER TRANSPLANT
+  // RECIPIENT" without the immunosuppression suffix. The Emergency Card keeps
+  // the full text (an ED needs the immunosuppression half); one derivation
+  // still drives both, the profile just trims the suffix for display.
   const transplantBanner = deriveTransplantBanner(
     conditions.filter(c => c.status !== "inactive"),
     activeMeds
-  );
+  ).replace(/ ON IMMUNOSUPPRESSION$/, "");
 
   // v1.49.0: weight auto-fills from the newest Vitals reading that has one —
   // the profile field is only a fallback for records with no logged weights.

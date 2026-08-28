@@ -12,7 +12,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.53.2 — 2026-08-19
+## v1.53.3 — 2026-08-19
+
+### Changed
+- **Profile-printout notice, third pass per founder review:** 10pt (down
+  from 14pt), both lines right-justified, and the transplant line shortened
+  to "LIVER TRANSPLANT RECIPIENT" — the immunosuppression suffix is trimmed
+  on the profile only. The Emergency Card keeps the full "…ON
+  IMMUNOSUPPRESSION" text: an ED needs that half. One shared derivation
+  still drives both documents.
+
+### Tests
+- Pins updated: `test:profile-sync` 45 (short-form + right-justified 10pt),
+  `test:print-csp` 49 still guards the Emergency Card's full text.
+  20 suites / 784 cases.
 
 ### Changed
 - **Profile-printout notice restyled per founder review.** The transplant
