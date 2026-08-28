@@ -698,7 +698,7 @@ export default function ProfileTab() {
     body { padding: 32pt 40pt; }
     h1 { font-size: 18pt; color: #000; margin-bottom: 3pt; }
     h2 { font-size: 10.5pt; font-family: Arial, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #000; border-bottom: 1.5pt solid #000; padding-bottom: 3pt; margin: 16pt 0 8pt; }
-    .print-notice { text-align: right; margin: 12pt 0 14pt; }
+    .print-notice { text-align: left; margin: 6pt 0 0; }
     .transplant-banner { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 800; font-size: 10pt; letter-spacing: 1px; }
     .notice-allergies { color: #b91c1c; font-family: Arial, sans-serif; font-weight: 700; font-size: 10pt; margin-top: 3pt; }
     .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12pt; }
@@ -1227,6 +1227,17 @@ export default function ProfileTab() {
                 .map(([l, v]) => `${l}: ${v}`)
                 .join("  ·  ") || "Demographics not recorded"}
             </div>
+            {/* v1.53.5 (Greg): transplant + allergies notice lives in the
+                header's LEFT column, left-justified, sharing the row with the
+                brand block's "Personal Health Record" line. 10pt red type, no
+                box; short-form banner; allergies names-only with "No
+                allergies recorded" stated rather than silence. */}
+            <div className="print-notice">
+              {transplantBanner && <div className="transplant-banner">⚠ {transplantBanner}</div>}
+              <div className="notice-allergies">
+                ALLERGIES: {allergies.map(a => a.allergen || a.name).filter(Boolean).join(", ") || "No allergies recorded"}
+              </div>
+            </div>
           </div>
           <div style={{ textAlign:"right", fontSize:"8pt", color:"#444", fontFamily:"Arial, sans-serif" }}>
             <div style={{ background:"#07090f", borderRadius:6, padding:"6px 8px", display:"inline-block", marginBottom:4 }}>
@@ -1234,18 +1245,6 @@ export default function ProfileTab() {
             </div>
             <div>Personal Health Record</div>
             <div>Printed: {new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
-          </div>
-        </div>
-
-        {/* v1.53.2 (Greg): transplant + allergies notice, centered between the
-            header and the first section — 14pt red type (no box), same shared
-            derivation as the Emergency Card; allergies as names-only, with
-            "No allergies recorded" stated rather than silence (absence of
-            data is not NKDA). */}
-        <div className="print-notice">
-          {transplantBanner && <div className="transplant-banner">⚠ {transplantBanner}</div>}
-          <div className="notice-allergies">
-            ALLERGIES: {allergies.map(a => a.allergen || a.name).filter(Boolean).join(", ") || "No allergies recorded"}
           </div>
         </div>
 

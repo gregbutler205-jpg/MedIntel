@@ -12,7 +12,17 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.53.4 — 2026-08-19
+## v1.53.5 — 2026-08-19
+
+### Changed
+- **Profile-printout notice moved into the header, left-justified.** The
+  transplant and allergies lines now sit under your demographics in the
+  header's left column, sharing the row with the "Personal Health Record"
+  brand block — no longer a standalone band between header and sections.
+  Still 10pt red type, short-form wording.
+
+### Tests
+- Placement pin updated: `test:profile-sync` 49. 20 suites / 788 cases.
 
 ### Fixed
 - **Profile edits stop resurrecting old values of other fields.** Saving any

@@ -255,14 +255,14 @@ const KEY = "mi_profile_personal";
   const printBlock = tab02.slice(tab02.indexOf('id="print-profile"'));
   const noticeIdx = printBlock.indexOf("print-notice");
   ok(noticeIdx > 0, "the notice block renders inside the printed profile");
-  ok(noticeIdx > printBlock.indexOf("Printed:") && noticeIdx < printBlock.indexOf("Demographics &amp; Contact"),
-     "the notice sits BETWEEN the header block and the Demographics section (v1.53.2 placement)");
+  ok(noticeIdx > printBlock.indexOf("Demographics not recorded") && noticeIdx < printBlock.indexOf("<div>Personal Health Record</div>"),
+     "the notice lives in the header's LEFT column, before the brand block's 'Personal Health Record' element (v1.53.5 placement)");
   ok(printBlock.slice(noticeIdx, noticeIdx + 700).includes("No allergies recorded"),
      "the notice includes allergies, stating absence explicitly (never silence)");
-  ok(/\.print-notice \{ text-align: right/.test(tab02) &&
+  ok(/\.print-notice \{ text-align: left/.test(tab02) &&
      /\.transplant-banner \{ color: #b91c1c;[^}]*font-size: 10pt/.test(tab02) &&
      !/\.transplant-banner \{[^}]*border/.test(tab02),
-     "notice is right-justified 10pt red TYPE with no box (v1.53.3 founder styling)");
+     "notice is left-justified 10pt red TYPE with no box (v1.53.5 founder styling)");
   ok(tab02.includes('.replace(/ ON IMMUNOSUPPRESSION$/, "")'),
      "profile shows the SHORT banner — suffix trimmed for display, shared derivation intact (Emergency Card keeps the full text)");
 }
