@@ -86,6 +86,52 @@ export function upsertArchiveDoc(doc) {
 }
 
 /** Documents with anything left to review: pending rows, or excluded rows that can be promoted later. */
+/**
+ * v1.54.1 self-healer: the archive is the authoritative record of what was
+ * confirmed — every promoted row carries its ConfirmationEvent and id. If a
+ * promoted row is missing from mi_labs (a stale-state full-array write from
+ * another screen erased imported rows — the bug that ate Greg's three lab
+ * documents), rebuild it exactly as confirmDoc promoted it (corrected values
+ * included; applyCorrection wrote them into the row, originals preserved in
+ * row.correction) and put it back. Idempotent: matches by archiveRowId, so
+ * restored rows are never duplicated. Returns how many rows were restored.
+ */
+export function reconcilePromotedRows() {
+  const docs = readArchive();
+  let labs;
+  try { labs = JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { labs = []; }
+  if (!Array.isArray(labs)) labs = [];
+  const have = new Set(labs.map(l => l.archiveRowId).filter(Boolean));
+
+  const restored = [];
+  const now = Date.now();
+  for (const doc of docs) {
+    for (const r of doc.rows || []) {
+      if (r.state !== "promoted" || have.has(r.id)) continue;
+      restored.push({
+        id: now + restored.length,
+        name: r.name,
+        value: Number.isFinite(parseFloat(r.value)) ? parseFloat(r.value) : r.value,
+        unit: r.unit,
+        refRange: r.refRange,
+        date: r.date,
+        facility: r.facility || "",
+        category: r.category,
+        flag: Array.isArray(r.flags) && r.flags.includes("out_of_range"),
+        notes: r.notes,
+        confirmationEventId: r.provenance?.confirmationEventId ?? null,
+        archiveRowId: r.id,
+      });
+      have.add(r.id);
+    }
+  }
+  if (restored.length > 0) {
+    const updated = [...restored, ...labs].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    localStorage.setItem("mi_labs", JSON.stringify(updated));
+  }
+  return restored.length;
+}
+
 export function reviewableArchiveDocs() {
   return readArchive().filter(d => d.rows.some(r => r.state === "pending" || r.state === "excluded"));
 }

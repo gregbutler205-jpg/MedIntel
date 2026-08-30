@@ -13,6 +13,7 @@ import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLa
 import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
 import { PrintLabel } from "../icons.jsx";
 import { getLastImportLabel } from "../../store.js";
+import { reconcilePromotedRows } from "../../lib/labBatchConfirm.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
@@ -595,6 +596,16 @@ export default function App({ onNavChange }) {
   const [importedLabs, setImportedLabs] = useState(() => {
     try { return JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { return []; }
   });
+  // v1.54.1: heal promoted-but-erased imports on arrival, and pick up store
+  // changes (PDF imports, Drive syncs) that land while this tab is open.
+  useEffect(() => {
+    const readLabs = () => { try { return JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { return []; } };
+    const healed = reconcilePromotedRows();
+    if (healed > 0) setImportedLabs(readLabs());
+    const refresh = () => setImportedLabs(readLabs());
+    window.addEventListener("mi-data-synced", refresh);
+    return () => window.removeEventListener("mi-data-synced", refresh);
+  }, []);
   const [importedCatFilter, setImportedCatFilter] = useState("All");
   const [showFlagged, setShowFlagged]   = useState(false);
   const [showDescription, setShowDescription] = useState(false);
@@ -661,7 +672,14 @@ export default function App({ onNavChange }) {
   }
 
   function commitLabEntry(entry) {
-    const updated = [entry, ...importedLabs];
+    // v1.54.1: base the write on a FRESH store read, never mount-time state.
+    // The stale base here rewrote mi_labs as [entry, ...pre-import snapshot],
+    // erasing every row the PDF import had added since this tab loaded —
+    // the bug that ate Greg's confirmed lab documents.
+    let fresh;
+    try { fresh = JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { fresh = []; }
+    if (!Array.isArray(fresh)) fresh = [];
+    const updated = [entry, ...fresh];
     setImportedLabs(updated);
     try { localStorage.setItem("mi_labs", JSON.stringify(updated)); } catch {}
     window.dispatchEvent(new Event("mi-data-synced")); // A-01: manual-entry hook for the tripwire engine

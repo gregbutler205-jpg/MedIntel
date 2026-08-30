@@ -10,7 +10,7 @@ import { getStagedStore } from "../../lib/onboardingStaging.js";
 import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
 import { canonicalLabId } from "../../lib/labCanonical.js";
 import { uploadReportToDrive, areaForRecordType } from "../../lib/driveReports.js";
-import { createArchiveDoc, upsertArchiveDoc, readArchive, reviewableArchiveDocs } from "../../lib/labBatchConfirm.js";
+import { createArchiveDoc, upsertArchiveDoc, readArchive, reviewableArchiveDocs, reconcilePromotedRows } from "../../lib/labBatchConfirm.js";
 import LabBatchReview from "../LabBatchReview.jsx";
 
 // v1.48.0: after a record is saved, file its original PDF in the patient's
@@ -267,7 +267,14 @@ export default function ImportTab({ onImport, onNavChange }) {
   ];
 
   // Reload from storage on mount (handles Clear Data reload)
-  useEffect(() => { setLabs(getLabs()); }, []);
+  useEffect(() => {
+    // v1.54.1: restore any promoted archive rows a stale-state write erased
+    // from mi_labs (idempotent), THEN load — imported labs come back on their
+    // own the next time this screen opens.
+    const healed = reconcilePromotedRows();
+    if (healed > 0) showToast(`${healed} imported lab result${healed !== 1 ? "s" : ""} restored from your confirmed documents.`);
+    setLabs(getLabs());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function showToast(msg) {
     setToast(msg);
@@ -283,13 +290,17 @@ export default function ImportTab({ onImport, onNavChange }) {
       showToast("Test name, value, and date are required.");
       return;
     }
+    // v1.54.1: rebuild from a FRESH store read, never mount-time state — a
+    // stale base here erased rows other flows (PDF import) had added since
+    // this tab loaded. Same class as the v1.53.4 profile fix.
+    const base = getLabs();
     let updated;
     if (editId !== null) {
-      updated = labs.map(l => l.id === editId ? { ...form, id: editId } : l);
+      updated = base.map(l => l.id === editId ? { ...form, id: editId } : l);
       showToast("Lab result updated");
     } else {
       const newEntry = { ...form, id: Date.now(), value: parseFloat(form.value) || form.value };
-      updated = [newEntry, ...labs];
+      updated = [newEntry, ...base];
       showToast("Lab result saved");
     }
     updated.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -306,8 +317,9 @@ export default function ImportTab({ onImport, onNavChange }) {
   }
 
   function handleDelete(id) {
-    tombstoneRecord("mi_labs", labs.find(l => l.id === id));
-    const updated = labs.filter(l => l.id !== id);
+    const base = getLabs(); // v1.54.1: fresh read — see handleSubmit
+    tombstoneRecord("mi_labs", base.find(l => l.id === id));
+    const updated = base.filter(l => l.id !== id);
     saveLabs(updated);
     setLabs(updated);
     setDeleteId(null);

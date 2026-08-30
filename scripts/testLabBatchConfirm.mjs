@@ -240,5 +240,47 @@ const mkDoc = () => createArchiveDoc({
      "the dead mi_import_log read is gone");
 }
 
+// ── 12. v1.54.1: promoted-row healer + fresh-read writes (Greg, live) ────────
+// Greg's confirmed imports vanished from Labs: manual-entry saves on two tabs
+// rebuilt mi_labs from mount-time React state, erasing rows the PDF import
+// added afterward. The archive stayed intact — so promoted rows heal back.
+{
+  const { reconcilePromotedRows, LAB_ARCHIVE_KEY } = await import("../src/lib/labBatchConfirm.js");
+  localStorage.clear();
+  const doc = {
+    id: "labdoc_heal", title: "heal-doc", fileName: "heal.pdf", rows: [
+      { id: "hr1", name: "PSA", value: "0.7", unit: "ng/mL", refRange: "0.0-4.0", date: "2026-08-20", facility: "Quest", category: "Other", notes: "", flags: [], state: "promoted", confidence: null, correction: null, provenance: { docId: "labdoc_heal", page: null, extractedAt: "x", confirmationEventId: "confirm_ev1" } },
+      { id: "hr2", name: "ALT", value: "62", unit: "U/L", refRange: "10-40", date: "2026-08-20", facility: "Quest", category: "Liver Function", notes: "", flags: ["out_of_range"], state: "promoted", confidence: null, correction: null, provenance: { docId: "labdoc_heal", page: null, extractedAt: "x", confirmationEventId: "confirm_ev1" } },
+      { id: "hr3", name: "Smudge", value: "1", unit: "u", refRange: "", date: "2026-08-20", facility: "", category: "Other", notes: "", flags: [], state: "excluded", confidence: null, correction: null, provenance: null },
+      { id: "hr4", name: "Pending", value: "2", unit: "u", refRange: "", date: "2026-08-20", facility: "", category: "Other", notes: "", flags: [], state: "pending", confidence: null, correction: null, provenance: null },
+    ],
+  };
+  localStorage.setItem(LAB_ARCHIVE_KEY, JSON.stringify([doc]));
+  localStorage.setItem("mi_labs", "[]");
+
+  const n = reconcilePromotedRows();
+  const labs = JSON.parse(localStorage.getItem("mi_labs"));
+  ok(n === 2 && labs.length === 2, `healer restores exactly the promoted rows (restored ${n})`);
+  const psa = labs.find(l => l.name === "PSA");
+  ok(psa && psa.archiveRowId === "hr1" && psa.confirmationEventId === "confirm_ev1" && psa.value === 0.7,
+     "restored row carries value, archiveRowId, and its original ConfirmationEvent");
+  ok(labs.find(l => l.name === "ALT")?.flag === true, "out-of-range flag survives restoration");
+  ok(!labs.some(l => l.name === "Smudge" || l.name === "Pending"),
+     "excluded and pending rows are NOT restored — only what the patient confirmed");
+  ok(reconcilePromotedRows() === 0 && JSON.parse(localStorage.getItem("mi_labs")).length === 2,
+     "healer is idempotent — a second run restores nothing and duplicates nothing");
+
+  const tab05 = readFileSync(SRC("components/tabs/Tab05.jsx"), "utf8");
+  const commitBlock = tab05.slice(tab05.indexOf("function commitLabEntry"), tab05.indexOf("function handleAddLab"));
+  ok(commitBlock.includes('JSON.parse(localStorage.getItem("mi_labs")'),
+     "Tab05 manual entry writes over a FRESH store read, not mount-time state");
+  ok(tab05.includes("reconcilePromotedRows()"), "Tab05 heals promoted rows on arrival");
+
+  const tab12 = readFileSync(SRC("components/tabs/Tab12.jsx"), "utf8");
+  ok(tab12.includes("const base = getLabs();") && tab12.includes("const base = getLabs(); // v1.54.1"),
+     "Tab12 manual save and delete rebuild from fresh reads");
+  ok(tab12.includes("reconcilePromotedRows()"), "Tab12 heals promoted rows on arrival");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (lab-batch-confirm)`);
 assert.equal(fail, 0);

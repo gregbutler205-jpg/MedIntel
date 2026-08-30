@@ -12,7 +12,27 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.54.0 — 2026-08-28
+## v1.54.1 — 2026-08-28
+
+### Fixed
+- **Imported lab results stop being erased — and yours come back.** Adding
+  a manual lab entry on Labs & Trends (or saving/editing/deleting one in
+  Import Records) rewrote the entire lab store from what that screen had
+  loaded when it opened — silently erasing every row a PDF import had added
+  since. That's why confirmed imports appeared in Import History but not in
+  Labs or search. Every lab write now rebuilds from a fresh read of the
+  store (the same fix the profile got in v1.53.4), Labs & Trends refreshes
+  when data lands while it's open, and a self-healer restores any promoted
+  row that a past erasure removed: your confirmed documents are the
+  authoritative record, so the rows return automatically — with their
+  original confirmation provenance — the next time you open Labs & Trends
+  or Import Records. Excluded and pending rows are never auto-restored;
+  only what you confirmed.
+
+### Tests
+- Healer behavior (restores exactly the promoted rows, keeps provenance and
+  flags, idempotent, never touches excluded/pending) and fresh-read writes
+  on both tabs pinned: `test:lab-batch` 80. 20 suites / 805 cases.
 
 ### Added
 - **Preview Report on AI sessions.** A new button between Save & Print and
