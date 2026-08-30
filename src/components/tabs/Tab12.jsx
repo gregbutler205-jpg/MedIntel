@@ -879,7 +879,11 @@ export default function ImportTab({ onImport, onNavChange }) {
             excluded/review counts where available, source doc, final status */}
         {mode === "history" && (() => {
           let log = [];
-          try { log = JSON.parse(localStorage.getItem("mi_import_log") || "[]"); } catch {}
+          // v1.53.6: the logger writes mi_importLog (store.js setStore camelCase);
+          // this view read mi_import_log — a key nothing ever wrote — so Import
+          // History rendered empty since the feature shipped, hiding outcomes
+          // like "All rows excluded" exactly when they mattered.
+          try { log = JSON.parse(localStorage.getItem("mi_importLog") || "[]"); } catch {}
           return (
             <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"16px 18px" }}>
               <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:12 }}>Import History</div>
@@ -1064,6 +1068,12 @@ export default function ImportTab({ onImport, onNavChange }) {
         if (!reviewDoc) return null;
         return (
           <LabBatchReview
+            // v1.53.6: key forces a FULL REMOUNT per document. Without it,
+            // batch auto-advance changed the `doc` prop but React kept the
+            // previous document's row state (useState initializes once), so
+            // every later document in a batch was reviewed — and its archive
+            // OVERWRITTEN — with the first document's rows.
+            key={reviewDoc.id}
             doc={reviewDoc}
             file={labReview.file}
             onDone={handleLabReviewDone}

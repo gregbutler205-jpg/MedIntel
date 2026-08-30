@@ -12,7 +12,23 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.53.5 — 2026-08-19
+## v1.53.6 — 2026-08-28
+
+### Fixed
+- **Multi-document lab batches review each document's own rows.** Confirming
+  a document in a batch advanced to the next one, but the review screen kept
+  the FIRST document's rows — every later document in the batch was reviewed,
+  and its archive overwritten, with document one's results. The review now
+  fully resets per document. Verified end-to-end with a real three-PDF batch:
+  nine unique rows, one per analyte, each document reviewed as itself.
+- **Import History shows your imports again.** The history screen read a
+  storage key nothing ever wrote, so it had rendered empty since it shipped —
+  hiding outcomes like "All rows excluded" exactly when they explained where
+  an import went. It now reads the live log.
+
+### Tests
+- Both regressions pinned structurally: `test:lab-batch` 71.
+  20 suites / 791 cases.
 
 ### Changed
 - **Profile-printout notice moved into the header, left-justified.** The

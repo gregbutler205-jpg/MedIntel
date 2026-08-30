@@ -221,5 +221,24 @@ const mkDoc = () => createArchiveDoc({
   ok(monitored.includes("Clinical Safety Core"), "monitored list carries its CSC governance comment");
 }
 
+// ── 11. v1.53.6 regressions: batch advance + Import History (Greg, live) ─────
+// Greg confirmed a 3-document batch and "nothing showed anywhere." Two real
+// defects: (a) LabBatchReview kept the FIRST document's row state across
+// auto-advance (useState initializes once; the doc prop changed but rows
+// didn't), overwriting later documents' archives with the first document's
+// rows — key={doc.id} forces a remount per document; (b) Import History read
+// mi_import_log, a key nothing writes — rendering empty forever and hiding
+// outcomes like "All rows excluded."
+{
+  const tab12 = readFileSync(SRC("components/tabs/Tab12.jsx"), "utf8");
+  const reviewRender = tab12.slice(tab12.indexOf("<LabBatchReview"), tab12.indexOf("onClose={handleLabReviewClose}"));
+  ok(reviewRender.includes("key={reviewDoc.id}"),
+     "LabBatchReview remounts per document (key on the render) — batch advance can't reuse stale rows");
+  ok(tab12.includes('localStorage.getItem("mi_importLog")'),
+     "Import History reads the key the logger actually writes (mi_importLog)");
+  ok(!tab12.includes('getItem("mi_import_log")'),
+     "the dead mi_import_log read is gone");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (lab-batch-confirm)`);
 assert.equal(fail, 0);
