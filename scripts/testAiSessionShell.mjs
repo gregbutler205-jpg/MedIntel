@@ -236,5 +236,25 @@ const V = await import("../src/lib/numericValidator.js");
   ok(!excludeBlock.includes("mi_ai_sessions"), "sessions are patient data: NOT excluded from Drive backup");
 }
 
+// ── 12. v1.54.0: whole-session Preview Report (founder-directed) ─────────────
+// Greg: preview the SAME report Print produces — the entire conversation, not
+// one response — between Save & Print and Close; the per-response "Open as
+// report" is retired.
+{
+  const tab11 = readFileSync(SRC("components/tabs/Tab11.jsx"), "utf8");
+  ok(!tab11.includes("Open as report"), "per-response 'Open as report' is gone");
+  ok(!tab11.includes("AnalysisOverlay"), "Tab11 no longer mounts the per-response overlay");
+  const bar = tab11.slice(tab11.indexOf("End-actions bar"));
+  const order = ["Save to Notes", "Save &amp; Print", "Preview Report", 'title="Close this session"']
+    .map(s => bar.indexOf(s));
+  ok(order.every(i => i > 0) && order[0] < order[1] && order[1] < order[2] && order[2] < order[3],
+     "end-actions order: Save to Notes · Save & Print · Preview Report · Close");
+  const printCall = tab11.indexOf("openPrintable(buildSessionPrintHtml(");
+  const previewCall = tab11.indexOf("setPreviewHtml(buildSessionPrintHtml(");
+  ok(printCall > 0 && previewCall > 0,
+     "preview and print use the SAME document builder — what you preview is what prints");
+  ok(tab11.includes("srcDoc={previewHtml}"), "preview renders the document in-app (view-only iframe)");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (ai-session-shell)`);
 assert.equal(fail, 0);

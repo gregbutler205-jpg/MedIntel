@@ -12,6 +12,27 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.54.0 — 2026-08-28
+
+### Added
+- **Preview Report on AI sessions.** A new button between Save & Print and
+  Close shows the full session report in-app — the entire conversation with
+  every part, stamp, and divider, built by the exact same code the print
+  uses, so what you preview is what prints. View-only: printing still goes
+  through Save & Print, keeping the every-printout-has-a-stored-counterpart
+  rule intact.
+
+### Removed
+- **The per-response "Open as report" link** on individual AI answers — it
+  covered only one answer at a time and is replaced by the whole-session
+  preview.
+
+### Tests
+- End-actions order, shared print/preview builder, and the retired opener
+  pinned: `test:ai-session-shell` 61. 20 suites / 796 cases.
+
+---
+
 ## v1.53.6 — 2026-08-28
 
 ### Fixed

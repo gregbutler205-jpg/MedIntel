@@ -7,7 +7,6 @@ import { callAI, MODEL_MAP } from "../../lib/aiClient.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { getIdentity } from "../../prompts/identity.js";
 import { buildSurfaceA } from "../../prompts/surfaceA.js";
-import AnalysisOverlay from "../AnalysisOverlay.jsx";
 import { PrinterIcon } from "../icons.jsx";
 import { wirePrintWindow } from "../../lib/printWindow.js";
 import { getTripwireEnvelope, formatTripwireEnvelope, canonicalizeLabName } from "../../lib/tripwire.js";
@@ -411,7 +410,7 @@ function renderMarkdown(rawText) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Message component
 // ─────────────────────────────────────────────────────────────────────────────
-function Message({ role, text, streaming, mode, ts, onOpenReport, isAdvancedUi }) {
+function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
   const isUser = role === "user";
   const isAdvanced = mode === "advanced";
   const tsLabel = ts ? new Date(ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : null;
@@ -452,15 +451,6 @@ function Message({ role, text, streaming, mode, ts, onOpenReport, isAdvancedUi }
                     {isAdvanced ? "Advanced" : "Standard"}
                   </span>
                   {tsLabel && <span style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{tsLabel}</span>}
-                  <div style={{ flex: 1 }} />
-                  {onOpenReport && (
-                    <button
-                      onClick={onOpenReport}
-                      title="Open this response as a full-screen report with Print and Save"
-                      className="no-print"
-                      style={{ background: "none", border: "none", color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono',monospace", cursor: "pointer", padding: 0, opacity: 0.8 }}
-                    >⤢ Open as report</button>
-                  )}
                 </div>
               )}
               {renderMarkdown(text)}
@@ -529,8 +519,8 @@ export default function AIAnalysis({ onNavChange }) {
   const textareaRef                   = useRef(null);
   const contextCounts                 = getContextCounts();
   const [summaryNote, setSummaryNote] = useState("");
-  // A-13: per-response report overlay — { title, content, mode, timestamp } | null.
-  const [analysisOverlay, setAnalysisOverlay] = useState(null);
+  // v1.54.0: whole-session report preview (the print document's HTML) | null.
+  const [previewHtml, setPreviewHtml] = useState(null);
   // UI-15: collapsible sidebar panels.
   const [quickPromptsOpen, setQuickPromptsOpen] = useState(true);
   const [dataUsedOpen, setDataUsedOpen]         = useState(true);
@@ -808,6 +798,18 @@ export default function AIAnalysis({ onNavChange }) {
     }
   };
 
+  // Preview Report (v1.54.0): the full-session print document, in-app,
+  // view-only — built by the SAME function Save & Print uses, so what you
+  // preview is byte-for-byte what prints. Does not save (it creates no
+  // artifact); printing remains behind Save & Print per DEC-C9.
+  const previewReport = () => {
+    const s = sessionRef.current;
+    if (!s || streaming || totalMessages(s) === 0) return;
+    let careTeam = [];
+    try { careTeam = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
+    setPreviewHtml(buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO, careTeam }));
+  };
+
   // Close: saved-and-current sessions close quietly; anything unsaved warns
   // first (DEC-C10) and discards on confirmation. Content-free sessions
   // just leave.
@@ -974,16 +976,23 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
       {/* First-run onboarding modal */}
       {showOnboarding && <AIModeOnboardingModal onConfirm={handleModeConfirm} />}
 
-      {/* A-13: per-response report overlay — modal, not window.open */}
-      {analysisOverlay && (
-        <AnalysisOverlay
-          title={analysisOverlay.title}
-          content={analysisOverlay.content}
-          mode={analysisOverlay.mode}
-          timestamp={analysisOverlay.timestamp}
-          savedNoteId={analysisOverlay.savedNoteId || null}
-          onClose={() => setAnalysisOverlay(null)}
-        />
+      {/* v1.54.0 (Greg): whole-session report preview — the EXACT document
+          Save & Print produces (same builder), shown in-app, view-only.
+          Printing still goes through Save & Print so every printed artifact
+          has a stored counterpart (DEC-C9). Zero scripts in the srcdoc. */}
+      {previewHtml && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9600, background: "rgba(0,0,0,.78)", display: "flex", flexDirection: "column" }}>
+          <div style={{ height: 48, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 20px", gap: 12, flexShrink: 0 }}>
+            <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 16, color: "#dde8f5", flex: 1 }}>Report Preview</div>
+            <span style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>exactly as Save &amp; Print produces it</span>
+            <button onClick={() => setPreviewHtml(null)}
+              style={{ background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#98afc4", padding: "6px 14px", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+              Close preview
+            </button>
+          </div>
+          <iframe title="Session report preview" srcDoc={previewHtml}
+            style={{ flex: 1, width: "100%", border: "none", background: "#ffffff" }} />
+        </div>
       )}
 
       {/* Close-without-saving warning (DEC-C10; copy PROVISIONAL) */}
@@ -1287,15 +1296,15 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                         {isNewTurn && (
                           <hr style={{ border:"none", borderTop:"1px solid #1a2840", margin:"8px 0 20px" }} />
                         )}
+                        {/* v1.54.0 (Greg): the per-response report opener is
+                            retired — the whole-session Preview Report in the
+                            end-actions bar replaces it. */}
                         <Message
                           role={m.role} text={m.text}
                           streaming={false}
                           mode={m.mode || currentMode}
                           ts={m.ts}
                           isAdvancedUi={isAdvanced}
-                          onOpenReport={m.role === "assistant" && m.text
-                            ? () => setAnalysisOverlay({ title: "AI Analysis", content: m.text, mode: m.mode || currentMode, timestamp: m.ts || new Date().toISOString() })
-                            : null}
                         />
                       </div>
                     );
@@ -1350,6 +1359,11 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               title="Save to Notes, then print — every printout has a stored counterpart"
               style={{ background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", color: "#7eb8d8" }}>
               Save &amp; Print
+            </button>
+            <button className="end-btn" onClick={previewReport} disabled={!canAct}
+              title="See the full session report exactly as it prints — the whole conversation, view-only"
+              style={{ background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.3)", color: "#a78bfa" }}>
+              Preview Report
             </button>
             {/* Founder review 2026-08-18: Close sits WITH its siblings, not
                 across the screen — the three end-actions read as one group. */}
