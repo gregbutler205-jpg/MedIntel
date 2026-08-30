@@ -208,6 +208,46 @@ function ApptModal({ appt, onSave, onClose }) {
     try { return JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { return []; }
   })();
 
+  // Quick-add a provider to the care team without leaving the appointment.
+  // The overlay renders above this modal, so the in-progress form is untouched;
+  // saving writes mi_care_team (fresh read — never a stale base) and drops the
+  // new member straight into the provider field.
+  const [quickAdd, setQuickAdd] = useState(null); // null | {name, role, specialty, facility, phone}
+  const setQA = (k, v) => setQuickAdd(q => ({ ...q, [k]: v }));
+  const openQuickAdd = () => setQuickAdd({
+    name: form.provider || "", role: "", specialty: form.specialty || "",
+    facility: form.facility || "", phone: "",
+  });
+  const saveQuickAdd = () => {
+    const name = (quickAdd.name || "").trim();
+    if (!name) return;
+    let fresh = [];
+    try { fresh = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
+    const member = {
+      id: Date.now(), name,
+      role: (quickAdd.role || "").trim(),
+      specialty: quickAdd.specialty || "",
+      facility: (quickAdd.facility || "").trim(),
+      address: "", phone: (quickAdd.phone || "").trim(), phone24: "", email: "",
+      pcp: false, color: "#4f8ef7",
+    };
+    try { localStorage.setItem("mi_care_team", JSON.stringify([...fresh, member])); } catch {}
+    // Emergency-card selection defaults to all when unset; only an explicit
+    // list needs the new name appended (mirrors Care Team's handleSaveDoc).
+    try {
+      const sel = JSON.parse(localStorage.getItem("mi_care_team_selected") || "null");
+      if (Array.isArray(sel)) localStorage.setItem("mi_care_team_selected", JSON.stringify([...new Set([...sel, name])]));
+    } catch {}
+    setForm(f => ({
+      ...f,
+      provider:  name,
+      specialty: f.specialty || member.specialty,
+      phone:     f.phone     || formatPhone(member.phone),
+      facility:  f.facility  || member.facility,
+    }));
+    setQuickAdd(null);
+  };
+
   // When the provider field loses focus, try to auto-fill phone/address from care team.
   // Uses scored matching so "Dr. Clay Thames" won't accidentally match "Dr. Stone Thames"
   // just because they share a last name.
@@ -246,7 +286,13 @@ function ApptModal({ appt, onSave, onClose }) {
           </div>
           {/* Provider */}
           <div>
-            <label style={lbl}>Provider / Doctor</label>
+            <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between" }}>
+              <label style={lbl}>Provider / Doctor</label>
+              <button
+                onClick={openQuickAdd}
+                style={{ background:"none", border:"none", color:"#4f8ef7", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer", padding:0, marginBottom:5 }}
+              >+ Add to Care Team</button>
+            </div>
             <input style={inp} placeholder="e.g. Dr. Ari Cohen" value={form.provider} onChange={e=>set("provider",e.target.value)} onBlur={handleProviderBlur} />
           </div>
           {/* Specialty */}
@@ -341,6 +387,51 @@ function ApptModal({ appt, onSave, onClose }) {
             Cancel
           </button>
         </div>
+
+        {/* Quick-add provider overlay — the appointment form stays mounted beneath */}
+        {quickAdd && (
+          <div role="dialog" aria-modal="true" aria-label="Add care team member" style={{ position:"fixed", inset:0, zIndex:1002, background:"rgba(8,12,20,.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+            <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:14, width:"100%", maxWidth:440, padding:24 }}>
+              <h3 style={{ fontFamily:"'DM Serif Display',serif", fontSize:18, color:"#dde8f5", fontWeight:400, marginBottom:6 }}>Add to Care Team</h3>
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:16 }}>
+                Saves this provider to your Care Team and returns you to the appointment. Address, email, and other details can be added later on the Care Team tab.
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div style={{ gridColumn:"1/-1" }}>
+                  <label style={lbl}>Name *</label>
+                  <input style={inp} placeholder="e.g. Dr. Ari Cohen" value={quickAdd.name} onChange={e=>setQA("name",e.target.value)} autoFocus />
+                </div>
+                <div>
+                  <label style={lbl}>Role</label>
+                  <input style={inp} placeholder="e.g. Hepatologist" value={quickAdd.role} onChange={e=>setQA("role",e.target.value)} />
+                </div>
+                <div>
+                  <label style={lbl}>Specialty</label>
+                  <select style={inp} value={quickAdd.specialty} onChange={e=>setQA("specialty",e.target.value)}>
+                    <option value="">Select…</option>
+                    {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={lbl}>Facility</label>
+                  <input style={inp} placeholder="e.g. Ochsner Medical Center" value={quickAdd.facility} onChange={e=>setQA("facility",e.target.value)} />
+                </div>
+                <div>
+                  <label style={lbl}>Phone</label>
+                  <input style={inp} placeholder="(601) 555-0000" value={quickAdd.phone} onChange={e=>setQA("phone",formatPhone(e.target.value))} />
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:18 }}>
+                <button onClick={() => setQuickAdd(null)} style={{ padding:"8px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
+                <button
+                  onClick={saveQuickAdd}
+                  disabled={!(quickAdd.name || "").trim()}
+                  style={{ padding:"8px 18px", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.45)", borderRadius:8, color:"#7eb8d8", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer", opacity:(quickAdd.name || "").trim() ? 1 : .5 }}
+                >Save &amp; use in appointment</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* UI-29: discard prompt for a dirty form */}
         {confirmDiscard && (
@@ -521,7 +612,12 @@ function AttachModal({ appt, onSave, onClose }) {
   const toggle = item => setSel(s => { const n = new Set(s); const k = attKey(item); n.has(k) ? n.delete(k) : n.add(k); return n; });
 
   const suggested = items.filter(i => attSuggested(i, appt));
-  const others    = items.filter(i => !attSuggested(i, appt));
+  // v1.56.0 (Greg): after the suggestions, everything else pages ten at a
+  // time, newest first, behind a Load More — the Save button stays reachable
+  // instead of sitting under the entire library.
+  const others = items.filter(i => !attSuggested(i, appt))
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  const [othersShown, setOthersShown] = useState(10);
 
   const Row = ({ item }) => {
     const m = ATT_META[item.type];
@@ -554,8 +650,16 @@ function AttachModal({ appt, onSave, onClose }) {
           {suggested.map(i => <Row key={attKey(i)} item={i} />)}
         </>}
         {others.length > 0 && <>
-          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"14px 0 8px" }}>All records</div>
-          {others.map(i => <Row key={attKey(i)} item={i} />)}
+          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"14px 0 8px" }}>
+            All records — newest first{others.length > othersShown ? ` (showing ${Math.min(othersShown, others.length)} of ${others.length})` : ""}
+          </div>
+          {others.slice(0, othersShown).map(i => <Row key={attKey(i)} item={i} />)}
+          {others.length > othersShown && (
+            <button onClick={() => setOthersShown(n => n + 10)}
+              style={{ width:"100%", padding:"8px 0", background:"transparent", border:"1px dashed #1a2f4a", borderRadius:8, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", marginBottom:6 }}>
+              Load 10 more ({others.length - othersShown} remaining)
+            </button>
+          )}
         </>}
 
         <div style={{ display:"flex", gap:10, marginTop:18 }}>
@@ -1366,9 +1470,14 @@ export default function AppointmentsTab({ onNavChange }) {
     if (p?.text) requestReport("consultationPrep", () => printConsultationPrep(appt, p.text));
   };
 
+  // v1.56.0 (Greg): Completed and All read newest-first (what happened most
+  // recently on top); Upcoming/Suggested keep soonest-first (what's next on top).
+  const newestFirst = filter === "completed" || filter === "all";
   const filtered = appts
     .filter(a => filter === "all" || a.status === filter)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    .sort((a, b) => newestFirst
+      ? new Date(b.date) - new Date(a.date)
+      : new Date(a.date) - new Date(b.date));
 
   const upcomingCount   = appts.filter(a => a.status === "upcoming").length;
   const completedCount  = appts.filter(a => a.status === "completed").length;

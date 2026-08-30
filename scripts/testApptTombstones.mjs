@@ -129,5 +129,46 @@ const EV_SEP7 = { id: "gcal-sep7", summary: "Labs", start: { date: "2026-09-07" 
   ok(list[list.length - 1].gcalId === "g349" && list[0].gcalId === "g50", "cap keeps the newest entries");
 }
 
+// ── v1.56.0: Appointments batch (founder-directed) ───────────────────────────
+// Greg: Completed and All lists read newest-first; the attach picker pages all
+// records ten at a time (newest first) with a Load More button; a provider can
+// be added to the care team without leaving the in-progress appointment.
+// Structural pins on Tab14 — anchored on code, not comments.
+{
+  const { readFileSync } = await import("node:fs");
+  const { fileURLToPath } = await import("node:url");
+  const { dirname, join } = await import("node:path");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const tab14 = readFileSync(join(here, "../src/components/tabs/Tab14.jsx"), "utf8");
+
+  // Item 4 — list direction: completed/all flip to reverse-chronological.
+  ok(tab14.includes(`filter === "completed" || filter === "all"`),
+    "Completed and All lists are the newest-first branches");
+  const sortIdx = tab14.indexOf("? new Date(b.date) - new Date(a.date)");
+  ok(sortIdx > 0 && tab14.indexOf(": new Date(a.date) - new Date(b.date)", sortIdx) > sortIdx,
+    "newest-first sorts b-a; upcoming keeps a-b chronological");
+
+  // Item 2 — attach picker pagination: ten at a time, newest first, Load More.
+  ok(tab14.includes("useState(10)") && tab14.includes("others.slice(0, othersShown)"),
+    "attach picker renders the first ten of the full list");
+  ok(tab14.includes("setOthersShown(n => n + 10)") || tab14.includes("othersShown + 10"),
+    "Load More advances the window by ten");
+  ok(tab14.includes("Load 10 more"), "the Load More button exists");
+
+  // Item 3 — quick-add provider without leaving the appointment.
+  ok(tab14.includes("const saveQuickAdd = ") && tab14.includes('localStorage.getItem("mi_care_team")'),
+    "quick-add reads the care team fresh at save time (never a stale base)");
+  const qaSave = tab14.slice(tab14.indexOf("const saveQuickAdd = "), tab14.indexOf("const handleProviderBlur"));
+  ok(qaSave.includes('localStorage.setItem("mi_care_team"') && qaSave.includes("[...fresh, member]"),
+    "quick-add appends the new member to a fresh read of mi_care_team");
+  ok(qaSave.includes("provider:  name") || qaSave.includes("provider: name"),
+    "saving drops the new member straight into the appointment's provider field");
+  ok(qaSave.includes("setQuickAdd(null)"),
+    "saving closes the overlay and returns to the in-progress appointment");
+  ok(qaSave.includes('mi_care_team_selected'),
+    "an explicit emergency-card selection list gains the new name (mirrors Care Team)");
+  ok(tab14.includes("+ Add to Care Team"), "the affordance sits beside the provider field");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (appt-tombstones)`);
 process.exit(fail ? 1 : 0);
