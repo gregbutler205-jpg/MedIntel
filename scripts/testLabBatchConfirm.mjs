@@ -325,5 +325,23 @@ const mkDoc = () => createArchiveDoc({
      "one 2023 PSA copy remains after healing — no tug-of-war");
 }
 
+// ── 14. v1.56.1: the Review shield does not flag unit-less labs ──────────────
+// Greg: "Don't flag labs that have no unit provided. Many of them don't have
+// units and that's fine." Ratios, counts, and qualitative results legitimately
+// carry no unit; the old warning nagged on every imported panel.
+{
+  localStorage.clear();
+  const { checkLabs } = await import("../src/rie/consistencyChecks.js");
+  localStorage.setItem("mi_labs", JSON.stringify([
+    { id: "l1", name: "INR",       value: "1.1", unit: "",      date: "2026-08-01", refRange: "" },
+    { id: "l2", name: "Potassium", value: "4.2", unit: "mEq/L", date: "2026-08-01", refRange: "3.5-5.0" },
+  ]));
+  const findings = checkLabs();
+  ok(!findings.some(f => String(f.fieldPath || "").endsWith(".unit")),
+     "a lab with no unit produces no unit finding");
+  ok(findings.some(f => String(f.fieldPath || "").endsWith(".refRange")),
+     "other lab checks (missing reference range) still run");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (lab-batch-confirm)`);
 assert.equal(fail, 0);

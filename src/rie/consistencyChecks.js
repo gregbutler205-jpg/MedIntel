@@ -2,9 +2,10 @@
 // Cross-field, cross-module rules. Each check is a named function returning a
 // findings array. Run on full scan (manual / pre-report), not per keystroke.
 //
-// Severity note: a few severities are tuned down from the spec (e.g. missing lab
-// unit → Warning rather than Critical) because imported labs commonly lack those
-// fields and Phase 1 surfaces everything in one queue. Easy to retune later.
+// Severity note: a few severities are tuned down from the spec because imported
+// labs commonly lack optional fields and Phase 1 surfaces everything in one
+// queue. A missing lab unit is not flagged at all (Greg 2026-08-30) — many
+// results legitimately have none. Easy to retune later.
 
 import { mkFinding } from "./findings.js";
 import { genericOf, similarity, ALLERGY_CONFLICTS } from "./medDictionary.js";
@@ -56,7 +57,8 @@ export function checkLabs() {
   const nameByKey = {};    // labKey → set of display names
   labs.forEach((l, i) => {
     const nm = l.name || `Lab ${i + 1}`;
-    if (!l.unit && l.value != null && l.value !== "") out.push(mkFinding({ severity: "warning", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].unit`, original: nm, message: `${nm}: ${l.value} — no unit recorded` }));
+    // A missing unit is NOT flagged: imported labs routinely omit units
+    // (ratios, counts, qualitative results) and that is fine (Greg 2026-08-30).
     if (!l.refRange) out.push(mkFinding({ severity: "info", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].refRange`, original: nm, message: `${nm} — no reference range on file` }));
     const d = parseDate(l.date);
     if (d && d > today) out.push(mkFinding({ severity: "critical", checkType: "consistency", module: "labs", fieldPath: `labs[${i}].date`, original: `${nm} ${l.date}`, message: `${nm} has a draw date in the future (${l.date})` }));

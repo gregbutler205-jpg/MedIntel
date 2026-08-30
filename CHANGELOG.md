@@ -12,6 +12,29 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.56.1 — 2026-08-30
+
+### Added
+- **Calendar sync tells you where the appointments went.** Synced events
+  wait in the Suggested tab for review — they never go straight onto the
+  schedule — but the inline banner saying so was easy to miss. Any sync
+  (manual or the once-a-day auto-sync) that imports appointments now pops
+  a notice: how many arrived, that they're in Suggested, and that each one
+  needs Confirm or Dismiss.
+
+### Fixed
+- **The Review shield no longer flags labs without a unit.** Many results
+  legitimately have none (ratios, counts, qualitative results), so the
+  "no unit recorded" warning nagged on every imported panel. Other lab
+  checks (future dates, duplicates, missing reference ranges, implausible
+  values) are unchanged.
+
+### Tests
+- Sync-notice wiring pinned in `test:appt-tombstones` (30); the unit rule
+  pinned behaviorally in `test:lab-batch` (89). 20 suites / 836 cases.
+
+---
+
 ## v1.56.0 — 2026-08-30
 
 ### Added
