@@ -18,9 +18,9 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 - **Preview Report on AI sessions.** A new button between Save & Print and
   Close shows the full session report in-app — the entire conversation with
   every part, stamp, and divider, built by the exact same code the print
-  uses, so what you preview is what prints. View-only: printing still goes
-  through Save & Print, keeping the every-printout-has-a-stored-counterpart
-  rule intact.
+  uses, so what you preview is what prints. A Save & Print button inside
+  the preview runs the standard flow (saves to Notes first, then prints),
+  keeping the every-printout-has-a-stored-counterpart rule intact.
 
 ### Removed
 - **The per-response "Open as report" link** on individual AI answers — it

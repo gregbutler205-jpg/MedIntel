@@ -253,7 +253,10 @@ const V = await import("../src/lib/numericValidator.js");
   const previewCall = tab11.indexOf("setPreviewHtml(buildSessionPrintHtml(");
   ok(printCall > 0 && previewCall > 0,
      "preview and print use the SAME document builder — what you preview is what prints");
-  ok(tab11.includes("srcDoc={previewHtml}"), "preview renders the document in-app (view-only iframe)");
+  ok(tab11.includes("srcDoc={previewHtml}"), "preview renders the document in-app (iframe, zero scripts)");
+  const previewModal = tab11.slice(tab11.indexOf("Report Preview"), tab11.indexOf("srcDoc={previewHtml}"));
+  ok(previewModal.includes("saveAndPrint()"),
+     "the preview's print control runs the STANDARD save-then-print flow (DEC-C9 kept)");
 }
 
 console.log(`\n${pass} passed, ${fail} failed (ai-session-shell)`);

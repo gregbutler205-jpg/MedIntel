@@ -977,14 +977,21 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
       {showOnboarding && <AIModeOnboardingModal onConfirm={handleModeConfirm} />}
 
       {/* v1.54.0 (Greg): whole-session report preview — the EXACT document
-          Save & Print produces (same builder), shown in-app, view-only.
-          Printing still goes through Save & Print so every printed artifact
-          has a stored counterpart (DEC-C9). Zero scripts in the srcdoc. */}
+          Save & Print produces (same builder), shown in-app. Its Save & Print
+          button runs the standard flow (save to Notes first, then print), so
+          every printed artifact keeps a stored counterpart (DEC-C9). Zero
+          scripts in the srcdoc. */}
       {previewHtml && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9600, background: "rgba(0,0,0,.78)", display: "flex", flexDirection: "column" }}>
           <div style={{ height: 48, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 20px", gap: 12, flexShrink: 0 }}>
             <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 16, color: "#dde8f5", flex: 1 }}>Report Preview</div>
             <span style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>exactly as Save &amp; Print produces it</span>
+            {/* v1.54.0 (Greg): print straight from the preview — same DEC-C9
+                flow as the main button: saves to Notes FIRST, then prints. */}
+            <button onClick={() => { setPreviewHtml(null); saveAndPrint(); }}
+              style={{ background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#7eb8d8", padding: "6px 14px", fontSize: 12, fontWeight: 600, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+              Save &amp; Print
+            </button>
             <button onClick={() => setPreviewHtml(null)}
               style={{ background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#98afc4", padding: "6px 14px", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
               Close preview
