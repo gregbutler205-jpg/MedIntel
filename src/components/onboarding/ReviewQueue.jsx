@@ -1,4 +1,5 @@
 // ── Phase 4: Review & Confirm — staging queue UI (ONBOARDING_SPEC v1.1 §3.4, §5) ──
+import { formatDateUS } from "../../lib/displaySafe.js";
 // Category summary → per-category review in the fixed high-consequence-first
 // order. The §5.2 matrix is enforced on two layers: structurally, the
 // bulk-accept control renders only when CONFIRMATION_MATRIX[cat].bulk is true;
@@ -42,9 +43,9 @@ function fieldSummary(item) {
     case "condition": return `${f.name || "?"}${f.onset_date ? ` · since ${f.onset_date}` : ""}`;
     case "care_team": return `${f.name || "?"}${f.credential ? `, ${f.credential}` : ""}${f.specialty ? ` — ${f.specialty}` : ""}`;
     case "lab": return `${f.test || "?"}: ${f.value ?? "?"}${f.unit ? ` ${f.unit}` : ""}${f.ref_low || f.ref_high ? ` (ref ${f.ref_low || "—"}–${f.ref_high || "—"})` : ""}${f.collected_date ? ` · ${f.collected_date}` : ""}`;
-    case "procedure": return `${f.name || "?"}${f.date ? ` · ${f.date}` : ""}`;
-    case "immunization": return `${f.name || "?"}${f.date ? ` · ${f.date}` : ""}`;
-    case "vital": return `${f.type || "?"}: ${f.value ?? "?"}${f.unit ? ` ${f.unit}` : ""}${f.date ? ` · ${f.date}` : ""}`;
+    case "procedure": return `${f.name || "?"}${f.date ? ` · ${formatDateUS(f.date)}` : ""}`;
+    case "immunization": return `${f.name || "?"}${f.date ? ` · ${formatDateUS(f.date)}` : ""}`;
+    case "vital": return `${f.type || "?"}: ${f.value ?? "?"}${f.unit ? ` ${f.unit}` : ""}${f.date ? ` · ${formatDateUS(f.date)}` : ""}`;
     default: return JSON.stringify(f);
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { PrintLabel } from "../icons.jsx";
 import { getDiagnostics, setDiagnostics as persistDiagnostics, getConditions } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
@@ -18,9 +19,7 @@ const BLANK = {
 };
 function genId() { return Math.random().toString(36).slice(2); }
 function fmtDate(iso) {
-  if (!iso) return "—";
-  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + "T12:00:00") : new Date(iso);
-  return isNaN(d) ? String(iso) : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return formatDateUS(iso, "—"); // v1.56.2: date fields read mm/dd/yyyy
 }
 
 // ── Modal ──────────────────────────────────────────────────────────────────────

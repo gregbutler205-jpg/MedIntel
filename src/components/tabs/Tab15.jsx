@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
@@ -29,8 +30,7 @@ function save(list) {
   localStorage.setItem("mi_conditions_summary", JSON.stringify(summary));
 }
 function fmtDate(iso) {
-  if (!iso) return "—";
-  return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return formatDateUS(iso, "—"); // v1.56.2: date fields read mm/dd/yyyy
 }
 
 // ── ICD-10 Lookup ──────────────────────────────────────────────────────────────

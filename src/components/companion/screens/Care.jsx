@@ -1,4 +1,5 @@
 // ── Care — upcoming appointments + the door into Doctor Visit Capture. ─────────
+import { formatDateUS } from "../../../lib/displaySafe.js";
 // The full searchable encounter history lives on the web; this is prep + capture.
 import { C, mono, serif, Card, SL, Pill, Empty } from "../companionUI.jsx";
 import { upcomingAppointments, relDate, fmtShort, daysUntil } from "../../../lib/companionData.js";
@@ -52,7 +53,7 @@ export default function Care({ startVisit, openVisit }) {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{v.apptTitle}</div>
-                  <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{v.date}{v.provider ? ` · ${v.provider}` : ""}</div>
+                  <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{formatDateUS(v.date)}{v.provider ? ` · ${v.provider}` : ""}</div>
                 </div>
                 <Pill color={v.status === "summarized" ? C.green : C.amber}>{v.status === "summarized" ? "summary ready" : v.status}</Pill>
               </div>

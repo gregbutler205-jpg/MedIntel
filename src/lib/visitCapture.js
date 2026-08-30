@@ -1,4 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
+import { formatDateUS } from "./displaySafe.js";
 // visitCapture.js — Doctor Visit Capture model & persistence.
 //
 // Visit RECORDS live in mi_visits (localStorage → synced to Drive). Audio BLOBS
@@ -173,9 +174,9 @@ export function confirmMedChange(visitId, itemId) {
   if (action === "stop" && idx >= 0) {
     list[idx] = { ...list[idx], status: "inactive" };
   } else if (action === "change" && idx >= 0) {
-    list[idx] = { ...list[idx], notes: [list[idx].notes, `Visit ${v.date}: ${detail}`].filter(Boolean).join(" · ") };
+    list[idx] = { ...list[idx], notes: [list[idx].notes, `Visit ${formatDateUS(v.date)}: ${detail}`].filter(Boolean).join(" · ") };
   } else if (action === "start" && idx < 0) {
-    list.push({ id: Date.now(), name, dose: detail || "", frequency: "", schedule: "", category: "From visit", status: "ok", refillDate: "", prescriber: v.provider, notes: `Added from visit ${v.date}`, flag: false });
+    list.push({ id: Date.now(), name, dose: detail || "", frequency: "", schedule: "", category: "From visit", status: "ok", refillDate: "", prescriber: v.provider, notes: `Added from visit ${formatDateUS(v.date)}`, flag: false });
   }
   wls("mi_meds_full", list);
   v.actionItems = v.actionItems.map(it => it.id === itemId ? { ...it, confirmed: true, done: true } : it);

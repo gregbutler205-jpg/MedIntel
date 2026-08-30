@@ -15,6 +15,7 @@ import { PrintLabel } from "../icons.jsx";
 import { getLastImportLabel } from "../../store.js";
 import { reconcilePromotedRows, countExactDuplicateLabs, removeDuplicateLabRows } from "../../lib/labBatchConfirm.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -358,7 +359,7 @@ function printLabReport(labs, logoUrl) {
         <td style="text-align:center;font-weight:600">${t.value||"—"}</td>
         <td style="text-align:center">${t.unit||"—"}</td>
         <td style="text-align:center">${rangeCell}</td>
-        <td style="text-align:center">${t.date||"—"}</td>
+        <td style="text-align:center">${formatDateUS(t.date, "—")}</td>
         <td style="text-align:center">${status}</td>
       </tr>`;
     }).join("");
@@ -1127,7 +1128,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 </div>
                 {urgentTripwireFlags.map(f => (
                   <div key={`${f.canonicalId}|${f.date}|${f.value}`} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, fontSize: 10.5, color: "#f0c4c4", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
-                    <span style={{ flex: 1 }}>{f.analyte}: {f.value}{f.unit ? ` ${f.unit}` : ""} ({f.date || "unknown date"}) — {f.guidance}</span>
+                    <span style={{ flex: 1 }}>{f.analyte}: {f.value}{f.unit ? ` ${f.unit}` : ""} ({formatDateUS(f.date, "unknown date")}) — {f.guidance}</span>
                     <button onClick={() => dismissTripwireFlag(f)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(239,68,68,.4)", borderRadius: 5, color: "#ef4444", fontSize: 9, fontFamily: "'Sora',sans-serif", padding: "2px 6px", cursor: "pointer" }}>Dismiss</button>
                   </div>
                 ))}
@@ -1312,7 +1313,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                                   {oor === true && <FlaggedBadge />}
                                 </div>
                                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>
-                                  {lab.date || "—"}{histCount > 1 ? ` · ${histCount} readings` : ""}
+                                  {formatDateUS(lab.date, "—")}{histCount > 1 ? ` · ${histCount} readings` : ""}
                                 </div>
                               </div>
                               <div style={{ fontSize: 12, fontWeight: 700, color: oor ? "#f59e0b" : "#10b981", flexShrink: 0, textAlign: "right" }}>
@@ -1387,7 +1388,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       </div>
                       <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
                         {selectedImportedLab.category}{selectedImportedLab.refRange ? ` · Normal range: ${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : ""}
-                        {selectedImportedLab.date ? ` · ${selectedImportedLab.date}` : ""}
+                        {selectedImportedLab.date ? ` · ${formatDateUS(selectedImportedLab.date)}` : ""}
                         {selectedImportedLab.facility ? ` · ${selectedImportedLab.facility}` : ""}
                       </div>
                     </div>

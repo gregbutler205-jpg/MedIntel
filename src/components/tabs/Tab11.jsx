@@ -22,6 +22,7 @@ import {
 } from "../../lib/aiSessions.js";
 import { saveSessionTranscriptToNotes } from "../../lib/analysisExport.js";
 import { buildSessionPrintHtml } from "../../lib/printSession.js";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { DAILY_QUESTION_LIMIT, dailyLimitReached, questionsRemainingToday, recordQuestionSent } from "../../lib/dailyQuestionLimit.js";
 
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
@@ -1170,7 +1171,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                     <span style={{ fontSize: 10, color: "#a78bfa", flexShrink: 0, marginTop: 1 }}>▣</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 10, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
-                      <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {d.addedDate}</div>
+                      <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {formatDateUS(d.addedDate)}</div>
                       <button
                         onClick={() => analyzeDoc(d)}
                         disabled={streaming}

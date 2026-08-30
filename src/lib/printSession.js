@@ -16,6 +16,7 @@ import { scanForProhibitedDirectives } from "./aiOutputFilter.js";
 import { segmentTransition, SESSION_COPY, CORPUS_VERSION } from "./aiSessions.js";
 import { consolidateAcrossTurns, allSessionMessages } from "./aiSessionReport.js";
 import { ageFromDob } from "../store.js";
+import { formatDateUS } from "./displaySafe.js";
 
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -56,7 +57,7 @@ export function buildSessionPrintHtml(session, { logoUrl } = {}) {
   try { profile = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}") || {}; } catch {}
   const age = ageFromDob(profile.dob) ?? profile.age ?? "";
   const identityBits = [
-    profile.dob ? `DOB ${esc(profile.dob)}` : "",
+    profile.dob ? `DOB ${esc(formatDateUS(profile.dob))}` : "",
     age !== "" ? `Age ${esc(age)}` : "",
   ].filter(Boolean).join(" · ");
 

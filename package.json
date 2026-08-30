@@ -1,12 +1,12 @@
 {
   "name": "intellitrax",
   "private": true,
-  "version": "1.56.1",
+  "version": "1.56.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "prebuild": "npm run test:all",
-    "test:all": "npm run test:thresholds && npm run test:onboarding && npm run test:advisory && npm run test:vault-restore && npm run test:emergency-card && npm run test:ai-filter && npm run test:question-rules && npm run test:ai-session && npm run test:appt-tombstones && npm run test:record-tombstones && npm run test:record-query && npm run test:daily-limit && npm run test:demo-seeder && npm run test:dashboard-sync && npm run test:prep-marks && npm run test:drive-reports && npm run test:profile-sync && npm run test:print-csp && npm run test:lab-batch && npm run test:ai-session-shell",
+    "test:all": "npm run test:thresholds && npm run test:onboarding && npm run test:advisory && npm run test:vault-restore && npm run test:emergency-card && npm run test:ai-filter && npm run test:question-rules && npm run test:ai-session && npm run test:appt-tombstones && npm run test:record-tombstones && npm run test:record-query && npm run test:daily-limit && npm run test:demo-seeder && npm run test:dashboard-sync && npm run test:prep-marks && npm run test:drive-reports && npm run test:profile-sync && npm run test:print-csp && npm run test:lab-batch && npm run test:ai-session-shell && npm run test:field-formats",
     "build": "node scripts/build.mjs",
     "build:demo": "node scripts/build-demo.mjs",
     "preview": "vite preview",
@@ -29,7 +29,8 @@
     "test:profile-sync": "node scripts/testProfileSync.mjs",
     "test:print-csp": "node scripts/testPrintCsp.mjs",
     "test:lab-batch": "node scripts/testLabBatchConfirm.mjs",
-    "test:ai-session-shell": "node scripts/testAiSessionShell.mjs"
+    "test:ai-session-shell": "node scripts/testAiSessionShell.mjs",
+    "test:field-formats": "node scripts/testFieldFormats.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",

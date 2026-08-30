@@ -13,7 +13,7 @@ import AdvisoryModal from './components/advisory/AdvisoryModal.jsx';
 import EmergencyInfoButton from './components/advisory/EmergencyInfoButton.jsx';
 import { printEmergency } from './lib/printEmergency.js';
 import { FlaskIcon, PillIcon, CalendarIcon, ThermometerIcon, HeartIcon, DownloadIcon, RefreshIcon, AlertTriangleIcon, ClockIcon, SaveIcon } from './components/icons.jsx';
-import { daysAgoLabel } from './lib/displaySafe.js';
+import { daysAgoLabel, displayPhone, formatDateUS } from './lib/displaySafe.js';
 import * as secureStorage from './lib/secureStorage.js';
 import RIEWidget from './rie/ReviewQueuePanel.jsx';
 import PreflightHost from './rie/PreflightHost.jsx';
@@ -169,7 +169,7 @@ function DataFreshnessCard() {
       }).filter(d => !isNaN(d));
       if (!dates.length) return null;
       const latest = new Date(Math.max(...dates));
-      return latest.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      return formatDateUS(latest);
     } catch { return null; }
   }
 
@@ -263,7 +263,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
         return new Date(raw);
       }).filter(d => !isNaN(d));
       if (!dates.length) return null;
-      return new Date(Math.max(...dates)).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+      return formatDateUS(new Date(Math.max(...dates)));
     } catch { return null; }
   }
 
@@ -364,7 +364,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
                 <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Backup</span>
                 <span style={{ fontSize: 11, color: lastWeeklyBackup ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                   {lastWeeklyBackup
-                    ? new Date(lastWeeklyBackup).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                    ? formatDateUS(lastWeeklyBackup)
                     : "—"}
                 </span>
               </div>
@@ -426,7 +426,7 @@ function BPCard({ readings }) {
       <div style={{ width:28, height:3, background:"#4f8ef7", borderRadius:2, marginBottom:14, boxShadow:"0 0 10px #4f8ef760" }} />
       <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6 }}>Blood Pressure</div>
       <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:6 }}>{r.bp_s ?? "--"}/{r.bp_d ?? "--"}</div>
-      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Recorded {r.date ?? "--"}</div>
+      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Recorded {formatDateUS(r.date, "--")}</div>
     </div>
   );
 }
@@ -1279,7 +1279,7 @@ function AppShell() {
                                     </div>
                                     {(d.role || d.specialty) && <div style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.role}{d.specialty ? ` · ${d.specialty}` : ""}</div>}
                                     {d.facility && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.facility}</div>}
-                                    {d.phone && <div style={{ fontSize:11, color:"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{d.phone}</div>}
+                                    {d.phone && <div style={{ fontSize:11, color:"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{displayPhone(d.phone)}</div>}
                                   </div>
                                 </div>
                               );

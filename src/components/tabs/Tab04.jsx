@@ -3,6 +3,7 @@ import AppSidebar from "../AppSidebar.jsx";
 import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds, getLastImportLabel } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { wirePrintWindow } from "../../lib/printWindow.js";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
@@ -36,7 +37,7 @@ function printRefillReport(meds) {
   const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const fmtD = str => {
     if (!str) return "—";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return formatDateUS(str);
     return str;
   };
 
@@ -153,7 +154,7 @@ function toIsoDate(str) {
 function fmtRefillDate(str) {
   if (!str) return "—";
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    return new Date(str + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return formatDateUS(str);
   }
   return str;
 }

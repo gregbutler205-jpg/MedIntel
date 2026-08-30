@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PrintLabel } from "../icons.jsx";
-import { daysAgoLabel } from "../../lib/displaySafe.js";
+import { daysAgoLabel, formatDateUS } from "../../lib/displaySafe.js";
 import ConsentText, { printConsent } from "../PrintableConsent";
 import { CONSENT_VERSION } from "../../config/urgencyThresholds";
 import { loadDemoData } from "../../demoData.js";
@@ -862,7 +862,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #0d1a28" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: 12, color: "#7eb8d8" }}>{b.type}</div>
-              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{b.date}</div>
+              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(b.date)}</div>
               <div style={{ fontSize: 9, color: "#10b981", fontFamily: "'DM Mono', monospace", minWidth: 44, textAlign: "right" }}>{b.size}</div>
               <span
                 onClick={() => { setRestoreId(b.id); setModal("restore"); }}

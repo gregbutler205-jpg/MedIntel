@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { PrintLabel } from "../icons.jsx";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { sanitizeReportUrl } from "../../lib/driveReports.js";
+import { formatPhone, displayPhone, formatDateUS } from "../../lib/displaySafe.js";
 const LOGO_WHITE = import.meta.env.BASE_URL + "logo.png";
 import {
   getProfilePersonal, setProfilePersonal,
@@ -86,6 +87,9 @@ function CardHeader({ title, editing, onEdit, onSave, onCancel, onAdd }) {
 // ── Simple field row ───────────────────────────────────────────────────────────
 function FieldRow({ label, value, editing, field, vals, setVals, options, placeholder }) {
   const current = vals[field] ?? value ?? "";
+  // v1.56.2 field formats: dates read mm/dd/yyyy, phones (xxx)xxx-xxxx.
+  // Display-only — the stored value (ISO dates) is untouched.
+  const shown = field === "dob" ? formatDateUS(value) : field === "phone" ? displayPhone(value) : value;
   return (
     <div style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
       <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
@@ -97,21 +101,14 @@ function FieldRow({ label, value, editing, field, vals, setVals, options, placeh
               {/* keep a stored value selectable even if it isn't in the list */}
               {current && !options.includes(current) && <option value={current}>{current}</option>}
             </select>
-          : <input value={current} onChange={e => setVals(p => ({ ...p, [field]: e.target.value }))} style={inp} placeholder={placeholder || ""} />
-        : <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>{value || <span style={{ color:T.ghost, fontStyle:"italic" }}>—</span>}</span>
+          : <input value={current} onChange={e => setVals(p => ({ ...p, [field]: field === "phone" ? formatPhone(e.target.value) : e.target.value }))} style={inp} placeholder={placeholder || ""} />
+        : <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>{shown || <span style={{ color:T.ghost, fontStyle:"italic" }}>—</span>}</span>
       }
     </div>
   );
 }
 
-// ── Phone formatter ───────────────────────────────────────────────────────────
-function formatPhone(val) {
-  const digits = (val || "").replace(/\D/g, "").slice(0, 10);
-  if (!digits.length) return "";
-  if (digits.length <= 3) return `(${digits}`;
-  if (digits.length <= 6) return `(${digits.slice(0,3)})-${digits.slice(3)}`;
-  return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}`;
-}
+// Phone/date field formats are shared app-wide from displaySafe.js (v1.56.2).
 
 // ── Care Team Modal ────────────────────────────────────────────────────────────
 const BLANK_PROVIDER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", phone24:"", email:"", pcp:false };
@@ -145,7 +142,7 @@ function ProviderModal({ provider, onSave, onClose }) {
           </div>
           <div>
             <label style={lbl}>Phone</label>
-            <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601) 555-0000" />
+            <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601)555-0000" />
           </div>
           <div>
             <label style={lbl}>24-Hour Line</label>
@@ -266,7 +263,7 @@ function PharmacyModal({ pharmacy, onSave, onClose }) {
           </div>
           <div>
             <label style={lbl}>Phone</label>
-            <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601) 555-0000" />
+            <input style={inp} value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601)555-0000" />
           </div>
           <div>
             <label style={lbl}>Fax</label>
@@ -928,8 +925,8 @@ export default function ProfileTab() {
                       </div>
                       <div style={{ fontSize:11, color:T.m, marginTop:2 }}>{doc.role}{doc.specialty ? ` · ${doc.specialty}` : ""}</div>
                       <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{doc.facility}</div>
-                      {doc.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:3 }}>{doc.phone}</div>}
-                      {doc.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {doc.phone24}</div>}
+                      {doc.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:3 }}>{displayPhone(doc.phone)}</div>}
+                      {doc.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {displayPhone(doc.phone24)}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4, flexShrink:0 }}>
                       <button className="icon-btn" onClick={() => setProviderModal(doc)}>✎</button>
@@ -1031,7 +1028,7 @@ export default function ProfileTab() {
                         {c.primary && <span style={{ fontSize:9, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
                       </div>
                       <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{c.relationship}</div>
-                      {c.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{c.phone}</div>}
+                      {c.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{displayPhone(c.phone)}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4 }}>
                       <button className="icon-btn" onClick={() => setEcModal(c)}>✎</button>
@@ -1056,7 +1053,7 @@ export default function ProfileTab() {
                         {ph.primary && <span style={{ fontSize:9, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
                         {ph.type && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{ph.type}</span>}
                       </div>
-                      {ph.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{ph.phone}{ph.fax ? ` · fax ${ph.fax}` : ""}</div>}
+                      {ph.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{displayPhone(ph.phone)}{ph.fax ? ` · fax ${displayPhone(ph.fax)}` : ""}</div>}
                       {ph.address && <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{ph.address}</div>}
                       {ph.hours && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{ph.hours}</div>}
                       {ph.notes && <div style={{ fontSize:11, color:T.dim, marginTop:2 }}>{ph.notes}</div>}
@@ -1085,7 +1082,7 @@ export default function ProfileTab() {
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{s.procedure}</div>
                         <div style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>
-                          {s.date ? new Date(s.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
+                          {formatDateUS(s.date, "—")}
                           {s.facility ? ` · ${s.facility}` : ""}
                         </div>
                         {s.surgeon && <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{s.surgeon}</div>}
@@ -1106,9 +1103,7 @@ export default function ProfileTab() {
               ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No diagnostic studies recorded — add imaging, EKGs, EMGs, and other studies on the Diagnostics tab.</div>
               : <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 32px" }}>
                   {allDiagnostics.map((d, i) => {
-                    const dateStr = d.date
-                      ? new Date(d.date + "T12:00:00").toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })
-                      : "—";
+                    const dateStr = formatDateUS(d.date, "—");
                     return (
                       <div key={d.id || i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < allDiagnostics.length - 1 ? `1px solid ${T.border}` : "none" }}>
                         <div style={{ width:8, height:8, borderRadius:"50%", background:"#a78bfa", marginTop:4, flexShrink:0 }} />
@@ -1222,7 +1217,7 @@ export default function ProfileTab() {
             {/* UI-23: only fields that have values print — no "—" placeholders
                 flagging optional blanks on the report */}
             <div style={{ fontSize:"9pt", color:"#555", fontFamily:"Arial, sans-serif" }}>
-              {[["DOB", P.dob], ["Age", ageDisplay], ["Sex", P.sex], ["Blood Type", P.blood || P.bloodType]]
+              {[["DOB", formatDateUS(P.dob)], ["Age", ageDisplay], ["Sex", P.sex], ["Blood Type", P.blood || P.bloodType]]
                 .filter(([, v]) => v)
                 .map(([l, v]) => `${l}: ${v}`)
                 .join("  ·  ") || "Demographics not recorded"}
@@ -1251,7 +1246,7 @@ export default function ProfileTab() {
         {/* Demographics */}
         <h2>Demographics &amp; Contact</h2>
         <div className="grid2">
-          {[["Height",P.height],["Weight", vitalsWeightLbs ? `${vitalsWeightLbs}${vitalsWeightDate ? ` (as of ${vitalsWeightDate})` : ""}` : P.weight],["Phone",P.phone],["Email",P.email],["Address",P.address],
+          {[["Height",P.height],["Weight", vitalsWeightLbs ? `${vitalsWeightLbs}${vitalsWeightDate ? ` (as of ${vitalsWeightDate})` : ""}` : P.weight],["Phone",displayPhone(P.phone)],["Email",P.email],["Address",P.address],
             ["Code Status",P.codeStatus],["Advance Directive",P.advanceDirective],["Implanted Devices",P.implantedDevices]].map(([l,v])=>v?(
             <div key={l} className="pr"><span className="pr-lbl">{l}</span><span className="pr-val">{v}</span></div>
           ):null)}
@@ -1275,7 +1270,7 @@ export default function ProfileTab() {
           {contacts.map((c,i)=>(
             <div key={i} className="pr">
               <span className="pr-lbl">{c.name}{c.primary?" (Primary)":""}</span>
-              <span className="pr-val">{c.relationship} &nbsp;·&nbsp; {c.phone}{c.email?` · ${c.email}`:""}</span>
+              <span className="pr-val">{c.relationship} &nbsp;·&nbsp; {displayPhone(c.phone)}{c.email?` · ${c.email}`:""}</span>
             </div>
           ))}
         </>}
@@ -1366,7 +1361,7 @@ export default function ProfileTab() {
             {selectedCareTeam.map((d,i)=>(
               <div key={i} className="pr">
                 <span className="pr-lbl">{d.name}{d.pcp?" (PCP)":""}</span>
-                <span className="pr-val">{d.role}{d.facility?` · ${d.facility}`:""}{d.phone?` · ${d.phone}`:""}{d.phone24?<strong> · 24 hr: {d.phone24}</strong>:null}</span>
+                <span className="pr-val">{d.role}{d.facility?` · ${d.facility}`:""}{d.phone?` · ${displayPhone(d.phone)}`:""}{d.phone24?<strong> · 24 hr: {displayPhone(d.phone24)}</strong>:null}</span>
               </div>
             ))}
           </div>
@@ -1378,7 +1373,7 @@ export default function ProfileTab() {
           {allSurgeries.map((s,i)=>(
             <div key={i} className="pr" style={{alignItems:"flex-start", paddingTop:5, paddingBottom:5}}>
               <span className="pr-lbl" style={{paddingTop:1}}>
-                {s.date ? new Date(s.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
+                {formatDateUS(s.date, "—")}
               </span>
               <span className="pr-val">
                 <strong>{s.procedure}</strong>

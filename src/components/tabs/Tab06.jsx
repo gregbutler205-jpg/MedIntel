@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
 import { getStore, setStore } from "../../store.js";
 import { mkReading, saveReading, getFieldHistory, defaultVitalFlag } from "../../lib/vitals.js";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { checkVitalReading, checkVitalCrossFields } from "../../lib/plausibility.js";
 import { PrintLabel } from "../icons.jsx";
 
@@ -160,7 +161,7 @@ function BandChart({ data, minKey, maxKey, restingKey, color, yMin, yMax, height
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{r.date}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{formatDateUS(r.date)}</text>;
       })}
     </svg>
   );
@@ -212,7 +213,7 @@ function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, hei
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{r.date}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{formatDateUS(r.date)}</text>;
       })}
     </svg>
   );
@@ -727,7 +728,7 @@ export default function App({ onNavChange }) {
                     <span style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
                   </div>
                   {status && <div style={{ fontSize:10, color:status.color, fontWeight:600 }}>{status.label}</div>}
-                  {latestR?.date && <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginTop:2 }}>Last: {latestR.date}</div>}
+                  {latestR?.date && <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginTop:2 }}>Last: {formatDateUS(latestR.date)}</div>}
                 </div>
               );
             })}
@@ -891,36 +892,36 @@ export default function App({ onNavChange }) {
                     const id = config.id;
                     // column definitions per vital
                     const cols = id === "bp"
-                      ? [{ h:"Date", fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date", fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Systolic",  fn:r=>r.bp_s??'—', c:r=>r.bp_s>=140?"#ef4444":r.bp_s>=130?"#f59e0b":"#c4d8ee", bold:true },
                          { h:"Diastolic", fn:r=>r.bp_d??'—', c:r=>r.bp_d>=90?"#ef4444":"#c4d8ee" },
                          { h:"HR",        fn:r=>r.hr??'—',   c:r=>"#7eb8d8" }]
                     : id === "o2"
-                      ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"O2 Sat %",     fn:r=>r.o2!=null?`${r.o2}%`:'—', c:r=>r.o2!=null&&r.o2<95?"#ef4444":r.o2!=null&&r.o2<97?"#f59e0b":"#10b981", bold:true },
                          { h:"HR",         fn:r=>r.hr??'—',  c:r=>"#7eb8d8" }]
                     : id === "weight"
-                      ? [{ h:"Date",   fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",   fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Weight (lbs)", fn:r=>r.weight??'—', c:r=>"#f59e0b", bold:true },
                          { h:"Change", fn:(r,i,arr)=>{const p=arr[i+1]; return p&&r.weight&&p.weight?(r.weight-p.weight>0?"+":"")+(r.weight-p.weight).toFixed(1):"—"}, c:(r,i,arr)=>{const p=arr[i+1]; if(!p||!r.weight||!p.weight)return"#a0b4c8"; return r.weight>p.weight?"#ef4444":r.weight<p.weight?"#10b981":"#a0b4c8";} }]
                     : id === "temp"
-                      ? [{ h:"Date",     fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Temp °F",  fn:r=>r.temp!=null?`${r.temp}°`:'—', c:r=>r.temp>99.5?"#ef4444":r.temp>99?"#f59e0b":"#b0c4d8", bold:true }]
                     : id === "glucose"
-                      ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Glucose mg/dL", fn:r=>r.glucose??'—', c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.glucose>125?"High":r.glucose>100?"Pre-diabetic":r.glucose<70?"Low":"Normal", c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981" }]
                     : id === "resting_hr"
-                      ? [{ h:"Date",       fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Resting HR", fn:r=>r.resting_hr!=null?`${r.resting_hr} bpm`:'—', c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.resting_hr==null?"—":r.resting_hr>70?"Elevated":r.resting_hr<50?"Low":"Good", c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981" }]
                     : id === "bmi"
-                      ? [{ h:"Date",   fn:r=><>{r.date}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",   fn:r=><>{formatDateUS(r.date)}</>, c:r=>"#98afc4" },
                          { h:"Weight", fn:r=>r.weight!=null?`${r.weight} lbs`:'—', c:r=>"#f59e0b" },
                          { h:"BMI",    fn:r=>{const b=calcBMI(r.weight);return b!=null?`${b}`:'—';}, c:r=>{const b=calcBMI(r.weight);return bmiLabel(b).color;}, bold:true },
                          { h:"Category", fn:r=>bmiLabel(calcBMI(r.weight)).label, c:r=>bmiLabel(calcBMI(r.weight)).color }]
                     : id === "sleep"
-                      ? [{ h:"Date",     fn:r=><>{r.date}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Sleep hrs", fn:r=>r.sleep?`${r.sleep}h`:'—', c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.sleep<6?"Poor":r.sleep<7?"Below goal":"Good", c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981" }]
                       : [];
@@ -951,7 +952,7 @@ export default function App({ onNavChange }) {
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:6 }}>
                     {filteredData.slice(0,28).map(r => (
                       <div key={r.ts} style={{ background:"#080c14", borderRadius:8, border:"1px solid #0d1a28", padding:"8px 10px" }}>
-                        <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{r.date}</div>
+                        <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{formatDateUS(r.date)}</div>
                         <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:9, color:"#98afc4" }}>bpm</span></div>
                         <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>
                       </div>

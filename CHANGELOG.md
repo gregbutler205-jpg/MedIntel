@@ -12,6 +12,31 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.56.2 — 2026-08-30
+
+### Changed
+- **One format for every phone and date field.** Phone fields read
+  (xxx)xxx-xxxx and date fields mm/dd/yyyy, app-wide: Health Profile,
+  Care Team, Appointments (including the attach picker and quick-add),
+  Medications refills, Labs & Trends, Vitals tables, Conditions,
+  Procedures, Diagnostics, Records, Notes, Source Documents, Import
+  History, Settings backups, the dashboard stat cards, the mobile
+  companion, and the printed documents (Patient Profile, Emergency Card,
+  Medication List, Labs report, AI Session). Two shared helpers in
+  displaySafe.js replace the per-tab formatters; phone inputs format as
+  you type. Display-only — stored data is untouched (dates stay ISO on
+  disk), numbers that aren't clean US phones (extensions, 7-digit) render
+  as stored, and unparseable date text renders as typed. Styled long-form
+  dates on cards and print headers (e.g. "Sat, September 5, 2026") keep
+  their designed look, per Greg's scope call.
+
+### Tests
+- New `test:field-formats` suite (32): progressive typing, legacy-format
+  conversion, 11-digit/extension edge cases, UTC day-shift guards, and
+  no-local-duplicates pins. 21 suites / 863 cases.
+
+---
+
 ## v1.56.1 — 2026-08-30
 
 ### Added

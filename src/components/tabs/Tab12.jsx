@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { getStore, setStore, mergeRecords, addImportLog } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
@@ -811,7 +812,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                       <span style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace" }}>
                         {item.title || item.name}
                         {item.count !== undefined && <span style={{ color:"#6a8090" }}> — {item.count} result{item.count!==1?"s":""}</span>}
-                        {item.date && <span style={{ color:"#6a8090" }}> · {new Date(item.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>}
+                        {item.date && <span style={{ color:"#6a8090" }}> · {formatDateUS(item.date)}</span>}
                       </span>
                     ) : (
                       <span style={{ fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
@@ -874,7 +875,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                 <span style={{ fontSize:15, fontWeight:600, color:"#dde8f5" }}>{docPreview.title}</span>
               </div>
               <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:10 }}>
-                {docPreview.date    && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>📅 {new Date(docPreview.date + "T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</span>}
+                {docPreview.date    && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>📅 {formatDateUS(docPreview.date)}</span>}
                 {docPreview.facility && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>🏥 {docPreview.facility}</span>}
                 {docPreview.provider && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>👤 {docPreview.provider}</span>}
               </div>
@@ -911,7 +912,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                         <div style={{ fontSize:12, fontWeight:600, color:"#c4d8ee" }}>{e.source || "Import"}</div>
                         {e.docName && <div style={{ fontSize:10, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>→ {e.docName}</div>}
                       </div>
-                      <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{e.ts ? new Date(e.ts).toLocaleString("en-US", { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" }) : "—"}</span>
+                      <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{e.ts ? `${formatDateUS(e.ts)} · ${new Date(e.ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" })}` : "—"}</span>
                       <span style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace" }}>{e.records ?? 0} record{(e.records ?? 0) !== 1 ? "s" : ""}</span>
                       {e.excluded > 0 && <span style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace" }}>{e.excluded} excluded in review</span>}
                       <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", padding:"2px 8px", borderRadius:4,
@@ -1030,7 +1031,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                         <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#ef4444" : "#4f8ef7", letterSpacing:"-0.5px" }}>{latest.value}</span>
                         <span style={{ fontSize:11, color:"#7eb8d8" }}>{latest.unit}</span>
                         {latest.refRange && <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {latest.refRange}</span>}
-                        <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {latest.date ? new Date(latest.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}</span>
+                        <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {formatDateUS(latest.date, "—")}</span>
                       </div>
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { uploadToDrive } from "../../lib/driveSync.js";
 import { getAccessToken } from "../../lib/googleAuth.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
+import { formatPhone, displayPhone, formatDateUS } from "../../lib/displaySafe.js";
 
 // UI-18: MVP keeps Care Team, Emergency, Reference. Timeline, Goals,
 // Preventive, and Milestones are removed from the interface only — their
@@ -263,7 +264,7 @@ function Timeline() {
                   <TypeBadge type={apptType} />
                   {a.urgency === "high" && <span style={{ width:6, height:6, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", display:"inline-block" }} />}
                 </div>
-                <span style={{ fontSize:10, color: a.urgency === "high" ? "#ef4444" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{a.date}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
+                <span style={{ fontSize:10, color: a.urgency === "high" ? "#ef4444" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{formatDateUS(a.date)}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{a.title}</div>
               <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: prep.length ? 10 : 0 }}>{doctorName}{a.facility ? ` · ${a.facility}` : ""}</div>
@@ -387,11 +388,11 @@ function TeamMemberModal({ member, onSave, onClose }) {
           </div>
           <div>
             <label style={lbl8}>Phone</label>
-            <input className="modal-input" value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="(601) 555-0000" />
+            <input className="modal-input" value={form.phone} onChange={e => set("phone", formatPhone(e.target.value))} placeholder="(601)555-0000" />
           </div>
           <div>
             <label style={lbl8}>24-Hour Line</label>
-            <input className="modal-input" value={form.phone24 || ""} onChange={e => set("phone24", e.target.value)} placeholder="24/7 emergency line (optional)" />
+            <input className="modal-input" value={form.phone24 || ""} onChange={e => set("phone24", formatPhone(e.target.value))} placeholder="24/7 emergency line (optional)" />
           </div>
           <div style={{ gridColumn:"1/-1" }}>
             <label style={lbl8}>Email / Portal</label>
@@ -517,8 +518,8 @@ function CareTeam() {
               </div>
               {/* Contact */}
               <div style={{ textAlign:"right", flexShrink:0, marginRight:6 }}>
-                {t.phone && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{t.phone}</div>}
-                {t.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {t.phone24}</div>}
+                {t.phone && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{displayPhone(t.phone)}</div>}
+                {t.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {displayPhone(t.phone24)}</div>}
                 {t.next  && <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>}
               </div>
               {/* Edit / Delete */}
@@ -668,7 +669,7 @@ function Milestones() {
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:5, gap:8 }}>
               <div style={{ fontSize:13, fontWeight:600, color: m.done ? "#b0c4d8" : "#c4d8ee" }}>{m.label}</div>
               <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-                {m.date && <span style={{ fontSize:10, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono }}>{m.date}</span>}
+                {m.date && <span style={{ fontSize:10, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono }}>{formatDateUS(m.date)}</span>}
                 <span onClick={() => deleteMilestone(m.id)} style={{ fontSize:10, color:"#a0b4c8", cursor:"pointer", lineHeight:1 }} title="Delete">✕</span>
               </div>
             </div>

@@ -1,4 +1,5 @@
 // ── Emergency Info — loads instantly, works offline, show-to-an-EMT screen. ────
+import { formatDateUS } from "../../../lib/displaySafe.js";
 // Entirely derived from the local record (no network). One tap from Today.
 import { C, mono, serif, Card, SL, Empty } from "../companionUI.jsx";
 import { emergencyData } from "../../../lib/companionData.js";
@@ -22,7 +23,7 @@ export default function Emergency({ onBack }) {
         <Card style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 18, color: C.p, fontWeight: 700 }}>{p.name || "—"}</div>
           <div style={{ fontSize: 11, color: C.dim, fontFamily: mono, marginTop: 3, lineHeight: 1.6 }}>
-            {[p.dob && `DOB ${p.dob}`, p.gender, p.blood && `Blood ${p.blood}`].filter(Boolean).join("  ·  ")}
+            {[p.dob && `DOB ${formatDateUS(p.dob)}`, p.gender, p.blood && `Blood ${p.blood}`].filter(Boolean).join("  ·  ")}
           </div>
         </Card>
 

@@ -1,4 +1,5 @@
 // ── Log — fast structured capture (Vitals, Symptoms) + Quick Log (natural lang). ─
+import { formatDateUS } from "../../../lib/displaySafe.js";
 // Structured tap-driven entry is the primary path (Insina is episodic, not a
 // daily logger). Quick Log is the convenience shortcut, not the front door.
 import { useState } from "react";
@@ -201,7 +202,7 @@ function Vitals({ queueSync }) {
       {recent.length === 0 ? <Empty>No readings recorded yet.</Empty> : recent.slice(0, 12).map(r => (
         <div key={r.id || r.ts} style={{ background: C.card, border: `1px solid ${C.b2}`, borderRadius: 10, padding: "10px 14px", marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ fontSize: 10, color: C.ghost, fontFamily: mono }}>{r.date}</span>
+            <span style={{ fontSize: 10, color: C.ghost, fontFamily: mono }}>{formatDateUS(r.date)}</span>
             {r.source === "companion" && <span style={{ fontSize: 9, color: C.blue, fontFamily: mono }}>📱 companion</span>}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px" }}>
@@ -297,7 +298,7 @@ function Symptoms({ queueSync, askAI }) {
               <span style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{e.name}</span>
               <Pill color={sevColor(e.severity)}>{e.severity}</Pill>
             </div>
-            <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{e.date}</div>
+            <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{formatDateUS(e.date)}</div>
             {e.notes && <div style={{ fontSize: 11, color: C.dim, marginTop: 3 }}>{e.notes}</div>}
             {askAI && <button onClick={() => askAI(symptomPrompt(e), "symptomPrep")} style={{ ...askBtn, marginTop: 8 }}>✦ Ask Insina about this</button>}
           </div>

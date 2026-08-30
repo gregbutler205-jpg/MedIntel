@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar, tombstoneAppt, filterTombstoned } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
+import { formatPhone, displayPhone, formatDateUS } from "../../lib/displaySafe.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
@@ -173,13 +174,7 @@ function saveAppts(appts) {
   localStorage.setItem("mi_upcoming", JSON.stringify(upcoming));
 }
 
-function formatPhone(val) {
-  const digits = (val || "").replace(/\D/g, "").slice(0, 10);
-  if (!digits.length) return "";
-  if (digits.length <= 3) return `(${digits}`;
-  if (digits.length <= 6) return `(${digits.slice(0,3)})-${digits.slice(3)}`;
-  return `(${digits.slice(0,3)})-${digits.slice(3,6)}-${digits.slice(6)}`;
-}
+// formatPhone comes from displaySafe.js (v1.56.2 shared field formats).
 
 function fmtDate(iso) {
   if (!iso) return "—";
@@ -342,7 +337,7 @@ function ApptModal({ appt, onSave, onClose }) {
           {/* Phone */}
           <div>
             <label style={lbl}>Phone</label>
-            <input style={inp} placeholder="(601) 555-0000" value={form.phone} onChange={e=>set("phone",formatPhone(e.target.value))} />
+            <input style={inp} placeholder="(601)555-0000" value={form.phone} onChange={e=>set("phone",formatPhone(e.target.value))} />
           </div>
           {/* Urgency */}
           <div>
@@ -418,7 +413,7 @@ function ApptModal({ appt, onSave, onClose }) {
                 </div>
                 <div>
                   <label style={lbl}>Phone</label>
-                  <input style={inp} placeholder="(601) 555-0000" value={quickAdd.phone} onChange={e=>setQA("phone",formatPhone(e.target.value))} />
+                  <input style={inp} placeholder="(601)555-0000" value={quickAdd.phone} onChange={e=>setQA("phone",formatPhone(e.target.value))} />
                 </div>
               </div>
               <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:18 }}>
@@ -628,7 +623,7 @@ function AttachModal({ appt, onSave, onClose }) {
         <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.title}</div>
-          <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{item.date ? ` · ${item.date}` : ""}</div>
+          <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{item.date ? ` · ${formatDateUS(item.date)}` : ""}</div>
         </div>
       </div>
     );
@@ -707,7 +702,7 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
             <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{att.title}</div>
-              <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{att.date ? ` · ${att.date}` : ""}</div>
+              <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{att.date ? ` · ${formatDateUS(att.date)}` : ""}</div>
             </div>
             {m.nav && <button onClick={() => onOpen(att)} title={`Open in ${m.label}`} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>↗ Open</button>}
             <button onClick={() => onDetach(att)} title="Detach" style={{ background:"none", border:"none", color:"#6b7a8d", fontSize:13, cursor:"pointer" }}>✕</button>
@@ -1150,7 +1145,7 @@ Please provide:
                   {included && <span style={{ fontSize:9, color:"#10b981" }}>✓</span>}
                 </div>
                 <span style={{ fontSize:11, color: included ? "#c4d8ee" : "#4a5c6a", flex:1, lineHeight:1.4 }}>{r.title}</span>
-                <span style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{r.date}</span>
+                <span style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{formatDateUS(r.date)}</span>
               </div>
             );
           })}
@@ -1702,7 +1697,7 @@ export default function AppointmentsTab({ onNavChange }) {
                     )}
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
                       {appt.address && <Detail label="Address"  value={appt.address} />}
-                      {appt.phone   && <Detail label="Phone"    value={appt.phone}   />}
+                      {appt.phone   && <Detail label="Phone"    value={displayPhone(appt.phone)} />}
                       {appt.prepInstructions && <Detail label="Prep Instructions" value={appt.prepInstructions} />}
                       {appt.notes   && <Detail label="Notes"    value={appt.notes}   full />}
                     </div>

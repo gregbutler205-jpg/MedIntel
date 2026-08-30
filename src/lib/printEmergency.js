@@ -24,6 +24,7 @@
 // mi_cards that ever put a non-base64 string in a src can't break out.
 import { escapeHtml } from "./renderAiText.js";
 import { latestWeightReading, ageFromDob } from "../store.js";
+import { displayPhone, formatDateUS } from "./displaySafe.js";
 import { wirePrintWindow } from "./printWindow.js";
 
 /** Pure HTML builder — exported so the card's content is testable without a window. */
@@ -146,9 +147,9 @@ export function buildEmergencyHtml() {
   })();
 
   const demoRows = [
-    kv("DOB", profile.dob), kv("Age", age), kv("Sex", sex),
+    kv("DOB", formatDateUS(profile.dob)), kv("Age", age), kv("Sex", sex),
     kv("Height", profile.height), kv("Weight", weightNow),
-    kv("Phone", profile.phone), kv("Email", profile.email), kv("Address", profile.address),
+    kv("Phone", displayPhone(profile.phone)), kv("Email", profile.email), kv("Address", profile.address),
   ].filter(Boolean);
 
   // ED-critical status: only rows that are actually filled in print.
@@ -164,7 +165,7 @@ export function buildEmergencyHtml() {
   const medsSorted = [...meds].sort((a, b) => (isImmunosuppressant(a) ? 0 : 1) - (isImmunosuppressant(b) ? 0 : 1));
   const medRows  = medsSorted.map(m => `<strong>${escapeHtml(m.name)}</strong>${m.dose ? ` ${escapeHtml(m.dose)}` : ""}${m.frequency ? ` — ${escapeHtml(m.frequency)}` : ""}${m.prescriber ? ` <span class="dim">(${escapeHtml(m.prescriber)})</span>` : ""}`);
   const algRows  = allergies.map(a => `<span class="badge allergy">${escapeHtml(a.allergen || a.name)}</span>${a.reaction ? ` <span class="dim">→ ${escapeHtml(a.reaction)}</span>` : ""}`);
-  const ctRows   = contacts.map(c => `<strong>${escapeHtml(c.name)}</strong>${c.relationship ? ` (${escapeHtml(c.relationship)})` : ""} — <a href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a>`);
+  const ctRows   = contacts.map(c => `<strong>${escapeHtml(c.name)}</strong>${c.relationship ? ` (${escapeHtml(c.relationship)})` : ""} — <a href="tel:${escapeHtml(c.phone)}">${escapeHtml(displayPhone(c.phone))}</a>`);
 
   // Care team — anyone with a 24-hour line first (that's the number an ED
   // calls at 2 AM), then the transplant coordinator, then the rest.
@@ -174,11 +175,11 @@ export function buildEmergencyHtml() {
   });
   const teamRows = teamSorted.map(p =>
     `<strong>${escapeHtml(p.name)}</strong>${p.role || p.specialty ? ` <span class="dim">(${escapeHtml(p.role || p.specialty)})</span>` : ""}` +
-    (p.phone24 ? ` — <strong style="color:#dc2626">24 hr: <a href="tel:${escapeHtml(p.phone24)}" style="color:#dc2626">${escapeHtml(p.phone24)}</a></strong>` : "") +
-    (p.phone ? ` ${p.phone24 ? '<span class="dim">· office:</span>' : "—"} <a href="tel:${escapeHtml(p.phone)}">${escapeHtml(p.phone)}</a>` : "")
+    (p.phone24 ? ` — <strong style="color:#dc2626">24 hr: <a href="tel:${escapeHtml(p.phone24)}" style="color:#dc2626">${escapeHtml(displayPhone(p.phone24))}</a></strong>` : "") +
+    (p.phone ? ` ${p.phone24 ? '<span class="dim">· office:</span>' : "—"} <a href="tel:${escapeHtml(p.phone)}">${escapeHtml(displayPhone(p.phone))}</a>` : "")
   );
 
-  const fmtDay = iso => { try { return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" }); } catch { return iso; } };
+  const fmtDay = iso => formatDateUS(iso, "date unknown"); // v1.56.2: lab draw dates are data fields -> mm/dd/yyyy
   const labSections = labPanels.map(p => section(
     `${p.key} — ${p.latest ? fmtDay(p.latest) : "date unknown"}`, // p.key is a literal from CARD_PANELS, not user data
     p.rows.map(l => `${l.flag ? '<span class="badge flag">⚠</span> ' : ""}<strong>${escapeHtml(l.name)}</strong>: ${escapeHtml(l.value)}${l.unit ? " " + escapeHtml(l.unit) : ""}${l.refRange ? ` <span class="dim">(ref ${escapeHtml(l.refRange)})</span>` : ""}`)
@@ -247,7 +248,7 @@ export function buildEmergencyHtml() {
     ${allergyNames.length
       ? `<div class="allergyline">ALLERGIES: ${allergyNames.map(escapeHtml).join(" · ")}</div>`
       : `<div class="allergyline none">No allergies recorded</div>`}
-    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(profile.dob)}`, age && `Age: ${escapeHtml(age)}`, sex && escapeHtml(sex), bloodType && `Blood Type ${escapeHtml(bloodType)}`].filter(Boolean).join("  ·  ")}</div>
+    <div class="idline">${[profile.dob && `DOB: ${escapeHtml(formatDateUS(profile.dob))}`, age && `Age: ${escapeHtml(age)}`, sex && escapeHtml(sex), bloodType && `Blood Type ${escapeHtml(bloodType)}`].filter(Boolean).join("  ·  ")}</div>
     <hr class="rule" />
     ${statusRows.length ? `
     <div class="section">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppSidebar from "../AppSidebar.jsx";
-import { safeAverage, safeNumber } from "../../lib/displaySafe.js";
+import { safeAverage, safeNumber, formatDateUS } from "../../lib/displaySafe.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 
 
@@ -244,7 +244,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
             {entry.status === "active" ? "● ACTIVE" : `✓ RESOLVED${entry.resolvedDate ? ` ${entry.resolvedDate}` : ""}`}
           </div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", lineHeight: 1.2 }}>{entry.symptom}</div>
-          <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 5 }}>{entry.date} · {entry.location}</div>
+          <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 5 }}>{formatDateUS(entry.date)} · {entry.location}</div>
         </div>
         <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px", flexShrink: 0 }}>✕</button>
       </div>

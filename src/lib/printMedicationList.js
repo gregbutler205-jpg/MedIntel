@@ -1,4 +1,5 @@
 // ── Medication Report generator (extracted verbatim from Tab04.jsx) ─────────
+import { formatDateUS } from "./displaySafe.js";
 // Moved to a shared lib so the onboarding first-artifact engine (ONBOARDING_
 // SPEC v1.1 §6) can invoke it from Phase 5 — the spec names first-artifact
 // invocation as a sanctioned integration point. Content unchanged.
@@ -21,7 +22,7 @@ export function printMedicationList(meds) {
   const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const fmtRefill = (str) => {
     if (!str) return "—";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return formatDateUS(str);
     return str;
   };
   const medsHTML = Object.entries(grouped).map(([cat, catMeds]) => `

@@ -16,6 +16,7 @@
 //    there is no synthesis step where wording or hedges could drift.
 
 import { scanForProhibitedDirectives } from "./aiOutputFilter.js";
+import { displayPhone } from "./displaySafe.js";
 
 /** The context rule: only THIS conversation's turns, role-mapped for the API. */
 export function apiMessagesForConv(messages, conv) {
@@ -97,8 +98,8 @@ export function buildContactBlock(careTeam) {
   const rows = [...team].sort((a, b) => rank(a) - rank(b)).map(p => {
     const who = `${p.name || "—"}${p.role || p.specialty ? ` (${p.role || p.specialty})` : ""}`;
     const phones = [
-      p.phone24 ? `24 hr: ${p.phone24}` : "",
-      p.phone ? `office: ${p.phone}` : "",
+      p.phone24 ? `24 hr: ${displayPhone(p.phone24)}` : "",
+      p.phone ? `office: ${displayPhone(p.phone)}` : "",
     ].filter(Boolean).join(" · ");
     return `- ${who}${phones ? ` — ${phones}` : ""}`;
   });

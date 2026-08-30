@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { PrintLabel } from "../icons.jsx";
 import CPT_COMMON from "../../data/cpt_common.json";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
@@ -19,13 +20,7 @@ function saveSurgeries(list) {
   localStorage.setItem("mi_surgeries", JSON.stringify(list));
 }
 function fmtDate(iso) {
-  if (!iso) return "—";
-  // UI-24: always render the full date INCLUDING year, and tolerate legacy
-  // non-ISO strings ("Apr 22, 2019") — the old ISO-only parse produced
-  // "Invalid Date" for those. Unparseable values fall back to the raw string
-  // rather than an invented date.
-  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? new Date(iso + "T12:00:00") : new Date(iso);
-  return isNaN(d) ? String(iso) : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return formatDateUS(iso, "—"); // v1.56.2: date fields read mm/dd/yyyy
 }
 function outcomeColor(o) {
   if (o === "Successful") return "#10b981";

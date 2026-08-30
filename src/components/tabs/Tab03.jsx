@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 
 import { getRecords, setRecords } from "../../store.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
@@ -192,7 +193,7 @@ export default function Records({ onNavChange }) {
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7, gap: 8 }}>
                 <Badge type={r.type} />
-                <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{r.date}</span>
+                <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{formatDateUS(r.date)}</span>
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee", marginBottom: 3, lineHeight: 1.3 }}>{r.title}</div>
               <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{r.facility}</div>
@@ -208,7 +209,7 @@ export default function Records({ onNavChange }) {
             <div style={{ marginBottom: 22 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <Badge type={selected.type} />
-                <span style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.date}</span>
+                <span style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{formatDateUS(selected.date)}</span>
               </div>
               <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px", marginBottom: 10 }}>
                 {selected.title}
@@ -272,7 +273,7 @@ export default function Records({ onNavChange }) {
               return (
                 <div style={{ background: "#0b1220", border: "1px solid rgba(167,139,250,.25)", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
                   <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a78bfa", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
-                    Source Document — {doc.name}{doc.addedDate ? ` · added ${doc.addedDate}` : ""}
+                    Source Document — {doc.name}{doc.addedDate ? ` · added ${formatDateUS(doc.addedDate)}` : ""}
                   </div>
                   <pre style={{ fontSize: 11, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", whiteSpace: "pre-wrap", lineHeight: 1.6, maxHeight: 300, overflowY: "auto", margin: 0 }}>
                     {doc.text || "(no extracted text stored)"}

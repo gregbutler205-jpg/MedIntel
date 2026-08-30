@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { loadPdfjs } from "../../lib/pdfjs.js";
 import { tombstoneRecord, untombstoneRecord } from "../../lib/recordTombstones.js";
@@ -736,7 +737,7 @@ export default function DocumentsTab() {
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: doc.sourceColor || "#98afc4", flexShrink: 0 }} />
                   <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doc.source}</span>
-                  <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{doc.date}</span>
+                  <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{formatDateUS(doc.date)}</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
                   {(doc.tags || []).slice(0, 3).map(t => (

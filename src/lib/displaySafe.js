@@ -64,3 +64,45 @@ export function textOr(v, fallback = "Not recorded") {
   const s = String(v).trim();
   return s && s !== "undefined" && s !== "null" ? s : fallback;
 }
+
+// ── v1.56.2: app-wide field formats (Greg 2026-08-30) ────────────────────────
+// Every date FIELD renders mm/dd/yyyy and every phone field (xxx)xxx-xxxx.
+// Styled long-form dates (cards, print headers) are deliberate design and stay.
+// Storage is untouched — dates stay ISO yyyy-mm-dd on disk; these only shape
+// what reaches the screen or paper.
+
+/**
+ * Date field display: mm/dd/yyyy. Unparseable non-empty input renders as
+ * typed (never hidden); empty renders `fallback`.
+ */
+export function formatDateUS(v, fallback = "") {
+  const d = parseDateSafe(v);
+  if (d) {
+    return `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
+  }
+  const s = v == null ? "" : String(v).trim();
+  return s || fallback;
+}
+
+/** Progressive phone formatter for typing: (xxx)xxx-xxxx as digits arrive. */
+export function formatPhone(val) {
+  const digits = (val || "").replace(/\D/g, "").slice(0, 10);
+  if (!digits.length) return "";
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)})${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)})${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+/**
+ * Phone field display for stored values: a clean US number (10 digits, or 11
+ * with a leading 1) renders (xxx)xxx-xxxx; anything else — extensions,
+ * international, blank — renders as stored.
+ */
+export function displayPhone(val) {
+  if (val == null) return "";
+  const s = String(val).trim();
+  let digits = s.replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) digits = digits.slice(1);
+  if (digits.length !== 10) return s;
+  return `(${digits.slice(0, 3)})${digits.slice(3, 6)}-${digits.slice(6)}`;
+}

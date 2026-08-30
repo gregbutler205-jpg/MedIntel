@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatDateUS } from "../../lib/displaySafe.js";
 import { callAI } from "../../lib/aiClient.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { getIdentity } from "../../prompts/identity.js";
@@ -61,7 +62,7 @@ function NoteItem({ note, active, onClick }) {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <TagBadge tag={note.tag} />
-        <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{note.date}</span>
+        <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{formatDateUS(note.date)}</span>
       </div>
     </div>
   );
@@ -147,7 +148,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         >
           {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
         </select>
-        <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>{note.date}</span>
+        <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(note.date)}</span>
         <div style={{ flex: 1 }} />
         <span onClick={() => onPin(note.id)} role="button" style={{ color: note.pinned ? "#f59e0b" : "#98afc4", cursor: "pointer", display: "flex" }} title={note.pinned ? "Unpin" : "Pin"}><PinIcon size={14} /></span>
         <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
@@ -165,7 +166,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
           onChange={e => onUpdate({ ...note, title: e.target.value })}
           style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#dde8f5", fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.3px", marginBottom: 4 }}
         />
-        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{note.date}</div>
+        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{formatDateUS(note.date)}</div>
 
         {/* DEC-022: explicit AI-generated label — distinguishes this from
             clinician or patient-authored text, plus a markdown download. */}
