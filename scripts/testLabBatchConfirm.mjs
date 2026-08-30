@@ -282,5 +282,48 @@ const mkDoc = () => createArchiveDoc({
   ok(tab12.includes("reconcilePromotedRows()"), "Tab12 heals promoted rows on arrival");
 }
 
+// ── 13. v1.55.0: exact-duplicate cleanup + healer equivalence guard ──────────
+// Greg re-uploaded the same documents for weeks; each Confirmed import
+// stacked an identical row. Cleanup keeps one copy per (canonical analyte,
+// date, value, unit) — alias-aware — and the healer must not resurrect what
+// the cleanup removed.
+{
+  const { removeDuplicateLabRows, countExactDuplicateLabs, reconcilePromotedRows, LAB_ARCHIVE_KEY } =
+    await import("../src/lib/labBatchConfirm.js");
+  localStorage.clear();
+
+  const rows = [
+    { id: 1, name: "PSA", value: 0.7, unit: "ng/mL", date: "2023-07-13", category: "Other" },
+    { id: 2, name: "Prostate Specific Antigen", value: "0.7", unit: "ng/mL", date: "2023-07-13", category: "Hormone", archiveRowId: "ar2", confirmationEventId: "ev2" },
+    { id: 3, name: "PSA", value: 0.7, unit: "ng/mL", date: "2023-07-13", category: "Other" },
+    { id: 4, name: "PSA", value: 0.9, unit: "ng/mL", date: "2024-05-30", category: "Other" },   // different value+date — NOT a duplicate
+    { id: 5, name: "Tacrolimus", value: 7.4, unit: "ng/mL", date: "2026-08-22", category: "Immunosuppressant Level" },
+  ];
+  localStorage.setItem("mi_labs", JSON.stringify(rows));
+
+  ok(countExactDuplicateLabs(rows) === 2, "count sees the two alias-equivalent extra copies");
+  const removed = removeDuplicateLabRows();
+  const after = JSON.parse(localStorage.getItem("mi_labs"));
+  ok(removed === 2 && after.length === 3, `cleanup removes ${removed} rows, keeps 3`);
+  ok(after.some(l => l.id === 2), "the kept copy is the one WITH import provenance");
+  ok(after.some(l => l.id === 4) && after.some(l => l.id === 5), "distinct results are untouched");
+  const tombs = JSON.parse(localStorage.getItem("mi_record_tombstones") || "[]");
+  ok(tombs.filter(t => t.store === "mi_labs").length === 2, "removed duplicates are tombstoned (Drive-safe)");
+
+  // Healer guard: the removed duplicate's archive row stays promoted, but an
+  // EQUIVALENT row is in the record — no resurrection tug-of-war.
+  localStorage.setItem(LAB_ARCHIVE_KEY, JSON.stringify([{
+    id: "labdoc_dup", title: "dup-doc", rows: [
+      { id: "ar9", name: "PSA, Total", value: "0.7", unit: "ng/mL", refRange: "", date: "2023-07-13", facility: "", category: "Other", notes: "", flags: [], state: "promoted", correction: null, provenance: { docId: "labdoc_dup", page: null, extractedAt: "x", confirmationEventId: "ev9" } },
+      { id: "ar10", name: "WBC", value: "5.8", unit: "x10E3/uL", refRange: "", date: "2026-08-21", facility: "", category: "CBC", notes: "", flags: [], state: "promoted", correction: null, provenance: { docId: "labdoc_dup", page: null, extractedAt: "x", confirmationEventId: "ev9" } },
+    ],
+  }]));
+  const healed = reconcilePromotedRows();
+  const final = JSON.parse(localStorage.getItem("mi_labs"));
+  ok(healed === 1, "healer restores only the genuinely missing row (WBC), not the equivalent PSA");
+  ok(final.filter(l => /psa|prostate/i.test(l.name) && l.date === "2023-07-13").length === 1,
+     "one 2023 PSA copy remains after healing — no tug-of-war");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (lab-batch-confirm)`);
 assert.equal(fail, 0);

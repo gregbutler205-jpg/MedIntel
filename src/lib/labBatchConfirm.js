@@ -32,6 +32,7 @@
 
 import { canonicalLabId } from "./labCanonical.js";
 import { MONITORED_ANALYTES } from "../config/monitoredAnalytes.js";
+import { tombstoneRecord } from "./recordTombstones.js";
 
 export const LAB_ARCHIVE_KEY = "mi_lab_archive";
 export const CONFIRMATION_EVENTS_KEY = "mi_confirmation_events";
@@ -102,12 +103,19 @@ export function reconcilePromotedRows() {
   try { labs = JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { labs = []; }
   if (!Array.isArray(labs)) labs = [];
   const have = new Set(labs.map(l => l.archiveRowId).filter(Boolean));
+  // v1.55.0: equivalence guard — never restore a row when an EQUIVALENT one
+  // (same canonical analyte, date, value, unit) is already in the record.
+  // Without this, deleting an exact duplicate would tug-of-war with the
+  // healer forever: the duplicate's archive row stays promoted, so it would
+  // be "restored" on every visit.
+  const equivalent = new Set(labs.map(labEquivalenceKey));
 
   const restored = [];
   const now = Date.now();
   for (const doc of docs) {
     for (const r of doc.rows || []) {
       if (r.state !== "promoted" || have.has(r.id)) continue;
+      if (equivalent.has(labEquivalenceKey(r))) { have.add(r.id); continue; }
       restored.push({
         id: now + restored.length,
         name: r.name,
@@ -123,6 +131,7 @@ export function reconcilePromotedRows() {
         archiveRowId: r.id,
       });
       have.add(r.id);
+      equivalent.add(labEquivalenceKey(r)); // two identical promoted rows restore once, not twice
     }
   }
   if (restored.length > 0) {
@@ -130,6 +139,68 @@ export function reconcilePromotedRows() {
     localStorage.setItem("mi_labs", JSON.stringify(updated));
   }
   return restored.length;
+}
+
+// ── v1.55.0: exact-duplicate cleanup (Greg: repeated re-uploads of the same
+// documents stacked identical rows). Two rows are EXACT duplicates when the
+// canonical analyte, collection date, numeric value, and unit all match —
+// alias-aware, so "PSA" and "Prostate Specific Antigen" on the same date
+// with the same value are one result. Near-matches (different value or
+// date) are NEVER touched: that's the patient-confirmed Group Tests flow.
+
+/** Equivalence key for exact-duplicate detection and the healer's guard. */
+export function labEquivalenceKey(row) {
+  const v = parseFloat(row?.value);
+  return [
+    canonicalLabId(row?.name),
+    row?.date || "",
+    Number.isFinite(v) ? String(v) : String(row?.value ?? ""),
+    (row?.unit || "").toLowerCase().trim(),
+  ].join("|");
+}
+
+/** Count how many rows a cleanup would remove (for the UI badge). */
+export function countExactDuplicateLabs(labs) {
+  const seen = new Set();
+  let removable = 0;
+  for (const l of labs || []) {
+    const k = labEquivalenceKey(l);
+    if (seen.has(k)) removable++; else seen.add(k);
+  }
+  return removable;
+}
+
+/**
+ * Remove exact duplicates from mi_labs, keeping ONE row per equivalence
+ * group — preferring a row with import provenance (archiveRowId), then the
+ * oldest id. Removed rows are tombstoned so no Drive merge resurrects them
+ * from another device. Returns how many rows were removed.
+ */
+export function removeDuplicateLabRows() {
+  let labs;
+  try { labs = JSON.parse(localStorage.getItem("mi_labs") || "[]"); } catch { labs = []; }
+  if (!Array.isArray(labs) || labs.length === 0) return 0;
+
+  const groups = new Map();
+  for (const l of labs) {
+    const k = labEquivalenceKey(l);
+    (groups.get(k) || groups.set(k, []).get(k)).push(l);
+  }
+
+  const removed = [];
+  const keep = new Set();
+  for (const rows of groups.values()) {
+    if (rows.length === 1) { keep.add(rows[0]); continue; }
+    const sorted = [...rows].sort((a, b) =>
+      (a.archiveRowId ? 0 : 1) - (b.archiveRowId ? 0 : 1) || (a.id ?? 0) - (b.id ?? 0));
+    keep.add(sorted[0]);
+    removed.push(...sorted.slice(1));
+  }
+  if (removed.length === 0) return 0;
+
+  for (const r of removed) tombstoneRecord("mi_labs", r);
+  localStorage.setItem("mi_labs", JSON.stringify(labs.filter(l => keep.has(l))));
+  return removed.length;
 }
 
 export function reviewableArchiveDocs() {

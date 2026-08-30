@@ -13,7 +13,7 @@ import { canonicalLabId, displayLabName, stripLabNoise, setLabMappings, removeLa
 import { evaluateAndFire } from "../../lib/advisoryRuntime.js";
 import { PrintLabel } from "../icons.jsx";
 import { getLastImportLabel } from "../../store.js";
-import { reconcilePromotedRows } from "../../lib/labBatchConfirm.js";
+import { reconcilePromotedRows, countExactDuplicateLabs, removeDuplicateLabRows } from "../../lib/labBatchConfirm.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
@@ -740,6 +740,18 @@ export default function App({ onNavChange }) {
 
   // Recompute duplicate groups whenever labs change
   const duplicateGroups = useMemo(() => detectDuplicates(importedLabs), [importedLabs]);
+  // v1.55.0: EXACT duplicates (same canonical analyte + date + value + unit)
+  // from re-uploading the same documents — removable in one click, unlike
+  // the name-grouping candidates above, which need patient confirmation.
+  const exactDupes = useMemo(() => countExactDuplicateLabs(importedLabs), [importedLabs]);
+  const [dedupeNote, setDedupeNote] = useState("");
+  function handleRemoveDuplicates() {
+    const n = removeDuplicateLabRows();
+    try { setImportedLabs(JSON.parse(localStorage.getItem("mi_labs") || "[]")); } catch {}
+    window.dispatchEvent(new Event("mi-data-synced"));
+    setDedupeNote(n > 0 ? `${n} duplicate row${n !== 1 ? "s" : ""} removed — one copy of each result kept.` : "No exact duplicates found.");
+    setTimeout(() => setDedupeNote(""), 8000);
+  }
 
   function openDupModal() {
     const groups = detectDuplicates(importedLabs);
@@ -1128,6 +1140,20 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               {tripwireEnv.status === "stale" && "Threshold check: stale — new results have arrived since the last check ran"}
               {tripwireEnv.status === "unavailable" && "Threshold check: not yet active (pending clinical review of the default threshold library)"}
             </div>
+
+            {/* v1.55.0: one-click exact-duplicate cleanup (same test, date,
+                value, unit — alias-aware). Removed rows are tombstoned; the
+                healer's equivalence guard keeps them from coming back. */}
+            {exactDupes > 0 && (
+              <button onClick={handleRemoveDuplicates} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background:"rgba(239,68,68,.07)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#ef8888", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
+                <span style={{ fontSize:13 }}>🧹</span>
+                <span style={{ flex:1, textAlign:"left" }}>Remove {exactDupes} exact duplicate{exactDupes !== 1 ? "s" : ""}</span>
+                <span style={{ fontSize:10, opacity:0.65 }}>Keeps one copy</span>
+              </button>
+            )}
+            {dedupeNote && (
+              <div style={{ marginBottom:10, fontSize:10.5, color:"#10b981", fontFamily:"'DM Mono',monospace", lineHeight:1.5 }}>{dedupeNote}</div>
+            )}
 
             {/* A-04 / UI-3: Group Tests — always available (manual grouping),
                 highlighted when duplicate candidates are auto-detected. */}

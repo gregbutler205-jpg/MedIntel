@@ -12,7 +12,23 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.54.2 — 2026-08-29
+## v1.55.0 — 2026-08-29
+
+### Added
+- **One-click duplicate cleanup on Labs & Trends.** Re-uploading the same
+  lab document stacks identical rows; a new "Remove N exact duplicates"
+  button removes them, keeping one copy of each result — preferring the copy
+  with import provenance. Exact means same analyte (alias-aware, so "PSA"
+  and "Prostate Specific Antigen" count as one), same collection date, same
+  value, same unit; anything less identical is never touched and stays in
+  the patient-confirmed Group Tests flow. Removed rows are tombstoned so no
+  device's sync resurrects them, and the restore healer now recognizes an
+  equivalent row as already present — cleanup and healing can't fight.
+
+### Tests
+- Cleanup semantics (alias-equivalence, provenance-preferred keeper,
+  tombstoning, distinct results untouched) and the healer guard pinned:
+  `test:lab-batch` 87. 20 suites / 818 cases.
 
 ### Fixed
 - **Searching "PSA" finds your PSA results.** Extraction names the same test
