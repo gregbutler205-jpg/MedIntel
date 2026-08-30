@@ -12,7 +12,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
-## v1.54.1 — 2026-08-28
+## v1.54.2 — 2026-08-29
+
+### Fixed
+- **Searching "PSA" finds your PSA results.** Extraction names the same test
+  differently per report ("PSA" on one, "Prostate Specific Antigen" on
+  another), which split one analyte's history and hid it from search. The
+  canonical alias table gains the total-PSA forms (free PSA stays separate —
+  it's a different test), and Search now matches through canonical ids, so
+  abbreviations find formal names (and FK506 finds Tacrolimus). Trends
+  group the split history automatically through the same table.
+
+### Notes
+- Import receipts confirmed no data was being lost in the latest imports:
+  rows file under their COLLECTION dates (a 2023 lab report lands in 2023,
+  not at the top of the list), which made deep-history imports look missing.
+
+### Tests
+- PSA aliasing (formal name, total variants, free-PSA exclusion) and the
+  canonical search haystack pinned: `test:record-query` 60.
+  20 suites / 811 cases.
 
 ### Fixed
 - **Imported lab results stop being erased — and yours come back.** Adding

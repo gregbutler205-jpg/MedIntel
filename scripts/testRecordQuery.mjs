@@ -148,5 +148,24 @@ const res = (category, record, title, date) => ({ category, record, title, date:
   }
 }
 
+// ── v1.54.2: canonical-alias search (Greg: "PSA" found nothing) ──────────────
+// Extraction names the same analyte differently per report; the canonical id
+// rides the search haystack so the abbreviation finds the formal name.
+{
+  const { canonicalLabId } = await import("../src/lib/labCanonical.js");
+  globalThis.localStorage = { getItem: () => null, setItem: () => {} }; // name-map empty
+  ok(canonicalLabId("Prostate Specific Antigen") === "psa", "formal name → canonical psa");
+  ok(canonicalLabId("PSA, Total") === "psa" && canonicalLabId("Total PSA") === "psa", "total-PSA variants → canonical psa");
+  ok(canonicalLabId("PSA, Free") !== "psa" && canonicalLabId("Free PSA") !== "psa",
+     "free PSA is a DIFFERENT test — never aliased to total");
+  ok(canonicalLabId("FK506") === "tacrolimus", "existing aliases unchanged");
+  ok(matchesTerms(["Prostate Specific Antigen", canonicalLabId("Prostate Specific Antigen")], extractTerms("PSA")),
+     "searching 'PSA' matches a row named 'Prostate Specific Antigen' via the canonical haystack");
+
+  const { readFileSync } = await import("node:fs");
+  const sp = readFileSync(new URL("../src/components/SearchPopup.jsx", import.meta.url), "utf8");
+  ok(sp.includes("canonicalLabId(l.name)"), "SearchPopup includes the canonical id in the labs haystack");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (record-query)`);
 process.exit(fail ? 1 : 0);

@@ -33,6 +33,16 @@ const SEED_SYNONYMS = {
   "hb": "hemoglobin",
   "plt": "platelets",
   "glu": "glucose",
+  // v1.54.2 (Greg, live): extraction names the same test "PSA" on one report
+  // and "Prostate Specific Antigen" on another, splitting one analyte's
+  // history and hiding it from a "PSA" search. TOTAL-PSA forms only — free
+  // PSA and %-free PSA are clinically distinct tests and are NOT aliased.
+  "prostate specific antigen": "psa",
+  "prostate-specific antigen": "psa",
+  "psa, total": "psa",
+  "psa total": "psa",
+  "psa screening": "psa",
+  "total psa": "psa",
 };
 
 export function normalizeLabKey(name) {

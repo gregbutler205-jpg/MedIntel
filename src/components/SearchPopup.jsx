@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef } from "react";
 import { setPendingSelect } from "../lib/searchSelect.js";
 import { extractTerms, matchesTerms, buildDirectAnswer, sortByDate, detectCategoryHint, snippet } from "../lib/recordQuery.js";
+import { canonicalLabId } from "../lib/labCanonical.js";
 
 const C = {
   overlay: "rgba(0,0,0,.72)",
@@ -69,7 +70,10 @@ function searchAll(query) {
   };
 
   safeRead("mi_labs", []).forEach(l => add("labs",
-    [l.name, l.value, l.notes, l.date, l.refRange, l.category, l.facility], l, {
+    // v1.54.2: the canonical id joins the haystack so "PSA" finds a row named
+    // "Prostate Specific Antigen" (and FK506 finds Tacrolimus) — same alias
+    // table the trends and tripwire grouping already use.
+    [l.name, canonicalLabId(l.name), l.value, l.notes, l.date, l.refRange, l.category, l.facility], l, {
       title: l.name || "Lab Result",
       subtitle: [
         l.value != null ? `${l.value}${l.unit ? " " + l.unit : ""}` : null,
