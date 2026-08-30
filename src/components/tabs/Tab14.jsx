@@ -1253,6 +1253,7 @@ export default function AppointmentsTab({ onNavChange }) {
   const [syncing, setSyncing]       = useState(false);
   const [syncMsg, setSyncMsg]       = useState(null);   // { kind:"ok"|"err", text }
   const [calPicker, setCalPicker]   = useState(null);   // array of calendars when picking
+  const [syncNotice, setSyncNotice] = useState(null);   // { count, calName } — pop-up when a sync lands suggestions
 
   useEffect(() => { saveAppts(appts); }, [appts]);
 
@@ -1300,6 +1301,9 @@ export default function AppointmentsTab({ onNavChange }) {
       if (added > 0) {
         setFilter("suggested");
         setSyncMsg({ kind:"ok", text: `${auto ? "Auto-synced — " : ""}${added} new appointment${added !== 1 ? "s" : ""} from "${cal.summary}" to review below — edit to fill gaps, then Confirm or Dismiss.` });
+        // v1.56.1 (Greg): the inline banner is easy to miss — a pop-up says
+        // where synced events landed (Suggested, not Upcoming) until dismissed.
+        setSyncNotice({ count: added, calName: cal.summary });
       } else if (!auto) {
         setSyncMsg({ kind:"ok", text: `No new appointments in "${cal.summary}" — you're up to date.` });
       }
@@ -1766,6 +1770,26 @@ export default function AppointmentsTab({ onNavChange }) {
 
       {/* Attach records modal */}
       {attachTarget && <AttachModal appt={attachTarget} onSave={handleSaveAttachments} onClose={() => setAttachTarget(null)} />}
+
+      {/* Calendar-sync landing notice — synced events wait in Suggested, not Upcoming */}
+      {syncNotice && (
+        <div role="alertdialog" aria-modal="true" aria-label="Appointments imported from Google Calendar" style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:460, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:30, marginBottom:10 }}>📅</div>
+            <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400, marginBottom:10 }}>
+              {syncNotice.count} appointment{syncNotice.count !== 1 ? "s" : ""} imported from Google Calendar
+            </h2>
+            <div style={{ fontSize:13, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", lineHeight:1.6, marginBottom:20 }}>
+              They're waiting in the <b style={{ color:"#7eb8d8" }}>Suggested</b> tab — nothing goes on your schedule until you review it.
+              Open each one, then <b style={{ color:"#7eb8d8" }}>Confirm</b> to add it or <b style={{ color:"#7eb8d8" }}>Dismiss</b> it.
+            </div>
+            <button
+              onClick={() => setSyncNotice(null)}
+              style={{ padding:"10px 26px", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.45)", borderRadius:9, color:"#7eb8d8", fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:600, cursor:"pointer" }}
+            >Review them now</button>
+          </div>
+        </div>
+      )}
 
       {/* Post-visit capture prompt */}
       {postVisit && <PostVisitModal appt={postVisit} onClose={() => setPostVisit(null)} onCaptured={handlePostVisitCapture} />}

@@ -168,6 +168,17 @@ const EV_SEP7 = { id: "gcal-sep7", summary: "Labs", start: { date: "2026-09-07" 
   ok(qaSave.includes('mi_care_team_selected'),
     "an explicit emergency-card selection list gains the new name (mirrors Care Team)");
   ok(tab14.includes("+ Add to Care Team"), "the affordance sits beside the provider field");
+
+  // v1.56.1 — a sync that lands suggestions pops a notice (Greg missed the
+  // inline banner; synced events wait in Suggested, not Upcoming).
+  const addedBranch = tab14.slice(tab14.indexOf("if (added > 0) {"), tab14.indexOf("} else if (!auto) {"));
+  ok(addedBranch.includes("setSyncNotice({ count: added"),
+    "every sync that adds suggestions (manual and auto) raises the notice");
+  ok(tab14.includes("syncNotice.count") && tab14.includes("setSyncNotice(null)"),
+    "the notice renders the count and dismisses");
+  const noticeJsx = tab14.slice(tab14.indexOf("{syncNotice && ("));
+  ok(noticeJsx.includes(">Suggested</b>") && noticeJsx.includes(">Confirm</b>"),
+    "the notice says where synced events landed and what to do next");
 }
 
 console.log(`\n${pass} passed, ${fail} failed (appt-tombstones)`);
