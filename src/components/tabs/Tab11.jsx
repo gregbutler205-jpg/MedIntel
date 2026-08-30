@@ -788,9 +788,7 @@ export default function AIAnalysis({ onNavChange }) {
     const s = sessionRef.current;
     if (!s || streaming || totalMessages(s) === 0) return;
     saveToNotes();
-    let careTeam = [];
-    try { careTeam = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
-    const how = openPrintable(buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO, careTeam }), "Insina Health — AI Session");
+    const how = openPrintable(buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO }), "Insina Health — AI Session");
     if (how === "downloaded") {
       setSummaryNote("Your browser blocked the print pop-up, so the session was saved to your Downloads folder instead. Open it there to print — or allow pop-ups for this site. It is also saved in Notes.");
     } else if (how === "failed") {
@@ -805,9 +803,7 @@ export default function AIAnalysis({ onNavChange }) {
   const previewReport = () => {
     const s = sessionRef.current;
     if (!s || streaming || totalMessages(s) === 0) return;
-    let careTeam = [];
-    try { careTeam = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch {}
-    setPreviewHtml(buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO, careTeam }));
+    setPreviewHtml(buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO }));
   };
 
   // Close: saved-and-current sessions close quietly; anything unsaved warns

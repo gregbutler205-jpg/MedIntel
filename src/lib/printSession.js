@@ -14,7 +14,7 @@
 import { renderAiMarkdownToHtml } from "./renderAiText.js";
 import { scanForProhibitedDirectives } from "./aiOutputFilter.js";
 import { segmentTransition, SESSION_COPY, CORPUS_VERSION } from "./aiSessions.js";
-import { consolidateAcrossTurns, buildContactBlock, allSessionMessages } from "./aiSessionReport.js";
+import { consolidateAcrossTurns, allSessionMessages } from "./aiSessionReport.js";
 import { ageFromDob } from "../store.js";
 
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -51,7 +51,7 @@ const fmtDay = iso => {
  * Full session print document. All collapsible content renders expanded;
  * every stamp and divider survives to paper (spec Sec 7).
  */
-export function buildSessionPrintHtml(session, { logoUrl, careTeam = [] } = {}) {
+export function buildSessionPrintHtml(session, { logoUrl } = {}) {
   let profile = {};
   try { profile = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}") || {}; } catch {}
   const age = ageFromDob(profile.dob) ?? profile.age ?? "";
@@ -84,7 +84,8 @@ export function buildSessionPrintHtml(session, { logoUrl, careTeam = [] } = {}) 
   const qHtml = questions.length
     ? `<div class="tail"><div class="q-label">Questions for your care team</div>${questions.map(q => `<div class="q-text">• ${esc(q)}</div>`).join("")}</div>`
     : "";
-  const contactsHtml = `<div class="tail">${renderAiMarkdownToHtml(buildContactBlock(careTeam))}</div>`;
+  // The "Contact your care team" roster was dropped from the handoff document
+  // (it re-listed the entire care team on every report; Greg 2026-08-29).
 
   const now = fmtTs(new Date().toISOString());
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -97,7 +98,6 @@ export function buildSessionPrintHtml(session, { logoUrl, careTeam = [] } = {}) 
     <hr class="rule" />
     ${segmentsHtml || "<p style='color:#777;font-style:italic'>No conversation content.</p>"}
     ${qHtml}
-    ${contactsHtml}
     <div class="footer">
       <span>${esc(SESSION_COPY.headerFooter)} Compiled by the patient from their own records using Insina Health.</span>
       <span>Generated ${esc(now)}</span>

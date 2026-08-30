@@ -259,5 +259,20 @@ const V = await import("../src/lib/numericValidator.js");
      "the preview's print control runs the STANDARD save-then-print flow (DEC-C9 kept)");
 }
 
+// ── 13. v1.56.0: contact roster dropped from the handoff document ────────────
+// Greg: "delete the Contact your care team section. It's not really necessary
+// and it lists every one of my care team." Questions-for-your-care-team stays;
+// the legacy per-response report text (aiSessionReport) keeps its own block.
+{
+  const printSrc = readFileSync(SRC("lib/printSession.js"), "utf8");
+  ok(!printSrc.includes("buildContactBlock"),
+     "the print document no longer builds the care-team roster");
+  ok(printSrc.includes("Questions for your care team"),
+     "the consolidated questions block survives the removal");
+  const tab11 = readFileSync(SRC("components/tabs/Tab11.jsx"), "utf8");
+  ok(!tab11.includes("buildSessionPrintHtml(s, { logoUrl: PRINT_LOGO, careTeam })"),
+     "print/preview call sites no longer pass the care team");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (ai-session-shell)`);
 assert.equal(fail, 0);

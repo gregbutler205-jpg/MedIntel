@@ -12,6 +12,36 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.56.0 — 2026-08-30
+
+### Added
+- **Add a provider to your Care Team without leaving the appointment.** A
+  "+ Add to Care Team" link beside the Provider field opens a small form
+  (name, role, specialty, facility, phone) over the appointment. Saving
+  writes the member to the Care Team, fills the provider into the
+  appointment (plus specialty, facility, and phone where blank), and
+  returns to the form exactly as it was — nothing typed is lost. Address,
+  email, and the rest can be added later on the Care Team tab.
+- **Attach picker pages through every record.** Below the suggested
+  matches, "All records" now lists everything newest-first, ten at a time,
+  with a "Load 10 more" button (and a running "showing X of Y" count).
+  Save Attachments and Cancel stay reachable at every page size.
+
+### Changed
+- **Completed and All appointment lists read newest-first** — the most
+  recent visit sits on top. Upcoming and Suggested keep soonest-first, so
+  what's next stays on top there.
+- **The AI session report drops the "Contact your care team" roster.** It
+  re-listed the entire care team on every printed session. The
+  consolidated "Questions for your care team" block stays.
+
+### Tests
+- Appointment list direction, attach-picker paging, and the quick-add
+  provider flow pinned in `test:appt-tombstones` (27); the roster removal
+  pinned in `test:ai-session-shell` (65). 20 suites / 831 cases.
+
+---
+
 ## v1.55.0 — 2026-08-29
 
 ### Added
