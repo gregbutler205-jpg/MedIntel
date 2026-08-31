@@ -1318,8 +1318,9 @@ export default function AppointmentsTab({ onNavChange }) {
     const cal = getSelectedCalendar();
     if (!cal) return;                                   // not connected yet
     if (localStorage.getItem(GCAL_LAST_SYNC_KEY) === todayISO()) return; // already today
-    autoSyncRanRef.current = true;
-    const t = setTimeout(() => pullFromCalendar(cal, { auto: true }), 1500); // let Google auth settle
+    // Flag set when the sync FIRES — StrictMode's dev double-mount cancels the
+    // first timer, and arming early would block the second mount's attempt.
+    const t = setTimeout(() => { autoSyncRanRef.current = true; pullFromCalendar(cal, { auto: true }); }, 1500); // let Google auth settle
     return () => clearTimeout(t);
   }, [pullFromCalendar]);
 

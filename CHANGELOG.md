@@ -12,6 +12,39 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.57.0 — 2026-08-31
+
+### Added
+- **Conditions now suggests itself from your records — Calendar-Sync style.**
+  A built-in scan reads what's already written in your record — Diagnostics
+  impressions, My Notes, Medical Records, Procedures, and the full text of
+  imported documents (which is how Labs & Trends contributes: the words on
+  the lab paperwork, never inference from values — founder decision) — and
+  surfaces condition names that aren't on your Conditions list. Suggestions
+  wait in a "Suggested from your records" section with provenance (which
+  record, when, and the sentence it appeared in); nothing joins your
+  Conditions list until you Confirm (which opens the normal Add Condition
+  form to review first) or Dismiss (tombstoned — never suggested again).
+  Scans run once a day when you open the tab, or on the "⟳ Scan Records"
+  button; new finds pop the same style of notice as Calendar Sync.
+  The scan is deterministic and offline — no AI involved — and guards
+  against false alarms: "no evidence of", "denies", "rule out", and
+  family-history mentions are never suggested, facility and provider names
+  are never scanned, and a condition already on your list (any status) is
+  never re-suggested.
+
+### Fixed
+- Daily auto-scan and calendar auto-sync timers now arm their once-only
+  flag when they fire rather than when scheduled (dev-only React
+  StrictMode issue; production behavior unchanged).
+
+### Tests
+- New `test:condition-suggest` suite (40): matching, negation and
+  family-history guards, word boundaries, source coverage, exclusions,
+  tombstones, lifecycle, and Tab15 wiring pins. 22 suites / 903 cases.
+
+---
+
 ## v1.56.2 — 2026-08-30
 
 ### Changed

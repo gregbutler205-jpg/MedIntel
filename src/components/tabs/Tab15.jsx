@@ -3,6 +3,9 @@ import { formatDateUS } from "../../lib/displaySafe.js";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
+// v1.57.0: calendar-sync-style condition suggestions — a deterministic
+// text-mention scan over the record; nothing enters mi_conditions unreviewed.
+import { runConditionScan, readSuggestions, dismissSuggestion, resolveSuggestion, lastScanDay, todayISO } from "../../lib/conditionSuggest.js";
 
 const STATUS_CFG = {
   active:   { color: "#ef4444", bg: "rgba(239,68,68,.10)",   border: "rgba(239,68,68,.25)",   label: "Active"   },
@@ -215,6 +218,49 @@ export default function ConditionsTab() {
   // UI-24: condition search + per-card expand/collapse for long notes
   const [condSearch, setCondSearch] = useState("");
   const [expandedIds, setExpandedIds] = useState(() => new Set());
+
+  // v1.57.0: suggested conditions (own store — never mi_conditions until Confirm)
+  const [suggestions, setSuggestions]   = useState(() => readSuggestions());
+  const [scanMsg, setScanMsg]           = useState(null);   // inline "up to date" strip
+  const [scanNotice, setScanNotice]     = useState(null);   // { count } — landing pop-up
+  const [confirmingSug, setConfirmingSug] = useState(null); // suggestion being confirmed via the modal
+  const autoScanRanRef = useRef(false);
+
+  const handleScan = (auto = false) => {
+    const { suggestions: next, added } = runConditionScan();
+    setSuggestions(next);
+    if (added > 0) {
+      setScanNotice({ count: added });
+    } else if (!auto) {
+      setScanMsg("No new condition mentions found in your records — you're up to date.");
+    }
+  };
+
+  // Auto-scan once a day on tab entry — same cadence as Calendar Sync.
+  // The ran-flag is set when the scan FIRES, not when it's scheduled —
+  // StrictMode's dev double-mount cancels the first timer, and arming the
+  // flag early would leave the second mount blocked (scan never runs).
+  useEffect(() => {
+    if (autoScanRanRef.current) return;
+    if (lastScanDay() === todayISO()) return;
+    const t = setTimeout(() => { autoScanRanRef.current = true; handleScan(true); }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!scanMsg) return;
+    const t = setTimeout(() => setScanMsg(null), 6000);
+    return () => clearTimeout(t);
+  }, [scanMsg]);
+
+  const openConfirmSuggestion = (sug) => {
+    setConfirmingSug(sug);
+    setModal({ ...BLANK, name: sug.name });
+  };
+  const handleDismissSuggestion = (sug) => {
+    setSuggestions(dismissSuggestion(sug));
+  };
   const toggleExpanded = (id) => setExpandedIds(prev => {
     const next = new Set(prev);
     next.has(id) ? next.delete(id) : next.add(id);
@@ -253,7 +299,14 @@ export default function ConditionsTab() {
     setConditions(updated);
     save(updated);
     setModal(null);
-    setSavedMsg("Condition saved.");
+    // Confirming a suggestion: the condition is saved, so retire its card.
+    if (confirmingSug) {
+      setSuggestions(resolveSuggestion(confirmingSug.condId));
+      setConfirmingSug(null);
+      setSavedMsg("Condition added from your records.");
+    } else {
+      setSavedMsg("Condition saved.");
+    }
   }
   function handleDelete(id) {
     tombstoneRecord("mi_conditions", conditions.find(x => x.id === id));
@@ -306,10 +359,55 @@ export default function ConditionsTab() {
             </p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
+            <button onClick={() => handleScan(false)} style={btnGhost} title="Scan Diagnostics, Notes, Records, Procedures, and imported documents for condition mentions">⟳ Scan Records</button>
             <button onClick={() => window.print()} style={btnGhost}><PrintLabel /></button>
             <button onClick={() => setModal(BLANK)} style={btnPrimary}>+ Add Condition</button>
           </div>
         </div>
+
+        {/* v1.57.0: scan result strip (mirrors the calendar-sync message) */}
+        {scanMsg && (
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", color:"#7eb8d8", marginBottom:16 }}>
+            {scanMsg}
+          </div>
+        )}
+
+        {/* v1.57.0: suggested conditions — found in the record, pending review */}
+        {suggestions.length > 0 && (
+          <div className="no-print" style={{ background:"rgba(245,158,11,.05)", border:"1px solid rgba(245,158,11,.25)", borderRadius:12, padding:"16px 18px", marginBottom:22 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+              <span style={{ fontSize:12, color:"#f59e0b" }}>✦</span>
+              <span style={{ fontSize:11, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>
+                Suggested from your records ({suggestions.length})
+              </span>
+            </div>
+            <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:14, lineHeight:1.5 }}>
+              These condition names appear in your records but aren't on your Conditions list. Nothing is added until you review it —
+              Confirm to add one (you can edit details first), or Dismiss it and it won't be suggested again.
+            </div>
+            {suggestions.map(sug => (
+              <div key={sug.condId} style={{ background:"#0b1220", border:"1px solid rgba(245,158,11,.18)", borderRadius:10, padding:"12px 14px", marginBottom:8 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:"#dde8f5", flex:1, minWidth:160 }}>{sug.name}</div>
+                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#10b981", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
+                  <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer" }}>Dismiss</button>
+                </div>
+                <div style={{ marginTop:8 }}>
+                  {sug.sources.slice(0, 3).map((s, i) => (
+                    <div key={i} style={{ fontSize:10.5, color:"#98afc4", fontFamily:"'DM Mono',monospace", lineHeight:1.6, marginBottom:2 }}>
+                      <span style={{ color:"#f59e0b" }}>{s.store}</span>
+                      {" — "}{s.title}{s.date ? ` (${formatDateUS(s.date)})` : ""}
+                      {s.snippet ? <span style={{ color:"#6a8090" }}>{" · “"}{s.snippet}{"”"}</span> : null}
+                    </div>
+                  ))}
+                  {sug.sources.length > 3 && (
+                    <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>+ {sug.sources.length - 3} more place{sug.sources.length - 3 !== 1 ? "s" : ""} in your records</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* UI-29: save confirmation strip */}
         {savedMsg && (
@@ -406,7 +504,28 @@ export default function ConditionsTab() {
       </div>
 
       {/* Add/Edit modal */}
-      {modal && <ConditionModal condition={modal} onSave={handleSave} onClose={() => setModal(null)} />}
+      {/* v1.57.0: scan landing notice — mirrors the calendar-sync pop-up */}
+      {scanNotice && (
+        <div role="alertdialog" aria-modal="true" aria-label="Possible conditions found in your records" style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:460, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:30, marginBottom:10 }}>✦</div>
+            <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400, marginBottom:10 }}>
+              {scanNotice.count} possible condition{scanNotice.count !== 1 ? "s" : ""} found in your records
+            </h2>
+            <div style={{ fontSize:13, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", lineHeight:1.6, marginBottom:20 }}>
+              They're listed under <b style={{ color:"#f59e0b" }}>Suggested from your records</b> at the top of this page —
+              nothing goes on your Conditions list until you review each one.
+              <b style={{ color:"#7eb8d8" }}> Confirm</b> to add it, or <b style={{ color:"#7eb8d8" }}>Dismiss</b> it.
+            </div>
+            <button
+              onClick={() => setScanNotice(null)}
+              style={{ padding:"10px 26px", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.45)", borderRadius:9, color:"#7eb8d8", fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:600, cursor:"pointer" }}
+            >Review them now</button>
+          </div>
+        </div>
+      )}
+
+      {modal && <ConditionModal condition={modal} onSave={handleSave} onClose={() => { setModal(null); setConfirmingSug(null); }} />}
 
       {/* Delete confirm */}
       {deleteId && (
