@@ -32,6 +32,15 @@ const DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
 const EXCLUDE_KEYS = new Set([
   "mi_google_user", "mi_unlocked", "mi_auth_hash",
   "mi_ai_pending", "mi_auto_analyze_doc",
+  // v1.57.1: per-DEVICE bookkeeping stamps — never sync. Each device keeps its
+  // own "last did X" clock: a synced copy suppresses the OTHER device's daily
+  // calendar auto-sync / condition auto-scan, overwrites its "last synced"
+  // display, and (worse) stale copies of these stranded in the Drive file kept
+  // failing to decrypt and tripping the "different vault key" warning for
+  // Greg on 2026-09-01 even though every real store merged fine. Excluded on
+  // both upload and merge, so poisoned copies already in Drive are ignored.
+  "mi_last_sync", "mi_gcal_last_sync", "mi_last_folder_backup",
+  "mi_condsug_last_scan",
 ]);
 
 // ── Local data helpers ────────────────────────────────────────────────────────
