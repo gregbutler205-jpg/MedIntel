@@ -12,6 +12,32 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.57.1 — 2026-09-02
+
+### Fixed
+- **The phone companion stays signed in to Google.** The redirect sign-in
+  relaunches the app locked, and the vault's managed-key rule silently
+  dropped the sign-in profile write — so every relaunch showed "Connect
+  Drive / Sign in" and the phone never synced on its own again (found live
+  on Greg's phone: "Synced 11:56 PM" beside a Sign in button). The unlock
+  handler now re-persists the profile while the redirect's token is still
+  alive.
+- **Per-device bookkeeping stamps no longer ride the Drive file.** The
+  "last synced / last calendar sync / last folder backup / last condition
+  scan" stamps are each device's own clock; synced copies suppressed the
+  other device's daily auto-runs and — stranded in the Drive file — kept
+  failing to decrypt and tripping a scary "different vault key" warning
+  even though every real store merged fine. Excluded on upload and merge,
+  so stale copies already in Drive are ignored from now on.
+- Onboarding suite: a hardcoded fixture date rotted into "today" on
+  2026-09-01 and failed the upcoming-appointment check; now computed
+  dynamically.
+
+### Tests
+- Both fixes pinned in `test:vault-restore` (24). 22 suites / 907 cases.
+
+---
+
 ## v1.57.0 — 2026-08-31
 
 ### Added

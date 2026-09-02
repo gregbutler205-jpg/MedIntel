@@ -146,5 +146,42 @@ const { isEncryptedBackupPayload, restoreEncryptedBackup } = await import("../sr
   ok(localStorage.getItem("mi_schema_version") === "1", "schema stamp reset to baseline so idempotent migrations re-run (A-08)");
 }
 
+// ── v1.57.1: per-device bookkeeping stamps never ride the Drive file ─────────
+// Stale synced copies of these stamps kept tripping the "different vault key"
+// warning (Greg 2026-09-01) and a synced daily-throttle stamp suppresses the
+// OTHER device's auto-sync/auto-scan. Excluded on upload, restore, and merge.
+{
+  localStorage.clear();
+  const { collectLocalData, restoreFromBackupObject } = await import("../src/lib/driveSync.js");
+  const STAMPS = ["mi_last_sync", "mi_gcal_last_sync", "mi_last_folder_backup", "mi_condsug_last_scan"];
+  for (const k of STAMPS) localStorage.setItem(k, "2026-09-01");
+  localStorage.setItem("mi_conditions", JSON.stringify([{ id: 1, name: "x" }]));
+  const exported = collectLocalData();
+  ok(STAMPS.every(k => !(k in exported)) && "mi_conditions" in exported,
+    "device-local stamps are excluded from export; real stores still ride");
+  localStorage.clear();
+  restoreFromBackupObject({ _vaultEnvelope: "{}", mi_last_sync: "poison", mi_conditions: "[]" });
+  ok(localStorage.getItem("mi_last_sync") === null,
+    "a stamp stranded in an old Drive file is ignored on restore, not imported");
+}
+
+// ── v1.57.1: companion sign-in survives the locked redirect landing ──────────
+// The phone's Google redirect relaunches the app LOCKED, so the sign-in
+// profile write was dropped by the managed-key rule — every relaunch showed
+// "Connect Drive / Sign in" and auto-sync never ran again. The unlock handler
+// must re-persist the profile while the redirect's token is still alive.
+{
+  const { readFileSync } = await import("node:fs");
+  const { fileURLToPath } = await import("node:url");
+  const { dirname, join } = await import("node:path");
+  const here = dirname(fileURLToPath(import.meta.url));
+  const src = readFileSync(join(here, "../src/components/companion/CompanionApp.jsx"), "utf8");
+  const onUnlocked = src.slice(src.indexOf("<Lock onUnlocked={"), src.indexOf("Sign-in gate:"));
+  ok(onUnlocked.includes("!getStoredUser()") && onUnlocked.includes('localStorage.setItem("mi_google_user"'),
+    "unlock re-persists the Google profile dropped by the locked redirect landing");
+  ok(onUnlocked.indexOf("setUnlocked(true)") < onUnlocked.indexOf('setItem("mi_google_user"'),
+    "the re-persist happens AFTER the store can accept writes");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (vault-restore)`);
 process.exit(fail ? 1 : 0);

@@ -259,6 +259,22 @@ function CompanionInner() {
           // dropped) — pull again now that the record can actually accept them.
           const t = getAccessToken();
           if (t) runSync(t);
+          // v1.57.1: the redirect sign-in lands on a LOCKED app, so its
+          // mi_google_user write was silently dropped (managed-key rule) —
+          // every relaunch then showed "Connect Drive / Sign in" and no sync
+          // ever ran on its own again (Greg's phone, 2026-09-01). Re-persist
+          // the profile NOW, while the redirect's token is still alive and
+          // the store can actually accept the write.
+          if (t && !getStoredUser()) {
+            fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${t}` } })
+              .then(r => r.json())
+              .then(u => {
+                const profile = { name: u.name, email: u.email, picture: u.picture };
+                localStorage.setItem("mi_google_user", JSON.stringify(profile));
+                setUser(profile);
+              })
+              .catch(() => {});
+          }
         }} />
       </div>
     );
