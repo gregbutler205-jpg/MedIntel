@@ -560,7 +560,10 @@ check("§6 appointment prep: needs an UPCOMING appointment with date+provider+sp
   // a past appointment does not count
   localStorage.setItem("mi_appointments", JSON.stringify([{ id: 1, status: "upcoming", date: "2020-01-01", provider: "Dr. A", specialty: "Hepatology" }]));
   assert.deepEqual(engine.evaluateGoalMinimum("appointment_prep").missing.map(m => m.key), ["appointment"]);
-  const r = engine.addUpcomingAppointment({ provider: "Dr. Chen", specialty: "Transplant Hepatology", date: "2026-09-01" });
+  // Always 30 days out — a hardcoded date here rotted into "today" on
+  // 2026-09-01 and failed the upcoming check late that evening.
+  const futureISO = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+  const r = engine.addUpcomingAppointment({ provider: "Dr. Chen", specialty: "Transplant Hepatology", date: futureISO });
   assert.equal(r.fired, true);
   assert.equal(state.loadState().artifact_generated.artifact, "Consultation Prep Brief");
   const appt = JSON.parse(localStorage.getItem("mi_appointments"))[0];
