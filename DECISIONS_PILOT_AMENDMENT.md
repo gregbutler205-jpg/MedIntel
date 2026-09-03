@@ -1333,6 +1333,8 @@ The Insina AI mark (four-point sparkle with heartbeat spike) appears on all mode
 
 Rationale: makes "AI proposes, patient disposes" visible in the interface and gives the CDS memo a clean visual enforcement story.
 
+Artwork note (2026-09-03): the full-cut mark was refined after founder review of the richer lockup artwork (harder-pinched arms, left-to-right deep-blue-to-cyan gradient, offset inner star, brighter core, taller heartbeat), vector-traced by hand and shipped in v1.58.1. The rule is unchanged; the simple 14px silhouette is unchanged.
+
 ## DEC-P48: Single destination for model output
 Status: Settled
 

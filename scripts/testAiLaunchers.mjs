@@ -67,15 +67,15 @@ const html = (el) => renderToStaticMarkup(el);
     "simple variant: currentColor, single evenodd path, data-ai-mark root");
   ok(!simple.includes("id="), "simple variant carries no ids (safe to inline any number of times)");
   const s32 = html(createElement(Mark, { variant: "full", size: 32 }));
-  ok(s32.includes("M66 100H84L95 62L105 138L116 100H134") && !s32.includes("feGaussianBlur") && !s32.includes("M64 100H82L88 92"),
+  ok(s32.includes("M60 100H84L96 56L106 144L116 100H140") && !s32.includes("feGaussianBlur") && !s32.includes("M56 100H80L86 92"),
     "full variant below 40 renders the compact trace: no glow filter, no P wave");
   ok(/stroke-width="9"/.test(s32) && /stroke-linecap="round"/.test(s32), "compact trace is stroke 9 with round caps and joins");
   const s44 = html(createElement(Mark, { variant: "full", size: 44 }));
-  ok(s44.includes("M64 100H82L88 92L93 100H97L102 66L109 132L114 100H136") && s44.includes("feGaussianBlur"),
+  ok(s44.includes("M56 100H80L86 92L91 100H96L101 50L110 150L116 100H144") && s44.includes("feGaussianBlur"),
     "full variant at 40 and above renders the standard trace with glow and P wave");
   const two = html(createElement("div", null, createElement(Mark, { variant: "full", size: 44 }), createElement(Mark, { variant: "full", size: 44 })));
   const ids = [...two.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
-  ok(ids.length === 8 && new Set(ids).size === 8, `two full marks in one tree produce eight distinct ids (got ${ids.length}, ${new Set(ids).size} unique)`);
+  ok(ids.length === 10 && new Set(ids).size === 10, `two full marks in one tree produce ten distinct ids (got ${ids.length}, ${new Set(ids).size} unique)`);
   ok(html(createElement(Mark, { variant: "simple" })).includes('aria-hidden="true"'), "mark is aria-hidden by default (a text label accompanies it)");
   ok(html(createElement(Mark, { variant: "simple", decorative: false })).includes('aria-label="Insina AI"'), "standalone mark is a labelled image");
 }
@@ -88,7 +88,7 @@ const html = (el) => renderToStaticMarkup(el);
     "launcher: visible label, aria-label equals label, simple mark inside");
   ok(html(createElement(Launcher, { label: "", scope: {} })) === "", "launcher is never icon-only: no label renders nothing");
   const e = html(createElement(Entry, { iconSize: 32 }));
-  ok(e.includes('aria-label="Open AI Analysis"') && e.includes("M66 100H84") && /width:44px;height:44px/.test(e),
+  ok(e.includes('aria-label="Open AI Analysis"') && e.includes("M60 100H84") && /width:44px;height:44px/.test(e),
     "entry button: aria-label, compact trace at 32, 44px hit target");
   ok(html(createElement(Entry, { iconSize: 44 })).includes("feGaussianBlur"), "entry button at 44 renders the standard trace");
   ok(html(createElement(LauncherOff, { label: "x", scope: {} })) === "" && html(createElement(EntryOff, {})) === "",

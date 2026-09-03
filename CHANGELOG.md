@@ -12,6 +12,20 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.58.1 (2026-09-03)
+
+### Changed
+- **Richer Insina AI mark on the full-cut surfaces** (founder review of the
+  new lockup artwork, vector-traced by hand). The topbar and dashboard entry
+  buttons and the AI Analysis header now draw the star with harder-pinched
+  arms, a deep-blue-to-cyan gradient running left to right, a second
+  lighter star set low-right for depth, a brighter core, and a taller,
+  sharper heartbeat. Below 40 px the compact single-spike rule still
+  applies. The 14 px single-color silhouette on the nav row and launchers
+  is unchanged.
+
+---
+
 ## v1.58.0 (2026-09-02)
 
 ### Added
