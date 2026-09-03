@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getStore, setStore, mergeReadings, mergeMeds, mergeLabs, mergeRecords, addImportLog } from './store.js';
-import { mkReading, saveReading, defaultVitalFlag } from './lib/vitals.js';
+import { mkReading, saveReading, defaultVitalFlag, sortReadingsByRecency } from './lib/vitals.js';
 import { checkVitalReading, checkVitalCrossFields } from './lib/plausibility.js';
 import { wirePrintWindow } from './lib/printWindow.js';
 import LockScreen from './components/LockScreen.jsx';
@@ -594,7 +594,11 @@ function AppShell() {
     recordAppOpen(); // §7 T9: one session per calendar day the shell opens
   }, []);
   const [time, setTime]           = useState(new Date());
-  const [readings, setReadings]   = useState(() => getStore('readings'));
+  // v1.57.2: ALWAYS newest-first. A Drive merge appends the other device's
+  // readings at the tail, and a dozen dashboard readers (readings[0], .find())
+  // assume recency order — phone-entered vitals showed on the Vitals tab (it
+  // sorts) but not the dashboard (it trusted storage order).
+  const [readings, setReadings]   = useState(() => sortReadingsByRecency(getStore('readings')));
   const [meds, setMeds]           = useState(() => getStore('meds_full'));
   const [alerts, setAlerts]       = useState(() => {
     const stored = getStore('alerts').map((a, i) => ({ ...a, fp: `stored:${i}:${(a.text||"").substring(0,40)}`, source:"stored" }));
@@ -675,7 +679,7 @@ function AppShell() {
   // the dashboard summary until a full page reload. One function now covers all
   // of it, so a new dashboard field cannot quietly miss the refresh path.
   const refreshDashboardData = useCallback(() => {
-    setReadings(getStore('readings'));
+    setReadings(sortReadingsByRecency(getStore('readings')));
     setMeds(getStore('meds_full'));
     // Refresh auto-alerts from flagged labs + vitals
     const auto = generateAutoAlerts();
@@ -728,7 +732,7 @@ function AppShell() {
       const ts = await fullSync(token);
       setLastSyncTs(ts);
       setSyncStatus("done");
-      setReadings(getStore('readings'));
+      setReadings(sortReadingsByRecency(getStore('readings')));
       setMeds(getStore('meds_full'));
       // Let open tabs (e.g. Vitals) re-read the freshly-merged data.
       window.dispatchEvent(new Event("mi-data-synced"));
@@ -1171,7 +1175,7 @@ function AppShell() {
                                 <div style={{ fontSize:14, fontWeight:700, color: val != null ? (flag ? "#ef4444" : color) : "#4a5c6a", lineHeight:1, marginBottom:2 }}>
                                   {val != null ? `${val}${unit ? " " + unit : ""}` : "—"}
                                 </div>
-                                {date && val != null && <div style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>{date}</div>}
+                                {date && val != null && <div style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>{formatDateUS(date)}</div>}
                               </div>
                             ))}
                           </div>

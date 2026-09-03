@@ -12,6 +12,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.57.2 — 2026-09-02
+
+### Fixed
+- **Vitals synced from the phone now show on the dashboard.** A Drive
+  merge appends the other device's readings at the end of the stored
+  array, and the dashboard's "latest" pickers trusted storage order — so
+  phone-entered vitals appeared on the Vitals tab (which sorts by date)
+  but not on the dashboard's Current Vitals panel or hero card. Every
+  dashboard read of the readings store now sorts newest-first (the
+  companion already did).
+- The Current Vitals panel's per-reading date now reads mm/dd/yyyy (a
+  spot the v1.56.2 format sweep missed).
+
+### Tests
+- Structural + behavioural pins in `test:dashboard-sync` (18) — the
+  suite that owns "dashboard, Vitals, and companion always agree."
+  22 suites / 912 cases.
+
+---
+
 ## v1.57.1 — 2026-09-02
 
 ### Fixed

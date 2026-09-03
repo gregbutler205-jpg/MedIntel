@@ -75,5 +75,36 @@ ok(/addEventListener\("mi-data-synced"/.test(APP),
      "a FLAGGED vital still renders red — red still means urgent");
 }
 
+// ── v1.57.2: merged-in readings must not hide behind storage order ───────────
+// A Drive merge APPENDS the other device's readings at the array tail;
+// readings[0] and every .find() on the dashboard assume newest-first. Greg's
+// phone vitals showed on the Vitals tab (it sorts) but not the dashboard.
+// Every dashboard read of the store now goes through sortReadingsByRecency.
+{
+  ok(!APP.includes("useState(() => getStore('readings'))"),
+     "mount state does not trust raw storage order");
+  ok(!APP.match(/setReadings\(getStore\('readings'\)\)/),
+     "no refresh path re-reads without sorting");
+  ok((APP.match(/sortReadingsByRecency\(getStore\('readings'\)\)/g) || []).length === 3,
+     "all three dashboard read sites (mount, dashboard refresh, Drive refresh) sort");
+}
+{
+  // Behavioural: the sorter itself puts a tail-appended newer reading first.
+  globalThis.Storage = class { getItem(){return null;} setItem(){} removeItem(){} clear(){} key(){return null;} get length(){return 0;} };
+  globalThis.localStorage = new globalThis.Storage();
+  globalThis.window = globalThis;
+  globalThis.dispatchEvent = () => {};
+  const { sortReadingsByRecency } = await import("../src/lib/vitals.js");
+  const mergedOrder = [
+    { id: "web1",   date: "2026-08-28", bp_s: 120, bp_d: 70 },  // web's latest, stored first
+    { id: "web0",   date: "2026-08-20", bp_s: 118, bp_d: 68 },
+    { id: "phone1", date: "2026-08-31", bp_s: 143, bp_d: 78 },  // phone's, merge-appended at tail
+  ];
+  const sorted = sortReadingsByRecency(mergedOrder);
+  ok(sorted[0].id === "phone1",
+     "a phone reading appended by the merge becomes readings[0] — the dashboard shows it");
+  ok(sorted.map(r => r.id).join(",") === "phone1,web1,web0", "full recency order holds");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (dashboard-sync)`);
 assert.equal(fail, 0);
