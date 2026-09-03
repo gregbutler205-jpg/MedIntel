@@ -1319,3 +1319,59 @@ Tier 2 rows are created offline: AI proposes candidate rows from reputable publi
 ---
 
 **C-series open items:** [CONFIRM] print-requires-save (C9). [CONFIRM] visit prep routing (C14). [CONFIRM] session content encryption gate inheritance (assumed yes; the shell implements sessions in the vaulted store). [CONFIRM] retention behavior for saved sessions on record deletion. [CONFIRM] all patient-facing copy strings, including the warn-on-close text and the record-changed divider (provisional drafts live in src/lib/aiSessions.js SESSION_COPY).
+
+---
+
+# Decision Log Amendment: AI Launcher System and Provenance Mark (DEC-P47 to DEC-P51)
+
+Merged 2026-09-02 from DEC_DRAFTS_AI_LAUNCHER.md (session 2026-08-30, amended 2026-09-02). IDs confirmed against the log: main ends at DEC-P43; DEC-P44 to DEC-P46 are held by the History Builder branch (feature/history-builder-01 cites them in code), so this set takes P47 to P51. Governs WO_AI_LAUNCHER_01.md. Founder decisions taken at merge are recorded inline under P50 and P51.
+
+## DEC-P47: Provenance mark rule
+Status: Settled
+
+The Insina AI mark (four-point sparkle with heartbeat spike) appears on all model-generated content and only on model-generated content. Deterministic outputs never carry it: tripwire alerts, advisory text, the 911 and nearest-ED line, lab range flags, refill and appointment reminders, and anything the patient typed or confirmed. The mark is a provenance signal, not decoration. Its absence is as meaningful as its presence.
+
+Rationale: makes "AI proposes, patient disposes" visible in the interface and gives the CDS memo a clean visual enforcement story.
+
+## DEC-P48: Single destination for model output
+Status: Settled
+
+Model output renders in exactly one surface: the AI Analysis tab. All other screens may host launchers that deep-link into AI Analysis with scope pre-set, but never render model output themselves. The dashboard AI summary card is deferred and not approved; if revisited it must be a cached, marked, timestamped artifact of a prior run, never an auto-run.
+
+Rationale: one surface for acceptance tests, scanner fixtures, CSC compliance checks, and the provenance mark to govern.
+
+Merge note: two pre-existing surfaces render model output outside AI Analysis today (Appointments' Consultation Prep and the per-medication quick actions that auto-send through mi_ai_pending). They predate this decision, are outside WO_AI_LAUNCHER_01's scope, and are listed in that work order's session report for disposition.
+
+## DEC-P49: Launcher placement and count discipline
+Status: Settled
+
+At most one launcher per screen, plus the AI Analysis nav row. Approved placements:
+
+| Screen | Position | Label (verbatim) |
+|---|---|---|
+| Sidebar nav | AI Analysis row, mark at 14, pill removed | AI Analysis |
+| Dashboard | Existing quick-launch panel only | existing v1.16 strings unchanged |
+| Labs & Trends | One per panel header | Ask about this panel |
+| Medications | One at list level | Review my medication list |
+| Appointments | One per upcoming appointment | Prepare for this visit |
+| Symptoms | After entry saves and tripwire pass returns clean | Prepare questions about this |
+| Dashboard AI panel | Full-cut icon button above the hint and suggestions, wordmark `Insina AI` beneath it | icon button, aria-label Open AI Analysis |
+| Topbar | Persistent full-cut icon button left of the avatar, every screen except Import Records and confirmation flows | icon only, aria-label Open AI Analysis |
+
+Count discipline: at most one contextual launcher per screen. Persistent entries sit outside the count: the nav row, the topbar icon button, and the dashboard panel icon button. Entry buttons carry full-record scope and are the sanctioned icon-only exception; contextual launchers always carry a text label. The sub-brand string `Insina AI` renders verbatim and appears in-app only on the dashboard panel lockup; navigation vocabulary remains AI Analysis everywhere. The name enters the marketing and disclosure language review list as shipping patient-facing copy.
+
+Prohibited zones: archive tier, Import flow, any confirmation screen, and any screen where a tripwire has fired for the displayed content. These exclusions apply to the topbar entry button as well. No floating global button. Per-row launchers on labs are prohibited: per-value urgency belongs to the tripwire engine.
+
+## DEC-P50: Scope preview and consent to run
+Status: Settled (amended at merge, 2026-09-02)
+
+Tapping a launcher never triggers a model call. It navigates to AI Analysis with a scope object shown as removable chips ("Reads:" line) above the existing run control. The model call happens only on the patient's explicit run action. Scope travels through in-memory navigation state only: never in the URL, never persisted independently of the record. Removing all specific chips reverts scope to a single non-removable Full record chip. Scope may only narrow which reconciled-record slices are included; prompt templates and system prompts are untouched.
+
+Amendment (founder decision, 2026-09-02): the three dashboard question launchers ("Analyze my current health status", "Review my medications for interactions", "Prep for Hepatology appt") are the explicit run action. Their labeled tap opens AI Analysis with full-record scope and sends the question immediately. Every other launcher, the Custom query launcher, and both entry buttons never run on tap. The question travels in the same in-memory scope object, replacing the previous mi_ai_pending localStorage hand-off for these buttons, which could resurrect through a Drive merge and re-run.
+
+## DEC-P51: AI-off flag behavior
+Status: Settled
+
+All launchers, both full-cut entry buttons, and the quick-launch panel sit behind the single global AI-enabled flag. When off, launchers are hidden, not greyed. The AI Analysis nav row remains visible with the mark; the AI Analysis tab alone carries the off-state explanation.
+
+Merge note (founder decision, 2026-09-02): no such flag existed in the code before this work order. It is created as `AI_FEATURES_ENABLED` in src/config/aiFeatures.js, defaulting to true, the same shape as the tripwire advisory's ship-dark constant. It gates the launchers, entry buttons, and quick-launch panel. The AI Analysis tab itself is unchanged: its only off-state copy today is the public demo's explanation, and the work order forbids new copy, so a pilot-off explanation is deferred to a later decision.

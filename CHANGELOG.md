@@ -12,6 +12,45 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.58.0 (2026-09-02)
+
+### Added
+- **The Insina AI mark and the launcher system** (WO_AI_LAUNCHER_01,
+  DEC-P47 to DEC-P51). The four-point sparkle with a heartbeat spike now
+  marks model-generated content and its launchers, and only those: the AI
+  Analysis nav row (pill removed), a full-cut entry button in the topbar on
+  every screen except Import Records, and the dashboard AI panel's new
+  lockup (entry button above the `Insina AI` wordmark). Contextual
+  launchers deep-link into AI Analysis with scope pre-set: "Ask about this
+  panel" on each Labs & Trends category header, "Review my medication list"
+  on Medications (replacing the old AI Interaction Check button), and
+  "Prepare for this visit" on each upcoming appointment. AI Analysis shows
+  the scope as removable "Reads:" chips above the composer; removing them
+  all reverts to a single Full record chip. Scope narrows only the data
+  slices the run reads (labs by panel, vitals, documents); conditions,
+  medications, allergies, care team, and the safety envelope always ride.
+- **Consent to run.** Tapping a launcher or entry button never calls the
+  model: it sets scope and navigates. The three dashboard question buttons
+  are the deliberate exception (founder decision, DEC-P50 as amended): their
+  labeled tap is the run. The old localStorage hand-off for those buttons is
+  gone with it.
+- **AI features flag.** `AI_FEATURES_ENABLED` (src/config/aiFeatures.js,
+  default on) hides every launcher, both entry buttons, and the quick-launch
+  panel when off; the nav row keeps its mark.
+
+### Not built
+- Symptoms launcher: symptom saves run no tripwire evaluation, so there is
+  no clean state to gate on (work-order Tier 1 halt, awaiting a decision).
+
+### Tests
+- New `test:ai-launchers` suite (58): components rendered for real via
+  esbuild + react-dom/server (traces by size, unique ids, aria contract,
+  flag-off hiding), plus provenance allowlist, prohibited zones, no-URL and
+  no-network checks, placement audit, and an em dash scan. 23 suites / 970
+  cases.
+
+---
+
 ## v1.57.2 — 2026-09-02
 
 ### Fixed

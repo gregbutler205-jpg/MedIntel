@@ -16,6 +16,7 @@ import { getLastImportLabel } from "../../store.js";
 import { reconcilePromotedRows, countExactDuplicateLabs, removeDuplicateLabRows } from "../../lib/labBatchConfirm.js";
 import { takePendingSelect } from "../../lib/searchSelect.js";
 import { formatDateUS } from "../../lib/displaySafe.js";
+import AILauncher from "../ai/AILauncher.jsx";
 import { buildLabDigestData, formatLabDigest, formatLabsWindow } from "../../lib/labDigest.js";
 import { selectConditionModules, formatConditionModules } from "../../lib/conditionModules.js";
 
@@ -1259,7 +1260,8 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     Object.values(grouped).forEach(arr => arr.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
                     const orderedCats = [...labCatOrder, ...Object.keys(grouped).filter(c => !labCatOrder.includes(c))];
                     orderedCats.filter(c => grouped[c]?.length).forEach(cat => {
-                      listItems.push({ type: "header", cat });
+                      // DEC-P49: the panel launcher's chip names the panel's latest draw date.
+                      listItems.push({ type: "header", cat, latest: grouped[cat].map(l => l.date).filter(Boolean).sort().slice(-1)[0] || "" });
                       grouped[cat].forEach(lab => listItems.push({ type: "lab", lab }));
                     });
                   } else {
@@ -1290,8 +1292,15 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       {listItems.map((item, i) => {
                         if (item.type === "header") {
                           return (
-                            <div key={`hdr-${item.cat}`} style={{ fontSize: 9, fontWeight: 700, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #0d1a28" }}>
-                              {item.cat}
+                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 9, fontWeight: 700, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #0d1a28" }}>
+                              <span>{item.cat}</span>
+                              {/* DEC-P49: one launcher per panel header, scope = this panel (reconciled rows only). No per-row launchers. */}
+                              <AILauncher
+                                label="Ask about this panel"
+                                scope={{ source: "labs_panel", items: [{ kind: "panel", id: item.cat, label: `${item.cat} panel${item.latest ? `, ${formatDateUS(item.latest)}` : ""}`, date: item.latest || undefined }] }}
+                                onNavigate={() => onNavChange?.("ai")}
+                                style={{ padding: "3px 9px", fontSize: 10, borderRadius: 8, textTransform: "none", letterSpacing: 0, fontWeight: 400 }}
+                              />
                             </div>
                           );
                         }

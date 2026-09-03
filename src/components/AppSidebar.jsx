@@ -1,3 +1,4 @@
+import AIMark from "./ai/AIMark.jsx";
 // ── UI-10: THE shared application sidebar ─────────────────────────────────────
 // One sidebar, one NAV list. Previously App.jsx and each standalone tab
 // (Medications, Labs, Vitals, Symptoms) carried byte-for-byte copies of this
@@ -77,11 +78,16 @@ function PatientBlock() {
 }
 
 function NavItem({ id, icon, label, active, onNav }) {
+  // DEC-P49: the AI Analysis row carries the Insina AI mark (simple, 14) in
+  // place of the generic sparkle glyph; the AI pill is gone. The mark stays
+  // visible when the AI features flag is off (DEC-P51).
+  const isAI = id === "ai";
   return (
     <div className={`nav-item ${active ? "active" : ""}`} onClick={() => onNav(id)}>
-      <span className="nav-icon">{icon}</span>
+      <span className="nav-icon" style={isAI ? { display: "inline-flex", alignItems: "center", justifyContent: "center" } : undefined}>
+        {isAI ? <AIMark variant="simple" size={14} /> : icon}
+      </span>
       <span>{label}</span>
-      {id === "ai" && <span style={{ marginLeft: "auto", fontSize: 10, background: "var(--accent)", color: "#fff", padding: "1px 6px", borderRadius: 8, fontFamily: "var(--font-mono)" }}>AI</span>}
     </div>
   );
 }

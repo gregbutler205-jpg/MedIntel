@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Insina AI">
+  <defs>
+    <path id="iai-star" d="M100 4C121 54 130 95 196 100C130 105 121 146 100 196C79 146 70 105 4 100C70 95 79 54 100 4Z"/>
+    <linearGradient id="iai-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6fdcff"/>
+      <stop offset="0.5" stop-color="#2a70ee"/>
+      <stop offset="1" stop-color="#3ea6ff"/>
+    </linearGradient>
+    <radialGradient id="iai-core" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#d7f6ff"/>
+      <stop offset="0.45" stop-color="#6fd4ff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#6fd4ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="iai-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+  </defs>
+  <use href="#iai-star" fill="url(#iai-body)"/>
+  <use href="#iai-star" fill="url(#iai-core)" transform="translate(100 100) scale(0.62) translate(-100 -100)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 100H82L88 92L93 100H97L102 66L109 132L114 100H136" stroke="#ffffff" stroke-opacity="0.45" stroke-width="9" filter="url(#iai-glow)"/>
+    <path d="M64 100H82L88 92L93 100H97L102 66L109 132L114 100H136" stroke="#ffffff" stroke-width="4.5"/>
+  </g>
+</svg>
