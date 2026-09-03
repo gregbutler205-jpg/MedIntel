@@ -4,6 +4,7 @@ import { getMedsFull, setMedsFull, getPendingMeds, setPendingMeds, getLastImport
 import { tombstoneRecord } from "../../lib/recordTombstones.js";
 import { wirePrintWindow } from "../../lib/printWindow.js";
 import { formatDateUS } from "../../lib/displaySafe.js";
+import AILauncher from "../ai/AILauncher.jsx";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { takePendingSelect } from "../../lib/searchSelect.js";
@@ -717,18 +718,15 @@ export default function App({ onNavChange }) {
               <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 28, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.5px" }}>Medications</h1>
               <p style={{ fontSize: 12, color: "#98afc4", marginTop: 5, fontFamily: "'DM Mono',monospace" }}>{meds.length} active · {flaggedCount} flagged · {refillSoon} refill{refillSoon !== 1 ? "s" : ""} due soon</p>
             </div>
-            <button
-              onClick={() => {
-                // Same mechanism as the per-med AI quick actions: stash the
-                // prompt, jump to AI Analysis, Tab11 auto-sends it. (This
-                // button previously had no handler at all — it did nothing.)
-                localStorage.setItem("mi_ai_pending",
-                  "Review my full medication list for interactions, anything I should avoid (including OTCs and supplements), and flag any concerns to raise with my care team.");
-                onNavChange?.("ai");
-              }}
-              style={{ padding: "8px 16px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "#4f8ef7" }}>✦</span> AI Interaction Check
-            </button>
+            {/* DEC-P49: the one list-level launcher. Replaces the AI Interaction
+                Check button, which auto-sent a prompt on tap (DEC-P50 forbids
+                launcher-triggered runs). Scope: the active medication list. */}
+            <AILauncher
+              label="Review my medication list"
+              scope={{ source: "medications", items: [{ kind: "med_list", label: "Active medications" }] }}
+              onNavigate={() => onNavChange?.("ai")}
+              style={{ padding: "8px 16px", borderRadius: 8 }}
+            />
           </div>
 
           {/* Stats */}

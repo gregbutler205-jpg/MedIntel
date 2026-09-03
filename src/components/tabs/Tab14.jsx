@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, setSelectedCalendar, tombstoneAppt, filterTombstoned } from "../../lib/calendarSync.js";
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 import { formatPhone, displayPhone, formatDateUS } from "../../lib/displaySafe.js";
+import AILauncher from "../ai/AILauncher.jsx";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
@@ -1733,6 +1734,15 @@ export default function AppointmentsTab({ onNavChange }) {
                             onClick={e => { e.stopPropagation(); handleMarkComplete(appt); }}>
                             ✓ Mark Complete
                           </button>
+                          {/* DEC-P49: one launcher per upcoming appointment; none on past encounters. */}
+                          {appt.status === "upcoming" && (
+                            <AILauncher
+                              label="Prepare for this visit"
+                              scope={{ source: "appointment", items: [{ kind: "appointment", id: String(appt.id), label: `Visit: ${appt.provider || appt.title}, ${formatDateUS(appt.date)}`, date: appt.date }] }}
+                              onNavigate={() => onNavChange?.("ai")}
+                              style={{ padding: "6px 12px", fontSize: 11, borderRadius: 8 }}
+                            />
+                          )}
                           <button className="apt-btn"
                             style={{ background: showAI === appt.id ? "rgba(167,139,250,.15)" : "rgba(79,142,247,.08)", borderColor: showAI === appt.id ? "rgba(167,139,250,.4)" : "rgba(79,142,247,.2)", color: showAI === appt.id ? "#a78bfa" : "#7eb8d8" }}
                             onClick={e => { e.stopPropagation(); setShowAI(prev => prev === appt.id ? null : appt.id); }}>
