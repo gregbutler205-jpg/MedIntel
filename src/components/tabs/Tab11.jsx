@@ -24,6 +24,10 @@ import { saveSessionTranscriptToNotes } from "../../lib/analysisExport.js";
 import { buildSessionPrintHtml } from "../../lib/printSession.js";
 import { formatDateUS } from "../../lib/displaySafe.js";
 import { DAILY_QUESTION_LIMIT, dailyLimitReached, questionsRemainingToday, recordQuestionSent } from "../../lib/dailyQuestionLimit.js";
+// DEC-P47 / DEC-P50: provenance mark on the one output surface; in-memory
+// scope hand-off from launchers (never URL, never persisted).
+import AIMark from "../ai/AIMark.jsx";
+import { takeAIScope, scopeChips } from "../../lib/aiScope.js";
 
 const PRINT_LOGO       = import.meta.env.BASE_URL + "logo.png";
 
@@ -73,10 +77,24 @@ function appendAuditLog(entry) {
 // rule 7 (data fidelity) prohibits presenting fabricated defaults as record
 // data, and condition-specific reference content is A-06's conditionModules
 // mechanism, not a block injected for every patient regardless of diagnosis.
-function buildDataSections() {
+function buildDataSections(scopeItems = []) {
   const safeRead = (key, fallback) => {
     try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch { return fallback; }
   };
+
+  // DEC-P50: scope narrows which reconciled-record DATA slices are included
+  // (labs, vitals, reference documents, clinical findings). Identity and
+  // safety slices (conditions, history, medications, allergies, care team,
+  // the tripwire envelope, condition modules) always ride. A full-record
+  // scope, and an appointment scope (no appointment slice exists to narrow
+  // to), produce the unscoped assembly byte for byte. The template text
+  // below is untouched: excluded slices contribute empty content.
+  const narrowing = (scopeItems || []).filter(i => i && (i.kind === "panel" || i.kind === "med_list" || i.kind === "symptom_entry"));
+  const narrowed = narrowing.length > 0;
+  const panelIds = narrowing.filter(i => i.kind === "panel").map(i => String(i.id));
+  const includeLabs = !narrowed || panelIds.length > 0;
+  const includeVitals = !narrowed;
+  const includeDocs = !narrowed;
 
   const conditions = safeRead("mi_conditions", []);
   const surgeries  = safeRead("mi_surgeries",  []);
@@ -113,12 +131,14 @@ function buildDataSections() {
     : "- No care team members on file.";
 
   // ── Labs (A-03 v1: 12-month digest + 60-day window, replaces full history) ──
-  const labs = safeRead("mi_labs", []);
+  const labsAll = safeRead("mi_labs", []);
+  // Panel scope: only the selected categories (grouped the way Labs & Trends groups them).
+  const labs = panelIds.length ? labsAll.filter(l => panelIds.includes(String(l.category || "Other"))) : labsAll;
   const customRanges = safeRead("mi_lab_custom_ranges", {});
   const tripwireEnvelope = getTripwireEnvelope();
   const digestAnalytes = buildLabDigestData(labs, customRanges, { tripwireEnvelope, canonicalizeLabName });
-  const labDigestStr = formatLabDigest(digestAnalytes);
-  const labsWindowStr = formatLabsWindow(labs, customRanges);
+  const labDigestStr = includeLabs ? formatLabDigest(digestAnalytes) : "";
+  const labsWindowStr = includeLabs ? formatLabsWindow(labs, customRanges) : "";
 
   // Personalized-range reminder: flagged, condition-linked analytes with no
   // custom range set. Kept in Tab11 (not labDigest.js) since it depends on
@@ -144,7 +164,7 @@ function buildDataSections() {
   const rangeReminders = digestAnalytes
     .filter(a => !a.customRange && a.last6.some(v => v.flagged === true) && isConditionLinked(a.name))
     .map(a => `- ${a.name}: patient may have an individual target range for this condition — confirm with their care team.`);
-  const rangeRemindersStr = rangeReminders.length
+  const rangeRemindersStr = includeLabs && rangeReminders.length
     ? `\n\nPERSONALIZED RANGE REMINDERS\n${rangeReminders.join("\n")}`
     : "";
 
@@ -161,7 +181,9 @@ function buildDataSections() {
   // fields nothing ever wrote, so BP/HR/O2 silently never reached Surface A.
   const readings = safeRead("mi_readings", []);
   let vitalsStr;
-  if (readings.length > 0) {
+  if (!includeVitals) {
+    vitalsStr = "";
+  } else if (readings.length > 0) {
     const sorted = sortReadingsByRecency(readings);
     vitalsStr = sorted.slice(0, 30).map(r => {
       const parts = [];
@@ -181,7 +203,7 @@ function buildDataSections() {
   }
 
   // ── Reference docs ──────────────────────────────────────────────────────────
-  const refDocs = safeRead("mi_ref_docs", []);
+  const refDocs = includeDocs ? safeRead("mi_ref_docs", []) : [];
   let refDocsSection = "";
   if (refDocs.length > 0) {
     // Group by docType (fall back to "Other" for legacy docs without the field)
@@ -221,7 +243,7 @@ function buildDataSections() {
   }
 
   // ── Clinical findings (auto-extracted from uploaded documents) ──────────────
-  const clinicalFindings = safeRead("mi_clinical_findings", []);
+  const clinicalFindings = includeDocs ? safeRead("mi_clinical_findings", []) : [];
   const findingsSection = clinicalFindings.length > 0
     ? `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nCLINICAL FINDINGS (extracted from patient documents)\n━━━━━━━━━━━━━━━━━━━━━━━━━\nThese findings were automatically extracted from the patient's uploaded medical documents. Treat them as confirmed clinical data points — cross-reference with labs, vitals, and medications as appropriate.\n\n` +
       clinicalFindings.map(f =>
@@ -630,7 +652,7 @@ export default function AIAnalysis({ onNavChange }) {
 
     // Build system prompt with prompt caching blocks
     const { userId, age, sex } = getIdentity();
-    const { system: systemPromptText } = buildSurfaceA({ userId, age, sex, dataSections: buildDataSections() });
+    const { system: systemPromptText } = buildSurfaceA({ userId, age, sex, dataSections: buildDataSections(scopeRef.current) });
     const systemBlocks = [
       {
         type: "text",
@@ -736,11 +758,38 @@ export default function AIAnalysis({ onNavChange }) {
     }
   }, [streaming, staleConsent]);
 
+  // DEC-P50: scope handed off by a launcher. Chips above the composer; the
+  // ref mirrors state so the send path reads the current scope, not a stale
+  // closure. Empty means full record.
+  const [scopeItems, setScopeItems] = useState([]);
+  const scopeRef = useRef([]);
+  useEffect(() => { scopeRef.current = scopeItems; }, [scopeItems]);
+  const removeScopeChip = (chip) => setScopeItems(prev =>
+    prev.filter(it => !(it.kind === chip.kind && String(it.id ?? "") === String(chip.id ?? "") && it.label === chip.label)));
+
   // Auto-send pending prompt from Dashboard AI buttons — opens a NEW session
   // pre-seeded with that question (spec Sec 1 [CONFIRM], stated assumption).
   const pendingSentRef = useRef(false);
   useEffect(() => {
     if (pendingSentRef.current) return;
+    // Launcher hand-off (in-memory, taken once). A dashboard question
+    // launcher is the explicit run action (DEC-P50 as amended): send it.
+    // Every other launcher only pre-sets the scope chips.
+    const handed = takeAIScope();
+    if (handed) {
+      const items = Array.isArray(handed.items) ? handed.items : [];
+      scopeRef.current = items;
+      setScopeItems(items);
+      if (handed.question) {
+        pendingSentRef.current = true;
+        setTimeout(() => sendMessage(handed.question), 300);
+        return;
+      }
+      // A scoped hand-off lands on the session surface so the Reads: chips
+      // sit above the run control on arrival. No document is created until
+      // the first send, so an abandoned surface leaves nothing behind.
+      setView("session");
+    }
     const pending = localStorage.getItem("mi_ai_pending");
     if (pending) {
       localStorage.removeItem("mi_ai_pending");
@@ -1046,7 +1095,10 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             Dashboard
           </button>
         )}
-        <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px" }}>AI Analysis</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <AIMark variant="full" size={40} />
+          <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px" }}>AI Analysis</div>
+        </div>
         <span style={{ fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "2px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px" }}>AI</span>
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -1389,6 +1441,20 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 Integrity button (fixed at right:18, 48px wide). That button is
                 functional — pointer-events:none would break it — so the input
                 row yields the corner instead. */}
+            {/* DEC-P50: scope preview. Chips say which record slices the next
+                run reads; removing them all reverts to the single Full record chip. */}
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 8, paddingRight: 64 }}>
+              <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", letterSpacing: ".8px" }}>Reads:</span>
+              {scopeChips(scopeItems).map((chip, i) => (
+                <span key={`${chip.kind}-${chip.id ?? i}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 9px", borderRadius: 12, fontSize: 10.5, fontFamily: "'DM Mono',monospace", background: chip.removable ? "rgba(79,142,247,.12)" : "rgba(255,255,255,.04)", border: `1px solid ${chip.removable ? "rgba(79,142,247,.35)" : "#1a2f4a"}`, color: chip.removable ? "#7eb8d8" : "#98afc4" }}>
+                  {chip.label}
+                  {chip.removable && (
+                    <button type="button" aria-label={`Remove ${chip.label} from scope`} onClick={() => removeScopeChip(chip)}
+                      style={{ background: "none", border: "none", color: "#7eb8d8", cursor: "pointer", padding: 0, fontSize: 11, lineHeight: 1 }}>✕</button>
+                  )}
+                </span>
+              ))}
+            </div>
             <div style={{ display: "flex", gap: 10, alignItems: "flex-end", paddingRight: 64 }}>
               <textarea
                 ref={textareaRef}
