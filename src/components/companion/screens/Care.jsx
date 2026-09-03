@@ -2,7 +2,8 @@
 import { formatDateUS } from "../../../lib/displaySafe.js";
 // The full searchable encounter history lives on the web; this is prep + capture.
 import { C, mono, serif, Card, SL, Pill, Empty } from "../companionUI.jsx";
-import { upcomingAppointments, relDate, fmtShort, daysUntil } from "../../../lib/companionData.js";
+import { upcomingAppointments, relDate, fmtShort, daysUntil, careTeam } from "../../../lib/companionData.js";
+import { directionsUrl } from "../../../lib/mapsLink.js";
 import { getVisits } from "../../../lib/visitCapture.js";
 
 export default function Care({ startVisit, openVisit }) {
@@ -16,7 +17,10 @@ export default function Care({ startVisit, openVisit }) {
       {appts.length === 0 ? <Empty>No upcoming appointments.</Empty> : appts.map(a => {
         const d = daysUntil(a.date);
         const soon = d != null && d <= 3;
-        const maps = a.address ? `https://maps.google.com/?q=${encodeURIComponent([a.facility, a.address].filter(Boolean).join(", "))}` : null;
+        // v1.58.2: a DIRECTIONS link to the appointment's location (address,
+        // else the care-team member's address, else the facility), not a
+        // search that lists places to pick from.
+        const maps = directionsUrl(a, careTeam());
         return (
           <Card key={a.id} style={{ marginBottom: 12, border: `1px solid ${soon ? C.amber + "50" : C.b2}` }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>

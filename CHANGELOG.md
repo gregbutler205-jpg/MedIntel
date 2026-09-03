@@ -12,6 +12,24 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.58.2 (2026-09-03)
+
+### Fixed
+- **Directions go to the appointment's actual location.** On the phone
+  companion (and the web Appointments tab) the Directions button built a
+  Google Maps search, which listed places to pick from instead of routing,
+  and the companion hid the button unless the appointment carried an
+  address. Both now open Google Maps directions from your current location
+  to the appointment: its own address first, otherwise the matching care
+  team member's address (by provider, then by facility), otherwise the
+  facility name.
+
+### Tests
+- Destination resolution and both surfaces' wiring pinned in
+  `test:appt-tombstones` (40).
+
+---
+
 ## v1.58.1 (2026-09-03)
 
 ### Changed

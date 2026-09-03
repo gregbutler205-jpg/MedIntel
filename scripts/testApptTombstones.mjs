@@ -181,5 +181,36 @@ const EV_SEP7 = { id: "gcal-sep7", summary: "Labs", start: { date: "2026-09-07" 
     "the notice says where synced events landed and what to do next");
 }
 
+// ── v1.58.2: Directions goes to the appointment's location, not a search list ─
+// Greg (companion): "it just searches for the name and then gives a listing of
+// the locations for me to choose. I want it to give directions to the actual
+// location in the appointment."
+{
+  const { directionsUrl, appointmentDestination } = await import("../src/lib/mapsLink.js");
+  const { readFileSync } = await import("node:fs");
+  const team = [
+    { id: 1, name: "Dr. Akhtar", specialty: "Hepatology", facility: "Ochsner Medical Center", address: "1514 Jefferson Hwy, Jefferson, LA 70121" },
+    { id: 2, name: "Dr. Webb", specialty: "Family Medicine", facility: "Hattiesburg Clinic", address: "415 S 28th Ave, Hattiesburg, MS 39401" },
+  ];
+  const withAddress = { title: "Follow-up", provider: "Dr. Akhtar", facility: "Ochsner Medical Center", address: "1514 Jefferson Hwy, Jefferson, LA 70121" };
+  const u = directionsUrl(withAddress, team);
+  ok(u.startsWith("https://www.google.com/maps/dir/?api=1&destination="), "a directions link, never a search link");
+  ok(!/maps\/search|maps\.google\.com\/\?q=/.test(u), "no search-list URL shapes remain");
+  ok(decodeURIComponent(u).includes("Ochsner Medical Center, 1514 Jefferson Hwy"), "the appointment's own address is the destination, facility prefixed");
+  ok(appointmentDestination({ facility: "Ochsner", address: "Ochsner, 1514 Jefferson Hwy" }) === "Ochsner, 1514 Jefferson Hwy",
+    "a facility already inside the address is not doubled");
+  ok(appointmentDestination({ provider: "Dr. Akhtar", facility: "Ochsner Medical Center" }, team) === "Ochsner Medical Center, 1514 Jefferson Hwy, Jefferson, LA 70121",
+    "no address on the appointment: the matching care-team member's address routes it (by provider)");
+  ok(appointmentDestination({ title: "Labs", facility: "Hattiesburg Clinic" }, team).includes("415 S 28th Ave"),
+    "no provider match: the care-team member at that facility supplies the address");
+  ok(appointmentDestination({ facility: "Some Imaging Center" }, team) === "Some Imaging Center",
+    "nothing on file but a facility name: directions to the name (best effort)");
+  ok(directionsUrl({ title: "Unknown" }, team) === null, "no destination at all: no link (companion hides the button)");
+  const care = readFileSync(new URL("../src/components/companion/screens/Care.jsx", import.meta.url), "utf8");
+  ok(care.includes("directionsUrl(a, careTeam())") && !care.includes("maps.google.com/?q="), "companion Care screen uses the directions builder");
+  const tab14 = readFileSync(new URL("../src/components/tabs/Tab14.jsx", import.meta.url), "utf8");
+  ok(tab14.includes("return directionsUrl(appt, team)") && !tab14.includes("maps/search/?api=1"), "web Appointments uses the same builder");
+}
+
 console.log(`\n${pass} passed, ${fail} failed (appt-tombstones)`);
 process.exit(fail ? 1 : 0);

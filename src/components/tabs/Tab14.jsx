@@ -3,6 +3,7 @@ import { listCalendars, listEvents, diffNewAppointments, getSelectedCalendar, se
 import { matchCareTeamMember } from "../../lib/careTeamMatch.js";
 import { formatPhone, displayPhone, formatDateUS } from "../../lib/displaySafe.js";
 import AILauncher from "../ai/AILauncher.jsx";
+import { directionsUrl } from "../../lib/mapsLink.js";
 import { requestReport } from "../../rie/preflightChecks.js";
 import { PrintLabel } from "../icons.jsx";
 import { escapeHtml, applyBoldSafe, stripAiEmojis } from "../../lib/renderAiText.js";
@@ -131,10 +132,12 @@ const BLANK = {
 
 function genId() { return Math.random().toString(36).slice(2); }
 
-// Google Maps directions link from an appointment's facility + address.
+// Google Maps DIRECTIONS link to the appointment's location (v1.58.2: was a
+// search link that listed places to pick from). Shared with the companion.
 function mapsUrl(appt) {
-  const q = [appt.facility, appt.address].filter(Boolean).join(", ");
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+  let team = [];
+  try { team = JSON.parse(localStorage.getItem("mi_care_team") || "[]"); } catch { team = []; }
+  return directionsUrl(appt, team) || "https://www.google.com/maps";
 }
 
 const GCAL_LAST_SYNC_KEY = "mi_gcal_last_sync";
