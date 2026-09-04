@@ -12,6 +12,26 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.58.3 (2026-09-03)
+
+### Changed
+- **Companion bottom bar: six uniform tabs.** Today, Meds, AI, Record, Log,
+  Care. The AI spark (the Insina AI mark) joins the bar and opens AI chat;
+  Record is the same size as every other tab and keeps only its red tint
+  instead of the oversized raised button; inactive tabs are brighter, with a
+  blue top rule on the active one. The Today screen's AI chat shortcut uses
+  the mark too.
+- **Companion Today: the visit card is a link.** Tapping the imminent-visit
+  card body opens the appointment page (Care tab) for directions and visit
+  prep; its Start button still launches capture directly. The Next visit
+  tile already did this.
+
+### Tests
+- Bar order, mark usage, Record sizing, and the Today tap-throughs pinned in
+  `test:ai-launchers` (67).
+
+---
+
 ## v1.58.2 (2026-09-03)
 
 ### Fixed

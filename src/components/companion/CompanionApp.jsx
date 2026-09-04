@@ -15,6 +15,7 @@ import { scheduleMedReminders, runOpenNotifications } from "../../lib/notify.js"
 import { computePatternFlags } from "../../lib/patternFlags.js";
 import { nextAppointment, daysUntil } from "../../lib/companionData.js";
 import { C, mono, sans } from "./companionUI.jsx";
+import AIMark from "../ai/AIMark.jsx";
 
 import { isUnlocked, isDemoMode } from "../../lib/secureStorage.js";
 import Lock       from "./screens/Lock.jsx";
@@ -34,13 +35,17 @@ import VisitFlow  from "./screens/visit/VisitFlow.jsx";
 // Visit recording gets the center slot (camera-app pattern) — always one tap
 // away. AI chat moves off the bar; it stays reachable from Today's quick
 // actions and every "Ask Insina" handoff (tab key "ai" still routes).
-const TABS_LEFT = [
-  { key: "today", label: "Today", icon: "🏠" },
-  { key: "meds",  label: "Meds",  icon: "💊" },
-];
-const TABS_RIGHT = [
-  { key: "log",   label: "Log",   icon: "➕" },
-  { key: "care",  label: "Care",  icon: "📅" },
+// v1.58.3 (Greg): six uniform tabs. The AI spark joins the bar (the mark, as
+// on the web nav row; visible regardless of the AI features flag, DEC-P51),
+// Record is the same size as everything else and keeps only its red tint,
+// and inactive tabs are no longer dimmed to a whisper.
+const TABS = [
+  { key: "today",  label: "Today",  icon: "🏠" },
+  { key: "meds",   label: "Meds",   icon: "💊" },
+  { key: "ai",     label: "AI",     icon: "mark" },
+  { key: "record", label: "Record", icon: "record", action: true },
+  { key: "log",    label: "Log",    icon: "➕" },
+  { key: "care",   label: "Care",   icon: "📅" },
 ];
 
 function fmtTime(ts) {
@@ -100,12 +105,35 @@ function SyncBar({ syncState, lastSynced, onSync, vaultFp, diag }) {
 }
 
 // ── Bottom tab bar ─────────────────────────────────────────────────────────────
-function NavTab({ t, active, onTab }) {
+const NAV_ICON = 22;
+function NavIcon({ t, active }) {
+  if (t.icon === "mark") {
+    return (
+      <span style={{ color: active ? C.blue : C.s, display: "inline-flex", height: NAV_ICON, alignItems: "center" }}>
+        <AIMark variant="simple" size={NAV_ICON} />
+      </span>
+    );
+  }
+  if (t.icon === "record") {
+    return (
+      <span style={{ width: NAV_ICON, height: NAV_ICON, borderRadius: "50%", background: "linear-gradient(135deg, #ef4444, #b91c1c)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />
+      </span>
+    );
+  }
+  return <span style={{ fontSize: NAV_ICON, lineHeight: 1, display: "inline-flex", height: NAV_ICON, alignItems: "center" }}>{t.icon}</span>;
+}
+
+function NavTab({ t, active, onTab, onRecord }) {
+  const isRecord = t.icon === "record";
+  const labelColor = isRecord ? "#f87171" : active ? C.blue : C.dim;
   return (
-    <button key={t.key} onClick={() => onTab(t.key)}
-      style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "9px 0 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-      <span style={{ fontSize: 18, lineHeight: 1, opacity: active ? 1 : 0.55, filter: active ? "none" : "grayscale(0.4)" }}>{t.icon}</span>
-      <span style={{ fontSize: 9, fontFamily: mono, letterSpacing: "0.5px", color: active ? C.blue : C.ghost }}>{t.label}</span>
+    <button key={t.key} onClick={() => (t.action ? onRecord() : onTab(t.key))}
+      aria-label={isRecord ? "Record a doctor visit" : t.label}
+      aria-current={active ? "page" : undefined}
+      style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "8px 0 9px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, borderTop: `2px solid ${active ? C.blue : "transparent"}`, opacity: active || isRecord ? 1 : 0.9 }}>
+      <NavIcon t={t} active={active} />
+      <span style={{ fontSize: 10, fontFamily: mono, letterSpacing: "0.5px", color: labelColor, fontWeight: 600 }}>{t.label}</span>
     </button>
   );
 }
@@ -113,23 +141,7 @@ function NavTab({ t, active, onTab }) {
 function BottomNav({ tab, onTab, onRecord }) {
   return (
     <nav style={{ display: "flex", alignItems: "stretch", borderTop: `1px solid ${C.b2}`, background: C.card, flexShrink: 0, paddingBottom: "env(safe-area-inset-bottom)" }}>
-      {TABS_LEFT.map(t => <NavTab key={t.key} t={t} active={tab === t.key} onTab={onTab} />)}
-
-      {/* Center Record button — Doctor Visit Capture, one tap from anywhere */}
-      <button onClick={onRecord} aria-label="Record a doctor visit"
-        style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "4px 0 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-        <span style={{
-          width: 40, height: 40, borderRadius: "50%", marginTop: -14,
-          background: "linear-gradient(135deg, #ef4444, #b91c1c)", border: `3px solid ${C.card}`,
-          boxShadow: "0 2px 12px rgba(239,68,68,.45)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#fff" }} />
-        </span>
-        <span style={{ fontSize: 9, fontFamily: mono, letterSpacing: "0.5px", color: "#f87171", fontWeight: 700 }}>Record</span>
-      </button>
-
-      {TABS_RIGHT.map(t => <NavTab key={t.key} t={t} active={tab === t.key} onTab={onTab} />)}
+      {TABS.map(t => <NavTab key={t.key} t={t} active={tab === t.key} onTab={onTab} onRecord={onRecord} />)}
     </nav>
   );
 }

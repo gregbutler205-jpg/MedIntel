@@ -1,6 +1,7 @@
 // ── Today — the daily hub. Surfaces what needs attention, compactly. ───────────
 import { useState } from "react";
 import { C, mono, serif, Card, SL, LEVEL_COLOR } from "../companionUI.jsx";
+import AIMark from "../../ai/AIMark.jsx";
 import {
   firstName, nextAppointment, refillsDue, latestWith, relDate, fmtShort,
   flaggedLabs, appointments, daysUntil,
@@ -88,13 +89,19 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
       {/* Imminent-visit prompt */}
       {apptSoon && (
         <Card style={{ marginBottom: 14, border: `1px solid ${C.amber}50` }} >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* v1.58.3 (Greg): the card body opens the appointment page (Care tab:
+              directions + visit prep); Start still launches capture directly. */}
+          <div role="button" tabIndex={0} aria-label="Open this appointment"
+            onClick={() => goTab("care")}
+            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goTab("care"); } }}
+            style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
             <span style={{ fontSize: 22 }}>🎙️</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{appt.title} {relDate(appt.date).toLowerCase()}</div>
               <div style={{ fontSize: 10, color: C.amber, fontFamily: mono }}>Review the brief & capture the visit</div>
+              <div style={{ fontSize: 10, color: C.s, fontFamily: mono, marginTop: 3 }}>Tap for directions & details ›</div>
             </div>
-            <button onClick={() => startVisit(appt)} style={{ background: C.blue, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: "pointer" }}>Start</button>
+            <button onClick={e => { e.stopPropagation(); startVisit(appt); }} style={{ background: C.blue, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: "pointer" }}>Start</button>
           </div>
         </Card>
       )}
@@ -120,7 +127,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
         <QuickBtn icon="🤒" label="Log a symptom" onClick={() => openLog("symptoms")} />
         <QuickBtn icon="💊" label="Confirm meds" onClick={() => goTab("meds")} />
         <QuickBtn icon="💬" label="Talk to Insina" onClick={() => openLog("quick")} />
-        <QuickBtn icon="✦" label="AI chat" onClick={() => goTab("ai")} />
+        <QuickBtn icon={<span style={{ color: C.blue, display: "inline-flex" }}><AIMark variant="simple" size={18} /></span>} label="AI chat" onClick={() => goTab("ai")} />
       </div>
 
       <div style={{ marginTop: 16 }}><SL>Health Record</SL></div>

@@ -113,7 +113,9 @@ const html = (el) => renderToStaticMarkup(el);
 
 // 4. Provenance allowlist: AIMark imported only where permitted
 {
-  const allow = new Set(["components/ai/AILauncher.jsx", "components/ai/AIEntryButton.jsx", "components/AppSidebar.jsx", "components/tabs/Tab11.jsx"]);
+  // v1.58.3: the companion's bottom nav (its nav row) and the Today AI chat
+  // shortcut carry the simple mark too, replacing generic sparkle glyphs.
+  const allow = new Set(["components/ai/AILauncher.jsx", "components/ai/AIEntryButton.jsx", "components/AppSidebar.jsx", "components/tabs/Tab11.jsx", "components/companion/CompanionApp.jsx", "components/companion/screens/Today.jsx"]);
   const files = [];
   const walk = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (/\.(jsx?|mjs)$/.test(f)) files.push(p); } };
   walk(join(ROOT, "src"));
@@ -181,6 +183,22 @@ const html = (el) => renderToStaticMarkup(el);
   const body = t11.slice(idx, t11.indexOf("\n}\n", idx));
   ok(body.includes("LAB RESULTS") && body.includes("VITALS HISTORY") && body.includes("CARE TEAM"), "template headers are untouched by the filter");
   ok(t11.includes('<AIMark variant="full" size={40} />'), "AI Analysis header carries the full mark (permitted surface)");
+}
+
+// 9. v1.58.3: companion bottom bar and Today tap-throughs (Greg)
+{
+  const app = read("components/companion/CompanionApp.jsx");
+  const order = [...app.matchAll(/\{ key: "(today|meds|ai|record|log|care)",/g)].map(m => m[1]).join(" ");
+  ok(order === "today meds ai record log care", `six uniform tabs in the agreed order (got: ${order})`);
+  ok(app.includes('<AIMark variant="simple" size={NAV_ICON} />'), "the AI tab carries the mark at the shared nav icon size");
+  ok(!app.includes("marginTop: -14") && !app.includes("width: 40, height: 40"), "Record is no longer an oversized raised circle");
+  ok(app.includes('background: "linear-gradient(135deg, #ef4444, #b91c1c)"') && app.includes('"#f87171"'), "Record keeps its red tint");
+  ok(!app.includes("grayscale(0.4)") && !app.includes("0.55"), "inactive tabs are no longer dimmed to a whisper");
+  ok(!app.includes("AI_FEATURES_ENABLED"), "the companion AI tab, like the web nav row, is not flag-gated");
+  const today = read("components/companion/screens/Today.jsx");
+  ok(today.includes('aria-label="Open this appointment"') && today.includes('onClick={() => goTab("care")}'), "Today: the imminent-visit card body opens the appointment page");
+  ok(today.includes("e.stopPropagation(); startVisit(appt)"), "Today: Start still launches capture without also navigating");
+  ok(!today.includes('icon="✦"'), "Today: the AI chat shortcut uses the mark, not a generic sparkle");
 }
 
 // 8. Em dash scan (U+2014) over the files this work order created
