@@ -40,7 +40,7 @@ const EXCLUDE_KEYS = new Set([
   // Greg on 2026-09-01 even though every real store merged fine. Excluded on
   // both upload and merge, so poisoned copies already in Drive are ignored.
   "mi_last_sync", "mi_gcal_last_sync", "mi_last_folder_backup",
-  "mi_condsug_last_scan",
+  "mi_condsug_last_scan", "mi_procsug_last_scan",
 ]);
 
 // ── Local data helpers ────────────────────────────────────────────────────────

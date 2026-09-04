@@ -153,7 +153,7 @@ const { isEncryptedBackupPayload, restoreEncryptedBackup } = await import("../sr
 {
   localStorage.clear();
   const { collectLocalData, restoreFromBackupObject } = await import("../src/lib/driveSync.js");
-  const STAMPS = ["mi_last_sync", "mi_gcal_last_sync", "mi_last_folder_backup", "mi_condsug_last_scan"];
+  const STAMPS = ["mi_last_sync", "mi_gcal_last_sync", "mi_last_folder_backup", "mi_condsug_last_scan", "mi_procsug_last_scan"];
   for (const k of STAMPS) localStorage.setItem(k, "2026-09-01");
   localStorage.setItem("mi_conditions", JSON.stringify([{ id: 1, name: "x" }]));
   const exported = collectLocalData();

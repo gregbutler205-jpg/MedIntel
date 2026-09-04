@@ -262,6 +262,10 @@ export default function ImportTab({ onImport, onNavChange }) {
     { label: "Lab Results",     type: "Lab Report", color: "#10b981" },
     { label: "Imaging Report",  type: "Imaging",    color: "#a78bfa" },
     { label: "Clinical Note",   type: "Visit Note", color: "#4f8ef7" },
+    // v1.59.0 (Greg): a procedure/operative note files as a Procedure record,
+    // which the Procedures tab lists directly. Before, only Pathology mapped
+    // there, so a CESI note imported as a Clinical Note never reached it.
+    { label: "Procedure Note",  type: "Procedure",  color: "#f59e0b" },
     { label: "Pathology",       type: "Procedure",  color: "#f59e0b" },
     { label: "Discharge",       type: "Hospital",   color: "#ef4444" },
     { label: "Other",           type: "Other",      color: "#98afc4" },

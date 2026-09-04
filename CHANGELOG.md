@@ -12,6 +12,41 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.59.0 (2026-09-03)
+
+### Added
+- **Procedures now suggests itself from your records**, the same way
+  Conditions does. A built-in scan reads Diagnostics, My Notes, Medical
+  Records, and the full text of imported documents for procedures that are
+  described there but missing from your Procedures list (a CESI in a pain
+  management note, a colonoscopy in a discharge summary, "status post liver
+  transplant" anywhere) and surfaces them under "Suggested from your
+  records" with the document's date and the sentence they appeared in.
+  Confirm opens the normal Add Procedure form pre-filled with the name and
+  that date; Dismiss tombstones it. Runs once a day when you open the tab or
+  on the "⟳ Scan Records" button, with the same landing notice as Calendar
+  Sync. Deterministic and offline. Guards: anything merely scheduled,
+  recommended, discussed, or a candidate for is not history and is not
+  suggested; family members' procedures are not suggested; procedures
+  already on the list (from Procedures or from Procedure-typed Medical
+  Records) are never re-suggested.
+- **Import Records offers a "Procedure Note" type.** It files as a Procedure
+  record, which the Procedures tab already lists directly. Before, only
+  Pathology mapped there, so a procedure note imported as a Clinical Note
+  never reached Procedures.
+
+### Changed
+- The Conditions and Procedures scans share one mention-matching engine
+  (src/lib/recordMentions.js); the Conditions behaviour and its 40 tests
+  are unchanged.
+
+### Tests
+- New `test:procedure-suggest` suite (39): the CESI case, planned-versus-
+  done guards, abbreviation safety, exclusions, tombstones, lifecycle, and
+  Tab16 / import / sync-stamp wiring. 24 suites.
+
+---
+
 ## v1.58.3 (2026-09-03)
 
 ### Changed
