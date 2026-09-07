@@ -380,7 +380,7 @@ function LogPanel({ onClose, onSave }) {
           <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Log Vitals</div>
         </div>
-        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
         {/* Date + optional time */}
@@ -388,12 +388,12 @@ function LogPanel({ onClose, onSave }) {
           <div style={{ flex: 2 }}>
             <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Date of Reading</div>
             <input type="date" value={form.date} onChange={e => set("date", e.target.value)}
-              style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${form.date !== todayISO ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+              style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${form.date !== todayISO ? "#4f8ef7" : "#1c2a40"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Time (optional)</div>
             <input type="time" value={form.time} onChange={e => set("time", e.target.value)}
-              style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+              style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
           </div>
         </div>
         {form.date !== todayISO && (
@@ -410,12 +410,12 @@ function LogPanel({ onClose, onSave }) {
             <div style={{ display: "flex", gap: 8 }}>
               {inputs.map(({ k, ph }) => (
                 <input key={k} type="number" placeholder={ph} value={form[k]} onChange={e => set(k, e.target.value)}
-                  style={{ flex: 1, padding: "9px 12px", background: "#0b1220", border: `1px solid ${form[k] ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 14, fontFamily: "'DM Mono',monospace", outline: "none" }} />
+                  style={{ flex: 1, padding: "9px 12px", background: "#0b1220", border: `1px solid ${form[k] ? "#4f8ef7" : "#1c2a40"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 14, fontFamily: "'DM Mono',monospace", outline: "none" }} />
               ))}
             </div>
           </div>
         ))}
-        <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "10px 12px", marginTop: 4 }}>
+        <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "10px 12px", marginTop: 4 }}>
           <div style={{ fontSize: 11, color: "#98afc4", lineHeight: 1.6 }}>Leave any field blank to skip it. BMI is calculated automatically from your weight and height in Profile.</div>
         </div>
       </div>
@@ -425,7 +425,7 @@ function LogPanel({ onClose, onSave }) {
           Save Entry
         </button>
         <button onClick={onClose}
-          style={{ padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+          style={{ padding: "11px 16px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
           Cancel
         </button>
       </div>
@@ -491,7 +491,7 @@ function PlausibilityGate({ pending, onConfirm, onSuggestion, onCancel }) {
             </button>
           )}
           <button onClick={onCancel}
-            style={{ flex: hasHard ? 1 : "none", padding: "11px 16px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+            style={{ flex: hasHard ? 1 : "none", padding: "11px 16px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
             {hasHard ? "Edit Manually" : "Cancel"}
           </button>
         </div>
@@ -618,7 +618,7 @@ export default function App({ onNavChange }) {
         @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
         .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
-        .vcard{background:#0b1220;border:1px solid #111e30;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;animation:fadeUp .3s ease both}
+        .vcard{background:#0b1220;border:1px solid #1c2a40;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;animation:fadeUp .3s ease both}
         .vcard:hover{border-color:#1a2f4a}
         .vcard.sel{border-color:#4f8ef7;background:rgba(79,142,247,.07)}
         .time-btn{padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;background:#0f1e30;color:#7eb8d8;font-weight:500}
@@ -687,12 +687,12 @@ export default function App({ onNavChange }) {
 
             {/* Summary chips */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7, marginBottom:14 }}>
-              <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #111e30", borderRadius:10, padding:"9px 11px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
+              <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #1c2a40", borderRadius:10, padding:"9px 11px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
                 <div style={{ fontSize:17, fontWeight:700, color:"#f87171", lineHeight:1, marginBottom:2 }}>{flaggedManual}</div>
                 <div style={{ fontSize:9, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight:600 }}>Flagged</div>
                 <div style={{ fontSize:8, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "clear" : "filter"}</div>
               </div>
-              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"9px 11px" }}>
+              <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"9px 11px" }}>
                 <div style={{ fontSize:17, fontWeight:700, color:"#4f8ef7", lineHeight:1, marginBottom:2 }}>{manualReadings.length}</div>
                 <div style={{ fontSize:9, color:"#7eb8d8", fontWeight:600 }}>Readings</div>
               </div>
@@ -703,7 +703,7 @@ export default function App({ onNavChange }) {
               value={vitalSearch}
               onChange={e => setVitalSearch(e.target.value)}
               placeholder="Search vitals…"
-              style={{ width:"100%", background:"#080c14", border:"1px solid #111e30", borderRadius:8, padding:"7px 10px", fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", outline:"none", marginBottom:10 }}
+              style={{ width:"100%", background:"#080c14", border:"1px solid #1c2a40", borderRadius:8, padding:"7px 10px", fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", outline:"none", marginBottom:10 }}
             />
 
             {/* Vital cards */}
@@ -774,7 +774,7 @@ export default function App({ onNavChange }) {
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   <button onClick={handleSaveReading} style={{ padding:"8px 18px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Save Reading</button>
-                  <button onClick={() => setShowEntryForm(false)} style={{ padding:"8px 14px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Cancel</button>
+                  <button onClick={() => setShowEntryForm(false)} style={{ padding:"8px 14px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>Cancel</button>
                 </div>
               </div>
             )}
@@ -836,7 +836,7 @@ export default function App({ onNavChange }) {
                     { label:"Data Source", value: isWatch ? "Watch" : "Manual", sub: isWatch ? "HealthKit daily" : "Sporadic entry", color: isWatch ? "#4f8ef7" : "#7eb8d8" },
                   ];
                 })().map(({ label, value, sub, color }) => (
-                  <div key={label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"12px 14px" }}>
+                  <div key={label} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"12px 14px" }}>
                     <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
                     <div style={{ fontSize:16, fontWeight:700, color, marginBottom:2 }}>{value}</div>
                     <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{sub}</div>
@@ -845,7 +845,7 @@ export default function App({ onNavChange }) {
               </div>
 
               {/* Chart */}
-              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"16px 14px 10px", marginBottom:14 }}>
+              <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 14px 10px", marginBottom:14 }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                   <div className="section-label" style={{ marginBottom:0 }}>{timeRange}-Month Trend</div>
                   <div style={{ display:"flex", gap:12 }}>
@@ -885,7 +885,7 @@ export default function App({ onNavChange }) {
 
               {/* History table — focused on selected vital */}
               {!isWatch && (
-                <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"14px 18px" }}>
+                <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"14px 18px" }}>
                   <div className="section-label">Reading History</div>
                   {(() => {
                     const rows = filterByMonths(manualReadings, timeRange);
@@ -947,7 +947,7 @@ export default function App({ onNavChange }) {
 
               {/* Watch history — resting HR */}
               {isWatch && (
-                <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"14px 18px" }}>
+                <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"14px 18px" }}>
                   <div className="section-label">Daily Watch Data</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:6 }}>
                     {filteredData.slice(0,28).map(r => (

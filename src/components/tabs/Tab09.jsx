@@ -166,7 +166,7 @@ function UploadModal({ onSave, onClose }) {
   }
 
   const inp = {
-    width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8,
+    width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8,
     padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono',monospace", fontSize: 11, outline: "none",
   };
   const lbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 5, display: "block" };
@@ -263,7 +263,7 @@ function UploadModal({ onSave, onClose }) {
         </div>
 
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", cursor: "pointer", fontSize: 12 }}>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", cursor: "pointer", fontSize: 12 }}>
             Cancel
           </button>
           <button
@@ -614,16 +614,16 @@ export default function DocumentsTab() {
         .doc-cat:hover { background:rgba(79,142,247,.05); color:#7eb8d8; }
         .doc-cat.active { background:rgba(79,142,247,.08); color:#4f8ef7; }
         .doc-row { padding:12px 14px; border-radius:10px; border:1px solid #1c2a40; background:#080c14; cursor:pointer; transition:all .15s; margin-bottom:6px; animation:fadeUp .3s ease both; }
-        .doc-row:hover { border-color:#111e30; background:#0a0f1c; }
+        .doc-row:hover { border-color:#1c2a40; background:#0a0f1c; }
         .doc-row.selected { border-color:#1a2f4a; background:#0b1220; }
         .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:9px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#4f8ef7; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
         .tag.urgent { background:rgba(239,68,68,.1); color:#f87171; border-color:rgba(239,68,68,.2); }
-        .doc-search { background:#080c14; border:1px solid #111e30; border-radius:8px; padding:8px 12px; color:#a8c4dc; font-family:'Sora',sans-serif; font-size:12px; width:100%; outline:none; transition:border-color .15s; }
+        .doc-search { background:#080c14; border:1px solid #1c2a40; border-radius:8px; padding:8px 12px; color:#a8c4dc; font-family:'Sora',sans-serif; font-size:12px; width:100%; outline:none; transition:border-color .15s; }
         .doc-search:focus { border-color:#1a2f4a; }
         .doc-search::placeholder { color:#a0b4c8; }
         .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
         .preview-area { font-family:'DM Mono',monospace; font-size:11px; color:#b0c4d8; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #1c2a40; border-radius:10px; padding:18px; overflow-y:auto; flex:1; min-height:0; }
-        .filter-chip { padding:5px 12px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #111e30; background:transparent; color:#b0c4d8; }
+        .filter-chip { padding:5px 12px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; }
         .filter-chip.active { border-color:rgba(79,142,247,.4); background:rgba(79,142,247,.08); color:#7eb8d8; }
         .act-btn { padding:6px 13px; border-radius:7px; font-family:'Sora',sans-serif; font-size:11px; cursor:pointer; transition:all .15s; }
         .extracting-pulse { animation:pulse 2s ease infinite; }
@@ -642,7 +642,7 @@ export default function DocumentsTab() {
           + Upload
         </button>
         <button onClick={() => window.print()}
-          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
           <PrintLabel />
         </button>
       </div>

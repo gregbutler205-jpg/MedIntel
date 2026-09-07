@@ -10,7 +10,7 @@
   --bg-deep:   #080c14;
   --card:      #0b1220;
   --card-deep: #080c14;
-  --border:    #111e30;
+  --border:    #1c2a40;
   --border-strong: #1a2f4a;
   --divider:   #1c2a40;
 
@@ -70,7 +70,7 @@
   --chip-warn-bg: rgba(245,158,11,.12); --chip-warn-fg: #f59e0b;
   --chip-dup-bg: #111e30; --chip-dup-bd: #1a2f4a; --chip-dup-fg: #7eb8d8;
   --stale-bg: rgba(245,158,11,.08); --stale-bd: rgba(245,158,11,.3); --stale-fg: #f59e0b;
-  --banner-bg: #0b1220; --banner-bd: #111e30;
+  --banner-bg: #0b1220; --banner-bd: #1c2a40;
   --band-bg: transparent; --band-bd: var(--divider);
   --ob-shadow-card: none; --ob-shadow-frame: none;
 }

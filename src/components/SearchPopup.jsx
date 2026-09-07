@@ -16,7 +16,7 @@ const C = {
   overlay: "rgba(0,0,0,.72)",
   card:    "#0b1220",
   b1:      "#1a2f4a",
-  b2:      "#111e30",
+  b2:      "#1c2a40",
   blue:    "#4f8ef7",
   green:   "#2dd4a0",
   amber:   "#f59e0b",

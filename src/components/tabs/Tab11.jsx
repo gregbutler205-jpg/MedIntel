@@ -452,7 +452,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
       <div style={{
         maxWidth: "74%",
         background: isUser ? "rgba(79,142,247,.09)" : "#0b1220",
-        border: `1px solid ${isUser ? "rgba(79,142,247,.18)" : "#111e30"}`,
+        border: `1px solid ${isUser ? "rgba(79,142,247,.18)" : "#1c2a40"}`,
         borderRadius: isUser ? "12px 4px 12px 12px" : "4px 12px 12px 12px",
         padding: "12px 15px",
         fontSize: 12.5, color: "#a8c4dc", lineHeight: 1.75,
@@ -480,7 +480,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
               {streaming && <span style={{ display: "inline-block", width: 8, height: 14, background: "#4f8ef7", marginLeft: 2, animation: "cursorBlink 1s step-end infinite", verticalAlign: "text-bottom" }} />}
               {/* Footer disclaimer — all responses */}
               {!streaming && text && (
-                <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
+                <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #1c2a40", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
                   {isAdvancedUi ? "Advanced Mode" : "Standard Mode"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
                 </div>
               )}
@@ -495,7 +495,7 @@ function TypingIndicator() {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 20 }}>
       <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</div>
-      <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: "4px 12px 12px 12px", padding: "14px 18px", display: "flex", gap: 5, alignItems: "center" }}>
+      <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: "4px 12px 12px 12px", padding: "14px 18px", display: "flex", gap: 5, alignItems: "center" }}>
         {[0, 150, 300].map(d => (
           <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#b0c4d8", display: "inline-block", animation: `dotBlink 1.2s ease ${d}ms infinite` }} />
         ))}
@@ -1003,19 +1003,19 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         @keyframes fadeUp   { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
         @keyframes dotBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-        .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #111e30; border-radius:8px; color:#b0c4d8; font-size:11.5px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
+        .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #1c2a40; border-radius:8px; color:#b0c4d8; font-size:11.5px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
         .preset-btn:hover { border-color:#1a2f4a; color:#7eb8d8; background:#0d1828; }
         .send-btn { padding:0 18px; height:40px; background:rgba(79,142,247,.12); border:1px solid rgba(79,142,247,.3); border-radius:8px; color:#4f8ef7; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; flex-shrink:0; }
         .send-btn:hover { background:rgba(79,142,247,.2); border-color:rgba(79,142,247,.5); }
         .send-btn:disabled { opacity:.4; cursor:not-allowed; }
         .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#f87171; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
         .stop-btn:hover { background:rgba(239,68,68,.15); }
-        .chat-input { flex:1; min-width:0; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
+        .chat-input { flex:1; min-width:0; background:#0b1220; border:1px solid #1c2a40; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
         .chat-input::placeholder { color:#98afc4; }
         .chat-input:focus { border-color:#1a2f4a; }
         .end-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; }
         .end-btn:disabled { opacity:.45; cursor:not-allowed; }
-        .sess-row { width:100%; text-align:left; background:#0b1220; border:1px solid #111e30; border-radius:10px; padding:13px 16px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:14px; margin-bottom:8px; }
+        .sess-row { width:100%; text-align:left; background:#0b1220; border:1px solid #1c2a40; border-radius:10px; padding:13px 16px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:14px; margin-bottom:8px; }
         .sess-row:hover { border-color:#1a2f4a; background:#0d1828; }
       `}</style>
 
@@ -1039,7 +1039,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               Save &amp; Print
             </button>
             <button onClick={() => setPreviewHtml(null)}
-              style={{ background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#98afc4", padding: "6px 14px", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+              style={{ background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#98afc4", padding: "6px 14px", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
               Close preview
             </button>
           </div>
@@ -1140,7 +1140,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <button
             onClick={() => onNavChange("backup")}
             title="Change AI mode in Settings & Backup"
-            style={{ background: "none", border: "1px solid #111e30", borderRadius: 4, color: "#7eb8d8", fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 9px", cursor: "pointer", letterSpacing: "0.4px" }}
+            style={{ background: "none", border: "1px solid #1c2a40", borderRadius: 4, color: "#7eb8d8", fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 9px", cursor: "pointer", letterSpacing: "0.4px" }}
           >Change</button>
         )}
         <div style={{ flex: 1 }} />
@@ -1425,7 +1425,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 across the screen — the three end-actions read as one group. */}
             <button className="end-btn" onClick={closeSession} disabled={streaming}
               title="Close this session"
-              style={{ background: "transparent", border: "1px solid #111e30", color: "#98afc4" }}>
+              style={{ background: "transparent", border: "1px solid #1c2a40", color: "#98afc4" }}>
               Close
             </button>
             <span style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>

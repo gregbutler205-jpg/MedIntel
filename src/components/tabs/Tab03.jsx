@@ -118,18 +118,18 @@ export default function Records({ onNavChange }) {
         .rec-row { padding: 13px 16px; border-bottom: 1px solid #1c2a40; cursor: pointer; transition: background .1s; border-left: 2px solid transparent; }
         .rec-row:hover { background: #0b1220; }
         .rec-row.active { background: #0d1525; border-left-color: #4f8ef7; }
-        .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
+        .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .filter-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .filter-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
-        .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
+        .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .type-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .type-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
         .detail-line { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #1c2a40; font-size: 12px; }
         .detail-line:last-child { border-bottom: none; }
-        .search-input { background: #0b1220; border: 1px solid #111e30; color: #c4d8ee; padding: 7px 12px 7px 32px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; width: 220px; transition: border-color .15s; }
+        .search-input { background: #0b1220; border: 1px solid #1c2a40; color: #c4d8ee; padding: 7px 12px 7px 32px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; width: 220px; transition: border-color .15s; }
         .search-input::placeholder { color: #98afc4; }
         .search-input:focus { border-color: #1a2f4a; }
-        .modal-input { width: 100%; background: #07090f; border: 1px solid #111e30; color: #c4d8ee; padding: 8px 12px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; transition: border-color .15s; }
+        .modal-input { width: 100%; background: #07090f; border: 1px solid #1c2a40; color: #c4d8ee; padding: 8px 12px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; transition: border-color .15s; }
         .modal-input::placeholder { color: #a0b4c8; }
         .modal-input:focus { border-color: #1a2f4a; }
         .epic-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 8px; color: #4f8ef7; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; text-decoration: none; }
@@ -157,7 +157,7 @@ export default function Records({ onNavChange }) {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
+        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
           {records.length} records · Epic FHIR
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function Records({ onNavChange }) {
                 {/* UI-19: truthful metadata — the old "Open in Epic" pointed at a
                     fake example.com URL; the id is shown as plain text instead. */}
                 {selected.epicId && (
-                  <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "2px 8px", borderRadius: 5 }}>
+                  <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "2px 8px", borderRadius: 5 }}>
                     Epic ID: {selected.epicId}
                   </span>
                 )}
@@ -284,7 +284,7 @@ export default function Records({ onNavChange }) {
 
             {/* Summary — only when there is one (UI-19: no empty headings) */}
             {selected.summary && (
-              <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
+              <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
                 <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                   Summary
                 </div>
@@ -293,7 +293,7 @@ export default function Records({ onNavChange }) {
             )}
 
             {/* Key details */}
-            {(selected.details ?? []).length > 0 && <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
+            {(selected.details ?? []).length > 0 && <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
               <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                 Key Details
               </div>
@@ -311,7 +311,7 @@ export default function Records({ onNavChange }) {
             {/* Tags */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {(selected.tags ?? []).map(t => (
-                <span key={t} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", color: "#98afc4", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
+                <span key={t} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", color: "#98afc4", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
                   #{t}
                 </span>
               ))}
@@ -374,7 +374,7 @@ export default function Records({ onNavChange }) {
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button
                 onClick={() => { setShowAdd(false); setAddForm({ title: "", facility: "", provider: "", date: "" }); setAddType(null); }}
-                style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
+                style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
               >
                 Cancel
               </button>
@@ -418,7 +418,7 @@ export default function Records({ onNavChange }) {
             <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", marginBottom: 10 }}>Delete Record?</div>
             <div style={{ fontSize: 13, color: "#98afc4", marginBottom: 22 }}>This cannot be undone.</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button onClick={() => setDeleteId(null)} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => setDeleteId(null)} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => {
                 tombstoneRecord("mi_records", records.find(r => r.id === deleteId));
                 const updated = records.filter(r => r.id !== deleteId);

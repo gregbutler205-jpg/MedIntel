@@ -118,7 +118,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
           <div className="ao-body" dangerouslySetInnerHTML={{ __html: renderAiMarkdownToHtml(safeContent) }} />
 
           {/* Screen footer note */}
-          <div className="ao-chrome" style={{ marginTop: 28, paddingTop: 12, borderTop: "1px solid #111e30", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.6 }}>
+          <div className="ao-chrome" style={{ marginTop: 28, paddingTop: 12, borderTop: "1px solid #1c2a40", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.6 }}>
             {ANALYSIS_FOOTER} · Record last synced: {getLastSyncStamp()}
           </div>
 

@@ -1494,7 +1494,7 @@ export default function AppointmentsTab({ onNavChange }) {
       <style>{`
         * { box-sizing:border-box; }
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-        .apt-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; transition:border-color .2s; animation:fadeUp .35s ease both; }
+        .apt-card { background:#0b1220; border:1px solid #1c2a40; border-radius:14px; transition:border-color .2s; animation:fadeUp .35s ease both; }
         .apt-card:hover { border-color:#1a2f4a; }
         .apt-row { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:10px; background:#080c14; border:1px solid #1c2a40; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
         .apt-row:hover { border-color:#1a2f4a; }

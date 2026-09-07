@@ -90,7 +90,7 @@ function LogPanel({ onClose, onSave }) {
             {step === 1 ? "Select Symptom" : selected ? selected.label : custom}
           </div>
         </div>
-        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
       </div>
 
       {/* Step 1 — symptom picker */}
@@ -101,7 +101,7 @@ function LogPanel({ onClose, onSave }) {
               placeholder="Search symptoms..."
               value={filter}
               onChange={e => setFilter(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none" }}
+              style={{ width: "100%", padding: "8px 12px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none" }}
             />
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 14px" }}>
@@ -113,7 +113,7 @@ function LogPanel({ onClose, onSave }) {
                 placeholder="e.g. Tingling in left hand..."
                 value={custom}
                 onChange={e => { setCustom(e.target.value); if (e.target.value) setSelected(null); }}
-                style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${custom ? "#4f8ef7" : "#111e30"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none" }}
+                style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${custom ? "#4f8ef7" : "#1c2a40"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none" }}
               />
               <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>…or pick from the common symptoms below</div>
             </div>
@@ -124,7 +124,7 @@ function LogPanel({ onClose, onSave }) {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {filtered.filter(s => s.category === cat).map(s => (
                     <button key={s.id} onClick={() => { setSelected(selected?.id === s.id ? null : s); if (selected?.id !== s.id) setCustom(""); }}
-                      style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${selected?.id === s.id ? "#4f8ef7" : "#111e30"}`, background: selected?.id === s.id ? "rgba(79,142,247,.15)" : "#0b1220", color: selected?.id === s.id ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
+                      style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${selected?.id === s.id ? "#4f8ef7" : "#1c2a40"}`, background: selected?.id === s.id ? "rgba(79,142,247,.15)" : "#0b1220", color: selected?.id === s.id ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
                       {s.label}
                     </button>
                   ))}
@@ -173,7 +173,7 @@ function LogPanel({ onClose, onSave }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {BODY_LOCATIONS.map(loc => (
                   <button key={loc} onClick={() => setLocation(location === loc ? "" : loc)}
-                    style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${location === loc ? "#4f8ef7" : "#111e30"}`, background: location === loc ? "rgba(79,142,247,.15)" : "#0b1220", color: location === loc ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
+                    style={{ padding: "5px 11px", borderRadius: 20, border: `1px solid ${location === loc ? "#4f8ef7" : "#1c2a40"}`, background: location === loc ? "rgba(79,142,247,.15)" : "#0b1220", color: location === loc ? "#7eb8d8" : "#b0c4d8", fontSize: 11, cursor: "pointer", fontFamily: "'Sora',sans-serif", transition: "all .12s" }}>
                     {loc}
                   </button>
                 ))}
@@ -186,14 +186,14 @@ function LogPanel({ onClose, onSave }) {
               <textarea
                 placeholder="Any context — when it started, what makes it better or worse..."
                 value={note} onChange={e => setNote(e.target.value)} rows={4}
-                style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none", resize: "none", lineHeight: 1.6 }}
+                style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, color: "#c4d8ee", fontSize: 12, fontFamily: "'Sora',sans-serif", outline: "none", resize: "none", lineHeight: 1.6 }}
               />
             </div>
           </div>
 
           <div style={{ padding: "14px 18px", borderTop: "1px solid #1c2a40", display: "flex", gap: 8, flexShrink: 0 }}>
             <button onClick={() => setStep(1)}
-              style={{ padding: "11px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+              style={{ padding: "11px 14px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
               ← Back
             </button>
             <button onClick={handleSave}
@@ -246,12 +246,12 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", lineHeight: 1.2 }}>{entry.symptom}</div>
           <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 5 }}>{formatDateUS(entry.date)} · {entry.location}</div>
         </div>
-        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px", flexShrink: 0 }}>✕</button>
+        <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px", flexShrink: 0 }}>✕</button>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "18px" }}>
         {/* Severity */}
-        <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "16px", marginBottom: 14 }}>
+        <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12, padding: "16px", marginBottom: 14 }}>
           <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Severity</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
             <span style={{ fontSize: 36, fontWeight: 700, color: severityColor(entry.severity), lineHeight: 1 }}>{entry.severity}</span>
@@ -267,7 +267,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
 
         {/* Notes */}
         {entry.note && (
-          <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 12, padding: "14px", marginBottom: 14 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12, padding: "14px", marginBottom: 14 }}>
             <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Notes</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.7 }}>{entry.note}</div>
           </div>
@@ -397,10 +397,10 @@ export default function App({ onNavChange }) {
         @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
         .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
-        .entry-row{background:#0b1220;border:1px solid #111e30;border-radius:11px;padding:14px 16px;cursor:pointer;transition:all .15s;animation:fadeUp .3s ease both;margin-bottom:7px}
+        .entry-row{background:#0b1220;border:1px solid #1c2a40;border-radius:11px;padding:14px 16px;cursor:pointer;transition:all .15s;animation:fadeUp .3s ease both;margin-bottom:7px}
         .entry-row:hover{border-color:#1a2f4a}
         .entry-row.sel{border-color:#4f8ef7;background:rgba(79,142,247,.06)}
-        .filter-btn{padding:5px 13px;border-radius:20px;border:1px solid #111e30;background:transparent;color:#b0c4d8;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .12s}
+        .filter-btn{padding:5px 13px;border-radius:20px;border:1px solid #1c2a40;background:transparent;color:#b0c4d8;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .12s}
         .filter-btn:hover{color:#7eb8d8;border-color:#1a2f4a}
         .filter-btn.on{background:rgba(79,142,247,.12);border-color:#4f8ef7;color:#7eb8d8}
       `}</style>
@@ -475,7 +475,7 @@ export default function App({ onNavChange }) {
                 { label:"Avg Severity", value: avgSeverity, color: safeNumber(avgSeverity) == null ? "#98afc4" : safeNumber(avgSeverity) >= 6 ? "#ef4444" : safeNumber(avgSeverity) >= 4 ? "#f59e0b" : "#10b981" },
                 { label:"Peak Severity", value: maxSeverity ?? "—", color: severityColor(maxSeverity ?? 5) },
               ].map(({ label, value, color }) => (
-                <div key={label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 16px", animation:"fadeUp .3s ease both" }}>
+                <div key={label} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"14px 16px", animation:"fadeUp .3s ease both" }}>
                   <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
                   <div style={{ fontSize:24, fontWeight:700, color, lineHeight:1 }}>{value}</div>
                 </div>

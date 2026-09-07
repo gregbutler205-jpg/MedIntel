@@ -664,12 +664,12 @@ export default function ImportTab({ onImport, onNavChange }) {
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
-        .lab-card { background:#0b1220; border:1px solid #111e30; border-radius:12px; padding:14px 16px; margin-bottom:8px; transition:border-color .15s; animation:fadeUp .3s ease both; }
+        .lab-card { background:#0b1220; border:1px solid #1c2a40; border-radius:12px; padding:14px 16px; margin-bottom:8px; transition:border-color .15s; animation:fadeUp .3s ease both; }
         .lab-card:hover { border-color:#1a2f4a; }
         .imp-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; border:1px solid; }
         .btn-primary { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.35); color:#7eb8d8; }
         .btn-primary:hover { background:rgba(79,142,247,.25); border-color:rgba(79,142,247,.6); color:#b8d4f0; }
-        .btn-ghost  { background:transparent; border-color:#111e30; color:#b0c4d8; }
+        .btn-ghost  { background:transparent; border-color:#1c2a40; color:#b0c4d8; }
         .btn-ghost:hover { border-color:#1a2f4a; color:#c4d8ee; }
         .btn-danger { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#f87171; }
         .btn-danger:hover { background:rgba(239,68,68,.2); }
@@ -743,7 +743,7 @@ export default function ImportTab({ onImport, onNavChange }) {
 
         {/* Document type selector + upload */}
         {mode === "upload" && (
-        <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 18px", marginBottom:20 }}>
+        <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"14px 18px", marginBottom:20 }}>
           <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:10 }}>Upload Document Type</div>
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:14 }}>
             {DOC_TYPES.map(dt => {
@@ -800,7 +800,7 @@ export default function ImportTab({ onImport, onNavChange }) {
 
         {/* Batch summary (non-lab: auto-saved; lab: shows per-file counts above the preview grid) */}
         {batchSummary.length > 0 && (
-          <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"14px 18px", marginBottom:20, animation:"fadeUp .3s ease both" }}>
+          <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"14px 18px", marginBottom:20, animation:"fadeUp .3s ease both" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
               <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
                 Batch Import — {batchSummary.filter(s=>s.ok).length} of {batchSummary.length} succeeded
@@ -873,7 +873,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                 <button onClick={sendToAI} style={{ padding:"6px 14px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:7, color:"#4f8ef7", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>✦ Interpret with AI ▸</button>
               </div>
             </div>
-            <div style={{ background:"#07090f", border:"1px solid #111e30", borderRadius:10, padding:"14px 16px" }}>
+            <div style={{ background:"#07090f", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
                 <span style={{ fontSize:9, background:`${docPreview._color}18`, color: docPreview._color, border:`1px solid ${docPreview._color}30`, padding:"2px 8px", borderRadius:4, fontFamily:"'DM Mono',monospace", letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{docPreview._recordType || docPreview._label}</span>
                 <span style={{ fontSize:15, fontWeight:600, color:"#dde8f5" }}>{docPreview.title}</span>
@@ -902,7 +902,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           // like "All rows excluded" exactly when they mattered.
           try { log = JSON.parse(localStorage.getItem("mi_importLog") || "[]"); } catch {}
           return (
-            <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:12, padding:"16px 18px" }}>
+            <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"16px 18px" }}>
               <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:12 }}>Import History</div>
               {log.length === 0 ? (
                 <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", padding:"12px 0" }}>
@@ -937,7 +937,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         <div style={{ display:"grid", gridTemplateColumns:"380px 1fr", gap:20 }}>
 
           {/* ── Entry Form ── */}
-          <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:20, height:"fit-content" }}>
+          <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:20, height:"fit-content" }}>
             <div className="section-label">{editId !== null ? "Editing Result" : "Add Lab Result"}</div>
 
             <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
@@ -995,18 +995,18 @@ export default function ImportTab({ onImport, onNavChange }) {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search tests…"
-                style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:8, padding:"7px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none", flex:1, minWidth:140 }}
+                style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:8, padding:"7px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none", flex:1, minWidth:140 }}
               />
               <select className="dark-sel" style={{ width:"auto", minWidth:160 }} value={catFilter} onChange={e => setCatFilter(e.target.value)}>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"7px 12px", background:"#0b1220", border:"1px solid #111e30", borderRadius:8 }}>
+              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"7px 12px", background:"#0b1220", border:"1px solid #1c2a40", borderRadius:8 }}>
                 {grouped.length} test{grouped.length !== 1 ? "s" : ""} · {labs.length} total readings
               </div>
             </div>
 
             {grouped.length === 0 && (
-              <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:32, textAlign:"center" }}>
+              <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:32, textAlign:"center" }}>
                 <div style={{ fontSize:24, marginBottom:10, color:"#1a2f4a" }}>◈</div>
                 <div style={{ fontSize:14, color:"#a0b4c8", marginBottom:6 }}>No lab results yet</div>
                 <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Use the form to add your first result</div>
@@ -1046,7 +1046,7 @@ export default function ImportTab({ onImport, onNavChange }) {
 
                   {/* Expanded history grid */}
                   {isExpanded && (
-                    <div style={{ borderTop:"1px solid #111e30", padding:"12px 16px 14px" }}>
+                    <div style={{ borderTop:"1px solid #1c2a40", padding:"12px 16px 14px" }}>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, paddingBottom:6, borderBottom:"1px solid #1c2a40", marginBottom:4 }}>
                         {["DATE","VALUE","RANGE","FACILITY",""].map((h,j) => (
                           <div key={j} style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", padding:"0 4px" }}>{h}</div>

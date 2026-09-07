@@ -636,22 +636,22 @@ export default function App({ onNavChange }) {
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
         .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
-        .stat-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; padding:18px 20px; animation:fadeUp .35s ease both; transition:border-color .2s; }
+        .stat-card { background:#0b1220; border:1px solid #1c2a40; border-radius:14px; padding:18px 20px; animation:fadeUp .35s ease both; transition:border-color .2s; }
         .stat-card:hover { border-color:#1a2f4a; }
-        .med-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #111e30; margin-bottom:6px; cursor:pointer; transition:all .15s; animation:fadeUp .35s ease both; }
+        .med-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:6px; cursor:pointer; transition:all .15s; animation:fadeUp .35s ease both; }
         .med-row:hover { border-color:#1a2f4a; }
         .med-row.selected { border-color:#4f8ef7; background:rgba(79,142,247,.06); }
-        .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; white-space:nowrap; }
+        .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; white-space:nowrap; }
         .filter-pill:hover { color:#7eb8d8; border-color:#1a2f4a; }
         .filter-pill.active { background:rgba(79,142,247,.1); border-color:#4f8ef7; color:#4f8ef7; }
-        .search-input { background:#0b1220; border:1px solid #111e30; border-radius:8px; padding:8px 12px; font-size:12px; font-family:'Sora',sans-serif; color:#c4d8ee; outline:none; width:100%; transition:border-color .15s; }
+        .search-input { background:#0b1220; border:1px solid #1c2a40; border-radius:8px; padding:8px 12px; font-size:12px; font-family:'Sora',sans-serif; color:#c4d8ee; outline:none; width:100%; transition:border-color .15s; }
         .search-input:focus { border-color:#4f8ef7; }
         .search-input::placeholder { color:#98afc4; }
-        .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
+        .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
         .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#f87171; }
         .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #1c2a40; }
         .detail-row:last-child { border-bottom:none; }
-        .interaction-row { padding:10px 14px; border-radius:8px; background:#0b1220; border:1px solid #111e30; margin-bottom:6px; animation:fadeUp .35s ease both; }
+        .interaction-row { padding:10px 14px; border-radius:8px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:6px; animation:fadeUp .35s ease both; }
         @media print {
           body { background: white !important; color: black !important; }
           .no-print { display: none !important; }
@@ -697,7 +697,7 @@ export default function App({ onNavChange }) {
             <div className="live-dot" />
             <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
-          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #111e30", padding: "5px 12px", borderRadius: 6 }}>
+          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
             Last import: {getLastImportLabel()}
           </div>
           <button onClick={() => requestReport("medications", () => printRefillReport(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#f87171", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
@@ -899,7 +899,7 @@ export default function App({ onNavChange }) {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1c2a40" }}>
                       <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Edit — {editingMed.name}</div>
                       <button onClick={() => { setEditingMed(null); setDeleteConfirm(false); }}
-                        style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 13, cursor: "pointer", padding: "4px 8px" }}>✕</button>
+                        style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 6, color: "#b0c4d8", fontSize: 13, cursor: "pointer", padding: "4px 8px" }}>✕</button>
                     </div>
 
                     {[
@@ -985,7 +985,7 @@ export default function App({ onNavChange }) {
                         Save Changes
                       </button>
                       <button onClick={() => { setEditingMed(null); setDeleteConfirm(false); }}
-                        style={{ padding: "10px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+                        style={{ padding: "10px 14px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
                         Cancel
                       </button>
                     </div>
@@ -1007,7 +1007,7 @@ export default function App({ onNavChange }) {
                             Yes, Delete
                           </button>
                           <button onClick={() => setDeleteConfirm(false)}
-                            style={{ flex: 1, padding: "9px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 7, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
+                            style={{ flex: 1, padding: "9px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 7, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
                             Keep It
                           </button>
                         </div>
@@ -1018,7 +1018,7 @@ export default function App({ onNavChange }) {
                 ) : (
                   /* ── VIEW MODE ── */
                   <>
-                <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "20px", marginBottom: 12 }}>
+                <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "20px", marginBottom: 12 }}>
 
                   {/* Drug header */}
                   <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: "1px solid #1c2a40" }}>
@@ -1140,7 +1140,7 @@ export default function App({ onNavChange }) {
                 </div>
 
                 {/* AI quick actions */}
-                <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px", marginBottom: 12 }}>
+                <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "16px 18px", marginBottom: 12 }}>
                   <div className="section-label">AI Quick Actions</div>
                   {[
                     `Explain ${selectedMed.name} and its purpose for a post-liver-transplant patient`,
@@ -1166,7 +1166,7 @@ export default function App({ onNavChange }) {
                   const existing = reminders.find(r => r.medId === selectedMed.id);
                   const isEditing = editingReminder === selectedMed.id;
                   return (
-                    <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "16px 18px" }}>
+                    <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "16px 18px" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                         <div className="section-label" style={{ marginBottom: 0 }}>Reminders</div>
                         {!isEditing && (
@@ -1265,7 +1265,7 @@ export default function App({ onNavChange }) {
                               Save
                             </button>
                             <button onClick={() => setEditingReminder(null)}
-                              style={{ padding: "9px 12px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 7, color: "#b0c4d8", fontSize: 12, cursor: "pointer" }}>
+                              style={{ padding: "9px 12px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 7, color: "#b0c4d8", fontSize: 12, cursor: "pointer" }}>
                               Cancel
                             </button>
                             {existing && (

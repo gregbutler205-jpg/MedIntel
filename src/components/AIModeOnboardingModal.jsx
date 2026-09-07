@@ -117,7 +117,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           {showWhatIsSent && (
             <div style={{
               fontSize: 11, color: "#a8c4dc", lineHeight: 1.7, marginBottom: 12,
-              background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "12px 14px",
+              background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "12px 14px",
             }}>
               Only the record fields your specific question needs — for example, relevant lab
               values, active conditions, or current medications — are sent, under your
@@ -260,7 +260,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
             {showConsent && (
               <div style={{
                 maxHeight: 220, overflowY: "auto",
-                background: "#0b1220", border: "1px solid #111e30",
+                background: "#0b1220", border: "1px solid #1c2a40",
                 borderRadius: 8, padding: "12px 14px", marginBottom: 12,
               }}>
                 <ConsentText />

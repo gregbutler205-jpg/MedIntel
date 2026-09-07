@@ -56,7 +56,7 @@ function ReportArchiveRow({ showToast }) {
             : <>Create a standard folder structure in your Drive (“{REPORT_ROOT}”) so original reports have one predictable home. Imports file themselves there and keep a link on the entry.</>}
         </div>
       </div>
-      <button onClick={setup} disabled={busy} style={{ padding:"8px 16px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, marginLeft:14, opacity: busy ? 0.6 : 1 }}>
+      <button onClick={setup} disabled={busy} style={{ padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, marginLeft:14, opacity: busy ? 0.6 : 1 }}>
         {busy ? "Setting up…" : folders ? "Re-check folders" : "Set up report folders"}
       </button>
     </div>
@@ -70,7 +70,7 @@ function ConfirmModal({ title, body, confirmLabel, confirmStyle, onConfirm, onCa
         <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 10 }}>{title}</div>
         <div style={{ fontSize: 13, color: "#7eb8d8", lineHeight: 1.65, marginBottom: 22 }}>{body}</div>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onCancel} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onCancel} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={onConfirm} style={{ padding: "8px 18px", borderRadius: 8, fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12, ...confirmStyle }}>{confirmLabel}</button>
         </div>
       </div>
@@ -90,10 +90,10 @@ function ApiKeyModal({ current, onSave, onClose }) {
           onChange={e => setVal(e.target.value)}
           placeholder="sk-ant-api03-..."
           type="password"
-          style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
+          style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Key</button>
         </div>
       </div>
@@ -115,10 +115,10 @@ function PilotTokenModal({ current, onSave, onClose }) {
           onChange={e => setVal(e.target.value)}
           placeholder="Paste your access token"
           type="password"
-          style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
+          style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Token</button>
         </div>
       </div>
@@ -151,7 +151,7 @@ function ExportTile({ icon, label, sub, onClick }) {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ background: "#07090f", border: `1px solid ${hovered ? "#1a2f4a" : "#111e30"}`, borderRadius: 10, padding: 14, cursor: "pointer", transition: "border-color .15s" }}
+      style={{ background: "#07090f", border: `1px solid ${hovered ? "#1a2f4a" : "#1c2a40"}`, borderRadius: 10, padding: 14, cursor: "pointer", transition: "border-color .15s" }}
     >
       <div style={{ fontSize: 22, marginBottom: 10 }}>{icon}</div>
       <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", marginBottom: 4 }}>{label}</div>
@@ -160,10 +160,10 @@ function ExportTile({ icon, label, sub, onClick }) {
   );
 }
 
-const cardStyle = { background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px" };
+const cardStyle = { background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "18px 20px" };
 const sectionLbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 14 };
 const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
-const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
+const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
 
 const AI_MODE_KEY = "insina_ai_mode";
 
@@ -897,7 +897,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 <select
                   value={backupFreq}
                   onChange={e => { setBackupFreq(e.target.value); localStorage.setItem("mi_backup_freq", e.target.value); showToast(`Backup frequency set to ${e.target.value}`); }}
-                  style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+                  style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
                 >
                   {["Daily", "Weekly", "Monthly", "Never"].map(f => <option key={f}>{f}</option>)}
                 </select>
@@ -996,7 +996,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                   {showConsentText ? "▾" : "▸"} {showConsentText ? "Hide" : "Read"} consent details
                 </button>
                 {showConsentText && (
-                  <div style={{ maxHeight: 160, overflowY: "auto", background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "10px 12px", marginBottom: 10 }}>
+                  <div style={{ maxHeight: 160, overflowY: "auto", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "10px 12px", marginBottom: 10 }}>
                     <ConsentText style={{ fontSize: 10.5 }} />
                   </div>
                 )}
@@ -1051,13 +1051,13 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <button
                 onClick={() => moveCat(idx, -1)}
                 disabled={idx === 0}
-                style={{ width: 38, height: 38, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: idx === 0 ? "#1e3040" : "#7eb8d8", cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
+                style={{ width: 38, height: 38, background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, color: idx === 0 ? "#1e3040" : "#7eb8d8", cursor: idx === 0 ? "not-allowed" : "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
                 title="Move up" aria-label={`Move ${cat} up`}
               >↑</button>
               <button
                 onClick={() => moveCat(idx, 1)}
                 disabled={idx === labCatOrder.length - 1}
-                style={{ width: 38, height: 38, background: "#07090f", border: "1px solid #111e30", borderRadius: 8, color: idx === labCatOrder.length - 1 ? "#1e3040" : "#7eb8d8", cursor: idx === labCatOrder.length - 1 ? "not-allowed" : "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
+                style={{ width: 38, height: 38, background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, color: idx === labCatOrder.length - 1 ? "#1e3040" : "#7eb8d8", cursor: idx === labCatOrder.length - 1 ? "not-allowed" : "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", transition: "color .15s" }}
                 title="Move down" aria-label={`Move ${cat} down`}
               >↓</button>
             </div>
@@ -1089,7 +1089,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           <select
             value={autoLockMin}
             onChange={e => { const v = parseInt(e.target.value, 10); setAutoLockMin(v); setAutoLockMinutes(v); showToast(v === 0 ? "Auto-lock turned off" : `Auto-lock set to ${AUTOLOCK_OPTIONS.find(o => o.value === v)?.label}`); }}
-            style={{ width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+            style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
           >
             {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>

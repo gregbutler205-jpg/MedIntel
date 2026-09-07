@@ -102,7 +102,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
       <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, width:"min(1500px, 98vw)", height:"min(880px, 94vh)", display:"flex", flexDirection:"column", overflow:"hidden" }}>
 
         {/* Header */}
-        <div style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 20px", borderBottom:"1px solid #111e30", flexWrap:"wrap" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, padding:"16px 20px", borderBottom:"1px solid #1c2a40", flexWrap:"wrap" }}>
           <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", flex:1, minWidth:200 }}>
             Review before adding to your record
           </div>
@@ -111,17 +111,17 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
 
         {/* Body: source left, rows right */}
         <div style={{ display:"flex", flex:1, minHeight:0 }}>
-          <div style={{ width:"42%", minWidth:280, borderRight:"1px solid #111e30", overflowY:"auto", padding:14, background:"#07090f" }}>
+          <div style={{ width:"42%", minWidth:280, borderRight:"1px solid #1c2a40", overflowY:"auto", padding:14, background:"#07090f" }}>
             <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:10 }}>Source Document</div>
             {pages === null && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, padding:"20px 0", textAlign:"center" }}>Rendering pages…</div>}
             {pages && pages.length === 0 && (
-              <div style={{ fontSize:11.5, color:"#98afc4", fontFamily:mono, lineHeight:1.7, background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"14px 16px" }}>
+              <div style={{ fontSize:11.5, color:"#98afc4", fontFamily:mono, lineHeight:1.7, background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
                 The original file isn't held in this session{doc.fileName ? ` (${doc.fileName})` : ""}.
                 Open it from Source Documents or your Drive report archive to compare against the rows.
               </div>
             )}
             {pages && pages.map((src, i) => (
-              <img key={i} src={src} alt={`page ${i + 1}`} style={{ width:"100%", borderRadius:6, border:"1px solid #111e30", marginBottom:10 }} />
+              <img key={i} src={src} alt={`page ${i + 1}`} style={{ width:"100%", borderRadius:6, border:"1px solid #1c2a40", marginBottom:10 }} />
             ))}
           </div>
 
@@ -201,14 +201,14 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
         </div>
 
         {/* Footer: summary + gated confirm */}
-        <div style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 20px", borderTop:"1px solid #111e30", flexWrap:"wrap" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 20px", borderTop:"1px solid #1c2a40", flexWrap:"wrap" }}>
           <div style={{ flex:1, fontSize:12, color:"#98afc4", fontFamily:mono, minWidth:220 }}>
             {gate.summary.promoteCount} row{gate.summary.promoteCount !== 1 ? "s" : ""} will be added to your record · {gate.summary.excludeCount} excluded
             {gate.unacknowledged.length > 0 && (
               <span style={{ color:"#f59e0b" }}> · {gate.unacknowledged.length} flagged row{gate.unacknowledged.length !== 1 ? "s" : ""} need{gate.unacknowledged.length === 1 ? "s" : ""} acknowledgment</span>
             )}
           </div>
-          <button onClick={handleCancel} style={{ padding:"9px 18px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>
+          <button onClick={handleCancel} style={{ padding:"9px 18px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>
             Review later
           </button>
           <button onClick={handleConfirm} disabled={!gate.canConfirm}

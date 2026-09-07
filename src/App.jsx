@@ -283,7 +283,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
     <button key={label} onClick={onClick} style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
       gap: 7, padding: "14px 10px", minWidth: 86, flexShrink: 0,
-      background: "#0b1220", border: "1px solid #111e30", borderRadius: 12,
+      background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12,
       cursor: "pointer", transition: "all .15s", ...extra,
     }}
       onMouseEnter={e => { e.currentTarget.style.background = extra.background ? extra.background.replace(",.12)", ",.22)").replace(",.08)", ",.16)") : "#0f1828"; e.currentTarget.style.borderColor = "#1a2f4a"; }}
@@ -952,11 +952,11 @@ function AppShell() {
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #1a2840; border-radius: 4px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .stat-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; padding:20px; position:relative; overflow:hidden; transition:border-color .2s; animation: fadeUp .4s ease both; }
+        .stat-card { background:#0b1220; border:1px solid #1c2a40; border-radius:14px; padding:20px; position:relative; overflow:hidden; transition:border-color .2s; animation: fadeUp .4s ease both; }
         .stat-card:hover { border-color:#1a2f4a; }
         .stat-card::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(255,255,255,.015) 0%, transparent 60%); pointer-events:none; }
-        .alert-row { display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #111e30; margin-bottom:8px; animation:fadeUp .4s ease both; }
-        .upcoming-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; background:#0b1220; border:1px solid #111e30; margin-bottom:8px; cursor:pointer; transition:border-color .15s; animation:fadeUp .4s ease both; }
+        .alert-row { display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:8px; animation:fadeUp .4s ease both; }
+        .upcoming-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:8px; cursor:pointer; transition:border-color .15s; animation:fadeUp .4s ease both; }
         .upcoming-row:hover { border-color:#1a2f4a; }
         .vital-row { display:grid; grid-template-columns:80px 100px 50px 60px; gap:0; padding:10px 0; border-bottom:1px solid #1c2a40; align-items:center; font-size:12px; }
         .vital-row:last-child { border-bottom:none; }
@@ -1170,7 +1170,7 @@ function AppShell() {
                         { label:"BMI",             val: bmi,                      unit:"",      date:latestWeight?.date,  color:"#10b981" },
                       ];
                       return (
-                        <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"18px 20px", marginBottom:14 }}>
+                        <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"18px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Current Vitals</div>
                             <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("vitals")}>Log / View all →</div>
@@ -1244,7 +1244,7 @@ function AppShell() {
                       {AI_FEATURES_ENABLED && (
                       <div>
                         <div className="section-label">AI Analysis</div>
-                        <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: 16 }}>
+                        <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: 16 }}>
                           <div style={{ display: "flex", justifyContent: "center" }}>
                             <AIEntryButton iconSize={44} source="dashboard" onNavigate={() => setActiveNav("ai")} />
                           </div>
@@ -1278,7 +1278,7 @@ function AppShell() {
                         : team;
                       if (visible.length === 0) return null;
                       return (
-                        <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
+                        <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Care Team</div>
                             <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
@@ -1313,7 +1313,7 @@ function AppShell() {
 
                     {/* Active Conditions */}
                     {activeConditions.length > 0 && (
-                      <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
+                      <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                           <div className="section-label" style={{ marginBottom:0 }}>Active Conditions</div>
                           <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("conditions")}>Manage →</div>
@@ -1334,7 +1334,7 @@ function AppShell() {
                       const hasAny = featuredLabs.some(f => f.lab);
                       if (!hasAny) return null;
                       return (
-                        <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
+                        <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                             <div className="section-label" style={{ marginBottom: 0 }}>Recent Lab Results</div>
                             <div style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("labs")}>View all →</div>
@@ -1484,7 +1484,7 @@ function AppShell() {
                   </button>
                 )}
                 <button onClick={() => setPendingPlausibility(null)}
-                  style={{ flex: hasHard ? 1 : "none", padding:"11px 16px", background:"#0b1220", border:"1px solid #111e30", borderRadius:9, color:"#b0c4d8", fontSize:13, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
+                  style={{ flex: hasHard ? 1 : "none", padding:"11px 16px", background:"#0b1220", border:"1px solid #1c2a40", borderRadius:9, color:"#b0c4d8", fontSize:13, fontFamily:"'Sora',sans-serif", cursor:"pointer" }}>
                   {hasHard ? "Edit Manually" : "Cancel"}
                 </button>
               </div>

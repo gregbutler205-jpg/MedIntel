@@ -342,9 +342,9 @@ export default function ConditionsTab() {
           #conditions-print { position:absolute; top:0; left:0; width:100%; }
           .no-print { display:none !important; }
         }
-        .cond-card { background:#0b1220; border:1px solid #111e30; border-radius:12px; padding:16px 18px; margin-bottom:10px; transition:border-color .15s; }
+        .cond-card { background:#0b1220; border:1px solid #1c2a40; border-radius:12px; padding:16px 18px; margin-bottom:10px; transition:border-color .15s; }
         .cond-card:hover { border-color:#1a2f4a; }
-        .filter-btn { padding:6px 14px; border-radius:20px; border:1px solid #111e30; background:transparent; color:#b0c4d8; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all .15s; }
+        .filter-btn { padding:6px 14px; border-radius:20px; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all .15s; }
         .filter-btn.active { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.4); color:#4f8ef7; }
       `}</style>
 
@@ -429,7 +429,7 @@ export default function ConditionsTab() {
             { label:"Managed",  count:managedCt,  ...STATUS_CFG.managed  },
             { label:"Resolved", count:resolvedCt, ...STATUS_CFG.resolved },
           ].map(s => (
-            <div key={s.label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"14px 16px" }}>
+            <div key={s.label} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
               <div style={{ fontSize:22, fontWeight:700, color:s.color, letterSpacing:"-0.5px" }}>{s.count}</div>
               <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{s.label}</div>
             </div>
@@ -447,7 +447,7 @@ export default function ConditionsTab() {
             value={condSearch}
             onChange={e => setCondSearch(e.target.value)}
             placeholder="Search conditions…"
-            style={{ flex:1, minWidth:160, background:"#0b1220", border:"1px solid #111e30", borderRadius:8, padding:"7px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" }}
+            style={{ flex:1, minWidth:160, background:"#0b1220", border:"1px solid #1c2a40", borderRadius:8, padding:"7px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" }}
           />
         </div>
 
@@ -466,7 +466,7 @@ export default function ConditionsTab() {
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
                       <span style={{ fontSize:15, fontWeight:600, color:"#c4d8ee" }}>{c.name}</span>
-                      {c.icd10 && <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", background:"#07090f", border:"1px solid #111e30", borderRadius:4, padding:"1px 6px" }}>{c.icd10}</span>}
+                      {c.icd10 && <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", background:"#07090f", border:"1px solid #1c2a40", borderRadius:4, padding:"1px 6px" }}>{c.icd10}</span>}
                       <span style={{ fontSize:10, background:s.bg, border:`1px solid ${s.border}`, borderRadius:12, padding:"2px 8px", color:s.color, fontFamily:"'DM Mono',monospace" }}>{s.label}</span>
                       <span style={{ fontSize:10, color:sev.color, fontFamily:"'DM Mono',monospace" }}>▪ {c.severity.charAt(0).toUpperCase()+c.severity.slice(1)}</span>
                     </div>
@@ -546,6 +546,6 @@ export default function ConditionsTab() {
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
 const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
-const inp = { width:"100%", background:"#07090f", border:"1px solid #111e30", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
+const inp = { width:"100%", background:"#07090f", border:"1px solid #1c2a40", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
 const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
-const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #111e30", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
+const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };

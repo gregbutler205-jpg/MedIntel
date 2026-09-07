@@ -79,7 +79,7 @@ function ChecklistSection({ section, onToggle }) {
           <div
             onClick={() => onToggle(section.id, item.id)}
             style={{
-              width: 15, height: 15, border: `1px solid ${item.done ? "#10b981" : "#111e30"}`,
+              width: 15, height: 15, border: `1px solid ${item.done ? "#10b981" : "#1c2a40"}`,
               borderRadius: 3, background: item.done ? "rgba(16,185,129,.1)" : "#0b1220",
               flexShrink: 0, marginTop: 2, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s",
@@ -102,7 +102,7 @@ function TextSection({ section, onEdit }) {
       <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
         {section.header}
       </div>
-      <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
+      <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px" }}>
         <textarea
           value={section.body}
           onChange={e => onEdit(section.id, e.target.value)}
@@ -211,7 +211,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         )}
 
         {note.linked && (
-          <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 14 }}>📅</span>
             <div>
               <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8" }}>{note.linked.label}</div>
@@ -254,7 +254,7 @@ function NewNoteModal({ onSave, onClose }) {
     onClose();
   }
 
-  const inputStyle = { width: "100%", background: "#07090f", border: "1px solid #111e30", borderRadius: 8, padding: "9px 12px", color: "#dde8f5", fontFamily: "'Sora', sans-serif", fontSize: 13, outline: "none", marginBottom: 12 };
+  const inputStyle = { width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "9px 12px", color: "#dde8f5", fontFamily: "'Sora', sans-serif", fontSize: 13, outline: "none", marginBottom: 12 };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
@@ -267,7 +267,7 @@ function NewNoteModal({ onSave, onClose }) {
         <textarea placeholder="Start writing..." value={body} onChange={e => setBody(e.target.value)} rows={5}
           style={{ ...inputStyle, color: "#a8c4dc", resize: "vertical", lineHeight: 1.65 }} />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
-          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
           <button onClick={save} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Note</button>
         </div>
       </div>
@@ -341,7 +341,7 @@ function AIPanel({ note, onClose }) {
         {result && <div style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{result}</div>}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18, gap: 10 }}>
           {error && <button onClick={generate} style={{ padding: "7px 16px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Retry</button>}
-          <button onClick={onClose} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #111e30", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Close</button>
+          <button onClick={onClose} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Close</button>
         </div>
       </div>
     </div>
@@ -422,7 +422,7 @@ export default function Notes() {
 
         {/* Search */}
         <div style={{ padding: "10px 12px", borderBottom: "1px solid #1c2a40" }}>
-          <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: "#98afc4", fontSize: 13 }}>⌕</span>
             <input
               placeholder="Search notes..."
@@ -441,7 +441,7 @@ export default function Notes() {
               onClick={() => setFilter(f)}
               style={{
                 background: filter === f ? "rgba(79,142,247,.15)" : "#0b1220",
-                border: `1px solid ${filter === f ? "rgba(79,142,247,.35)" : "#111e30"}`,
+                border: `1px solid ${filter === f ? "rgba(79,142,247,.35)" : "#1c2a40"}`,
                 borderRadius: 20, padding: "3px 10px", fontSize: 10,
                 color: filter === f ? "#4f8ef7" : "#b0c4d8",
                 fontFamily: "'DM Mono', monospace", cursor: "pointer", transition: "all .12s",
