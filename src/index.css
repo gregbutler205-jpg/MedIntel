@@ -114,17 +114,27 @@
   color: var(--text-body);
 }
 
-/* ONBOARDING_SPEC v1.1 §8: visible focus rings on every onboarding surface.
-   .ob-focus is carried by the onboarding shell AND its post-onboarding
-   embeddings (Import Records queue, dashboard task cards) — §11.12. */
-.ob-focus button:focus-visible,
-.ob-focus input:focus-visible,
-.ob-focus select:focus-visible,
-.ob-focus textarea:focus-visible,
-.ob-focus [role="button"]:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* WO_ACCESSIBLE_TOKENS_01 4.5 (DEC-049): one visible focus indicator for every
+   interactive element on every surface. Supersedes the onboarding-only
+   .ob-focus outline (ONBOARDING_SPEC v1.1 section 8), which this rule now
+   covers everywhere the shell renders. Inline `outline: none` on inputs is
+   paired with this ring, not orphaned. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--accent-blue);
 }
+
+/* WO_ACCESSIBLE_TOKENS_01 4.4 (DEC-049): every interactive element presents a
+   hit area of at least 44 by 44 CSS pixels. Icons keep their visual size; the
+   box grows. Checkbox and radio inputs are excluded here because their hit
+   area is the wrapping label; they are listed in the work order report. */
+button, [role="button"], select, textarea,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="file"]),
+a[href] { min-height: var(--touch-target); }
+button, [role="button"] { min-width: var(--touch-target); }
+/* Opt-out for a control that cannot reach 44px without a layout change.
+   Use only alongside a TODO(a11y) comment naming the constraint. */
+.a11y-compact { min-height: 0; min-width: 0; }
 
 html, body, #root {
   height: 100%;
@@ -157,7 +167,7 @@ body {
 }
 .nav-item:hover { color: var(--accent-soft); background: rgba(79,142,247,.04); }
 .nav-item.active { color: var(--accent-blue); background: rgba(79,142,247,.08); border-left-color: var(--accent-blue); }
-.nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-icon { font-size: 15px; width: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .nav-group-header {
   display: flex;
   align-items: center;
