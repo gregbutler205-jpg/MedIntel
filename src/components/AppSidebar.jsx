@@ -12,6 +12,16 @@ import AIMark from "./ai/AIMark.jsx";
 // force-expands so the active destination is always visible. Emergency
 // Information is pinned below the groups, always visible on every screen.
 import { useState } from "react";
+// WO_ACCESSIBLE_TOKENS_01 4.6 (DEC-049): navigation icons are lucide-react
+// components with the visible text label beside them; the unicode glyphs
+// (which had no accessible name and rendered inconsistently across fonts)
+// are gone. Mapping is the work order's table; the AI Analysis row keeps the
+// Insina AI mark per DEC-P47 (Sparkles is not applied there; see the report).
+import {
+  LayoutDashboard, User, Stethoscope, Scissors, ScanLine, Pill, FlaskConical,
+  HeartPulse, ClipboardList, Calendar, Users, FolderOpen, NotebookPen, Upload,
+  DatabaseBackup,
+} from "lucide-react";
 import { printEmergency } from "../lib/printEmergency.js";
 import { openEmergencyInfo } from "../lib/advisoryRuntime.js";
 
@@ -20,24 +30,24 @@ import { openEmergencyInfo } from "../lib/advisoryRuntime.js";
 // relabel — tracked as follow-up.
 export const NAV = [
   // ── Core ────────────────────────────────────────────────────────────────────
-  { id: "dashboard",   icon: "⬡", label: "Dashboard" },
-  { id: "profile",     icon: "◯", label: "Health Profile" },
-  { id: "conditions",  icon: "◎", label: "Conditions" },
-  { id: "surgeries",   icon: "✦", label: "Procedures" },   // renamed from "Surgeries"; id/store keys unchanged
-  { id: "diagnostics", icon: "◫", label: "Diagnostics" },
-  { id: "medications", icon: "⬡", label: "Medications" },
-  { id: "labs",        icon: "◈", label: "Labs & Trends" },
-  { id: "vitals",      icon: "♡", label: "Vitals" },
-  { id: "symptoms",    icon: "◎", label: "Symptoms" },
-  { id: "appointments",icon: "◻", label: "Appointments" },
-  { id: "careplan",    icon: "◷", label: "Care Team" },
+  { id: "dashboard",   icon: LayoutDashboard, label: "Dashboard" },
+  { id: "profile",     icon: User,            label: "Health Profile" },
+  { id: "conditions",  icon: Stethoscope,     label: "Conditions" },
+  { id: "surgeries",   icon: Scissors,        label: "Procedures" },   // renamed from "Surgeries"; id/store keys unchanged
+  { id: "diagnostics", icon: ScanLine,        label: "Diagnostics" },
+  { id: "medications", icon: Pill,            label: "Medications" },
+  { id: "labs",        icon: FlaskConical,    label: "Labs & Trends" },
+  { id: "vitals",      icon: HeartPulse,      label: "Vitals" },
+  { id: "symptoms",    icon: ClipboardList,   label: "Symptoms" },
+  { id: "appointments",icon: Calendar,        label: "Appointments" },
+  { id: "careplan",    icon: Users,           label: "Care Team" },
   // ── System ──────────────────────────────────────────────────────────────────
-  { id: "records",     icon: "▤", label: "Medical Records" },
-  { id: "documents",   icon: "▣", label: "Source Documents" },
-  { id: "notes",       icon: "◻", label: "My Notes" },
-  { id: "ai",          icon: "✦", label: "AI Analysis" },
-  { id: "import",      icon: "↓", label: "Import Records" },
-  { id: "backup",      icon: "◈", label: "Settings & Backup" },
+  { id: "records",     icon: FolderOpen,      label: "Medical Records" },
+  { id: "documents",   icon: FolderOpen,      label: "Source Documents" },
+  { id: "notes",       icon: NotebookPen,     label: "My Notes" },
+  { id: "ai",          icon: null,            label: "AI Analysis" },   // renders the Insina AI mark (DEC-P47)
+  { id: "import",      icon: Upload,          label: "Import Records" },
+  { id: "backup",      icon: DatabaseBackup,  label: "Settings & Backup" },
 ];
 
 // UI-9 groups. Assignment: "Today" is the day-to-day starting points;
@@ -82,10 +92,11 @@ function NavItem({ id, icon, label, active, onNav }) {
   // place of the generic sparkle glyph; the AI pill is gone. The mark stays
   // visible when the AI features flag is off (DEC-P51).
   const isAI = id === "ai";
+  const Icon = icon;
   return (
-    <div className={`nav-item ${active ? "active" : ""}`} onClick={() => onNav(id)}>
-      <span className="nav-icon" style={isAI ? { display: "inline-flex", alignItems: "center", justifyContent: "center" } : undefined}>
-        {isAI ? <AIMark variant="simple" size={14} /> : icon}
+    <div className={`nav-item ${active ? "active" : ""}`} onClick={() => onNav(id)} role="button" aria-current={active ? "page" : undefined}>
+      <span className="nav-icon" aria-hidden="true">
+        {isAI ? <AIMark variant="simple" size={14} /> : (Icon ? <Icon size={16} strokeWidth={2} /> : null)}
       </span>
       <span>{label}</span>
     </div>
