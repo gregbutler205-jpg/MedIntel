@@ -243,7 +243,7 @@ export default function DiagnosticsTab() {
                     ? <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
                     : <>
                         <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
-                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
                       </>}
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function DiagnosticsTab() {
             <div style={{ fontSize:13, color:"#98afc4", marginBottom:22 }}>This cannot be undone.</div>
             <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
               <button onClick={() => setDeleteId(null)} style={btnGhost}>Cancel</button>
-              <button onClick={() => handleDelete(deleteId)} style={{ ...btnPrimary, background:"rgba(239,68,68,.15)", borderColor:"rgba(239,68,68,.35)", color:"#ef4444" }}>Delete</button>
+              <button onClick={() => handleDelete(deleteId)} style={{ ...btnPrimary, background:"rgba(239,68,68,.15)", borderColor:"rgba(239,68,68,.35)", color:"#f87171" }}>Delete</button>
             </div>
           </div>
         </div>

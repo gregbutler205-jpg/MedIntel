@@ -105,7 +105,7 @@ function printConsultationPrep(appt, analysis) {
 }
 
 const URGENCY_CFG = {
-  high: { color: "#ef4444", bg: "rgba(239,68,68,.10)", border: "rgba(239,68,68,.25)", label: "High" },
+  high: { color: "#f87171", bg: "rgba(239,68,68,.10)", border: "rgba(239,68,68,.25)", label: "High" },
   med:  { color: "#f59e0b", bg: "rgba(245,158,11,.10)", border: "rgba(245,158,11,.25)", label: "Med"  },
   low:  { color: "#10b981", bg: "rgba(16,185,129,.10)", border: "rgba(16,185,129,.25)", label: "Low"  },
 };
@@ -972,7 +972,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
           Capture anything from &ldquo;{appt.title}&rdquo;? Add what applies below — each item is saved and attached to this appointment automatically.
         </div>
 
-        {err && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>⚠ {err}</div>}
+        {err && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>⚠ {err}</div>}
 
         {rows.map(r => {
           const isOpen = openRow === r.key;
@@ -1180,7 +1180,7 @@ Please provide:
       >
         {loading ? "⏳ Analyzing…" : "✦ Generate Prep Analysis"}
       </button>
-      {error && <div style={{ marginTop:10, fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace" }}>⚠ {error}</div>}
+      {error && <div style={{ marginTop:10, fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>⚠ {error}</div>}
       {analysis && (
         <div style={{ marginTop:14, background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"14px 16px", fontSize:12, color:"#a8c4dc", lineHeight:1.75, whiteSpace:"pre-wrap" }}>
           {analysis}
@@ -1544,7 +1544,7 @@ export default function AppointmentsTab({ onNavChange }) {
               <div role="status" aria-live="polite" style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace",
                 background: syncMsg.kind === "ok" ? "rgba(16,185,129,.08)" : "rgba(239,68,68,.08)",
                 border: `1px solid ${syncMsg.kind === "ok" ? "rgba(16,185,129,.25)" : "rgba(239,68,68,.25)"}`,
-                color: syncMsg.kind === "ok" ? "#10b981" : "#ef4444" }}>
+                color: syncMsg.kind === "ok" ? "#10b981" : "#f87171" }}>
                 {syncMsg.kind === "ok" ? "✓ " : "⚠ "}{syncMsg.text}
               </div>
             )}
@@ -1571,7 +1571,7 @@ export default function AppointmentsTab({ onNavChange }) {
                 <div style={{ fontSize:12, color:"#7eb8d8", marginBottom:6 }}>{nextAppt.provider}</div>
                 <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(nextAppt.date)} · {nextAppt.time || "TBD"}</div>
                 {nextDays !== null && (
-                  <div style={{ marginTop:10, display:"inline-block", padding:"3px 10px", borderRadius:20, background: nextDays <= 3 ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.12)", border:`1px solid ${nextDays<=3?"rgba(239,68,68,.3)":"rgba(79,142,247,.3)"}`, fontSize:10, color:nextDays<=3?"#ef4444":"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>
+                  <div style={{ marginTop:10, display:"inline-block", padding:"3px 10px", borderRadius:20, background: nextDays <= 3 ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.12)", border:`1px solid ${nextDays<=3?"rgba(239,68,68,.3)":"rgba(79,142,247,.3)"}`, fontSize:10, color:nextDays<=3?"#f87171":"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>
                     {nextDays === 0 ? "Today" : nextDays === 1 ? "Tomorrow" : `In ${nextDays} days`}
                   </div>
                 )}
@@ -1675,7 +1675,7 @@ export default function AppointmentsTab({ onNavChange }) {
                   <div style={{ textAlign:"right", flexShrink:0 }}>
                     <div style={{ fontSize:12, color:"#b0c4d8", fontFamily:"'DM Mono',monospace" }}>{appt.time || "—"}</div>
                     {days !== null && appt.status === "upcoming" && (
-                      <div style={{ fontSize:10, color:days<=3?"#ef4444":days<=7?"#f59e0b":"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
+                      <div style={{ fontSize:10, color:days<=3?"#f87171":days<=7?"#f59e0b":"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
                         {days === 0 ? "Today" : days === 1 ? "Tomorrow" : days < 0 ? "Past" : `${days}d`}
                       </div>
                     )}
@@ -1723,7 +1723,7 @@ export default function AppointmentsTab({ onNavChange }) {
                             onClick={e => { e.stopPropagation(); setModal(appt); }}>
                             ✎ Edit
                           </button>
-                          <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#ef4444", marginLeft:"auto" }}
+                          <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#f87171", marginLeft:"auto" }}
                             onClick={e => { e.stopPropagation(); setDeleteConfirm(appt.id); }}>
                             ✕ Dismiss
                           </button>
@@ -1751,7 +1751,7 @@ export default function AppointmentsTab({ onNavChange }) {
                             onClick={e => { e.stopPropagation(); setShowAI(prev => prev === appt.id ? null : appt.id); }}>
                             ✦ {showAI === appt.id ? "Hide AI Prep" : "AI Prep Analysis"}
                           </button>
-                          <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#ef4444", marginLeft:"auto" }}
+                          <button className="apt-btn" style={{ background:"rgba(239,68,68,.08)", borderColor:"rgba(239,68,68,.2)", color:"#f87171", marginLeft:"auto" }}
                             onClick={e => { e.stopPropagation(); setDeleteConfirm(appt.id); }}>
                             ✕ Delete
                           </button>
@@ -1840,7 +1840,7 @@ export default function AppointmentsTab({ onNavChange }) {
                 : " It also won't be restored by Drive sync — deletions now stick everywhere."}
             </div>
             <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-              <button className="apt-btn" style={{ background:"rgba(239,68,68,.12)", borderColor:"rgba(239,68,68,.3)", color:"#ef4444" }} onClick={() => handleDelete(deleteConfirm)}>Delete</button>
+              <button className="apt-btn" style={{ background:"rgba(239,68,68,.12)", borderColor:"rgba(239,68,68,.3)", color:"#f87171" }} onClick={() => handleDelete(deleteConfirm)}>Delete</button>
               <button className="apt-btn" style={{ background:"transparent", borderColor:"#1a2f4a", color:"#b0c4d8" }} onClick={() => setDeleteConfirm(null)}>Cancel</button>
             </div>
           </div>

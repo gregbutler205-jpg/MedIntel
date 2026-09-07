@@ -56,7 +56,7 @@ const T = {
   p:"#dde8f5", s:"#c4d8ee", m:"#7eb8d8",
   dim:"#b0c4d8", ghost:"#98afc4", faint:"#a0b4c8",
   blue:"#4f8ef7", purple:"#a78bfa", green:"#10b981",
-  yellow:"#f59e0b", red:"#ef4444",
+  yellow:"#f59e0b", red:"#f87171",
 };
 
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1a2f4a", borderRadius:6, color:T.s, fontFamily:"'Sora',sans-serif", fontSize:12, padding:"6px 10px", outline:"none", boxSizing:"border-box" };
@@ -775,7 +775,7 @@ export default function ProfileTab() {
         input:focus, select:focus { border-color:#4f8ef7 !important; }
         .icon-btn { background:transparent; border:1px solid #111e30; border-radius:6px; color:#b0c4d8; font-size:11px; padding:3px 8px; cursor:pointer; transition:all .15s; }
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
-        .icon-btn.danger:hover { border-color:rgba(239,68,68,.4); color:#ef4444; }
+        .icon-btn.danger:hover { border-color:rgba(239,68,68,.4); color:#f87171; }
 
         @media screen { #print-profile { display: none; } }
       `}</style>
@@ -926,7 +926,7 @@ export default function ProfileTab() {
                       <div style={{ fontSize:11, color:T.m, marginTop:2 }}>{doc.role}{doc.specialty ? ` · ${doc.specialty}` : ""}</div>
                       <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{doc.facility}</div>
                       {doc.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:3 }}>{displayPhone(doc.phone)}</div>}
-                      {doc.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {displayPhone(doc.phone24)}</div>}
+                      {doc.phone24 && <div style={{ fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {displayPhone(doc.phone24)}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4, flexShrink:0 }}>
                       <button className="icon-btn" onClick={() => setProviderModal(doc)}>✎</button>

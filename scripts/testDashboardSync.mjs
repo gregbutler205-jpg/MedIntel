@@ -67,11 +67,11 @@ ok(/addEventListener\("mi-data-synced"/.test(APP),
 // A flagged reading must still render red; the resting colour must not.
 {
   const bpLine = APP.split("\n").find(l => l.includes('label:"Blood Pressure"')) || "";
-  ok(!/color:"#ef4444"/.test(bpLine),
-     "resting Blood Pressure is not alert-red (#ef4444)");
+  ok(!/color:"#f87171"/.test(bpLine),
+     "resting Blood Pressure is not alert-red (#f87171)");
   ok(/color:"#ea580c"/.test(bpLine),
      "resting Blood Pressure is dark orange (#ea580c)");
-  ok(/flag \? "#ef4444"/.test(APP),
+  ok(/flag \? "#f87171"/.test(APP),
      "a FLAGGED vital still renders red — red still means urgent");
 }
 

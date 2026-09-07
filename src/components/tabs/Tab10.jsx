@@ -19,7 +19,7 @@ const TAG_STYLES = {
   Meds:     { bg: "rgba(167,139,250,.1)",  color: "#a78bfa", border: "rgba(167,139,250,.25)" },
   Symptoms: { bg: "rgba(16,185,129,.1)",   color: "#10b981", border: "rgba(16,185,129,.25)" },
   General:  { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
-  Urgent:   { bg: "rgba(239,68,68,.1)",    color: "#ef4444", border: "rgba(239,68,68,.25)" },
+  Urgent:   { bg: "rgba(239,68,68,.1)",    color: "#f87171", border: "rgba(239,68,68,.25)" },
 };
 
 const FILTERS = ["All", "Appt", "Labs", "Meds", "Symptoms", "General", "Urgent"];
@@ -337,7 +337,7 @@ function AIPanel({ note, onClose }) {
             <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>Analyzing note...</span>
           </div>
         )}
-        {error && <div style={{ fontSize: 12, color: "#ef4444", lineHeight: 1.6, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
+        {error && <div style={{ fontSize: 12, color: "#f87171", lineHeight: 1.6, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
         {result && <div style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{result}</div>}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18, gap: 10 }}>
           {error && <button onClick={generate} style={{ padding: "7px 16px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Retry</button>}

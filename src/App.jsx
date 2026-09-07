@@ -1042,7 +1042,7 @@ function AppShell() {
                 {/* ── Google Drive sync ── */}
                 {googleUser ? (
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#ef4444" : lastSyncTs?"#10b981":"#4a5c6a" }}>
+                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#f87171" : lastSyncTs?"#10b981":"#4a5c6a" }}>
                       {syncStatus==="syncing" ? "Syncing…" : syncStatus==="error" ? "Sync error" : lastSyncTs ? `↑ ${new Date(lastSyncTs).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` : ""}
                     </span>
                     <button onClick={signIn} title="Sync with Google Drive" style={{ padding:"3px 8px", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.2)", borderRadius:6, color:"#10b981", fontSize:9, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>↑↓</button>
@@ -1179,7 +1179,7 @@ function AppShell() {
                             {vitals.map(({ label, val, unit, date, color, flag }) => (
                               <div key={label} style={{ background:"#080c14", border:`1px solid ${flag ? "rgba(239,68,68,.25)" : "#0d1a28"}`, borderRadius:8, padding:"10px 12px" }}>
                                 <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
-                                <div style={{ fontSize:14, fontWeight:700, color: val != null ? (flag ? "#ef4444" : color) : "#4a5c6a", lineHeight:1, marginBottom:2 }}>
+                                <div style={{ fontSize:14, fontWeight:700, color: val != null ? (flag ? "#f87171" : color) : "#4a5c6a", lineHeight:1, marginBottom:2 }}>
                                   {val != null ? `${val}${unit ? " " + unit : ""}` : "—"}
                                 </div>
                                 {date && val != null && <div style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>{formatDateUS(date)}</div>}
@@ -1205,7 +1205,7 @@ function AppShell() {
                                 </div>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: urgency === "high" ? "#ef4444" : "#7eb8d8", fontWeight: 600, fontFamily: "'DM Mono',monospace" }}>{date}</div>
+                            <div style={{ fontSize: 11, color: urgency === "high" ? "#f87171" : "#7eb8d8", fontWeight: 600, fontFamily: "'DM Mono',monospace" }}>{date}</div>
                           </div>
                         ))}
                       </div>
@@ -1320,7 +1320,7 @@ function AppShell() {
                         </div>
                         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
                           {activeConditions.map(c => (
-                            <div key={c.id} style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", borderRadius:20, padding:"4px 12px", fontSize:11, color:"#ef4444", fontFamily:"'DM Mono',monospace" }}>
+                            <div key={c.id} style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", borderRadius:20, padding:"4px 12px", fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
                               {c.name}{c.icd10 ? ` · ${c.icd10}` : ""}
                             </div>
                           ))}

@@ -264,7 +264,7 @@ function Timeline() {
                   <TypeBadge type={apptType} />
                   {a.urgency === "high" && <span style={{ width:6, height:6, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", display:"inline-block" }} />}
                 </div>
-                <span style={{ fontSize:10, color: a.urgency === "high" ? "#ef4444" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{formatDateUS(a.date)}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
+                <span style={{ fontSize:10, color: a.urgency === "high" ? "#f87171" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{formatDateUS(a.date)}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{a.title}</div>
               <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: prep.length ? 10 : 0 }}>{doctorName}{a.facility ? ` · ${a.facility}` : ""}</div>
@@ -519,7 +519,7 @@ function CareTeam() {
               {/* Contact */}
               <div style={{ textAlign:"right", flexShrink:0, marginRight:6 }}>
                 {t.phone && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{displayPhone(t.phone)}</div>}
-                {t.phone24 && <div style={{ fontSize:11, color:"#ef4444", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {displayPhone(t.phone24)}</div>}
+                {t.phone24 && <div style={{ fontSize:11, color:"#f87171", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {displayPhone(t.phone24)}</div>}
                 {t.next  && <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>}
               </div>
               {/* Edit / Delete */}
@@ -560,7 +560,7 @@ function CareTeam() {
             </div>
             <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
               <button onClick={() => setDeleteTarget(null)} style={{ padding:"8px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
-              <button onClick={handleDelete} style={{ padding:"8px 18px", background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.35)", borderRadius:8, color:"#ef4444", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Remove</button>
+              <button onClick={handleDelete} style={{ padding:"8px 18px", background:"rgba(239,68,68,.12)", border:"1px solid rgba(239,68,68,.35)", borderRadius:8, color:"#f87171", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Remove</button>
             </div>
           </div>
         </div>
@@ -577,7 +577,7 @@ function Preventive() {
     return (
       <div key={p.label} style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"12px 14px", marginBottom:8, display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
         <div style={{ flex:1 }}>
-          <div style={{ fontSize:13, fontWeight:600, color: p.status === "never" ? "#ef4444" : "#c4d8ee", marginBottom:4 }}>{p.label}</div>
+          <div style={{ fontSize:13, fontWeight:600, color: p.status === "never" ? "#f87171" : "#c4d8ee", marginBottom:4 }}>{p.label}</div>
           <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{p.note}</div>
         </div>
         <span style={{ fontSize:9, fontFamily:mono, color:sm.color, background:`${sm.color}15`, border:`1px solid ${sm.color}28`, padding:"2px 8px", borderRadius:4, textTransform:"uppercase", letterSpacing:"0.5px", flexShrink:0, marginTop:2 }}>{sm.label}</span>
@@ -616,7 +616,7 @@ function Emergency() {
         <div style={{ fontSize:12, color:"#7eb8d8", fontFamily:mono, lineHeight:1.8 }}>
           <div>Business hours (Mon–Fri 8am–5pm): Call transplant team directly</div>
           <div>After hours / weekends / holidays: Call transplant on-call nurse service</div>
-          <div style={{ marginTop:6, color:"#ef4444" }}>Life-threatening emergency: Call 911 immediately</div>
+          <div style={{ marginTop:6, color:"#f87171" }}>Life-threatening emergency: Call 911 immediately</div>
         </div>
       </div>
     </div>

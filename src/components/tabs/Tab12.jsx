@@ -671,7 +671,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         .btn-primary:hover { background:rgba(79,142,247,.25); border-color:rgba(79,142,247,.6); color:#b8d4f0; }
         .btn-ghost  { background:transparent; border-color:#111e30; color:#b0c4d8; }
         .btn-ghost:hover { border-color:#1a2f4a; color:#c4d8ee; }
-        .btn-danger { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#ef4444; }
+        .btn-danger { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#f87171; }
         .btn-danger:hover { background:rgba(239,68,68,.2); }
         .btn-success { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.3); color:#10b981; }
         select.dark-sel { background:#07090f; border:1px solid #1a2f4a; border-radius:8px; padding:8px 12px; color:#c4d8ee; font-family:'Sora',sans-serif; font-size:12px; outline:none; width:100%; }
@@ -810,7 +810,7 @@ export default function ImportTab({ onImport, onNavChange }) {
             <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
               {batchSummary.map((item, i) => (
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 10px", background: item.ok ? "rgba(16,185,129,.04)" : "rgba(239,68,68,.04)", border:`1px solid ${item.ok ? "rgba(16,185,129,.15)" : "rgba(239,68,68,.2)"}`, borderRadius:7 }}>
-                  <span style={{ fontSize:11, color: item.ok ? "#10b981" : "#ef4444", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
+                  <span style={{ fontSize:11, color: item.ok ? "#10b981" : "#f87171", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
                   <div style={{ flex:1, minWidth:0 }}>
                     {item.ok ? (
                       <span style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace" }}>
@@ -921,7 +921,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                       {e.excluded > 0 && <span style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace" }}>{e.excluded} excluded in review</span>}
                       <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", padding:"2px 8px", borderRadius:4,
                         background: (e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.1)" : "rgba(16,185,129,.1)",
-                        color: (e.status || "Saved").startsWith("Discard") ? "#ef4444" : "#10b981",
+                        color: (e.status || "Saved").startsWith("Discard") ? "#f87171" : "#10b981",
                         border: `1px solid ${(e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.25)" : "rgba(16,185,129,.25)"}` }}>
                         {e.status || "Saved"}
                       </span>
@@ -971,9 +971,9 @@ export default function ImportTab({ onImport, onNavChange }) {
               <label className="flag-toggle">
                 <div style={{ width:16, height:16, borderRadius:4, border:`1px solid ${form.flag ? "#ef4444" : "#1a2f4a"}`, background: form.flag ? "rgba(239,68,68,.2)" : "#07090f", display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}
                   onClick={() => handleChange("flag", !form.flag)}>
-                  {form.flag && <span style={{ color:"#ef4444", fontSize:10 }}>✓</span>}
+                  {form.flag && <span style={{ color:"#f87171", fontSize:10 }}>✓</span>}
                 </div>
-                <span style={{ fontSize:12, color: form.flag ? "#ef4444" : "#98afc4" }}>Flag as out of range</span>
+                <span style={{ fontSize:12, color: form.flag ? "#f87171" : "#98afc4" }}>Flag as out of range</span>
               </label>
 
               <div style={{ display:"flex", gap:8, marginTop:4 }}>
@@ -1028,11 +1028,11 @@ export default function ImportTab({ onImport, onNavChange }) {
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                         <span style={{ fontSize:14, fontWeight:600, color:"#dde8f5" }}>{latest.name}</span>
-                        {anyFlagged && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", border:"1px solid rgba(239,68,68,.3)", color:"#ef4444", borderRadius:4, padding:"1px 6px", fontFamily:"'DM Mono',monospace" }}>FLAGGED</span>}
+                        {anyFlagged && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", border:"1px solid rgba(239,68,68,.3)", color:"#f87171", borderRadius:4, padding:"1px 6px", fontFamily:"'DM Mono',monospace" }}>FLAGGED</span>}
                         <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace" }}>{latest.category}</span>
                       </div>
                       <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-                        <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#ef4444" : "#4f8ef7", letterSpacing:"-0.5px" }}>{latest.value}</span>
+                        <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#f87171" : "#4f8ef7", letterSpacing:"-0.5px" }}>{latest.value}</span>
                         <span style={{ fontSize:11, color:"#7eb8d8" }}>{latest.unit}</span>
                         {latest.refRange && <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {latest.refRange}</span>}
                         <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {formatDateUS(latest.date, "—")}</span>
@@ -1057,7 +1057,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                           <div style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>
                             {lab.date ? new Date(lab.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
                           </div>
-                          <div style={{ fontSize:13, fontWeight:700, color: lab.flag ? "#ef4444" : "#10b981", padding:"0 4px" }}>
+                          <div style={{ fontSize:13, fontWeight:700, color: lab.flag ? "#f87171" : "#10b981", padding:"0 4px" }}>
                             {lab.value} <span style={{ fontSize:9, color:"#7eb8d8", fontWeight:400 }}>{lab.unit}</span>
                           </div>
                           <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.refRange || "—"}</div>

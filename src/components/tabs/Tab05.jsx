@@ -166,8 +166,8 @@ function TrendChart({ lab, color, monthLabels, dates = [] }) {
           <g key={i}>
             {/* UI-16: every point reveals its date and result on hover */}
             <title>{`${dates[i] || monthLabels[i] || ""}: ${v}`}</title>
-            <circle cx={toX(i)} cy={toY(v)} r={4} fill={bad ? "#ef4444" : color} />
-            {bad && <circle cx={toX(i)} cy={toY(v)} r={7} fill="none" stroke="#ef4444" strokeWidth={1} opacity={0.4} />}
+            <circle cx={toX(i)} cy={toY(v)} r={4} fill={bad ? "#f87171" : color} />
+            {bad && <circle cx={toX(i)} cy={toY(v)} r={7} fill="none" stroke="#f87171" strokeWidth={1} opacity={0.4} />}
             {/* invisible wider hit target so the hover reveal is reachable */}
             <circle cx={toX(i)} cy={toY(v)} r={10} fill="transparent" />
           </g>
@@ -1109,8 +1109,8 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             {/* Summary chips */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
               <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #111e30", borderRadius: 10, padding: "12px 14px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: flaggedCount > 0 ? "#ef4444" : "#a0b4c8", lineHeight: 1, marginBottom: 3 }}>{flaggedCount}</div>
-                <div style={{ fontSize: 10, color: showFlagged ? "#ef4444" : "#7eb8d8", fontWeight: 600 }}>Flagged</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: flaggedCount > 0 ? "#f87171" : "#a0b4c8", lineHeight: 1, marginBottom: 3 }}>{flaggedCount}</div>
+                <div style={{ fontSize: 10, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight: 600 }}>Flagged</div>
                 <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{showFlagged ? "click to clear" : "click to filter"}</div>
               </div>
               <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 10, padding: "12px 14px" }}>
@@ -1123,14 +1123,14 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             {/* A-01: urgent tripwire flags — deterministic, not AI-generated */}
             {urgentTripwireFlags.length > 0 && (
               <div style={{ marginBottom: 10, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.35)", borderRadius: 8, padding: "10px 12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#ef4444" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#f87171" }}>
                   <span style={{ fontSize: 13 }}>⚠</span>
                   <span>{urgentTripwireFlags.length} urgent threshold flag{urgentTripwireFlags.length > 1 ? "s" : ""}</span>
                 </div>
                 {urgentTripwireFlags.map(f => (
                   <div key={`${f.canonicalId}|${f.date}|${f.value}`} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, fontSize: 10.5, color: "#f0c4c4", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
                     <span style={{ flex: 1 }}>{f.analyte}: {f.value}{f.unit ? ` ${f.unit}` : ""} ({formatDateUS(f.date, "unknown date")}) — {f.guidance}</span>
-                    <button onClick={() => dismissTripwireFlag(f)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(239,68,68,.4)", borderRadius: 5, color: "#ef4444", fontSize: 9, fontFamily: "'Sora',sans-serif", padding: "2px 6px", cursor: "pointer" }}>Dismiss</button>
+                    <button onClick={() => dismissTripwireFlag(f)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(239,68,68,.4)", borderRadius: 5, color: "#f87171", fontSize: 9, fontFamily: "'Sora',sans-serif", padding: "2px 6px", cursor: "pointer" }}>Dismiss</button>
                   </div>
                 ))}
               </div>
@@ -1393,7 +1393,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
                         <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400 }}>{selectedImportedLab.name}</h2>
-                        {inRange === false && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE{customRange ? " (your range)" : ""}</span>}
+                        {inRange === false && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE{customRange ? " (your range)" : ""}</span>}
                       </div>
                       <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
                         {selectedImportedLab.category}{selectedImportedLab.refRange ? ` · Normal range: ${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : ""}
@@ -1431,10 +1431,10 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   {/* Value + Range bar */}
                   <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "20px 24px", marginBottom: 18 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
-                      <span style={{ fontSize: 36, fontWeight: 700, color: inRange === false ? "#ef4444" : inRange === true ? "#10b981" : "#dde8f5", letterSpacing: "-1px" }}>{selectedImportedLab.value}</span>
+                      <span style={{ fontSize: 36, fontWeight: 700, color: inRange === false ? "#f87171" : inRange === true ? "#10b981" : "#dde8f5", letterSpacing: "-1px" }}>{selectedImportedLab.value}</span>
                       <span style={{ fontSize: 16, color: "#7eb8d8" }}>{selectedImportedLab.unit}</span>
                       {inRange === true && <span style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono',monospace" }}>✓ Within normal range</span>}
-                      {inRange === false && <span style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>⚠ Outside normal range</span>}
+                      {inRange === false && <span style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace" }}>⚠ Outside normal range</span>}
                     </div>
                     {selectedImportedLab.refRange && (
                       <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
@@ -1455,7 +1455,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                             <button onClick={() => { setCustomRangeForm({ low: String(customRange.low), high: String(customRange.high) }); setEditingCustomRange(labKey); }}
                               style={{ fontSize: 9, color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✎ Edit</button>
                             <button onClick={() => removeCustomRange(selectedImportedLab.name)}
-                              style={{ fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✕ Remove</button>
+                              style={{ fontSize: 9, color: "#f87171", background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✕ Remove</button>
                           </>}
                           {!customRange && editingCustomRange !== labKey && (
                             <button onClick={() => { setCustomRangeForm({ low: "", high: "" }); setEditingCustomRange(labKey); }}
@@ -1558,7 +1558,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           return (
                             <div key={i} style={{ textAlign: "center", padding: "8px 4px", background: "#080c14", borderRadius: 6, border: bad ? "1px solid rgba(239,68,68,.3)" : "1px solid #0d1a28" }}>
                               <div style={{ fontSize: 8, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{h.date || "—"}</div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: bad ? "#ef4444" : "#a8c4dc" }}>{h.value}</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: bad ? "#f87171" : "#a8c4dc" }}>{h.value}</div>
                             </div>
                           );
                         })}
@@ -1616,7 +1616,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 >Ask ↑</button>
               </div>
 
-              {aiError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>{aiError}</div>}
+              {aiError && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>{aiError}</div>}
 
               {/* Q&A thread */}
               {aiQA.length > 0 && (

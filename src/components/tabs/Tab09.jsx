@@ -32,7 +32,7 @@ const SOURCE_COLORS = {
 };
 
 const FINDING_COLORS = {
-  diagnosis:   { bg: "rgba(239,68,68,.1)",   color: "#ef4444",  border: "rgba(239,68,68,.25)"   },
+  diagnosis:   { bg: "rgba(239,68,68,.1)",   color: "#f87171",  border: "rgba(239,68,68,.25)"   },
   medication:  { bg: "rgba(245,158,11,.1)",  color: "#f59e0b",  border: "rgba(245,158,11,.25)"  },
   procedure:   { bg: "rgba(167,139,250,.1)", color: "#a78bfa",  border: "rgba(167,139,250,.25)" },
   lab:         { bg: "rgba(16,185,129,.1)",  color: "#10b981",  border: "rgba(16,185,129,.25)"  },
@@ -617,7 +617,7 @@ export default function DocumentsTab() {
         .doc-row:hover { border-color:#111e30; background:#0a0f1c; }
         .doc-row.selected { border-color:#1a2f4a; background:#0b1220; }
         .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:9px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#4f8ef7; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
-        .tag.urgent { background:rgba(239,68,68,.1); color:#ef4444; border-color:rgba(239,68,68,.2); }
+        .tag.urgent { background:rgba(239,68,68,.1); color:#f87171; border-color:rgba(239,68,68,.2); }
         .doc-search { background:#080c14; border:1px solid #111e30; border-radius:8px; padding:8px 12px; color:#a8c4dc; font-family:'Sora',sans-serif; font-size:12px; width:100%; outline:none; transition:border-color .15s; }
         .doc-search:focus { border-color:#1a2f4a; }
         .doc-search::placeholder { color:#a0b4c8; }
@@ -728,7 +728,7 @@ export default function DocumentsTab() {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", lineHeight: 1.35, marginBottom: 3, paddingRight: 8 }}>
-                      {doc.flagged && <span style={{ color: "#ef4444", marginRight: 5 }}>⚠</span>}
+                      {doc.flagged && <span style={{ color: "#f87171", marginRight: 5 }}>⚠</span>}
                       {doc.isRef && <span style={{ color: "#4f8ef7", marginRight: 5, fontSize: 10 }}>✦</span>}
                       {doc.title}
                     </div>
@@ -763,7 +763,7 @@ export default function DocumentsTab() {
               <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid #0d1a28", background: "#07090f", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
                   <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px", lineHeight: 1.3, flex: 1, minWidth: 0, paddingRight: 12 }}>
-                    {selectedDoc.flagged && <span style={{ color: "#ef4444", marginRight: 8 }}>⚠</span>}
+                    {selectedDoc.flagged && <span style={{ color: "#f87171", marginRight: 8 }}>⚠</span>}
                     {selectedDoc.title}
                   </h2>
 
@@ -810,7 +810,7 @@ export default function DocumentsTab() {
                     <button
                       className="act-btn"
                       onClick={() => handleDelete(selectedDoc.id)}
-                      style={{ background: "transparent", border: "1px solid rgba(239,68,68,.2)", color: "#ef4444" }}
+                      style={{ background: "transparent", border: "1px solid rgba(239,68,68,.2)", color: "#f87171" }}
                     >
                       ✕ Delete
                     </button>
@@ -892,9 +892,9 @@ export default function DocumentsTab() {
                 {/* Extraction error banner */}
                 {extractError && (
                   <div style={{ padding: "10px 14px", background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                    <span style={{ color: "#ef4444" }}>⚠</span>
-                    <span style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace" }}>{extractError}</span>
-                    <button onClick={() => setExtraction(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: 14, lineHeight: 1 }}>✕</button>
+                    <span style={{ color: "#f87171" }}>⚠</span>
+                    <span style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace" }}>{extractError}</span>
+                    <button onClick={() => setExtraction(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#f87171", cursor: "pointer", fontSize: 14, lineHeight: 1 }}>✕</button>
                   </div>
                 )}
 

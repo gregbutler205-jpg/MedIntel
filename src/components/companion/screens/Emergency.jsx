@@ -15,7 +15,7 @@ export default function Emergency({ onBack }) {
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", background: "#1a0505", borderBottom: "1px solid #3d1212", position: "sticky", top: 0, zIndex: 10 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: C.red, fontSize: 20, cursor: "pointer", lineHeight: 1 }}>←</button>
         <div style={{ fontFamily: serif, fontSize: 18, color: "#f87171", flex: 1 }}>Emergency Info</div>
-        <a href="tel:911" style={{ background: C.red, color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: mono, padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}>911</a>
+        <a href="tel:911" style={{ background: "#ef4444", color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: mono, padding: "6px 14px", borderRadius: 20, textDecoration: "none" }}>911</a>
       </div>
 
       <div style={{ overflowY: "auto", padding: 16 }}>
@@ -36,7 +36,7 @@ export default function Emergency({ onBack }) {
                 <div style={{ fontSize: 14, color: C.p, fontWeight: 600 }}>{d.primary.name}</div>
                 {d.primary.relationship && <div style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>{d.primary.relationship}</div>}
               </div>
-              {d.primary.phone && <a href={tel(d.primary.phone)} style={{ background: C.red, color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, padding: "8px 16px", borderRadius: 20, textDecoration: "none" }}>📞 Call</a>}
+              {d.primary.phone && <a href={tel(d.primary.phone)} style={{ background: "#ef4444", color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, padding: "8px 16px", borderRadius: 20, textDecoration: "none" }}>📞 Call</a>}
             </div>
           </Card>
         )}

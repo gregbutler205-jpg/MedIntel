@@ -587,7 +587,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 </button>
                 <button
                   onClick={() => { if (window.confirm("Disconnect Google Drive? Your local data will not be deleted.")) onSignOut(); }}
-                  style={{ ...btnGhost, color:"#ef4444", borderColor:"rgba(239,68,68,.2)" }}
+                  style={{ ...btnGhost, color:"#f87171", borderColor:"rgba(239,68,68,.2)" }}
                 >
                   Disconnect
                 </button>
@@ -1133,9 +1133,9 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={{ fontSize: 10, color: "rgba(239,68,68,.5)", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
         <div style={{ display: "flex", gap: 10 }}>
           <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(239,68,68,.15)", borderRadius: 8, padding: "12px 14px" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#ef4444", marginBottom: 4 }}>Clear All Data</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#f87171", marginBottom: 4 }}>Clear All Data</div>
             <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Permanently removes all locally stored records, notes, and settings. Cannot be undone.</div>
-            <button onClick={() => setModal("clear")} style={{ padding: "6px 14px", border: "1px solid rgba(239,68,68,.3)", borderRadius: 6, fontSize: 11, color: "#ef4444", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Clear Data</button>
+            <button onClick={() => setModal("clear")} style={{ padding: "6px 14px", border: "1px solid rgba(239,68,68,.3)", borderRadius: 6, fontSize: 11, color: "#f87171", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Clear Data</button>
           </div>
           {/* UI-21: demo controls only in the demo build. The stale "Demo PIN:
               1234" note is gone — PIN auth no longer exists under P-02. */}
@@ -1158,7 +1158,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           title="Clear All Data?"
           body="This will permanently delete all locally stored records, notes, vitals, and settings — including your API key. This cannot be undone."
           confirmLabel="Yes, clear everything"
-          confirmStyle={{ background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.35)", color: "#ef4444" }}
+          confirmStyle={{ background: "rgba(239,68,68,.15)", border: "1px solid rgba(239,68,68,.35)", color: "#f87171" }}
           onConfirm={handleClearData}
           onCancel={() => setModal(null)}
         />
@@ -1217,7 +1217,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               />
             </div>
 
-            {pinError && <div style={{ fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
+            {pinError && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
             {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Password updated successfully.</div>}
 
             <div style={{ display: "flex", gap: 10 }}>

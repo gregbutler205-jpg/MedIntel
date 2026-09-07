@@ -232,7 +232,7 @@ export default function Records({ onNavChange }) {
                 </button>
                 <button
                   onClick={() => setDeleteId(selected.id)}
-                  style={{ padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                  style={{ padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#f87171", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                 >
                   Delete
                 </button>
@@ -426,7 +426,7 @@ export default function Records({ onNavChange }) {
                 setRecords(updated);
                 if (selected?.id === deleteId) setSelected(updated[0] ?? null);
                 setDeleteId(null);
-              }} style={{ padding: "8px 18px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 8, color: "#ef4444", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Delete</button>
+              }} style={{ padding: "8px 18px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 8, color: "#f87171", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Delete</button>
             </div>
           </div>
         </div>

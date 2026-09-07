@@ -262,7 +262,7 @@ const VITALS = [
     statusFn: r => r.hr == null ? { label: "No data", color: "#98afc4" } : r.hr < 50 ? { label: "Low", color: "#f59e0b" } : r.hr > 100 ? { label: "High", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["hr"], chartColors: ["#ef4444"],
     chartLabels: ["Heart Rate"],
-    refLines: [{ val: 60, color: "#f59e0b" }, { val: 100, color: "#ef4444" }],
+    refLines: [{ val: 60, color: "#f59e0b" }, { val: 100, color: "#f87171" }],
     chartYMin: 40, chartYMax: 120,
     data: "manual",
   },
@@ -286,7 +286,7 @@ const VITALS = [
     statusFn: r => r.o2 == null ? { label: "No data", color: "#98afc4" } : r.o2 >= 98 ? { label: "Excellent", color: "#10b981" } : r.o2 >= 95 ? { label: "Normal", color: "#7eb8d8" } : { label: "Low", color: "#ef4444" },
     chartType: "line", chartKeys: ["o2"], chartColors: ["#10b981"],
     chartLabels: ["O2 Saturation"],
-    refLines: [{ val: 95, color: "#ef4444" }],
+    refLines: [{ val: 95, color: "#f87171" }],
     chartYMin: 88, chartYMax: 102,
     data: "manual",
   },
@@ -315,7 +315,7 @@ const VITALS = [
     statusFn: r => r.temp == null ? { label: "No data", color: "#98afc4" } : r.temp < 97 ? { label: "Low", color: "#4f8ef7" } : r.temp > 99.5 ? { label: "Fever", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["temp"], chartColors: ["#7eb8d8"],
     chartLabels: ["Temp"],
-    refLines: [{ val: 97, color: "#4f8ef7" }, { val: 99.5, color: "#ef4444" }],
+    refLines: [{ val: 97, color: "#4f8ef7" }, { val: 99.5, color: "#f87171" }],
     chartYMin: 96, chartYMax: 101,
     data: "manual",
   },
@@ -327,7 +327,7 @@ const VITALS = [
     statusFn: r => r.glucose == null ? { label: "No data", color: "#98afc4" } : r.glucose > 125 ? { label: "High", color: "#ef4444" } : r.glucose > 100 ? { label: "Pre-diabetic", color: "#f59e0b" } : r.glucose < 70 ? { label: "Low", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["glucose"], chartColors: ["#a78bfa"],
     chartLabels: ["Fasting Glucose"],
-    refLines: [{ val: 100, color: "#f59e0b" }, { val: 126, color: "#ef4444" }],
+    refLines: [{ val: 100, color: "#f59e0b" }, { val: 126, color: "#f87171" }],
     chartYMin: 60, chartYMax: 130,
     data: "manual",
   },
@@ -339,7 +339,7 @@ const VITALS = [
     statusFn: r => bmiLabel(calcBMI(r.weight)),
     chartType: "line", chartKeys: ["bmi_calc"], chartColors: ["#10b981"],
     chartLabels: ["BMI"],
-    refLines: [{ val: 18.5, color: "#4f8ef7" }, { val: 25, color: "#f59e0b" }, { val: 30, color: "#ef4444" }],
+    refLines: [{ val: 18.5, color: "#4f8ef7" }, { val: 25, color: "#f59e0b" }, { val: 30, color: "#f87171" }],
     chartYMin: 15, chartYMax: 40,
     data: "manual",
   },
@@ -688,8 +688,8 @@ export default function App({ onNavChange }) {
             {/* Summary chips */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7, marginBottom:14 }}>
               <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #111e30", borderRadius:10, padding:"9px 11px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
-                <div style={{ fontSize:17, fontWeight:700, color:"#ef4444", lineHeight:1, marginBottom:2 }}>{flaggedManual}</div>
-                <div style={{ fontSize:9, color: showFlagged ? "#ef4444" : "#7eb8d8", fontWeight:600 }}>Flagged</div>
+                <div style={{ fontSize:17, fontWeight:700, color:"#f87171", lineHeight:1, marginBottom:2 }}>{flaggedManual}</div>
+                <div style={{ fontSize:9, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight:600 }}>Flagged</div>
                 <div style={{ fontSize:8, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "clear" : "filter"}</div>
               </div>
               <div style={{ background:"#0b1220", border:"1px solid #111e30", borderRadius:10, padding:"9px 11px" }}>
@@ -722,7 +722,7 @@ export default function App({ onNavChange }) {
                     {isWatch && <span style={{ fontSize:7.5, background:"rgba(79,142,247,.15)", color:"#4f8ef7", padding:"1px 5px", borderRadius:8, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>WATCH</span>}
                   </div>
                   <div style={{ display:"flex", alignItems:"baseline", gap:5, marginBottom:2 }}>
-                    <span style={{ fontSize:19, fontWeight:700, color: status && status.color === "#ef4444" ? "#ef4444" : "#dde8f5", lineHeight:1 }}>
+                    <span style={{ fontSize:19, fontWeight:700, color: status && status.color === "#ef4444" ? "#f87171" : "#dde8f5", lineHeight:1 }}>
                       {latestR ? vc.latestFn(latestR) : "—"}
                     </span>
                     <span style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
@@ -892,27 +892,27 @@ export default function App({ onNavChange }) {
                     const id = config.id;
                     // column definitions per vital
                     const cols = id === "bp"
-                      ? [{ h:"Date", fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date", fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Systolic",  fn:r=>r.bp_s??'—', c:r=>r.bp_s>=140?"#ef4444":r.bp_s>=130?"#f59e0b":"#c4d8ee", bold:true },
                          { h:"Diastolic", fn:r=>r.bp_d??'—', c:r=>r.bp_d>=90?"#ef4444":"#c4d8ee" },
                          { h:"HR",        fn:r=>r.hr??'—',   c:r=>"#7eb8d8" }]
                     : id === "o2"
-                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"O2 Sat %",     fn:r=>r.o2!=null?`${r.o2}%`:'—', c:r=>r.o2!=null&&r.o2<95?"#ef4444":r.o2!=null&&r.o2<97?"#f59e0b":"#10b981", bold:true },
                          { h:"HR",         fn:r=>r.hr??'—',  c:r=>"#7eb8d8" }]
                     : id === "weight"
-                      ? [{ h:"Date",   fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",   fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Weight (lbs)", fn:r=>r.weight??'—', c:r=>"#f59e0b", bold:true },
                          { h:"Change", fn:(r,i,arr)=>{const p=arr[i+1]; return p&&r.weight&&p.weight?(r.weight-p.weight>0?"+":"")+(r.weight-p.weight).toFixed(1):"—"}, c:(r,i,arr)=>{const p=arr[i+1]; if(!p||!r.weight||!p.weight)return"#a0b4c8"; return r.weight>p.weight?"#ef4444":r.weight<p.weight?"#10b981":"#a0b4c8";} }]
                     : id === "temp"
-                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Temp °F",  fn:r=>r.temp!=null?`${r.temp}°`:'—', c:r=>r.temp>99.5?"#ef4444":r.temp>99?"#f59e0b":"#b0c4d8", bold:true }]
                     : id === "glucose"
-                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Glucose mg/dL", fn:r=>r.glucose??'—', c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.glucose>125?"High":r.glucose>100?"Pre-diabetic":r.glucose<70?"Low":"Normal", c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981" }]
                     : id === "resting_hr"
-                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Resting HR", fn:r=>r.resting_hr!=null?`${r.resting_hr} bpm`:'—', c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.resting_hr==null?"—":r.resting_hr>70?"Elevated":r.resting_hr<50?"Low":"Good", c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981" }]
                     : id === "bmi"
@@ -921,7 +921,7 @@ export default function App({ onNavChange }) {
                          { h:"BMI",    fn:r=>{const b=calcBMI(r.weight);return b!=null?`${b}`:'—';}, c:r=>{const b=calcBMI(r.weight);return bmiLabel(b).color;}, bold:true },
                          { h:"Category", fn:r=>bmiLabel(calcBMI(r.weight)).label, c:r=>bmiLabel(calcBMI(r.weight)).color }]
                     : id === "sleep"
-                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#ef4444"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Sleep hrs", fn:r=>r.sleep?`${r.sleep}h`:'—', c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.sleep<6?"Poor":r.sleep<7?"Below goal":"Good", c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981" }]
                       : [];

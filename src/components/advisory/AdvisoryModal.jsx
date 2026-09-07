@@ -71,7 +71,7 @@ export default function AdvisoryModal() {
   const openED = () => window.open(edDirectionsUrl(), "_blank", "noopener,noreferrer");
 
   const btnBase = { display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", borderRadius: 12, fontFamily: "var(--font-sans)", fontWeight: 700, cursor: "pointer", border: "1px solid transparent", textDecoration: "none", boxSizing: "border-box" };
-  const btn911 = { ...btnBase, background: "var(--red)", color: "#fff", minHeight: isEmergency ? 68 : 52, fontSize: isEmergency ? 22 : 16 };
+  const btn911 = { ...btnBase, background: "#ef4444", color: "#fff", minHeight: isEmergency ? 68 : 52, fontSize: isEmergency ? 22 : 16 };
   const btnPrimary = { ...btnBase, background: accent, color: "#fff", minHeight: 56, fontSize: 17 };
   const btnSecondary = { ...btnBase, background: "var(--card)", color: "var(--text-bright)", border: "1px solid var(--border-strong)", minHeight: 52, fontSize: 15 };
 

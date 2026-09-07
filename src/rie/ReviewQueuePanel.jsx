@@ -99,7 +99,7 @@ export default function RIEWidget({ onNavChange }) {
                     <div style={{ fontSize: 12, color: "#c4d8ee", lineHeight: 1.5 }}>{f.message}</div>
                     {f.suggestion && (
                       <div style={{ marginTop: 6, fontSize: 11, fontFamily: mono, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <span style={{ color: "#ef4444", textDecoration: "line-through" }}>{f.original}</span>
+                        <span style={{ color: "#f87171", textDecoration: "line-through" }}>{f.original}</span>
                         <span style={{ color: "#6a8090" }}>→</span>
                         <span style={{ color: "#10b981" }}>{f.suggestion}</span>
                       </div>

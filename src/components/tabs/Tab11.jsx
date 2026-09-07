@@ -1008,7 +1008,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         .send-btn { padding:0 18px; height:40px; background:rgba(79,142,247,.12); border:1px solid rgba(79,142,247,.3); border-radius:8px; color:#4f8ef7; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; flex-shrink:0; }
         .send-btn:hover { background:rgba(79,142,247,.2); border-color:rgba(79,142,247,.5); }
         .send-btn:disabled { opacity:.4; cursor:not-allowed; }
-        .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#ef4444; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
+        .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#f87171; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
         .stop-btn:hover { background:rgba(239,68,68,.15); }
         .chat-input { flex:1; min-width:0; background:#0b1220; border:1px solid #111e30; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
         .chat-input::placeholder { color:#98afc4; }
@@ -1062,7 +1062,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 {SESSION_COPY.warnOnCloseKeep}
               </button>
               <button className="end-btn" onClick={confirmDiscard}
-                style={{ background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", color: "#ef4444" }}>
+                style={{ background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", color: "#f87171" }}>
                 {SESSION_COPY.warnOnCloseDiscard}
               </button>
             </div>
@@ -1215,7 +1215,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 >{refUploading ? "…" : "+ PDF"}</button>
                 <input ref={refFileRef} type="file" accept="application/pdf" onChange={handleRefDocUpload} style={{ display: "none" }} />
               </div>
-              {refError && <div style={{ fontSize: 9, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
+              {refError && <div style={{ fontSize: 9, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
               {refDocs.length === 0
                 ? <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>No reference docs.<br />Upload a PDF to include it in AI context.</div>
                 : refDocs.map(d => (
@@ -1240,7 +1240,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           {/* Session list */}
           <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
             {error && (
-              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
                 ⚠ {error}
               </div>
             )}
@@ -1389,7 +1389,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             )}
 
             {error && (
-              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#ef4444", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
                 ⚠ {error}
               </div>
             )}
@@ -1479,7 +1479,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between", paddingRight: 64 }}>
               <span>Shift+Enter for new line · Enter to send</span>
               <span>
-                <span style={{ color: questionsLeft === 0 ? "#ef4444" : questionsLeft <= 3 ? "#f59e0b" : "#a0b4c8" }}>
+                <span style={{ color: questionsLeft === 0 ? "#f87171" : questionsLeft <= 3 ? "#f59e0b" : "#a0b4c8" }}>
                   {questionsLeft} of {DAILY_QUESTION_LIMIT} questions left today
                 </span>
                 {" · "}{isAdvanced ? "Advanced Mode" : "Standard Mode"} · sent pseudonymously per message

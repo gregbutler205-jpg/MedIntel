@@ -648,7 +648,7 @@ export default function App({ onNavChange }) {
         .search-input:focus { border-color:#4f8ef7; }
         .search-input::placeholder { color:#98afc4; }
         .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
-        .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#ef4444; }
+        .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#f87171; }
         .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #0d1a28; }
         .detail-row:last-child { border-bottom:none; }
         .interaction-row { padding:10px 14px; border-radius:8px; background:#0b1220; border:1px solid #111e30; margin-bottom:6px; animation:fadeUp .35s ease both; }
@@ -742,7 +742,7 @@ export default function App({ onNavChange }) {
                 <div style={{ fontSize: 24, fontWeight: 700, color: "#dde8f5", letterSpacing: "-0.5px", lineHeight: 1, marginBottom: 5 }}>{value}</div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8", marginBottom: 3 }}>{label}</div>
                 <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
-                {clickable && <div style={{ marginTop:8, fontSize:10, color: showFlagged ? "#ef4444" : "#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
+                {clickable && <div style={{ marginTop:8, fontSize:10, color: showFlagged ? "#f87171" : "#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
               </div>
             ))}
           </div>
@@ -763,7 +763,7 @@ export default function App({ onNavChange }) {
                 />
                 <button
                   onClick={() => setShowFlagged(!showFlagged)}
-                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#ef4444" : "#4f8ef7", transition:"all .15s" }}
+                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#f87171" : "#4f8ef7", transition:"all .15s" }}
                 >
                   {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
@@ -826,7 +826,7 @@ export default function App({ onNavChange }) {
                         <span style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>{med.name}</span>
                         <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.brand}</span>
                         {med.flag && (
-                          <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#ef4444", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>REVIEW</span>
+                          <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>REVIEW</span>
                         )}
                         {calcDaysLeft(med.refillDate) <= 7 && (
                           <span style={{ fontSize: 9, background: "rgba(245,158,11,.15)", color: "#f59e0b", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>REFILL THIS WEEK</span>
@@ -993,7 +993,7 @@ export default function App({ onNavChange }) {
                     {/* Delete */}
                     {!deleteConfirm ? (
                       <button onClick={() => setDeleteConfirm(true)}
-                        style={{ width: "100%", padding: "9px", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 8, color: "#ef4444", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", opacity: 0.7 }}>
+                        style={{ width: "100%", padding: "9px", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 8, color: "#f87171", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", opacity: 0.7 }}>
                         Delete Medication
                       </button>
                     ) : (
@@ -1046,7 +1046,7 @@ export default function App({ onNavChange }) {
 
                     {selectedMed.flag && (
                       <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "9px 12px", marginTop: 10 }}>
-                        <div style={{ fontSize: 9, color: "#ef4444", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", marginBottom: 4 }}>FLAGGED FOR REVIEW</div>
+                        <div style={{ fontSize: 9, color: "#f87171", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", marginBottom: 4 }}>FLAGGED FOR REVIEW</div>
                         <div style={{ fontSize: 11, color: "#c4d8ee", lineHeight: 1.5 }}>{selectedMed.flagNote}</div>
                       </div>
                     )}
@@ -1232,7 +1232,7 @@ export default function App({ onNavChange }) {
                               />
                               {reminderForm.times.length > 1 && (
                                 <button onClick={() => setReminderForm(f => ({ ...f, times: f.times.filter((_, j) => j !== i) }))}
-                                  style={{ background: "none", border: "none", color: "#ef4444", fontSize: 14, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>✕</button>
+                                  style={{ background: "none", border: "none", color: "#f87171", fontSize: 14, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>✕</button>
                               )}
                             </div>
                           ))}
@@ -1270,7 +1270,7 @@ export default function App({ onNavChange }) {
                             </button>
                             {existing && (
                               <button onClick={() => handleDeleteReminder(selectedMed.id)}
-                                style={{ padding: "9px 12px", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#ef4444", fontSize: 12, cursor: "pointer" }}>
+                                style={{ padding: "9px 12px", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#f87171", fontSize: 12, cursor: "pointer" }}>
                                 Delete
                               </button>
                             )}
