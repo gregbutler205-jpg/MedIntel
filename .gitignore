@@ -14,3 +14,5 @@ dist
 # in this file; secrets live in Render / GitHub env, never in the repo.
 !.env.production
 dist-demo/
+# WO_ACCESSIBLE_TOKENS_01: axe reports and screenshots are generated locally (npm run test:a11y)
+a11y-report/
