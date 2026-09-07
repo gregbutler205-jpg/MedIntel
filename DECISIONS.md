@@ -1780,3 +1780,76 @@ or appointments regenerates the samples (see the header of
 demoPrepReports.js). Pinned by `npm run test:demo-seeder`: full appointment
 coverage, substantial content, honesty tail present, replay gated to demo
 mode only.
+
+## DEC-049: Accessibility baseline is a hard rule
+
+**Status:** Settled (accepted by Greg as written from the usability DEC drafts, 2026-09-06)
+
+**Source.** `docs/DEC_DRAFT_USABILITY_2026-09-06.md`, entry DEC-TBD-01, from the
+2026-09-05/06 usability review session. Merged verbatim; the draft file keeps the original
+text for the record.
+
+**Decision.** All patient-facing surfaces meet WCAG 2.2 AA. This rule has the same weight as
+the em dash rule and the disclosure accuracy rule: a surface that fails it does not ship.
+
+**Specifics.**
+- Text contrast 4.5:1 minimum against its actual background; 3:1 for large text (24px regular
+  or 19px bold and above) and for UI component boundaries.
+- Body text floor 14px on mobile, 13px on desktop. Labels and figures floor 12px. No text below
+  12px anywhere.
+- Every interactive element is at least 44 by 44 CSS pixels.
+- Every interactive element has a visible focus state.
+- Icons never carry meaning alone; every icon in navigation or actions has a text label or an
+  accessible name.
+- Color never carries meaning alone; a flag state has a shape or word as well as a color.
+
+**Enforcement.** Automated check (axe or equivalent) in the build; a failing AA check blocks
+the PR. Manual contrast audit on any new token.
+
+**Rationale.** The target population skews older, rural, on phones, with hepatic
+encephalopathy, tacrolimus tremor, and eye disease in the risk profile. The prior token set had
+section labels at 1.5:1 and meta text at 2.1:1.
+
+**Related:** DEC-050 (token amendment), UI-8 (`src/index.css` token ladder, existing floor
+`--fs-min` 13px), DEC-TBD-03 and DEC-TBD-04 (theme policy and text size control, still drafts
+in the same file), WO_ACCESSIBLE_TOKENS_01 (the mechanical pass this entry unblocks).
+
+## DEC-050: Accessible token amendment to the locked design system
+
+**Status:** Settled (accepted by Greg as written from the usability DEC drafts, 2026-09-06)
+
+**Source.** `docs/DEC_DRAFT_USABILITY_2026-09-06.md`, entry DEC-TBD-02. Merged verbatim.
+
+**Decision.** The design system remains locked (DM Serif Display, Sora, DM Mono, dark navy,
+accent blue). The following text tokens are amended. Measured against `--bg-card` #0b1220.
+
+| Token | Old | Ratio | New | Ratio |
+|---|---|---|---|---|
+| text-faint | #1e3550 | 1.5 | #7a97b6 | 6.2 |
+| text-ghost | #2d4d6a | 2.1 | #8aa6c2 | 7.4 |
+| text-dim | #3d5a7a | 2.6 | #8fabc7 | 7.9 |
+| accent-blue (text use) | #4f8ef7 | 5.8 | #6ea3ff | 7.4 |
+| danger (text use) | #ef4444 | 5.0 | #f87171 | 6.8 |
+| success (text use) | #10b981 | 7.4 | #2dd4a0 | 9.8 |
+| border | #0d1a28 / #111e30 | under 1.5 | #1c2a40 | 3.1 vs card |
+
+text-primary, text-secondary, text-muted, warning, and the background tokens are unchanged.
+The old accent #4F8EF7 remains the brand accent for logos, marks, and external materials; the
+amended value is for text and interactive states inside the app.
+
+**Rationale.** Keeps hue family and brand recognition; clears AA with margin so future tints do
+not fall back under.
+
+**Implementation note (added at merge, 2026-09-06; measured from the code, not part of the
+accepted text).** The Old column names the design-system spec's tokens (INSINA_UI_FORMAT_SPEC:
+`--dim` #3d5a7a, `--ghost` #2d4d6a, `--faint` #1e3550; `docs/ONBOARDING_SPEC.md` restates
+them). The shipped code differs: `src/index.css` defines `--text-dim` as #8299ad and has no
+faint or ghost token; #1e3550 and #2d4d6a do not occur anywhere in `src/`; #3d5a7a occurs twice
+(PasswordInput.jsx). The dim greys the components actually use are inline literals #4a5c6a
+(56 occurrences) and #6a8090 (58), which the table does not list. The accent, danger, success,
+and border values in the table do match the code (#4f8ef7 in 30 files, #ef4444 in 25, #10b981
+in 27, #0d1a28 and #111e30 in 23 each). The token work order must therefore map the code's real
+literals to the amended values and record that mapping; the light theme (`.theme-light`) is
+outside this entry and waits on DEC-TBD-03.
+
+**Related:** DEC-049, UI-8, DEC-TBD-03 (draft), WO_ACCESSIBLE_TOKENS_01.

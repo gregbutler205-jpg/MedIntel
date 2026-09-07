@@ -2,6 +2,7 @@
 
 Session date: September 5 and 6, 2026
 Status: DRAFT. IDs are TBD until merged into DECISIONS.md. Nothing below is settled until merged.
+Update 2026-09-06: DEC-TBD-01 and DEC-TBD-02 were accepted by Greg as written and merged into DECISIONS.md as DEC-049 and DEC-050. The remaining ten entries and the deferred list are still drafts.
 Source: usability review and dashboard redesign session; mockups `insina_tier0_today.jsx` and `insina_dashboard_feed.jsx`.
 
 Ordering note: DEC-TBD-01 through DEC-TBD-03 are prerequisites for the others and for WO_ACCESSIBLE_TOKENS_01. DEC-TBD-04 onward describe the dashboard and can merge together.
@@ -9,6 +10,8 @@ Ordering note: DEC-TBD-01 through DEC-TBD-03 are prerequisites for the others an
 ---
 
 ## DEC-TBD-01: Accessibility baseline is a hard rule
+
+Merged as DEC-049 on 2026-09-06, accepted as written.
 
 **Decision.** All patient-facing surfaces meet WCAG 2.2 AA. This rule has the same weight as the em dash rule and the disclosure accuracy rule: a surface that fails it does not ship.
 
@@ -27,6 +30,8 @@ Ordering note: DEC-TBD-01 through DEC-TBD-03 are prerequisites for the others an
 ---
 
 ## DEC-TBD-02: Accessible token amendment to the locked design system
+
+Merged as DEC-050 on 2026-09-06, accepted as written. DEC-050 carries an implementation note on where the code's actual token values differ from the Old column.
 
 **Decision.** The design system remains locked (DM Serif Display, Sora, DM Mono, dark navy, accent blue). The following text tokens are amended. Measured against `--bg-card` #0b1220.
 
