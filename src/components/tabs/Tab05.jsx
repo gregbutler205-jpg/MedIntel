@@ -438,7 +438,7 @@ function renderMarkdown(rawText) {
       const content = trimmed.replace(/^[-•]\s+/, "");
       return (
         <div key={i} style={{ display:"flex", gap:8, marginBottom:4, paddingLeft:4 }}>
-          <span style={{ color:"#4f8ef7", flexShrink:0, marginTop:4, fontSize:9 }}>▸</span>
+          <span style={{ color:"#6ea3ff", flexShrink:0, marginTop:4, fontSize:9 }}>▸</span>
           <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(content, AI_BOLD_STYLE) }} style={{ lineHeight:1.7 }} />
         </div>
       );
@@ -446,7 +446,7 @@ function renderMarkdown(rawText) {
     const numMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
     if (numMatch) return (
       <div key={i} style={{ display:"flex", gap:8, marginBottom:5, paddingLeft:4 }}>
-        <span style={{ color:"#4f8ef7", fontWeight:700, flexShrink:0, minWidth:22,
+        <span style={{ color:"#6ea3ff", fontWeight:700, flexShrink:0, minWidth:22,
           fontFamily:"'DM Mono',monospace", fontSize:11 }}>{numMatch[1]}.</span>
         <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(numMatch[2], AI_BOLD_STYLE) }} style={{ lineHeight:1.7 }} />
       </div>
@@ -1033,7 +1033,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
         .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
         .lab-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:9px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:5px; cursor:pointer; transition:all .12s; animation:fadeUp .3s ease both; }
         .lab-row:hover { border-color:#1a2f4a; }
-        .lab-row.sel { border-color:#4f8ef7; background:rgba(79,142,247,.07); }
+        .lab-row.sel { border-color:#6ea3ff; background:rgba(79,142,247,.07); }
         .time-btn { padding:4px 10px; border-radius:6px; border:none; font-size:10px; font-family:'DM Mono',monospace; cursor:pointer; background:#0f1e30; color:#7eb8d8; font-weight:500; }
         .time-btn:hover { background:#162840; }
         .time-btn.on { background:#4f8ef7; color:#fff; }
@@ -1183,7 +1183,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             {/* Inline Add Lab form */}
             {showAddLab && (
               <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:10, padding:"14px", marginBottom:14, animation:"fadeUp .2s ease both" }}>
-                <div style={{ fontSize:9, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:12 }}>NEW LAB RESULT</div>
+                <div style={{ fontSize:9, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:12 }}>NEW LAB RESULT</div>
                 {[
                   { label:"Test Name *", key:"name", placeholder:"e.g. Creatinine", type:"text" },
                   { label:"Result Value *", key:"value", placeholder:"e.g. 1.2", type:"text" },
@@ -1292,7 +1292,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       {listItems.map((item, i) => {
                         if (item.type === "header") {
                           return (
-                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 9, fontWeight: 700, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1c2a40" }}>
+                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 9, fontWeight: 700, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1c2a40" }}>
                               <span>{item.cat}</span>
                               {/* DEC-P49: one launcher per panel header, scope = this panel (reconciled rows only). No per-row launchers. */}
                               <AILauncher
@@ -1574,7 +1574,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               {/* Header row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, color: "#4f8ef7" }}>✦</span>
+                  <span style={{ fontSize: 14, color: "#6ea3ff" }}>✦</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", letterSpacing: "0.5px" }}>AI Lab Analysis</span>
                   {importedLabs.length > 0 && <span style={{ fontSize: 9, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.25)", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>{importedLabs.length} imported</span>}
                 </div>
@@ -1583,7 +1583,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   disabled={aiAnalyzing || aiQALoading}
                   style={{ padding: "7px 16px", background: aiAnalyzing ? "#0f1e30" : "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: aiAnalyzing ? "default" : "pointer", display: "flex", alignItems: "center", gap: 6 }}
                 >
-                  {aiAnalyzing ? <><span style={{ fontSize: 12 }}>⟳</span> Analyzing…</> : <><span style={{ fontSize: 12, color: "#4f8ef7" }}>✦</span> Full Analysis</>}
+                  {aiAnalyzing ? <><span style={{ fontSize: 12 }}>⟳</span> Analyzing…</> : <><span style={{ fontSize: 12, color: "#6ea3ff" }}>✦</span> Full Analysis</>}
                 </button>
               </div>
 
@@ -1612,7 +1612,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 <button
                   onClick={askLabQuestion}
                   disabled={!aiQuestion.trim() || aiQALoading || aiAnalyzing}
-                  style={{ padding: "8px 16px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#4f8ef7", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", whiteSpace: "nowrap" }}
+                  style={{ padding: "8px 16px", background: "rgba(79,142,247,.18)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 8, color: "#6ea3ff", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", whiteSpace: "nowrap" }}
                 >Ask ↑</button>
               </div>
 
@@ -1632,7 +1632,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                               {renderMarkdown(item.a)}
                               <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8, paddingTop:6, borderTop:"1px solid #1c2a40" }}>
                                 <button onClick={() => printAIResponse(item.q, item.a, PRINT_LOGO)}
-                                  style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                                  style={{ background:"none", border:"none", color:"#6ea3ff", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
                                   <PrintLabel />
                                 </button>
                               </div>
@@ -1651,7 +1651,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   {renderMarkdown(aiAnalysis)}
                   <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:14, marginTop:10, paddingTop:8, borderTop:"1px solid #1c2a40" }}>
                     <button onClick={() => setAnalysisOverlay({ title: "Full Lab Analysis", content: aiAnalysis, mode: "standard", timestamp: new Date().toISOString() })}
-                      style={{ background:"none", border:"none", color:"#4f8ef7", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.8, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                      style={{ background:"none", border:"none", color:"#6ea3ff", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.8, display:"flex", alignItems:"center", gap:5, padding:0 }}>
                       ⤢ Open as report
                     </button>
                   </div>
@@ -1790,7 +1790,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                             </div>
                           </div>
                           {isSelected && (
-                            <span style={{ fontSize:8, background:"rgba(79,142,247,.15)", color:"#4f8ef7", border:"1px solid rgba(79,142,247,.3)", padding:"1px 7px", borderRadius:3, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
+                            <span style={{ fontSize:8, background:"rgba(79,142,247,.15)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.3)", padding:"1px 7px", borderRadius:3, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
                               CANONICAL
                             </span>
                           )}

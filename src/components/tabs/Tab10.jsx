@@ -14,11 +14,11 @@ import { scanForProhibitedDirectives } from "../../lib/aiOutputFilter.js";
 import PrepMarkPicker from "../PrepMarkPicker.jsx";
 
 const TAG_STYLES = {
-  Appt:     { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
+  Appt:     { bg: "rgba(79,142,247,.12)",  color: "#6ea3ff", border: "rgba(79,142,247,.25)" },
   Labs:     { bg: "rgba(245,158,11,.1)",   color: "#f59e0b", border: "rgba(245,158,11,.25)" },
   Meds:     { bg: "rgba(167,139,250,.1)",  color: "#a78bfa", border: "rgba(167,139,250,.25)" },
   Symptoms: { bg: "rgba(16,185,129,.1)",   color: "#2dd4a0", border: "rgba(16,185,129,.25)" },
-  General:  { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
+  General:  { bg: "rgba(79,142,247,.12)",  color: "#6ea3ff", border: "rgba(79,142,247,.25)" },
   Urgent:   { bg: "rgba(239,68,68,.1)",    color: "#f87171", border: "rgba(239,68,68,.25)" },
 };
 
@@ -50,7 +50,7 @@ function NoteItem({ note, active, onClick }) {
           {note.title}
         </div>
         {note.aiGenerated && (
-          <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
+          <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#6ea3ff", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
         )}
         {note.prepTargets?.length > 0 && (
           <span title={`Marked for appointment prep: ${note.prepTargets.map(t => t.name).join(", ")}`} style={{ fontSize: 8, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>PREP</span>
@@ -144,7 +144,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         <select
           value={note.tag}
           onChange={e => onUpdate({ ...note, tag: e.target.value })}
-          style={{ background: "#0b1220", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", outline: "none", cursor: "pointer" }}
+          style={{ background: "#0b1220", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", outline: "none", cursor: "pointer" }}
         >
           {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
         </select>
@@ -172,7 +172,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
             clinician or patient-authored text, plus a markdown download. */}
         {note.aiGenerated && (
           <div style={{ background: "rgba(79,142,247,.07)", border: "1px solid rgba(79,142,247,.22)", borderRadius: 8, padding: "9px 13px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 6px", borderRadius: 3, fontFamily: "'DM Mono', monospace", letterSpacing: "0.5px", flexShrink: 0 }}>AI</span>
+            <span style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#6ea3ff", border: "1px solid rgba(79,142,247,.3)", padding: "1px 6px", borderRadius: 3, fontFamily: "'DM Mono', monospace", letterSpacing: "0.5px", flexShrink: 0 }}>AI</span>
             <span style={{ fontSize: 11, color: "#7eb8d8", flex: 1, lineHeight: 1.5 }}>
               AI-generated analysis — informational only, not clinician text. Verify against source records.
             </span>
@@ -185,7 +185,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
                 mode: note.aiMode,
               })}
               title="Download this analysis as a dated markdown file"
-              style={{ background: "none", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono', monospace", padding: "3px 10px", cursor: "pointer", flexShrink: 0 }}
+              style={{ background: "none", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, color: "#6ea3ff", fontSize: 10, fontFamily: "'DM Mono', monospace", padding: "3px 10px", cursor: "pointer", flexShrink: 0 }}
             >↓ .md</button>
           </div>
         )}
@@ -217,7 +217,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
               <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8" }}>{note.linked.label}</div>
               <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{note.linked.date}</div>
             </div>
-            <span style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", marginLeft: "auto", cursor: "pointer" }}>View →</span>
+            <span style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", marginLeft: "auto", cursor: "pointer" }}>View →</span>
           </div>
         )}
 
@@ -228,9 +228,9 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         )}
 
         <div style={{ background: "linear-gradient(135deg,rgba(79,142,247,.08),rgba(167,139,250,.05))", border: "1px solid rgba(79,142,247,.2)", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginTop: 20 }}>
-          <span style={{ color: "#4f8ef7", fontSize: 14 }}>✦</span>
-          <div style={{ fontSize: 12, color: "#4f8ef7", flex: 1 }}>AI can summarize this note into a pre-visit brief or suggest questions from your labs.</div>
-          <button onClick={() => onAI(note)} style={{ fontSize: 11, color: "#4f8ef7", border: "1px solid rgba(79,142,247,.35)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Generate →</button>
+          <span style={{ color: "#6ea3ff", fontSize: 14 }}>✦</span>
+          <div style={{ fontSize: 12, color: "#6ea3ff", flex: 1 }}>AI can summarize this note into a pre-visit brief or suggest questions from your labs.</div>
+          <button onClick={() => onAI(note)} style={{ fontSize: 11, color: "#6ea3ff", border: "1px solid rgba(79,142,247,.35)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Generate →</button>
         </div>
       </div>
     </div>
@@ -268,7 +268,7 @@ function NewNoteModal({ onSave, onClose }) {
           style={{ ...inputStyle, color: "#a8c4dc", resize: "vertical", lineHeight: 1.65 }} />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
           <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
-          <button onClick={save} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Note</button>
+          <button onClick={save} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Note</button>
         </div>
       </div>
     </div>
@@ -326,7 +326,7 @@ function AIPanel({ note, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 520, maxHeight: "70vh", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <span style={{ color: "#4f8ef7", fontSize: 16 }}>✦</span>
+          <span style={{ color: "#6ea3ff", fontSize: 16 }}>✦</span>
           <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#dde8f5", flex: 1 }}>AI Note Summary</div>
           <span onClick={onClose} style={{ color: "#98afc4", cursor: "pointer", fontSize: 16 }}>✕</span>
         </div>
@@ -340,7 +340,7 @@ function AIPanel({ note, onClose }) {
         {error && <div style={{ fontSize: 12, color: "#f87171", lineHeight: 1.6, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
         {result && <div style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{result}</div>}
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18, gap: 10 }}>
-          {error && <button onClick={generate} style={{ padding: "7px 16px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Retry</button>}
+          {error && <button onClick={generate} style={{ padding: "7px 16px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Retry</button>}
           <button onClick={onClose} style={{ padding: "7px 16px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Close</button>
         </div>
       </div>
@@ -443,7 +443,7 @@ export default function Notes() {
                 background: filter === f ? "rgba(79,142,247,.15)" : "#0b1220",
                 border: `1px solid ${filter === f ? "rgba(79,142,247,.35)" : "#1c2a40"}`,
                 borderRadius: 20, padding: "3px 10px", fontSize: 10,
-                color: filter === f ? "#4f8ef7" : "#b0c4d8",
+                color: filter === f ? "#6ea3ff" : "#b0c4d8",
                 fontFamily: "'DM Mono', monospace", cursor: "pointer", transition: "all .12s",
               }}
             >{f}</div>
@@ -475,7 +475,7 @@ export default function Notes() {
             onClick={() => setShowNew(true)}
             style={{ width: "100%", padding: 10, background: "linear-gradient(135deg,rgba(79,142,247,.15),rgba(167,139,250,.1))", border: "1px solid rgba(79,142,247,.3)", borderRadius: 10, color: "#7eb8d8", fontFamily: "'Sora', sans-serif", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           >
-            <span style={{ color: "#4f8ef7", fontSize: 18, lineHeight: 1 }}>+</span> New Note
+            <span style={{ color: "#6ea3ff", fontSize: 18, lineHeight: 1 }}>+</span> New Note
           </button>
         </div>
       </div>

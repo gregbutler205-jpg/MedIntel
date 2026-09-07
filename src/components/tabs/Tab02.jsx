@@ -55,7 +55,7 @@ const T = {
   border:"#1c2a40", borderHover:"#1c2a40", borderActive:"#1a2f4a",
   p:"#dde8f5", s:"#c4d8ee", m:"#7eb8d8",
   dim:"#b0c4d8", ghost:"#98afc4", faint:"#a0b4c8",
-  blue:"#4f8ef7", purple:"#a78bfa", green:"#2dd4a0",
+  blue:"#6ea3ff", purple:"#a78bfa", green:"#2dd4a0",
   yellow:"#f59e0b", red:"#f87171",
 };
 
@@ -772,7 +772,7 @@ export default function ProfileTab() {
       <style>{`
         * { box-sizing:border-box; margin:0; padding:0; }
         ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:#1a2840; border-radius:4px; }
-        input:focus, select:focus { border-color:#4f8ef7 !important; }
+        input:focus, select:focus { border-color:#6ea3ff !important; }
         .icon-btn { background:transparent; border:1px solid #1c2a40; border-radius:6px; color:#b0c4d8; font-size:11px; padding:3px 8px; cursor:pointer; transition:all .15s; }
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .icon-btn.danger:hover { border-color:rgba(239,68,68,.4); color:#f87171; }

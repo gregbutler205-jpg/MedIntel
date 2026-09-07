@@ -735,7 +735,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               style={{ padding:"8px 18px", borderRadius:20, fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer", transition:"all .15s",
                 border:`1px solid ${mode === id ? "rgba(79,142,247,.5)" : "#1a2f4a"}`,
                 background: mode === id ? "rgba(79,142,247,.12)" : "#0b1220",
-                color: mode === id ? "var(--accent)" : "var(--text-dim)" }}>
+                color: mode === id ? "var(--accent-blue)" : "var(--text-dim)" }}>
               {label}
             </button>
           ))}
@@ -870,7 +870,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               <div style={{ display:"flex", gap:8 }}>
                 <button onClick={discardDoc} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
                 <button onClick={confirmDoc} style={{ padding:"6px 14px", background:`${docPreview._color}18`, border:`1px solid ${docPreview._color}40`, borderRadius:7, color: docPreview._color, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save to Records</button>
-                <button onClick={sendToAI} style={{ padding:"6px 14px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:7, color:"#4f8ef7", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>✦ Interpret with AI ▸</button>
+                <button onClick={sendToAI} style={{ padding:"6px 14px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:7, color:"#6ea3ff", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>✦ Interpret with AI ▸</button>
               </div>
             </div>
             <div style={{ background:"#07090f", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
@@ -1032,7 +1032,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                         <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace" }}>{latest.category}</span>
                       </div>
                       <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-                        <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#f87171" : "#4f8ef7", letterSpacing:"-0.5px" }}>{latest.value}</span>
+                        <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#f87171" : "#6ea3ff", letterSpacing:"-0.5px" }}>{latest.value}</span>
                         <span style={{ fontSize:11, color:"#7eb8d8" }}>{latest.unit}</span>
                         {latest.refRange && <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {latest.refRange}</span>}
                         <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {formatDateUS(latest.date, "—")}</span>

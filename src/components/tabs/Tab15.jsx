@@ -110,7 +110,7 @@ function Icd10Lookup({ value, onChange, inp }) {
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
-              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#4f8ef7", flexShrink:0, minWidth:52 }}>{item.code}</span>
+              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#6ea3ff", flexShrink:0, minWidth:52 }}>{item.code}</span>
               <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.name}</span>
             </div>
           ))}
@@ -345,7 +345,7 @@ export default function ConditionsTab() {
         .cond-card { background:#0b1220; border:1px solid #1c2a40; border-radius:12px; padding:16px 18px; margin-bottom:10px; transition:border-color .15s; }
         .cond-card:hover { border-color:#1a2f4a; }
         .filter-btn { padding:6px 14px; border-radius:20px; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all .15s; }
-        .filter-btn.active { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.4); color:#4f8ef7; }
+        .filter-btn.active { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.4); color:#6ea3ff; }
       `}</style>
 
       <div id="conditions-print" style={{ padding:"24px 28px", overflowY:"auto", flex:1 }}>
@@ -484,7 +484,7 @@ export default function ConditionsTab() {
                           {isLong && !open ? `${c.notes.slice(0, LONG).trimEnd()}…` : c.notes}
                           {isLong && (
                             <button onClick={() => toggleExpanded(c.id)} className="no-print"
-                              style={{ marginLeft:8, background:"none", border:"none", color:"var(--accent)", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", padding:0 }}>
+                              style={{ marginLeft:8, background:"none", border:"none", color:"var(--accent-blue)", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", padding:0 }}>
                               {open ? "Show less" : "Show more"}
                             </button>
                           )}
@@ -547,5 +547,5 @@ export default function ConditionsTab() {
 // ── Shared styles ──────────────────────────────────────────────────────────────
 const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1c2a40", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
-const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
+const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
 const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };

@@ -36,7 +36,7 @@ const FINDING_COLORS = {
   medication:  { bg: "rgba(245,158,11,.1)",  color: "#f59e0b",  border: "rgba(245,158,11,.25)"  },
   procedure:   { bg: "rgba(167,139,250,.1)", color: "#a78bfa",  border: "rgba(167,139,250,.25)" },
   lab:         { bg: "rgba(16,185,129,.1)",  color: "#2dd4a0",  border: "rgba(16,185,129,.25)"  },
-  imaging:     { bg: "rgba(79,142,247,.1)",  color: "#4f8ef7",  border: "rgba(79,142,247,.25)"  },
+  imaging:     { bg: "rgba(79,142,247,.1)",  color: "#6ea3ff",  border: "rgba(79,142,247,.25)"  },
   monitoring:  { bg: "rgba(14,165,233,.1)",  color: "#0ea5e9",  border: "rgba(14,165,233,.25)"  },
   warning:     { bg: "rgba(249,115,22,.1)",  color: "#f97316",  border: "rgba(249,115,22,.25)"  },
   other:       { bg: "rgba(148,175,196,.1)", color: "#98afc4",  border: "rgba(148,175,196,.25)" },
@@ -195,7 +195,7 @@ function UploadModal({ onSave, onClose }) {
               <div style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>
                 {(file.size / 1024).toFixed(1)} KB
               </div>
-              <div style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>Click to change file</div>
+              <div style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>Click to change file</div>
             </div>
           ) : (
             <>
@@ -250,7 +250,7 @@ function UploadModal({ onSave, onClose }) {
         <div style={{ marginBottom: 22, padding: "12px 14px", background: "rgba(79,142,247,.05)", border: "1px solid rgba(79,142,247,.15)", borderRadius: 8 }}>
           <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
             <input type="checkbox" checked={isRef} onChange={e => setIsRef(e.target.checked)}
-              style={{ marginTop: 2, accentColor: "#4f8ef7", width: 14, height: 14, flexShrink: 0 }} />
+              style={{ marginTop: 2, accentColor: "#6ea3ff", width: 14, height: 14, flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 11, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontWeight: 500 }}>
                 Include as AI Reference
@@ -269,7 +269,7 @@ function UploadModal({ onSave, onClose }) {
           <button
             onClick={handleSave}
             disabled={!title.trim()}
-            style={{ padding: "8px 18px", background: title.trim() ? "rgba(79,142,247,.15)" : "rgba(79,142,247,.05)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: title.trim() ? "#4f8ef7" : "#2a3c6a", fontFamily: "'Sora',sans-serif", cursor: title.trim() ? "pointer" : "not-allowed", fontSize: 12, transition: "all .15s" }}
+            style={{ padding: "8px 18px", background: title.trim() ? "rgba(79,142,247,.15)" : "rgba(79,142,247,.05)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: title.trim() ? "#6ea3ff" : "#2a3c6a", fontFamily: "'Sora',sans-serif", cursor: title.trim() ? "pointer" : "not-allowed", fontSize: 12, transition: "all .15s" }}
           >
             Save Document
           </button>
@@ -612,11 +612,11 @@ export default function DocumentsTab() {
         @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.5} }
         .doc-cat { display:flex; align-items:center; gap:9px; padding:7px 12px; border-radius:8px; cursor:pointer; transition:all .15s; font-size:12px; color:#b0c4d8; user-select:none; }
         .doc-cat:hover { background:rgba(79,142,247,.05); color:#7eb8d8; }
-        .doc-cat.active { background:rgba(79,142,247,.08); color:#4f8ef7; }
+        .doc-cat.active { background:rgba(79,142,247,.08); color:#6ea3ff; }
         .doc-row { padding:12px 14px; border-radius:10px; border:1px solid #1c2a40; background:#080c14; cursor:pointer; transition:all .15s; margin-bottom:6px; animation:fadeUp .3s ease both; }
         .doc-row:hover { border-color:#1c2a40; background:#0a0f1c; }
         .doc-row.selected { border-color:#1a2f4a; background:#0b1220; }
-        .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:9px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#4f8ef7; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
+        .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:9px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#6ea3ff; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
         .tag.urgent { background:rgba(239,68,68,.1); color:#f87171; border-color:rgba(239,68,68,.2); }
         .doc-search { background:#080c14; border:1px solid #1c2a40; border-radius:8px; padding:8px 12px; color:#a8c4dc; font-family:'Sora',sans-serif; font-size:12px; width:100%; outline:none; transition:border-color .15s; }
         .doc-search:focus { border-color:#1a2f4a; }
@@ -661,7 +661,7 @@ export default function DocumentsTab() {
             >
               <span style={{ fontSize: 12, width: 14, textAlign: "center", flexShrink: 0 }}>{cat.icon}</span>
               <span style={{ flex: 1 }}>{cat.label}</span>
-              <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: selectedCategory === cat.id ? "#4f8ef7" : "#a0b4c8" }}>
+              <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: selectedCategory === cat.id ? "#6ea3ff" : "#a0b4c8" }}>
                 {cat.count}
               </span>
             </div>
@@ -729,7 +729,7 @@ export default function DocumentsTab() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", lineHeight: 1.35, marginBottom: 3, paddingRight: 8 }}>
                       {doc.flagged && <span style={{ color: "#f87171", marginRight: 5 }}>⚠</span>}
-                      {doc.isRef && <span style={{ color: "#4f8ef7", marginRight: 5, fontSize: 10 }}>✦</span>}
+                      {doc.isRef && <span style={{ color: "#6ea3ff", marginRight: 5, fontSize: 10 }}>✦</span>}
                       {doc.title}
                     </div>
                   </div>
@@ -747,7 +747,7 @@ export default function DocumentsTab() {
                     <span style={{ fontSize: 9, color: "#f59e0b", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⚡ needs extract</span>
                   )}
                   {extraction?.docId === doc.id && extraction.phase !== "error" && (
-                    <span className="extracting-pulse" style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⏳ processing…</span>
+                    <span className="extracting-pulse" style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⏳ processing…</span>
                   )}
                 </div>
               </div>
@@ -786,7 +786,7 @@ export default function DocumentsTab() {
                       <button
                         className="act-btn"
                         onClick={() => runFullAnalysis(selectedDoc.id, selectedDoc.title, selectedDoc.extractedText, selectedDoc.isRef)}
-                        style={{ background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.2)", color: "#4f8ef7" }}
+                        style={{ background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.2)", color: "#6ea3ff" }}
                       >
                         ✦ Analyze
                       </button>
@@ -834,7 +834,7 @@ export default function DocumentsTab() {
                   {selectedDoc.isRef && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                       <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>AI Reference</span>
-                      <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Active ✦</span>
+                      <span style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Active ✦</span>
                     </div>
                   )}
                   {/* v1.48.0: link to the original report in the patient's own Drive.
@@ -877,7 +877,7 @@ export default function DocumentsTab() {
                 {/* Extraction progress banner */}
                 {isExtracting && (
                   <div style={{ padding: "12px 16px", background: "rgba(79,142,247,.06)", border: "1px solid rgba(79,142,247,.2)", borderRadius: 10, flexShrink: 0 }}>
-                    <div style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>
+                    <div style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>
                       {phaseLabel[extraction.phase] || "Processing…"}
                     </div>
                     <div className="extracting-pulse" style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>

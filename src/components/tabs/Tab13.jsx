@@ -94,7 +94,7 @@ function ApiKeyModal({ current, onSave, onClose }) {
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
-          <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Key</button>
+          <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Key</button>
         </div>
       </div>
     </div>
@@ -119,7 +119,7 @@ function PilotTokenModal({ current, onSave, onClose }) {
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
-          <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Token</button>
+          <button onClick={() => { onSave(val.trim()); onClose(); }} style={{ padding: "8px 18px", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Save Token</button>
         </div>
       </div>
     </div>
@@ -135,7 +135,7 @@ function FaqItem({ q, a }) {
         style={{ width: "100%", background: "none", border: "none", padding: "10px 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", gap: 10 }}
       >
         <span style={{ fontSize: 11, color: "#c4d8ee", textAlign: "left", lineHeight: 1.5 }}>{q}</span>
-        <span style={{ fontSize: 11, color: "#4f8ef7", flexShrink: 0 }}>{open ? "▾" : "▸"}</span>
+        <span style={{ fontSize: 11, color: "#6ea3ff", flexShrink: 0 }}>{open ? "▾" : "▸"}</span>
       </button>
       {open && (
         <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.7, paddingBottom: 10, paddingRight: 16 }}>{a}</div>
@@ -162,7 +162,7 @@ function ExportTile({ icon, label, sub, onClick }) {
 
 const cardStyle = { background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "18px 20px" };
 const sectionLbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 14 };
-const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
+const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
 const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
 
 const AI_MODE_KEY = "insina_ai_mode";
@@ -543,7 +543,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             style={{ padding: "8px 18px", borderRadius: 20, fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer", transition: "all .15s",
               border: `1px solid ${page === id ? "rgba(79,142,247,.5)" : "#1a2f4a"}`,
               background: page === id ? "rgba(79,142,247,.12)" : "#0b1220",
-              color: page === id ? "var(--accent)" : "var(--text-dim)" }}>
+              color: page === id ? "var(--accent-blue)" : "var(--text-dim)" }}>
             {label}
           </button>
         ))}
@@ -649,7 +649,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             <div style={{ display:"flex", alignItems:"center", gap:12 }}>
               <button
                 onClick={onSync}
-                style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 16px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer" }}
+                style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 16px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -822,7 +822,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <div style={sectionLbl}>Help & Support</div>
               <a
                 href="mailto:support@insinahealth.com"
-                style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono', monospace", textDecoration: "none" }}
+                style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", textDecoration: "none" }}
               >✉ Contact Support</a>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
@@ -833,7 +833,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 { icon: "◷", label: "Video Walkthroughs", sub: "Step-by-step feature demos", href: null },
               ].map(item => (
                 <div key={item.label} style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10, opacity: item.href ? 1 : 0.55 }}>
-                  <div style={{ fontSize: 14, color: "#4f8ef7", marginTop: 1, flexShrink: 0 }}>{item.icon}</div>
+                  <div style={{ fontSize: 14, color: "#6ea3ff", marginTop: 1, flexShrink: 0 }}>{item.icon}</div>
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", marginBottom: 2 }}>{item.label}</div>
                     <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>{item.href ? item.sub : item.sub + " — coming soon"}</div>
@@ -991,7 +991,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 </div>
                 <button
                   onClick={() => setShowConsentText(p => !p)}
-                  style={{ background: "none", border: "none", color: "#4f8ef7", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}
+                  style={{ background: "none", border: "none", color: "#6ea3ff", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}
                 >
                   {showConsentText ? "▾" : "▸"} {showConsentText ? "Hide" : "Read"} consent details
                 </button>
@@ -1005,7 +1005,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                     type="checkbox"
                     checked={consentChecked}
                     onChange={e => setConsentChecked(e.target.checked)}
-                    style={{ marginTop: 2, accentColor: "#4f8ef7", flexShrink: 0 }}
+                    style={{ marginTop: 2, accentColor: "#6ea3ff", flexShrink: 0 }}
                   />
                   <span style={{ fontSize: 10.5, color: "#a8c4dc", lineHeight: 1.6 }}>
                     I consent to Advanced Mode per the terms above.
@@ -1178,7 +1178,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           title="Restore this backup?"
           body={`This will overwrite your current data with the backup from ${backups.find(b => b.id === restoreId)?.date}. Your current state will be lost.`}
           confirmLabel="Yes, restore"
-          confirmStyle={{ background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", color: "#4f8ef7" }}
+          confirmStyle={{ background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", color: "#6ea3ff" }}
           onConfirm={confirmRestore}
           onCancel={() => setModal(null)}
         />

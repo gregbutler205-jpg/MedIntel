@@ -101,7 +101,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
               <div style={{ fontSize: 10, color: C.amber, fontFamily: mono }}>Review the brief & capture the visit</div>
               <div style={{ fontSize: 10, color: C.s, fontFamily: mono, marginTop: 3 }}>Tap for directions & details ›</div>
             </div>
-            <button onClick={e => { e.stopPropagation(); startVisit(appt); }} style={{ background: C.blue, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: "pointer" }}>Start</button>
+            <button onClick={e => { e.stopPropagation(); startVisit(appt); }} style={{ background: "#4f8ef7", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: "pointer" }}>Start</button>
           </div>
         </Card>
       )}

@@ -317,7 +317,7 @@ function Timeline() {
             </div>
             <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
               <button onClick={() => setShowAdd(false)} style={{ padding:"7px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
-              <button onClick={addAppt} style={{ padding:"7px 16px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Save</button>
+              <button onClick={addAppt} style={{ padding:"7px 16px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Save</button>
             </div>
           </div>
         </div>
@@ -407,7 +407,7 @@ function TeamMemberModal({ member, onSave, onClose }) {
           <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:sora, fontSize:12, cursor:"pointer" }}>Cancel</button>
           <button
             onClick={() => { if (!form.name.trim()) return; onSave({ ...form, id: form.id ?? Date.now() }); }}
-            style={{ padding:"8px 18px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:sora, fontSize:12, cursor:"pointer" }}
+            style={{ padding:"8px 18px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:sora, fontSize:12, cursor:"pointer" }}
           >Save</button>
         </div>
       </div>
@@ -511,7 +511,7 @@ function CareTeam() {
               <div style={{ flex:1, cursor:"pointer" }} onClick={() => toggleDoctor(t.name)}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
                   <span style={{ fontSize:13, fontWeight:600, color: isChecked ? "#c4d8ee" : "#7a8fa0" }}>{t.name}</span>
-                  {t.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#4f8ef7", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:mono }}>PCP</span>}
+                  {t.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:mono }}>PCP</span>}
                 </div>
                 <div style={{ fontSize:11, color: isChecked ? "#b0c4d8" : "#5a6e7a" }}>{t.role}{t.specialty ? ` · ${t.specialty}` : ""}</div>
                 <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
@@ -698,7 +698,7 @@ function Milestones() {
             </label>
             <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
               <button onClick={() => setShowAdd(false)} style={{ padding:"7px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:sora, cursor:"pointer", fontSize:12 }}>Cancel</button>
-              <button onClick={addMilestone} style={{ padding:"7px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:sora, cursor:"pointer", fontSize:12 }}>Add</button>
+              <button onClick={addMilestone} style={{ padding:"7px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:sora, cursor:"pointer", fontSize:12 }}>Add</button>
             </div>
           </div>
         </div>
@@ -744,11 +744,11 @@ export default function CarePlan() {
         ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#1a2840;border-radius:4px;}
         .tab-btn{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid transparent;background:transparent;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
         .tab-btn:hover{color:#7eb8d8;}
-        .tab-btn.active{color:#4f8ef7;border-color:#4f8ef7;background:rgba(79,142,247,.08);}
+        .tab-btn.active{color:#6ea3ff;border-color:#6ea3ff;background:rgba(79,142,247,.08);}
         .filter-chip{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid #1c2a40;background:#0b1220;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
         .filter-chip:hover{color:#7eb8d8;border-color:#1a2f4a;}
-        .filter-chip.active{color:#4f8ef7;border-color:#4f8ef7;background:rgba(79,142,247,.08);}
-        .add-badge-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:12px;color:#4f8ef7;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;}
+        .filter-chip.active{color:#6ea3ff;border-color:#6ea3ff;background:rgba(79,142,247,.08);}
+        .add-badge-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:12px;color:#6ea3ff;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;}
         .add-badge-btn:hover{background:rgba(79,142,247,.16);border-color:rgba(79,142,247,.45);}
         .modal-input{width:100%;background:#07090f;border:1px solid #1c2a40;color:#c4d8ee;padding:8px 12px;border-radius:8px;font-family:'Sora',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
         .modal-input::placeholder{color:#a0b4c8;}

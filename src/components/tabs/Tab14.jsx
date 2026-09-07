@@ -289,7 +289,7 @@ function ApptModal({ appt, onSave, onClose }) {
               <label style={lbl}>Provider / Doctor</label>
               <button
                 onClick={openQuickAdd}
-                style={{ background:"none", border:"none", color:"#4f8ef7", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer", padding:0, marginBottom:5 }}
+                style={{ background:"none", border:"none", color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer", padding:0, marginBottom:5 }}
               >+ Add to Care Team</button>
             </div>
             <input style={inp} placeholder="e.g. Dr. Ari Cohen" value={form.provider} onChange={e=>set("provider",e.target.value)} onBlur={handleProviderBlur} />
@@ -1128,7 +1128,7 @@ Please provide:
 
   return (
     <div style={{ marginTop:16, background:"rgba(79,142,247,.04)", border:"1px solid rgba(79,142,247,.15)", borderRadius:12, padding:18 }}>
-      <div style={{ fontSize:11, fontWeight:600, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
+      <div style={{ fontSize:11, fontWeight:600, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
         <span>✦</span> AI Appointment Prep
         {stale && <span style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:0 }}>· details changed — regenerate</span>}
         {analysis && <button onClick={() => requestReport("consultationPrep", () => printConsultationPrep(appt, analysis))} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}><PrintLabel size={11} /></button>}
@@ -1571,7 +1571,7 @@ export default function AppointmentsTab({ onNavChange }) {
                 <div style={{ fontSize:12, color:"#7eb8d8", marginBottom:6 }}>{nextAppt.provider}</div>
                 <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(nextAppt.date)} · {nextAppt.time || "TBD"}</div>
                 {nextDays !== null && (
-                  <div style={{ marginTop:10, display:"inline-block", padding:"3px 10px", borderRadius:20, background: nextDays <= 3 ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.12)", border:`1px solid ${nextDays<=3?"rgba(239,68,68,.3)":"rgba(79,142,247,.3)"}`, fontSize:10, color:nextDays<=3?"#f87171":"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>
+                  <div style={{ marginTop:10, display:"inline-block", padding:"3px 10px", borderRadius:20, background: nextDays <= 3 ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.12)", border:`1px solid ${nextDays<=3?"rgba(239,68,68,.3)":"rgba(79,142,247,.3)"}`, fontSize:10, color:nextDays<=3?"#f87171":"#6ea3ff", fontFamily:"'DM Mono',monospace" }}>
                     {nextDays === 0 ? "Today" : nextDays === 1 ? "Tomorrow" : `In ${nextDays} days`}
                   </div>
                 )}
@@ -1592,7 +1592,7 @@ export default function AppointmentsTab({ onNavChange }) {
               }).sort((a, b) => new Date(a.date) - new Date(b.date));
               return thisMonth.length > 0 ? (
                 <>
-                  <div style={{ fontSize:32, fontWeight:700, color:"#4f8ef7", lineHeight:1, marginBottom:6 }}>{thisMonth.length}</div>
+                  <div style={{ fontSize:32, fontWeight:700, color:"#6ea3ff", lineHeight:1, marginBottom:6 }}>{thisMonth.length}</div>
                   <div style={{ fontSize:11, color:"#7eb8d8" }}>appointment{thisMonth.length !== 1 ? "s" : ""} remaining</div>
                   {thisMonth.map((a,i) => (
                     <div key={i} style={{ marginTop:6, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>

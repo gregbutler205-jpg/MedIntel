@@ -356,7 +356,7 @@ const styles = {
   primaryBtn: { width: "100%", padding: "13px 0", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.4)", borderRadius: 10, color: "#7eb8d8", fontSize: 13, fontWeight: 600, cursor: "pointer", marginTop: 4 },
   secondaryBtn: { padding: "9px 16px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#b0c4d8", fontSize: 12, cursor: "pointer", marginBottom: 14 },
   dangerBtn: { padding: "9px 16px", background: "rgba(239,68,68,.12)", border: "1px solid rgba(239,68,68,.35)", borderRadius: 8, color: "#f87171", fontSize: 12, cursor: "pointer" },
-  linkBtn: { background: "transparent", border: "none", color: "#4f8ef7", fontSize: 12.5, cursor: "pointer", fontFamily: "'DM Mono',monospace", padding: "10px 0" },
+  linkBtn: { background: "transparent", border: "none", color: "#6ea3ff", fontSize: 12.5, cursor: "pointer", fontFamily: "'DM Mono',monospace", padding: "10px 0" },
   recoveryBox: { width: "100%", padding: "16px", background: "rgba(79,142,247,.06)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 10, color: "#dde8f5", fontFamily: "'DM Mono',monospace", fontSize: 13, textAlign: "center", letterSpacing: 1, lineHeight: 1.8, marginBottom: 14, wordBreak: "break-all" },
   checkboxRow: { display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#b0c4d8", marginBottom: 16, cursor: "pointer" },
   wipeBox: { marginTop: 16, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.25)", borderRadius: 12, padding: "16px 18px", textAlign: "center" },

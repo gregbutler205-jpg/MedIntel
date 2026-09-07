@@ -95,7 +95,7 @@ function CptLookup({ value, onChange, onPick, inp }) {
               style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #1c2a40", display:"flex", gap:10, alignItems:"flex-start" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#4f8ef7", flexShrink:0, minWidth:52 }}>{item.code}</span>
+              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#6ea3ff", flexShrink:0, minWidth:52 }}>{item.code}</span>
               <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.desc}</span>
             </div>
           ))}
@@ -445,5 +445,5 @@ export default function SurgeriesTab() {
 
 const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1c2a40", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
-const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#4f8ef7", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
+const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
 const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };

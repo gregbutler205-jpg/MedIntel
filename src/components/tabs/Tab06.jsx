@@ -250,7 +250,7 @@ const VITALS = [
     statusFn: r => r.bp_s == null ? { label: "No data", color: "#98afc4" } : r.bp_s >= 140 || r.bp_d >= 90 ? { label: "High", color: "#ef4444" } : r.bp_s >= 130 ? { label: "Elevated", color: "#f59e0b" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["bp_s", "bp_d"], chartColors: ["#4f8ef7", "#a78bfa"],
     chartLabels: ["Systolic", "Diastolic"],
-    refLines: [{ val: 120, color: "#4f8ef7" }, { val: 80, color: "#a78bfa" }],
+    refLines: [{ val: 120, color: "#6ea3ff" }, { val: 80, color: "#a78bfa" }],
     chartYMin: 50, chartYMax: 180,
     data: "manual",
   },
@@ -315,7 +315,7 @@ const VITALS = [
     statusFn: r => r.temp == null ? { label: "No data", color: "#98afc4" } : r.temp < 97 ? { label: "Low", color: "#4f8ef7" } : r.temp > 99.5 ? { label: "Fever", color: "#ef4444" } : { label: "Normal", color: "#10b981" },
     chartType: "line", chartKeys: ["temp"], chartColors: ["#7eb8d8"],
     chartLabels: ["Temp"],
-    refLines: [{ val: 97, color: "#4f8ef7" }, { val: 99.5, color: "#f87171" }],
+    refLines: [{ val: 97, color: "#6ea3ff" }, { val: 99.5, color: "#f87171" }],
     chartYMin: 96, chartYMax: 101,
     data: "manual",
   },
@@ -339,7 +339,7 @@ const VITALS = [
     statusFn: r => bmiLabel(calcBMI(r.weight)),
     chartType: "line", chartKeys: ["bmi_calc"], chartColors: ["#10b981"],
     chartLabels: ["BMI"],
-    refLines: [{ val: 18.5, color: "#4f8ef7" }, { val: 25, color: "#f59e0b" }, { val: 30, color: "#f87171" }],
+    refLines: [{ val: 18.5, color: "#6ea3ff" }, { val: 25, color: "#f59e0b" }, { val: 30, color: "#f87171" }],
     chartYMin: 15, chartYMax: 40,
     data: "manual",
   },
@@ -377,7 +377,7 @@ function LogPanel({ onClose, onSave }) {
     <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #1c2a40", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
       <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
+          <div style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Log Vitals</div>
         </div>
         <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
@@ -397,7 +397,7 @@ function LogPanel({ onClose, onSave }) {
           </div>
         </div>
         {form.date !== todayISO && (
-          <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", marginTop: -10, marginBottom: 16 }}>
+          <div style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginTop: -10, marginBottom: 16 }}>
             Logging for past date — {new Date(form.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}{form.time ? ` at ${form.time}` : ""}
           </div>
         )}
@@ -620,7 +620,7 @@ export default function App({ onNavChange }) {
         .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
         .vcard{background:#0b1220;border:1px solid #1c2a40;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;animation:fadeUp .3s ease both}
         .vcard:hover{border-color:#1a2f4a}
-        .vcard.sel{border-color:#4f8ef7;background:rgba(79,142,247,.07)}
+        .vcard.sel{border-color:#6ea3ff;background:rgba(79,142,247,.07)}
         .time-btn{padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;background:#0f1e30;color:#7eb8d8;font-weight:500}
         .time-btn:hover{background:#162840}
         .time-btn.on{background:#4f8ef7;color:#fff}
@@ -693,7 +693,7 @@ export default function App({ onNavChange }) {
                 <div style={{ fontSize:8, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "clear" : "filter"}</div>
               </div>
               <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"9px 11px" }}>
-                <div style={{ fontSize:17, fontWeight:700, color:"#4f8ef7", lineHeight:1, marginBottom:2 }}>{manualReadings.length}</div>
+                <div style={{ fontSize:17, fontWeight:700, color:"#6ea3ff", lineHeight:1, marginBottom:2 }}>{manualReadings.length}</div>
                 <div style={{ fontSize:9, color:"#7eb8d8", fontWeight:600 }}>Readings</div>
               </div>
             </div>
@@ -719,7 +719,7 @@ export default function App({ onNavChange }) {
                 <div key={vc.id} className={`vcard ${isSelected?"sel":""}`} style={{ animationDelay:`${i*40}ms` }} onClick={()=>setSelectedId(vc.id)}>
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
                     <div style={{ fontSize:9.5, fontWeight:600, color:vc.color, textTransform:"uppercase", letterSpacing:"0.5px", fontFamily:"'DM Mono',monospace" }}>{vc.label}</div>
-                    {isWatch && <span style={{ fontSize:7.5, background:"rgba(79,142,247,.15)", color:"#4f8ef7", padding:"1px 5px", borderRadius:8, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>WATCH</span>}
+                    {isWatch && <span style={{ fontSize:7.5, background:"rgba(79,142,247,.15)", color:"#6ea3ff", padding:"1px 5px", borderRadius:8, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>WATCH</span>}
                   </div>
                   <div style={{ display:"flex", alignItems:"baseline", gap:5, marginBottom:2 }}>
                     <span style={{ fontSize:19, fontWeight:700, color: status && status.color === "#ef4444" ? "#f87171" : "#dde8f5", lineHeight:1 }}>
@@ -787,7 +787,7 @@ export default function App({ onNavChange }) {
                   <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:3 }}>
                     <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px" }}>{config.label}</h2>
                     {isWatch && (
-                      <span style={{ fontSize:9, background:"rgba(79,142,247,.15)", color:"#4f8ef7", padding:"3px 8px", borderRadius:5, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>AUTO · APPLE WATCH</span>
+                      <span style={{ fontSize:9, background:"rgba(79,142,247,.15)", color:"#6ea3ff", padding:"3px 8px", borderRadius:5, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>AUTO · APPLE WATCH</span>
                     )}
                   </div>
                   <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>

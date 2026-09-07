@@ -68,7 +68,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
         <div style={{ marginBottom: 24 }}>
           <div style={{
             fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase",
-            color: "#4f8ef7", fontFamily: "'DM Mono', monospace", marginBottom: 8,
+            color: "#6ea3ff", fontFamily: "'DM Mono', monospace", marginBottom: 8,
           }}>AI Analysis Setup</div>
           <div style={{
             fontFamily: "'DM Serif Display', serif",
@@ -107,7 +107,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           <button
             onClick={() => setShowWhatIsSent(p => !p)}
             style={{
-              background: "none", border: "none", color: "#4f8ef7", fontSize: 11,
+              background: "none", border: "none", color: "#6ea3ff", fontSize: 11,
               fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 10,
               display: "flex", alignItems: "center", gap: 5,
             }}
@@ -133,7 +133,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               type="checkbox"
               checked={foundationChecked}
               onChange={e => setFoundationChecked(e.target.checked)}
-              style={{ marginTop: 2, width: 14, height: 14, accentColor: "#4f8ef7", flexShrink: 0 }}
+              style={{ marginTop: 2, width: 14, height: 14, accentColor: "#6ea3ff", flexShrink: 0 }}
             />
             <span style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.6 }}>
               I understand Insina Health is pre-commercial pilot software, is not a medical
@@ -216,7 +216,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               <span style={{ fontWeight: 700, fontSize: 14, color: "#dde8f5" }}>Advanced Mode</span>
               <span style={{
                 fontSize: 9, fontFamily: "'DM Mono', monospace",
-                background: "#4f8ef718", color: "#4f8ef7",
+                background: "#4f8ef718", color: "#6ea3ff",
                 border: "1px solid #4f8ef730", borderRadius: 4, padding: "2px 7px",
                 letterSpacing: "0.5px",
               }}>Claude Opus</span>
@@ -248,7 +248,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               onClick={() => setShowConsent(p => !p)}
               style={{
                 background: "none", border: "none",
-                color: "#4f8ef7", fontSize: 11,
+                color: "#6ea3ff", fontSize: 11,
                 fontFamily: "'DM Mono', monospace",
                 cursor: "pointer", padding: 0, marginBottom: 10,
                 display: "flex", alignItems: "center", gap: 5,
@@ -276,7 +276,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
                 type="checkbox"
                 checked={consentChecked}
                 onChange={e => setConsent(e.target.checked)}
-                style={{ marginTop: 2, width: 14, height: 14, accentColor: "#4f8ef7", flexShrink: 0 }}
+                style={{ marginTop: 2, width: 14, height: 14, accentColor: "#6ea3ff", flexShrink: 0 }}
               />
               <span style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.6 }}>
                 I have read and understand the consent document. I agree that my health data

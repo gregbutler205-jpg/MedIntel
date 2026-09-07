@@ -640,12 +640,12 @@ export default function App({ onNavChange }) {
         .stat-card:hover { border-color:#1a2f4a; }
         .med-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:6px; cursor:pointer; transition:all .15s; animation:fadeUp .35s ease both; }
         .med-row:hover { border-color:#1a2f4a; }
-        .med-row.selected { border-color:#4f8ef7; background:rgba(79,142,247,.06); }
+        .med-row.selected { border-color:#6ea3ff; background:rgba(79,142,247,.06); }
         .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; white-space:nowrap; }
         .filter-pill:hover { color:#7eb8d8; border-color:#1a2f4a; }
-        .filter-pill.active { background:rgba(79,142,247,.1); border-color:#4f8ef7; color:#4f8ef7; }
+        .filter-pill.active { background:rgba(79,142,247,.1); border-color:#6ea3ff; color:#6ea3ff; }
         .search-input { background:#0b1220; border:1px solid #1c2a40; border-radius:8px; padding:8px 12px; font-size:12px; font-family:'Sora',sans-serif; color:#c4d8ee; outline:none; width:100%; transition:border-color .15s; }
-        .search-input:focus { border-color:#4f8ef7; }
+        .search-input:focus { border-color:#6ea3ff; }
         .search-input::placeholder { color:#98afc4; }
         .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
         .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#f87171; }
@@ -742,7 +742,7 @@ export default function App({ onNavChange }) {
                 <div style={{ fontSize: 24, fontWeight: 700, color: "#dde8f5", letterSpacing: "-0.5px", lineHeight: 1, marginBottom: 5 }}>{value}</div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8", marginBottom: 3 }}>{label}</div>
                 <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
-                {clickable && <div style={{ marginTop:8, fontSize:10, color: showFlagged ? "#f87171" : "#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
+                {clickable && <div style={{ marginTop:8, fontSize:10, color: showFlagged ? "#f87171" : "#6ea3ff", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
               </div>
             ))}
           </div>
@@ -763,7 +763,7 @@ export default function App({ onNavChange }) {
                 />
                 <button
                   onClick={() => setShowFlagged(!showFlagged)}
-                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#f87171" : "#4f8ef7", transition:"all .15s" }}
+                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#f87171" : "#6ea3ff", transition:"all .15s" }}
                 >
                   {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
@@ -1155,7 +1155,7 @@ export default function App({ onNavChange }) {
                       border: "1px solid rgba(79,142,247,.25)", borderRadius: 9, color: "#7eb8d8", fontFamily: "'Sora',sans-serif",
                       fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, textAlign: "left"
                     }}>
-                      <span style={{ color: "#4f8ef7", fontSize: 13, flexShrink: 0 }}>✦</span>
+                      <span style={{ color: "#6ea3ff", fontSize: 13, flexShrink: 0 }}>✦</span>
                       <span>{q}</span>
                     </button>
                   ))}
@@ -1177,7 +1177,7 @@ export default function App({ onNavChange }) {
                                 : { times: ["08:00"], endDate: "", enabled: true });
                               setEditingReminder(selectedMed.id);
                             }}
-                            style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                            style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                           >{existing ? "Edit" : "+ Set Reminder"}</button>
                         )}
                       </div>
@@ -1238,7 +1238,7 @@ export default function App({ onNavChange }) {
                           ))}
                           {reminderForm.times.length < 5 && (
                             <button onClick={() => setReminderForm(f => ({ ...f, times: [...f.times, "12:00"] }))}
-                              style={{ width: "100%", marginBottom: 14, padding: "6px 10px", fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", background: "none", border: "1px dashed rgba(79,142,247,.3)", borderRadius: 6, cursor: "pointer" }}>
+                              style={{ width: "100%", marginBottom: 14, padding: "6px 10px", fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", background: "none", border: "1px dashed rgba(79,142,247,.3)", borderRadius: 6, cursor: "pointer" }}>
                               + Add another time
                             </button>
                           )}

@@ -140,14 +140,14 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                 <div key={r.id} style={{ background: included ? "#0b1220" : "#080c14", border, borderRadius:10, padding:"10px 14px", marginBottom:8, opacity: included ? 1 : 0.62 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                     <label style={{ display:"flex", alignItems:"center", gap:7, cursor:"pointer", flexShrink:0 }}>
-                      <input type="checkbox" checked={included} onChange={() => toggleInclude(r)} style={{ accentColor:"#4f8ef7", width:14, height:14 }} />
+                      <input type="checkbox" checked={included} onChange={() => toggleInclude(r)} style={{ accentColor:"#6ea3ff", width:14, height:14 }} />
                       <span style={{ fontSize:10, color: included ? "#7eb8d8" : "#6a8090", fontFamily:mono }}>{included ? "include" : "excluded"}</span>
                     </label>
-                    <span style={{ fontSize:13, fontWeight:600, color: isMonitored ? "#4f8ef7" : "#c4d8ee", minWidth:120 }}>{r.name}</span>
+                    <span style={{ fontSize:13, fontWeight:600, color: isMonitored ? "#6ea3ff" : "#c4d8ee", minWidth:120 }}>{r.name}</span>
                     {r.flags.map(f => (
                       <span key={f} style={{ fontSize:9, fontFamily:mono, borderRadius:9, padding:"1px 8px",
                         background: f === "monitored_analyte" ? "rgba(79,142,247,.12)" : "rgba(245,158,11,.12)",
-                        color: f === "monitored_analyte" ? "#4f8ef7" : "#f59e0b",
+                        color: f === "monitored_analyte" ? "#6ea3ff" : "#f59e0b",
                         border: `1px solid ${f === "monitored_analyte" ? "rgba(79,142,247,.35)" : "rgba(245,158,11,.35)"}` }}>
                         {FLAG_LABELS[f] || f}
                       </span>
@@ -162,7 +162,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                           placeholder={k} type={k === "date" ? "date" : "text"}
                           style={{ background:"#07090f", border:"1px solid #1a2f4a", borderRadius:7, padding:"5px 9px", color:"#c4d8ee", fontFamily:mono, fontSize:11, width: k === "value" ? 90 : k === "unit" ? 80 : 140 }} />
                       ))}
-                      <button onClick={() => saveEdit(r)} style={btn("#4f8ef7")}>Save</button>
+                      <button onClick={() => saveEdit(r)} style={btn("#6ea3ff")}>Save</button>
                       <button onClick={() => setEditingId(null)} style={btn("#98afc4")}>Cancel</button>
                     </div>
                   ) : (

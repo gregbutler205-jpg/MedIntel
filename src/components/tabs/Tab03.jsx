@@ -117,13 +117,13 @@ export default function Records({ onNavChange }) {
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         .rec-row { padding: 13px 16px; border-bottom: 1px solid #1c2a40; cursor: pointer; transition: background .1s; border-left: 2px solid transparent; }
         .rec-row:hover { background: #0b1220; }
-        .rec-row.active { background: #0d1525; border-left-color: #4f8ef7; }
+        .rec-row.active { background: #0d1525; border-left-color: #6ea3ff; }
         .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .filter-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
-        .filter-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
+        .filter-chip.active { color: #6ea3ff; border-color: #6ea3ff; background: rgba(79,142,247,.08); }
         .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .type-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
-        .type-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
+        .type-chip.active { color: #6ea3ff; border-color: #6ea3ff; background: rgba(79,142,247,.08); }
         .detail-line { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #1c2a40; font-size: 12px; }
         .detail-line:last-child { border-bottom: none; }
         .search-input { background: #0b1220; border: 1px solid #1c2a40; color: #c4d8ee; padding: 7px 12px 7px 32px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; width: 220px; transition: border-color .15s; }
@@ -132,9 +132,9 @@ export default function Records({ onNavChange }) {
         .modal-input { width: 100%; background: #07090f; border: 1px solid #1c2a40; color: #c4d8ee; padding: 8px 12px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; transition: border-color .15s; }
         .modal-input::placeholder { color: #a0b4c8; }
         .modal-input:focus { border-color: #1a2f4a; }
-        .epic-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 8px; color: #4f8ef7; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; text-decoration: none; }
+        .epic-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 8px; color: #6ea3ff; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; text-decoration: none; }
         .epic-btn:hover { background: rgba(79,142,247,.15); border-color: rgba(79,142,247,.4); }
-        .add-badge-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 12px; color: #4f8ef7; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; letter-spacing: 0.3px; }
+        .add-badge-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 12px; color: #6ea3ff; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; letter-spacing: 0.3px; }
         .add-badge-btn:hover { background: rgba(79,142,247,.16); border-color: rgba(79,142,247,.45); }
       `}</style>
 
@@ -226,7 +226,7 @@ export default function Records({ onNavChange }) {
                 )}
                 <button
                   onClick={() => handleAskAI(selected)}
-                  style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 7, color: "#4f8ef7", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                  style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 7, color: "#6ea3ff", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                 >
                   ✦ Ask AI
                 </button>
@@ -402,7 +402,7 @@ export default function Records({ onNavChange }) {
                   setAddForm({ title: "", facility: "", provider: "", date: "" });
                   setAddType(null);
                 }}
-                style={{ padding: "8px 18px", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#4f8ef7", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
+                style={{ padding: "8px 18px", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}
               >
                 Save Record
               </button>

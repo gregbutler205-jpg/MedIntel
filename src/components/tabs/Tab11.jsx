@@ -404,7 +404,7 @@ function renderMarkdown(rawText) {
       const content = trimmed.replace(/^[-•]\s+/, "");
       return (
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, paddingLeft: 4 }}>
-          <span style={{ color: "#4f8ef7", flexShrink: 0, marginTop: 4, fontSize: 9 }}>▸</span>
+          <span style={{ color: "#6ea3ff", flexShrink: 0, marginTop: 4, fontSize: 9 }}>▸</span>
           <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(content, AI_BOLD_STYLE) }} style={{ lineHeight: 1.7 }} />
         </div>
       );
@@ -414,7 +414,7 @@ function renderMarkdown(rawText) {
     if (numMatch) {
       return (
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5, paddingLeft: 4 }}>
-          <span style={{ color: "#4f8ef7", fontWeight: 700, flexShrink: 0, minWidth: 22,
+          <span style={{ color: "#6ea3ff", fontWeight: 700, flexShrink: 0, minWidth: 22,
             fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{numMatch[1]}.</span>
           <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(numMatch[2], AI_BOLD_STYLE) }} style={{ lineHeight: 1.7 }} />
         </div>
@@ -445,7 +445,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
         border: isUser ? "none" : "1px solid rgba(79,142,247,.25)",
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: isUser ? 11 : 14, fontWeight: 700,
-        color: isUser ? "#fff" : "#4f8ef7",
+        color: isUser ? "#fff" : "#6ea3ff",
       }}>
         {isUser ? ((() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return (p.name || "?")[0].toUpperCase(); } catch { return "?"; } })()) : "✦"}
       </div>
@@ -467,7 +467,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
                   <span style={{
                     fontSize: 9, fontFamily: "'DM Mono',monospace",
                     background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
-                    color: isAdvanced ? "#4f8ef7" : "#2dd4a0",
+                    color: isAdvanced ? "#6ea3ff" : "#2dd4a0",
                     border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
                     padding: "1px 7px", borderRadius: 3, letterSpacing: "0.4px",
                   }}>
@@ -494,7 +494,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
 function TypingIndicator() {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 20 }}>
-      <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</div>
+      <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#6ea3ff", flexShrink: 0 }}>✦</div>
       <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: "4px 12px 12px 12px", padding: "14px 18px", display: "flex", gap: 5, alignItems: "center" }}>
         {[0, 150, 300].map(d => (
           <span key={d} style={{ width: 5, height: 5, borderRadius: "50%", background: "#b0c4d8", display: "inline-block", animation: `dotBlink 1.2s ease ${d}ms infinite` }} />
@@ -1005,7 +1005,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
         .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #1c2a40; border-radius:8px; color:#b0c4d8; font-size:11.5px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
         .preset-btn:hover { border-color:#1a2f4a; color:#7eb8d8; background:#0d1828; }
-        .send-btn { padding:0 18px; height:40px; background:rgba(79,142,247,.12); border:1px solid rgba(79,142,247,.3); border-radius:8px; color:#4f8ef7; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; flex-shrink:0; }
+        .send-btn { padding:0 18px; height:40px; background:rgba(79,142,247,.12); border:1px solid rgba(79,142,247,.3); border-radius:8px; color:#6ea3ff; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; flex-shrink:0; }
         .send-btn:hover { background:rgba(79,142,247,.2); border-color:rgba(79,142,247,.5); }
         .send-btn:disabled { opacity:.4; cursor:not-allowed; }
         .stop-btn { padding:0 18px; height:40px; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); border-radius:8px; color:#f87171; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; flex-shrink:0; }
@@ -1127,7 +1127,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         <span style={{
           fontSize: 9, fontFamily: "'DM Mono',monospace",
           background: isAdvanced ? "rgba(79,142,247,.15)" : "rgba(16,185,129,.12)",
-          color: isAdvanced ? "#4f8ef7" : "#2dd4a0",
+          color: isAdvanced ? "#6ea3ff" : "#2dd4a0",
           border: `1px solid ${isAdvanced ? "rgba(79,142,247,.3)" : "rgba(16,185,129,.3)"}`,
           padding: "2px 9px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase",
         }}>
@@ -1181,7 +1181,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
                 {PRESETS.map((p, i) => (
                   <button key={i} className="preset-btn" onClick={() => startSessionWithPrompt(p.prompt)} disabled={streaming}>
-                    <span style={{ color: "#4f8ef7", fontSize: 12, flexShrink: 0 }}>✦</span>
+                    <span style={{ color: "#6ea3ff", fontSize: 12, flexShrink: 0 }}>✦</span>
                     <span>{p.label}</span>
                   </button>
                 ))}
@@ -1269,7 +1269,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                     const msgCount = totalMessages(s);
                     return (
                       <button key={s.id} className="sess-row" onClick={() => openSession(s)}>
-                        <span style={{ fontSize: 14, color: "#4f8ef7", flexShrink: 0 }}>✦</span>
+                        <span style={{ fontSize: 14, color: "#6ea3ff", flexShrink: 0 }}>✦</span>
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span style={{ display: "block", fontSize: 13, color: "#dde8f5", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
                           <span style={{ display: "block", fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>

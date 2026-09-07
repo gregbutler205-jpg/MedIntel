@@ -83,7 +83,7 @@ function LogPanel({ onClose, onSave }) {
       {/* Header */}
       <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>
+          <div style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>
             {step === 1 ? "STEP 1 OF 2" : "STEP 2 OF 2"}
           </div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>
@@ -275,7 +275,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
 
         {/* AI context hint */}
         <div style={{ background: "linear-gradient(135deg,rgba(79,142,247,.08),rgba(167,139,250,.06))", border: "1px solid rgba(79,142,247,.2)", borderRadius: 12, padding: "14px" }}>
-          <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", marginBottom: 8 }}>✦ AI CONTEXT</div>
+          <div style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.2px", marginBottom: 8 }}>✦ AI CONTEXT</div>
           <div style={{ fontSize: 11, color: "#7eb8d8", lineHeight: 1.7, marginBottom: 12 }}>
             {entry.symptom === "Hand Tremor" && "Tacrolimus-induced tremor is common — worth noting if severity increases or correlates with trough levels."}
             {entry.symptom === "Fatigue" && "Fatigue in transplant patients can reflect anemia, tacrolimus levels, poor sleep, or early rejection. Correlates with your recent Hemoglobin and eGFR trends."}
@@ -296,7 +296,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
               onNavToAI?.();
               onClose();
             }}
-            style={{ width: "100%", padding: "8px", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#4f8ef7", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
+            style={{ width: "100%", padding: "8px", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#6ea3ff", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
             ✦ Analyze in AI tab →
           </button>
         </div>
@@ -399,10 +399,10 @@ export default function App({ onNavChange }) {
         .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
         .entry-row{background:#0b1220;border:1px solid #1c2a40;border-radius:11px;padding:14px 16px;cursor:pointer;transition:all .15s;animation:fadeUp .3s ease both;margin-bottom:7px}
         .entry-row:hover{border-color:#1a2f4a}
-        .entry-row.sel{border-color:#4f8ef7;background:rgba(79,142,247,.06)}
+        .entry-row.sel{border-color:#6ea3ff;background:rgba(79,142,247,.06)}
         .filter-btn{padding:5px 13px;border-radius:20px;border:1px solid #1c2a40;background:transparent;color:#b0c4d8;font-size:11px;font-family:'Sora',sans-serif;cursor:pointer;transition:all .12s}
         .filter-btn:hover{color:#7eb8d8;border-color:#1a2f4a}
-        .filter-btn.on{background:rgba(79,142,247,.12);border-color:#4f8ef7;color:#7eb8d8}
+        .filter-btn.on{background:rgba(79,142,247,.12);border-color:#6ea3ff;color:#7eb8d8}
       `}</style>
 
       {/* Sidebar */}
@@ -490,13 +490,13 @@ export default function App({ onNavChange }) {
               onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(79,142,247,.4)"}
             >
               <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-                <div style={{ width:38, height:38, borderRadius:"50%", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#4f8ef7", lineHeight:1, flexShrink:0 }}>+</div>
+                <div style={{ width:38, height:38, borderRadius:"50%", background:"rgba(79,142,247,.18)", border:"1px solid rgba(79,142,247,.3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#6ea3ff", lineHeight:1, flexShrink:0 }}>+</div>
                 <div>
                   <div style={{ fontSize:14, fontWeight:600, color:"#7eb8d8", marginBottom:3 }}>Log a new symptom</div>
                   <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Quick-select or describe in your own words · takes 30 seconds</div>
                 </div>
               </div>
-              <div style={{ fontSize:18, color:"#4f8ef7", opacity:0.6 }}>→</div>
+              <div style={{ fontSize:18, color:"#6ea3ff", opacity:0.6 }}>→</div>
             </div>
 
             {/* Timeline */}

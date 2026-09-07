@@ -225,7 +225,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
 
   const totalStaged = Object.values(counts).reduce((a, b) => a + b, 0);
   const STATUS_LABEL = { queued: "Queued", reading: "Reading", extracting: "Extracting", done: "Done", failed: "Failed" };
-  const STATUS_COLOR = { queued: "var(--text-dim)", reading: "var(--accent-soft)", extracting: "var(--accent)", done: "var(--green)", failed: "var(--red)" };
+  const STATUS_COLOR = { queued: "var(--text-dim)", reading: "var(--accent-soft)", extracting: "var(--accent-blue)", done: "var(--green)", failed: "var(--red)" };
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18 }}>

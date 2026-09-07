@@ -23,7 +23,8 @@
   --text-dim:       #8299ad; /* replaces #6a8090/#4a5c6a where text must stay readable */
 
   /* Accents */
-  --accent:       #4f8ef7;
+  --accent:       #4f8ef7; /* brand fill: logo, marks, filled buttons, indicator bars */
+  --accent-blue:  #6ea3ff; /* DEC-050: accent for text, icons, and interactive states (7.4:1 on --card) */
   --accent-soft:  #7eb8d8;
   --green:        #2dd4a0;
   --amber:        #f59e0b;
@@ -89,6 +90,7 @@
   --text-label: #64748b;
   --text-dim: #64748b;
   --accent: #1d4fd7;
+  --accent-blue: #1d4fd7; /* light theme keeps its existing accent mapping; light tokens are DEC-TBD-03 */
   --accent-soft: #1d4fd7;
   --green: #0f9d6c;
   --amber: #d97a06;
@@ -154,7 +156,7 @@ body {
   user-select: none;
 }
 .nav-item:hover { color: var(--accent-soft); background: rgba(79,142,247,.04); }
-.nav-item.active { color: var(--accent); background: rgba(79,142,247,.08); border-left-color: var(--accent); }
+.nav-item.active { color: var(--accent-blue); background: rgba(79,142,247,.08); border-left-color: var(--accent-blue); }
 .nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
 .nav-group-header {
   display: flex;

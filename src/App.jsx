@@ -302,7 +302,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
       {/* UI-14: SVG icon family (one stroke style, no emoji in routine controls) */}
       {btn(<FlaskIcon style={{ color: "var(--green)" }} />,       "Lab Results",     () => setActiveNav("labs"))}
       {btn(<PillIcon style={{ color: "var(--amber)" }} />,        "Medications",     () => setActiveNav("medications"))}
-      {btn(<CalendarIcon style={{ color: "var(--accent)" }} />,   "Appointments",    () => setActiveNav("appointments"))}
+      {btn(<CalendarIcon style={{ color: "var(--accent-blue)" }} />,   "Appointments",    () => setActiveNav("appointments"))}
       {btn(<ThermometerIcon style={{ color: "var(--purple)" }} />,"Symptoms",        () => setActiveNav("symptoms"))}
       {btn(<HeartIcon style={{ color: "var(--red)" }} />,         "Log Vitals",      onLogVitals)}
       {btn(<DownloadIcon style={{ color: "var(--accent-soft)" }} />, "Import\nRecords", () => setActiveNav("import"))}
@@ -356,7 +356,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
             ))}
             <div style={{ borderTop: "1px solid #1c2a40", marginTop: 10, paddingTop: 10 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-                <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
+                <span style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
                 <span style={{ fontSize: 11, color: lastSyncTs ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                   {lastSyncTs ? new Date(lastSyncTs).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "—"}
                 </span>
@@ -364,7 +364,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
               {/* Last Drive backup — a date, not a time: backups are weekly, so
                   "Jul 9, 2026" answers "am I protected?" better than a clock time. */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Backup</span>
+                <span style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Last Backup</span>
                 <span style={{ fontSize: 11, color: lastWeeklyBackup ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                   {lastWeeklyBackup
                     ? formatDateUS(lastWeeklyBackup)
@@ -1173,7 +1173,7 @@ function AppShell() {
                         <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"18px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Current Vitals</div>
-                            <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("vitals")}>Log / View all →</div>
+                            <div style={{ fontSize:10, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("vitals")}>Log / View all →</div>
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:8 }}>
                             {vitals.map(({ label, val, unit, date, color, flag }) => (
@@ -1281,7 +1281,7 @@ function AppShell() {
                         <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Care Team</div>
-                            <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
+                            <div style={{ fontSize:10, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:10 }}>
                             {visible.slice(0,10).map((d, i) => {
@@ -1297,11 +1297,11 @@ function AppShell() {
                                   <div style={{ flex:1, minWidth:0 }}>
                                     <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
                                       <span style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{d.name || "—"}</span>
-                                      {d.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#4f8ef7", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
+                                      {d.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
                                     </div>
                                     {(d.role || d.specialty) && <div style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.role}{d.specialty ? ` · ${d.specialty}` : ""}</div>}
                                     {d.facility && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.facility}</div>}
-                                    {d.phone && <div style={{ fontSize:11, color:"#4f8ef7", fontFamily:"'DM Mono',monospace" }}>{displayPhone(d.phone)}</div>}
+                                    {d.phone && <div style={{ fontSize:11, color:"#6ea3ff", fontFamily:"'DM Mono',monospace" }}>{displayPhone(d.phone)}</div>}
                                   </div>
                                 </div>
                               );
@@ -1316,7 +1316,7 @@ function AppShell() {
                       <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                           <div className="section-label" style={{ marginBottom:0 }}>Active Conditions</div>
-                          <div style={{ fontSize:10, color:"#4f8ef7", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("conditions")}>Manage →</div>
+                          <div style={{ fontSize:10, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("conditions")}>Manage →</div>
                         </div>
                         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
                           {activeConditions.map(c => (
@@ -1337,7 +1337,7 @@ function AppShell() {
                         <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                             <div className="section-label" style={{ marginBottom: 0 }}>Recent Lab Results</div>
-                            <div style={{ fontSize: 10, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("labs")}>View all →</div>
+                            <div style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("labs")}>View all →</div>
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                             {featuredLabs.map(({ label, lab }) => {

@@ -105,7 +105,7 @@ export default function RIEWidget({ onNavChange }) {
                       </div>
                     )}
                     <div style={{ display: "flex", gap: 6, marginTop: 9, flexWrap: "wrap" }}>
-                      <button onClick={() => doFix(f)} style={btn("#4f8ef7")}>{f.fix ? "Fix Now" : "Go to field"}</button>
+                      <button onClick={() => doFix(f)} style={btn("#6ea3ff")}>{f.fix ? "Fix Now" : "Go to field"}</button>
                       <button onClick={() => { ignoreThisSession(f); setFindings(runFullScan()); }} style={btn("#98afc4")}>Ignore This Time</button>
                       <button onClick={() => { dismissPermanently(f); setFindings(runFullScan()); }} style={btn("#6b7a8d")}>Dismiss</button>
                     </div>

@@ -70,7 +70,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
         <span style={{
           fontSize: 9, fontFamily: "'DM Mono',monospace", flexShrink: 0,
           background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
-          color: isAdvanced ? "#4f8ef7" : "#2dd4a0",
+          color: isAdvanced ? "#6ea3ff" : "#2dd4a0",
           border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
           padding: "2px 8px", borderRadius: 4, letterSpacing: "0.4px", textTransform: "uppercase",
         }}>{modeLabel}</span>

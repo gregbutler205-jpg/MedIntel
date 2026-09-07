@@ -60,7 +60,7 @@ export default function PreflightHost({ onNavChange }) {
               </div>
             )}
             <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-              <button onClick={() => fix(f)} style={btn("#4f8ef7")}>{f.fix ? "Fix Now" : "Go fix it"}</button>
+              <button onClick={() => fix(f)} style={btn("#6ea3ff")}>{f.fix ? "Fix Now" : "Go fix it"}</button>
               <button onClick={() => { ignoreThisSession(f); rescan(ctx.reportType); }} style={btn("#98afc4")}>Ignore This Time</button>
               <button onClick={() => { dismissPermanently(f); rescan(ctx.reportType); }} style={btn("#6b7a8d")}>Dismiss</button>
             </div>

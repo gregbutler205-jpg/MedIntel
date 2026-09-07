@@ -42,7 +42,7 @@ export default function Care({ startVisit, openVisit }) {
               </button>
             )}
             <button onClick={() => startVisit(a)}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: C.blue, border: "none", borderRadius: 8, padding: "11px 0", color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, cursor: "pointer" }}>
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: "#4f8ef7", border: "none", borderRadius: 8, padding: "11px 0", color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, cursor: "pointer" }}>
               🎙️ Pre-Visit Brief & Capture
             </button>
           </Card>
