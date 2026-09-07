@@ -92,7 +92,7 @@ export default function PrepMarkPicker({ noteId, reportText, onChanged, persist 
           padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "'Sora',sans-serif",
           cursor: applied && !dirty ? "default" : "pointer",
           background: applied && !dirty ? "rgba(16,185,129,.10)" : "rgba(16,185,129,.16)",
-          border: "1px solid rgba(16,185,129,.35)", color: "#10b981",
+          border: "1px solid rgba(16,185,129,.35)", color: "#2dd4a0",
         }}>
         {applied && !dirty
           ? (count ? "✓ Marked for prep" : "✓ Marks cleared")

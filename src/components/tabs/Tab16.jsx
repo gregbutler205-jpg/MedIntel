@@ -307,7 +307,7 @@ export default function SurgeriesTab() {
         </div>
 
         {(scanMsg || savedMsg) && (
-          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background: savedMsg ? "rgba(16,185,129,.08)" : "rgba(79,142,247,.08)", border:`1px solid ${savedMsg ? "rgba(16,185,129,.25)" : "rgba(79,142,247,.25)"}`, color: savedMsg ? "#10b981" : "#7eb8d8", marginBottom:16 }}>
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background: savedMsg ? "rgba(16,185,129,.08)" : "rgba(79,142,247,.08)", border:`1px solid ${savedMsg ? "rgba(16,185,129,.25)" : "rgba(79,142,247,.25)"}`, color: savedMsg ? "#2dd4a0" : "#7eb8d8", marginBottom:16 }}>
             {savedMsg ? `✓ ${savedMsg}` : scanMsg}
           </div>
         )}
@@ -332,7 +332,7 @@ export default function SurgeriesTab() {
                     <div style={{ fontSize:14, fontWeight:600, color:"#dde8f5" }}>{sug.name}</div>
                     {sug.date && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{formatDateUS(sug.date)}</div>}
                   </div>
-                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#10b981", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
+                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#2dd4a0", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
                   <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer" }}>Dismiss</button>
                 </div>
                 <div style={{ marginTop:8 }}>

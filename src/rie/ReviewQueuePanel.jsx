@@ -73,7 +73,7 @@ export default function RIEWidget({ onNavChange }) {
               </div>
               {safeFixable > 0 && (
                 <button onClick={() => { applySafeFixes(findings); setFindings(runFullScan()); }}
-                  style={{ marginTop: 10, width: "100%", padding: "7px 0", fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#10b981", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, cursor: "pointer" }}>
+                  style={{ marginTop: 10, width: "100%", padding: "7px 0", fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#2dd4a0", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, cursor: "pointer" }}>
                   Apply {safeFixable} safe fix{safeFixable > 1 ? "es" : ""} (excludes medication names &amp; critical)
                 </button>
               )}
@@ -83,7 +83,7 @@ export default function RIEWidget({ onNavChange }) {
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px" }}>
               {findings.length === 0 && (
                 <div style={{ textAlign: "center", padding: "60px 20px", color: "#98afc4" }}>
-                  <div style={{ fontSize: 30, color: "#10b981", marginBottom: 10 }}>✓</div>
+                  <div style={{ fontSize: 30, color: "#2dd4a0", marginBottom: 10 }}>✓</div>
                   <div style={{ fontSize: 13 }}>No integrity issues found.</div>
                   <div style={{ fontSize: 10, color: "#6a8090", fontFamily: mono, marginTop: 6 }}>Your record looks clean.</div>
                 </div>
@@ -101,7 +101,7 @@ export default function RIEWidget({ onNavChange }) {
                       <div style={{ marginTop: 6, fontSize: 11, fontFamily: mono, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ color: "#f87171", textDecoration: "line-through" }}>{f.original}</span>
                         <span style={{ color: "#6a8090" }}>→</span>
-                        <span style={{ color: "#10b981" }}>{f.suggestion}</span>
+                        <span style={{ color: "#2dd4a0" }}>{f.suggestion}</span>
                       </div>
                     )}
                     <div style={{ display: "flex", gap: 6, marginTop: 9, flexWrap: "wrap" }}>

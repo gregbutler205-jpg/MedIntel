@@ -152,7 +152,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                         {FLAG_LABELS[f] || f}
                       </span>
                     ))}
-                    {r.correction && <span style={{ fontSize:9, fontFamily:mono, color:"#10b981", border:"1px solid rgba(16,185,129,.3)", borderRadius:9, padding:"1px 8px" }}>CORRECTED</span>}
+                    {r.correction && <span style={{ fontSize:9, fontFamily:mono, color:"#2dd4a0", border:"1px solid rgba(16,185,129,.3)", borderRadius:9, padding:"1px 8px" }}>CORRECTED</span>}
                   </div>
 
                   {editingId === r.id ? (
@@ -167,7 +167,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                     </div>
                   ) : (
                     <div style={{ display:"flex", gap:16, marginTop:6, flexWrap:"wrap", alignItems:"baseline", fontFamily:mono }}>
-                      <span style={{ fontSize:14, fontWeight:700, color: r.flags.includes("out_of_range") ? "#f59e0b" : "#10b981" }}>
+                      <span style={{ fontSize:14, fontWeight:700, color: r.flags.includes("out_of_range") ? "#f59e0b" : "#2dd4a0" }}>
                         {String(r.value)}{r.unit ? ` ${r.unit}` : ""}
                       </span>
                       {r.refRange && <span style={{ fontSize:10, color:"#98afc4" }}>ref {r.refRange}</span>}
@@ -189,7 +189,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                   {flagged(r) && included && (
                     <label style={{ display:"flex", alignItems:"center", gap:8, marginTop:8, cursor:"pointer" }}>
                       <input type="checkbox" checked={acks.has(r.id)} onChange={() => toggleAck(r.id)} style={{ accentColor:"#f59e0b", width:13, height:13 }} />
-                      <span style={{ fontSize:10.5, color: acks.has(r.id) ? "#10b981" : "#f59e0b", fontFamily:mono }}>
+                      <span style={{ fontSize:10.5, color: acks.has(r.id) ? "#2dd4a0" : "#f59e0b", fontFamily:mono }}>
                         I've reviewed this {r.flags.includes("monitored_analyte") ? "monitored" : "flagged"} value against the source document
                       </span>
                     </label>
@@ -215,7 +215,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
             style={{ padding:"9px 22px", borderRadius:8, fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600,
               background: gate.canConfirm ? "rgba(16,185,129,.15)" : "rgba(16,185,129,.05)",
               border: `1px solid ${gate.canConfirm ? "rgba(16,185,129,.4)" : "rgba(16,185,129,.15)"}`,
-              color: gate.canConfirm ? "#10b981" : "#2a4a3a", cursor: gate.canConfirm ? "pointer" : "not-allowed" }}>
+              color: gate.canConfirm ? "#2dd4a0" : "#2a4a3a", cursor: gate.canConfirm ? "pointer" : "not-allowed" }}>
             ✓ Confirm batch
           </button>
         </div>

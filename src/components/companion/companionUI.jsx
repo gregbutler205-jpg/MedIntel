@@ -10,7 +10,7 @@ export const C = {
   b1:     "#1a2f4a",
   b2:     "#111e30",
   blue:   "#4f8ef7",
-  green:  "#10b981",
+  green:  "#2dd4a0",
   amber:  "#f59e0b",
   red:    "#f87171",
   purple: "#a78bfa",

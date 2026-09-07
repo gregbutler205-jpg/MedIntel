@@ -157,7 +157,7 @@ export default function AdvisoryModal() {
               User-reported only — Insina never verifies contact happened. */}
           {mode !== "info" && (
             contacted ? (
-              <p style={{ alignSelf: "center", fontSize: 12, color: "var(--green, #10b981)", fontFamily: "var(--font-mono)" }}>
+              <p style={{ alignSelf: "center", fontSize: 12, color: "var(--green, #2dd4a0)", fontFamily: "var(--font-mono)" }}>
                 ✓ Care team contacted (self-reported)
               </p>
             ) : (

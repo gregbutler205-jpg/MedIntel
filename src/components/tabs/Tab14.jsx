@@ -107,7 +107,7 @@ function printConsultationPrep(appt, analysis) {
 const URGENCY_CFG = {
   high: { color: "#f87171", bg: "rgba(239,68,68,.10)", border: "rgba(239,68,68,.25)", label: "High" },
   med:  { color: "#f59e0b", bg: "rgba(245,158,11,.10)", border: "rgba(245,158,11,.25)", label: "Med"  },
-  low:  { color: "#10b981", bg: "rgba(16,185,129,.10)", border: "rgba(16,185,129,.25)", label: "Low"  },
+  low:  { color: "#2dd4a0", bg: "rgba(16,185,129,.10)", border: "rgba(16,185,129,.25)", label: "Low"  },
 };
 
 const STATUS_CFG = {
@@ -826,7 +826,7 @@ const pvField = { ...inp, marginBottom: 8 };
 const pvSaveBtn = (enabled) => ({
   width: "100%", padding: "9px 0", borderRadius: 8, fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 600,
   cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.5,
-  background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", color: "#10b981",
+  background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", color: "#2dd4a0",
 });
 const fileInp = {
   width: "100%", fontSize: 11, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", marginBottom: 8,
@@ -996,7 +996,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
 
         {captured.length > 0 && (
           <div style={{ marginTop: 14, padding: "10px 12px", background: "rgba(16,185,129,.06)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 10 }}>
-            <div style={{ fontSize: 10, color: "#10b981", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Attached to this visit</div>
+            <div style={{ fontSize: 10, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Attached to this visit</div>
             {captured.map((c, i) => {
               const m = ATT_META[c.type] || ATT_META.document;
               return (
@@ -1011,7 +1011,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
         )}
 
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14 }}>
-          <button onClick={onClose} style={{ padding: "9px 22px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 9, color: "#10b981", fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Done</button>
+          <button onClick={onClose} style={{ padding: "9px 22px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 9, color: "#2dd4a0", fontFamily: "'Sora',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Done</button>
         </div>
       </div>
     </div>
@@ -1137,7 +1137,7 @@ Please provide:
           excludable BEFORE generating, never silently included. */}
       {markedForVisit.reports.length > 0 && (
         <div style={{ marginBottom:12, background:"rgba(16,185,129,.04)", border:"1px solid rgba(16,185,129,.18)", borderRadius:8, padding:"10px 13px" }}>
-          <div style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:7 }}>
+          <div style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:7 }}>
             Marked analyses for this visit ({includedReports.length} of {markedForVisit.reports.length} included)
           </div>
           {markedForVisit.reports.map(r => {
@@ -1146,7 +1146,7 @@ Please provide:
               <div key={r.id} style={{ display:"flex", alignItems:"center", gap:9, marginBottom:5 }}>
                 <div onClick={() => toggleExclude(r.id)} role="checkbox" aria-checked={included}
                   style={{ width:14, height:14, border:`1px solid ${included ? "#10b981" : "#1a2f4a"}`, borderRadius:3, background: included ? "rgba(16,185,129,.12)" : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  {included && <span style={{ fontSize:9, color:"#10b981" }}>✓</span>}
+                  {included && <span style={{ fontSize:9, color:"#2dd4a0" }}>✓</span>}
                 </div>
                 <span style={{ fontSize:11, color: included ? "#c4d8ee" : "#4a5c6a", flex:1, lineHeight:1.4 }}>{r.title}</span>
                 <span style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{formatDateUS(r.date)}</span>
@@ -1520,7 +1520,7 @@ export default function AppointmentsTab({ onNavChange }) {
           <div style={{ display:"flex", gap:10, marginTop:4, alignItems:"center" }}>
             <button
               className="apt-btn"
-              style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.30)", color:"#10b981", opacity: syncing ? 0.6 : 1, cursor: syncing ? "wait" : "pointer" }}
+              style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.30)", color:"#2dd4a0", opacity: syncing ? 0.6 : 1, cursor: syncing ? "wait" : "pointer" }}
               onClick={handleSyncCalendar}
               disabled={syncing}
               title="Pull medical appointments from your Google Calendar"
@@ -1544,7 +1544,7 @@ export default function AppointmentsTab({ onNavChange }) {
               <div role="status" aria-live="polite" style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace",
                 background: syncMsg.kind === "ok" ? "rgba(16,185,129,.08)" : "rgba(239,68,68,.08)",
                 border: `1px solid ${syncMsg.kind === "ok" ? "rgba(16,185,129,.25)" : "rgba(239,68,68,.25)"}`,
-                color: syncMsg.kind === "ok" ? "#10b981" : "#f87171" }}>
+                color: syncMsg.kind === "ok" ? "#2dd4a0" : "#f87171" }}>
                 {syncMsg.kind === "ok" ? "✓ " : "⚠ "}{syncMsg.text}
               </div>
             )}
@@ -1715,7 +1715,7 @@ export default function AppointmentsTab({ onNavChange }) {
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                       {appt.status === "suggested" ? (
                         <>
-                          <button className="apt-btn" style={{ background:"rgba(16,185,129,.12)", borderColor:"rgba(16,185,129,.3)", color:"#10b981" }}
+                          <button className="apt-btn" style={{ background:"rgba(16,185,129,.12)", borderColor:"rgba(16,185,129,.3)", color:"#2dd4a0" }}
                             onClick={e => { e.stopPropagation(); handleSave({ ...appt, status:"upcoming" }); }}>
                             ✓ Confirm Appointment
                           </button>
@@ -1733,7 +1733,7 @@ export default function AppointmentsTab({ onNavChange }) {
                           <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={e => { e.stopPropagation(); setModal(appt); }}>
                             ✎ Edit
                           </button>
-                          <button className="apt-btn" style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.25)", color:"#10b981" }}
+                          <button className="apt-btn" style={{ background:"rgba(16,185,129,.10)", borderColor:"rgba(16,185,129,.25)", color:"#2dd4a0" }}
                             onClick={e => { e.stopPropagation(); handleMarkComplete(appt); }}>
                             ✓ Mark Complete
                           </button>
@@ -1822,7 +1822,7 @@ export default function AppointmentsTab({ onNavChange }) {
             </div>
             <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
               <button className="apt-btn" style={{ background:"rgba(79,142,247,.12)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8" }} onClick={() => resolveDup("useExisting")}>Use existing</button>
-              <button className="apt-btn" style={{ background:"rgba(16,185,129,.12)", borderColor:"rgba(16,185,129,.3)", color:"#10b981" }} onClick={() => resolveDup("update")}>Update existing</button>
+              <button className="apt-btn" style={{ background:"rgba(16,185,129,.12)", borderColor:"rgba(16,185,129,.3)", color:"#2dd4a0" }} onClick={() => resolveDup("update")}>Update existing</button>
               <button className="apt-btn" style={{ background:"transparent", borderColor:"#1a2f4a", color:"#b0c4d8" }} onClick={() => resolveDup("keepBoth")}>Keep both</button>
             </div>
           </div>

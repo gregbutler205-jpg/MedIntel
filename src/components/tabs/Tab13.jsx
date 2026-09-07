@@ -19,7 +19,7 @@ const INITIAL_BACKUPS = [];
 function Toast({ msg, onDone }) {
   useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, []);
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 24, background: "#0b1220", border: "1px solid #10b981", borderRadius: 10, padding: "12px 18px", fontSize: 12, color: "#10b981", fontFamily: "'DM Mono', monospace", zIndex: 200 }}>
+    <div style={{ position: "fixed", bottom: 24, right: 24, background: "#0b1220", border: "1px solid #10b981", borderRadius: 10, padding: "12px 18px", fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", zIndex: 200 }}>
       ✓ {msg}
     </div>
   );
@@ -567,7 +567,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                 <div style={{ width:6, height:6, borderRadius:"50%", background:"#10b981", boxShadow:"0 0 6px #10b98160" }} />
-                <span style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace" }}>Connected</span>
+                <span style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>Connected</span>
               </div>
             </div>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:12, borderTop:"1px solid #0d1a28" }}>
@@ -789,7 +789,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           <div style={sectionLbl}>Export Your Data</div>
           <button
             onClick={handleImport}
-            style={{ padding: "6px 14px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#10b981", fontFamily: "'DM Mono',monospace", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+            style={{ padding: "6px 14px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
           >
             ↑ Restore from File
           </button>
@@ -863,7 +863,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: 12, color: "#7eb8d8" }}>{b.type}</div>
               <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(b.date)}</div>
-              <div style={{ fontSize: 9, color: "#10b981", fontFamily: "'DM Mono', monospace", minWidth: 44, textAlign: "right" }}>{b.size}</div>
+              <div style={{ fontSize: 9, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", minWidth: 44, textAlign: "right" }}>{b.size}</div>
               <span
                 onClick={() => { setRestoreId(b.id); setModal("restore"); }}
                 style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", cursor: "pointer", marginLeft: 8 }}
@@ -974,7 +974,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                       showToast("Switched to Standard Mode");
                     }
                   }}
-                  style={{ ...btnGhost, width: "100%", textAlign: "center", color: "#10b981", borderColor: "rgba(16,185,129,.3)" }}
+                  style={{ ...btnGhost, width: "100%", textAlign: "center", color: "#2dd4a0", borderColor: "rgba(16,185,129,.3)" }}
                 >
                   Switch to Standard Mode
                 </button>
@@ -1078,7 +1078,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           </div>
           <button
             onClick={() => { setPinForm({ current: "", next: "", confirm: "" }); setPinError(""); setPinSuccess(false); setModal("changepin"); }}
-            style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
+            style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#2dd4a0", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
           >
             Change Password
           </button>
@@ -1218,11 +1218,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
 
             {pinError && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
-            {pinSuccess && <div style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Password updated successfully.</div>}
+            {pinSuccess && <div style={{ fontSize: 11, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Password updated successfully.</div>}
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setModal(null)} style={{ flex: 1, padding: "9px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#98afc4", fontSize: 12, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Cancel</button>
-              <button onClick={handleChangePin} style={{ flex: 1, padding: "9px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Save</button>
+              <button onClick={handleChangePin} style={{ flex: 1, padding: "9px", background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#2dd4a0", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Save</button>
             </div>
           </div>
         </div>

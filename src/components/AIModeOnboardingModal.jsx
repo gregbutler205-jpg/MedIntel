@@ -175,7 +175,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               <span style={{ fontWeight: 700, fontSize: 14, color: "#dde8f5" }}>Standard Mode</span>
               <span style={{
                 fontSize: 9, fontFamily: "'DM Mono', monospace",
-                background: "#10b98118", color: "#10b981",
+                background: "#10b98118", color: "#2dd4a0",
                 border: "1px solid #10b98130", borderRadius: 4, padding: "2px 7px",
                 letterSpacing: "0.5px",
               }}>Recommended</span>

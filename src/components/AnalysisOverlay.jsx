@@ -70,7 +70,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
         <span style={{
           fontSize: 9, fontFamily: "'DM Mono',monospace", flexShrink: 0,
           background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
-          color: isAdvanced ? "#4f8ef7" : "#10b981",
+          color: isAdvanced ? "#4f8ef7" : "#2dd4a0",
           border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
           padding: "2px 8px", borderRadius: 4, letterSpacing: "0.4px", textTransform: "uppercase",
         }}>{modeLabel}</span>
@@ -80,7 +80,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
           <PrintLabel />
         </button>
         <button onClick={handleSave} disabled={saved}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: saved ? "rgba(16,185,129,.10)" : "rgba(16,185,129,.14)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#10b981", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: saved ? "default" : "pointer", flexShrink: 0 }}>
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", background: saved ? "rgba(16,185,129,.10)" : "rgba(16,185,129,.14)", border: "1px solid rgba(16,185,129,.35)", borderRadius: 8, color: "#2dd4a0", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: saved ? "default" : "pointer", flexShrink: 0 }}>
           {saved ? "✓ Saved to My Notes" : "Save to My Notes"}
         </button>
         <button onClick={() => downloadAnalysisMarkdown({ analysisType: title, content: safeContent, mode })}

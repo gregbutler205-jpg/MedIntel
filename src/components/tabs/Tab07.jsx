@@ -240,7 +240,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
     <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #0d1a28", display: "flex", flexDirection: "column", zIndex: 10, animation: "slideInRight .2s ease both" }}>
       <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: 9, color: entry.status === "active" ? "#f87171" : "#10b981", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 5, fontWeight: 600 }}>
+          <div style={{ fontSize: 9, color: entry.status === "active" ? "#f87171" : "#2dd4a0", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 5, fontWeight: 600 }}>
             {entry.status === "active" ? "● ACTIVE" : `✓ RESOLVED${entry.resolvedDate ? ` ${entry.resolvedDate}` : ""}`}
           </div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", lineHeight: 1.2 }}>{entry.symptom}</div>
@@ -305,7 +305,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
       {entry.status === "active" && (
         <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", flexShrink: 0 }}>
           <button onClick={() => onResolve(entry.id)}
-            style={{ width: "100%", padding: "10px", background: "#0b1220", border: "1px solid #10b981", borderRadius: 9, color: "#10b981", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
+            style={{ width: "100%", padding: "10px", background: "#0b1220", border: "1px solid #10b981", borderRadius: 9, color: "#2dd4a0", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
             ✓ Mark as Resolved
           </button>
         </div>
@@ -527,7 +527,7 @@ export default function App({ onNavChange }) {
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
                             <span style={{ fontSize:14, fontWeight:600, color:"#c4d8ee" }}>{entry.symptom}</span>
-                            <span style={{ fontSize:9, background: entry.status==="active" ? "rgba(239,68,68,.12)" : "rgba(16,185,129,.1)", color: entry.status==="active" ? "#f87171" : "#10b981", padding:"2px 7px", borderRadius:20, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
+                            <span style={{ fontSize:9, background: entry.status==="active" ? "rgba(239,68,68,.12)" : "rgba(16,185,129,.1)", color: entry.status==="active" ? "#f87171" : "#2dd4a0", padding:"2px 7px", borderRadius:20, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
                               {entry.status === "active" ? "ACTIVE" : entry.resolvedDate ? `RESOLVED ${entry.resolvedDate}` : "RESOLVED"}
                             </span>
                           </div>

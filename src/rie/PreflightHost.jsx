@@ -56,7 +56,7 @@ export default function PreflightHost({ onNavChange }) {
             {f.suggestion && (
               <div style={{ marginTop: 5, fontSize: 11, fontFamily: mono, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <span style={{ color: "#f87171", textDecoration: "line-through" }}>{f.original}</span>
-                <span style={{ color: "#6a8090" }}>→</span><span style={{ color: "#10b981" }}>{f.suggestion}</span>
+                <span style={{ color: "#6a8090" }}>→</span><span style={{ color: "#2dd4a0" }}>{f.suggestion}</span>
               </div>
             )}
             <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -87,7 +87,7 @@ export default function PreflightHost({ onNavChange }) {
             <div style={{ marginBottom: 6 }}>
               {safeFixable > 0 && (
                 <button onClick={() => { applySafeFixes(findings); rescan(ctx.reportType); }}
-                  style={{ width: "100%", padding: "7px 0", marginBottom: 8, fontSize: 11, fontWeight: 600, color: "#10b981", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, cursor: "pointer" }}>
+                  style={{ width: "100%", padding: "7px 0", marginBottom: 8, fontSize: 11, fontWeight: 600, color: "#2dd4a0", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, cursor: "pointer" }}>
                   Apply {safeFixable} safe fix{safeFixable > 1 ? "es" : ""}
                 </button>
               )}
@@ -102,7 +102,7 @@ export default function PreflightHost({ onNavChange }) {
             style={{ padding: "9px 20px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer",
               background: crit.length ? "rgba(245,158,11,.15)" : "rgba(16,185,129,.15)",
               border: `1px solid ${crit.length ? "rgba(245,158,11,.45)" : "rgba(16,185,129,.45)"}`,
-              color: crit.length ? "#f59e0b" : "#10b981" }}>
+              color: crit.length ? "#f59e0b" : "#2dd4a0" }}>
             {crit.length ? "Override & Generate" : "Generate Report"}
           </button>
         </div>

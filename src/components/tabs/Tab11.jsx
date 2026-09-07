@@ -467,7 +467,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
                   <span style={{
                     fontSize: 9, fontFamily: "'DM Mono',monospace",
                     background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
-                    color: isAdvanced ? "#4f8ef7" : "#10b981",
+                    color: isAdvanced ? "#4f8ef7" : "#2dd4a0",
                     border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
                     padding: "1px 7px", borderRadius: 3, letterSpacing: "0.4px",
                   }}>
@@ -1127,7 +1127,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         <span style={{
           fontSize: 9, fontFamily: "'DM Mono',monospace",
           background: isAdvanced ? "rgba(79,142,247,.15)" : "rgba(16,185,129,.12)",
-          color: isAdvanced ? "#4f8ef7" : "#10b981",
+          color: isAdvanced ? "#4f8ef7" : "#2dd4a0",
           border: `1px solid ${isAdvanced ? "rgba(79,142,247,.3)" : "rgba(16,185,129,.3)"}`,
           padding: "2px 9px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase",
         }}>
@@ -1285,7 +1285,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                         <span style={{
                           fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 8px", borderRadius: 9, flexShrink: 0,
                           background: s.state === "saved" ? "rgba(16,185,129,.1)" : "rgba(79,142,247,.1)",
-                          color: s.state === "saved" ? "#10b981" : "#7eb8d8",
+                          color: s.state === "saved" ? "#2dd4a0" : "#7eb8d8",
                           border: `1px solid ${s.state === "saved" ? "rgba(16,185,129,.3)" : "rgba(79,142,247,.3)"}`,
                         }}>{s.state === "saved" ? "saved" : "open"}</span>
                       </button>
@@ -1408,7 +1408,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <div style={{ borderTop: "1px solid #0d1a28", padding: "10px 24px", background: "#080c14", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
             <button className="end-btn" onClick={saveToNotes} disabled={!canAct}
               title="Save this session's verbatim transcript to My Notes"
-              style={{ background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", color: "#10b981" }}>
+              style={{ background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", color: "#2dd4a0" }}>
               Save to Notes{activeSession?.state === "saved" && !unsaved ? " ✓" : ""}
             </button>
             <button className="end-btn" onClick={saveAndPrint} disabled={!canAct}

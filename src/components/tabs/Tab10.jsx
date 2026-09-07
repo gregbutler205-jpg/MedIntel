@@ -17,7 +17,7 @@ const TAG_STYLES = {
   Appt:     { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
   Labs:     { bg: "rgba(245,158,11,.1)",   color: "#f59e0b", border: "rgba(245,158,11,.25)" },
   Meds:     { bg: "rgba(167,139,250,.1)",  color: "#a78bfa", border: "rgba(167,139,250,.25)" },
-  Symptoms: { bg: "rgba(16,185,129,.1)",   color: "#10b981", border: "rgba(16,185,129,.25)" },
+  Symptoms: { bg: "rgba(16,185,129,.1)",   color: "#2dd4a0", border: "rgba(16,185,129,.25)" },
   General:  { bg: "rgba(79,142,247,.12)",  color: "#4f8ef7", border: "rgba(79,142,247,.25)" },
   Urgent:   { bg: "rgba(239,68,68,.1)",    color: "#f87171", border: "rgba(239,68,68,.25)" },
 };
@@ -53,7 +53,7 @@ function NoteItem({ note, active, onClick }) {
           <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#4f8ef7", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
         )}
         {note.prepTargets?.length > 0 && (
-          <span title={`Marked for appointment prep: ${note.prepTargets.map(t => t.name).join(", ")}`} style={{ fontSize: 8, background: "rgba(16,185,129,.12)", color: "#10b981", border: "1px solid rgba(16,185,129,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>PREP</span>
+          <span title={`Marked for appointment prep: ${note.prepTargets.map(t => t.name).join(", ")}`} style={{ fontSize: 8, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>PREP</span>
         )}
         {note.pinned && <span style={{ color: "#f59e0b", flexShrink: 0, display: "flex" }} title="Pinned"><PinIcon size={11} /></span>}
       </div>
@@ -85,7 +85,7 @@ function ChecklistSection({ section, onToggle }) {
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s",
             }}
           >
-            {item.done && <span style={{ fontSize: 9, color: "#10b981" }}>✓</span>}
+            {item.done && <span style={{ fontSize: 9, color: "#2dd4a0" }}>✓</span>}
           </div>
           <div style={{ fontSize: 13, color: item.done ? "#b0c4d8" : "#a8c4dc", lineHeight: 1.55, textDecoration: item.done ? "line-through" : "none", transition: "color .15s" }}>
             {item.text}

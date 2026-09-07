@@ -55,7 +55,7 @@ const T = {
   border:"#0d1a28", borderHover:"#111e30", borderActive:"#1a2f4a",
   p:"#dde8f5", s:"#c4d8ee", m:"#7eb8d8",
   dim:"#b0c4d8", ghost:"#98afc4", faint:"#a0b4c8",
-  blue:"#4f8ef7", purple:"#a78bfa", green:"#10b981",
+  blue:"#4f8ef7", purple:"#a78bfa", green:"#2dd4a0",
   yellow:"#f59e0b", red:"#f87171",
 };
 

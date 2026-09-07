@@ -194,8 +194,8 @@ function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, hei
       {targetMin != null && targetMax != null && (
         <rect x={PL} y={toY(targetMax)} width={cW} height={toY(targetMin) - toY(targetMax)} fill="rgba(16,185,129,0.07)" />
       )}
-      {targetMin != null && <line x1={PL} y1={toY(targetMin)} x2={PL + cW} y2={toY(targetMin)} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.45} />}
-      {targetMax != null && <line x1={PL} y1={toY(targetMax)} x2={PL + cW} y2={toY(targetMax)} stroke="#10b981" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.45} />}
+      {targetMin != null && <line x1={PL} y1={toY(targetMin)} x2={PL + cW} y2={toY(targetMin)} stroke="#2dd4a0" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.45} />}
+      {targetMax != null && <line x1={PL} y1={toY(targetMax)} x2={PL + cW} y2={toY(targetMax)} stroke="#2dd4a0" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.45} />}
       {reversed.map((r, i) => {
         const v = r[valueKey];
         if (v == null) return null;
@@ -274,7 +274,7 @@ const VITALS = [
     statusFn: r => r.resting_hr == null ? { label: "No data", color: "#98afc4" } : r.resting_hr > 70 ? { label: "Elevated", color: "#f59e0b" } : r.resting_hr < 50 ? { label: "Low", color: "#4f8ef7" } : { label: "Good", color: "#10b981" },
     chartType: "line", chartKeys: ["resting_hr"], chartColors: ["#f87171"],
     chartLabels: ["Resting HR"],
-    refLines: [{ val: 60, color: "#10b981" }, { val: 70, color: "#f59e0b" }],
+    refLines: [{ val: 60, color: "#2dd4a0" }, { val: 70, color: "#f59e0b" }],
     chartYMin: 40, chartYMax: 100,
     data: "manual",
   },

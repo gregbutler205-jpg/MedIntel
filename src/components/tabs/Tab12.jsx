@@ -673,7 +673,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         .btn-ghost:hover { border-color:#1a2f4a; color:#c4d8ee; }
         .btn-danger { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#f87171; }
         .btn-danger:hover { background:rgba(239,68,68,.2); }
-        .btn-success { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.3); color:#10b981; }
+        .btn-success { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.3); color:#2dd4a0; }
         select.dark-sel { background:#07090f; border:1px solid #1a2f4a; border-radius:8px; padding:8px 12px; color:#c4d8ee; font-family:'Sora',sans-serif; font-size:12px; outline:none; width:100%; }
         .flag-toggle { display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
         .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:12px; }
@@ -686,7 +686,7 @@ export default function ImportTab({ onImport, onNavChange }) {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position:"fixed", bottom:24, right:24, background:"#0b1220", border:"1px solid #10b981", borderRadius:10, padding:"12px 18px", fontSize:12, color:"#10b981", fontFamily:"'DM Mono',monospace", zIndex:200 }}>
+        <div style={{ position:"fixed", bottom:24, right:24, background:"#0b1220", border:"1px solid #10b981", borderRadius:10, padding:"12px 18px", fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", zIndex:200 }}>
           ✓ {toast}
         </div>
       )}
@@ -810,7 +810,7 @@ export default function ImportTab({ onImport, onNavChange }) {
             <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
               {batchSummary.map((item, i) => (
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 10px", background: item.ok ? "rgba(16,185,129,.04)" : "rgba(239,68,68,.04)", border:`1px solid ${item.ok ? "rgba(16,185,129,.15)" : "rgba(239,68,68,.2)"}`, borderRadius:7 }}>
-                  <span style={{ fontSize:11, color: item.ok ? "#10b981" : "#f87171", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
+                  <span style={{ fontSize:11, color: item.ok ? "#2dd4a0" : "#f87171", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
                   <div style={{ flex:1, minWidth:0 }}>
                     {item.ok ? (
                       <span style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace" }}>
@@ -917,11 +917,11 @@ export default function ImportTab({ onImport, onNavChange }) {
                         {e.docName && <div style={{ fontSize:10, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>→ {e.docName}</div>}
                       </div>
                       <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{e.ts ? `${formatDateUS(e.ts)} · ${new Date(e.ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" })}` : "—"}</span>
-                      <span style={{ fontSize:10, color:"#10b981", fontFamily:"'DM Mono',monospace" }}>{e.records ?? 0} record{(e.records ?? 0) !== 1 ? "s" : ""}</span>
+                      <span style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>{e.records ?? 0} record{(e.records ?? 0) !== 1 ? "s" : ""}</span>
                       {e.excluded > 0 && <span style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace" }}>{e.excluded} excluded in review</span>}
                       <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", padding:"2px 8px", borderRadius:4,
                         background: (e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.1)" : "rgba(16,185,129,.1)",
-                        color: (e.status || "Saved").startsWith("Discard") ? "#f87171" : "#10b981",
+                        color: (e.status || "Saved").startsWith("Discard") ? "#f87171" : "#2dd4a0",
                         border: `1px solid ${(e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.25)" : "rgba(16,185,129,.25)"}` }}>
                         {e.status || "Saved"}
                       </span>
@@ -1057,7 +1057,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                           <div style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>
                             {lab.date ? new Date(lab.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
                           </div>
-                          <div style={{ fontSize:13, fontWeight:700, color: lab.flag ? "#f87171" : "#10b981", padding:"0 4px" }}>
+                          <div style={{ fontSize:13, fontWeight:700, color: lab.flag ? "#f87171" : "#2dd4a0", padding:"0 4px" }}>
                             {lab.value} <span style={{ fontSize:9, color:"#7eb8d8", fontWeight:400 }}>{lab.unit}</span>
                           </div>
                           <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.refRange || "—"}</div>

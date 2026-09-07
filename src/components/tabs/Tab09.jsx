@@ -35,7 +35,7 @@ const FINDING_COLORS = {
   diagnosis:   { bg: "rgba(239,68,68,.1)",   color: "#f87171",  border: "rgba(239,68,68,.25)"   },
   medication:  { bg: "rgba(245,158,11,.1)",  color: "#f59e0b",  border: "rgba(245,158,11,.25)"  },
   procedure:   { bg: "rgba(167,139,250,.1)", color: "#a78bfa",  border: "rgba(167,139,250,.25)" },
-  lab:         { bg: "rgba(16,185,129,.1)",  color: "#10b981",  border: "rgba(16,185,129,.25)"  },
+  lab:         { bg: "rgba(16,185,129,.1)",  color: "#2dd4a0",  border: "rgba(16,185,129,.25)"  },
   imaging:     { bg: "rgba(79,142,247,.1)",  color: "#4f8ef7",  border: "rgba(79,142,247,.25)"  },
   monitoring:  { bg: "rgba(14,165,233,.1)",  color: "#0ea5e9",  border: "rgba(14,165,233,.25)"  },
   warning:     { bg: "rgba(249,115,22,.1)",  color: "#f97316",  border: "rgba(249,115,22,.25)"  },

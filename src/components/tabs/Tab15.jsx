@@ -10,10 +10,10 @@ import { runConditionScan, readSuggestions, dismissSuggestion, resolveSuggestion
 const STATUS_CFG = {
   active:   { color: "#f87171", bg: "rgba(239,68,68,.10)",   border: "rgba(239,68,68,.25)",   label: "Active"   },
   managed:  { color: "#f59e0b", bg: "rgba(245,158,11,.10)",  border: "rgba(245,158,11,.25)",  label: "Managed"  },
-  resolved: { color: "#10b981", bg: "rgba(16,185,129,.10)",  border: "rgba(16,185,129,.25)",  label: "Resolved" },
+  resolved: { color: "#2dd4a0", bg: "rgba(16,185,129,.10)",  border: "rgba(16,185,129,.25)",  label: "Resolved" },
 };
 const SEVERITY_CFG = {
-  mild:     { color: "#10b981" },
+  mild:     { color: "#2dd4a0" },
   moderate: { color: "#f59e0b" },
   severe:   { color: "#f87171" },
 };
@@ -389,7 +389,7 @@ export default function ConditionsTab() {
               <div key={sug.condId} style={{ background:"#0b1220", border:"1px solid rgba(245,158,11,.18)", borderRadius:10, padding:"12px 14px", marginBottom:8 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                   <div style={{ fontSize:14, fontWeight:600, color:"#dde8f5", flex:1, minWidth:160 }}>{sug.name}</div>
-                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#10b981", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
+                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#2dd4a0", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
                   <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer" }}>Dismiss</button>
                 </div>
                 <div style={{ marginTop:8 }}>
@@ -411,7 +411,7 @@ export default function ConditionsTab() {
 
         {/* UI-29: save confirmation strip */}
         {savedMsg && (
-          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", color:"#10b981", marginBottom:16 }}>
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", color:"#2dd4a0", marginBottom:16 }}>
             ✓ {savedMsg}
           </div>
         )}

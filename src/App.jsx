@@ -1042,10 +1042,10 @@ function AppShell() {
                 {/* ── Google Drive sync ── */}
                 {googleUser ? (
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#f87171" : lastSyncTs?"#10b981":"#4a5c6a" }}>
+                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#f87171" : lastSyncTs?"#2dd4a0":"#4a5c6a" }}>
                       {syncStatus==="syncing" ? "Syncing…" : syncStatus==="error" ? "Sync error" : lastSyncTs ? `↑ ${new Date(lastSyncTs).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` : ""}
                     </span>
-                    <button onClick={signIn} title="Sync with Google Drive" style={{ padding:"3px 8px", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.2)", borderRadius:6, color:"#10b981", fontSize:9, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>↑↓</button>
+                    <button onClick={signIn} title="Sync with Google Drive" style={{ padding:"3px 8px", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.2)", borderRadius:6, color:"#2dd4a0", fontSize:9, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>↑↓</button>
                     {/* DEC-P49: persistent entry button, left of the avatar, hidden on Import Records */}
                     {activeNav !== "import" && <AIEntryButton iconSize={32} source="nav" onNavigate={() => setActiveNav("ai")} />}
                     {googleUser.picture
@@ -1349,7 +1349,7 @@ function AppShell() {
                               );
                               const val = parseFloat(lab.value);
                               const isFlag = lab.flag;
-                              const color = isFlag ? "#f59e0b" : "#10b981";
+                              const color = isFlag ? "#f59e0b" : "#2dd4a0";
                               return (
                                 <div key={label} style={{ background: "#080c14", border: `1px solid ${isFlag ? "rgba(245,158,11,.25)" : "#0d1a28"}`, borderRadius: 8, padding: "10px 12px" }}>
                                   <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>

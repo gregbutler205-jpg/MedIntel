@@ -767,7 +767,7 @@ export default function App({ onNavChange }) {
                 >
                   {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
-                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", daysSupply:30, prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", daysSupply:30, prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#2dd4a0", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
                   + Add Med
                 </button>
               </div>
@@ -798,7 +798,7 @@ export default function App({ onNavChange }) {
                         <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{m.name} {m.dose}</div>
                         <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.frequency} · {m.prescriber}</div>
                       </div>
-                      <button onClick={() => handleApprovePending(m)} style={{ padding:"5px 12px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:6, color:"#10b981", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Add</button>
+                      <button onClick={() => handleApprovePending(m)} style={{ padding:"5px 12px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:6, color:"#2dd4a0", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Add</button>
                       <button onClick={() => handleRejectPending(m)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:6, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✗ Skip</button>
                     </div>
                   ))}
@@ -853,7 +853,7 @@ export default function App({ onNavChange }) {
                       <button
                         onClick={(e) => markRefilled(med, e)}
                         title="Mark refilled — advances the refill date by the days supply"
-                        style={{ flexShrink: 0, padding: "5px 11px", borderRadius: 7, border: `1px solid rgba(16,185,129,${refilledFlash === med.id ? ".55" : ".3"})`, background: `rgba(16,185,129,${refilledFlash === med.id ? ".20" : ".08"})`, color: "#10b981", fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                        style={{ flexShrink: 0, padding: "5px 11px", borderRadius: 7, border: `1px solid rgba(16,185,129,${refilledFlash === med.id ? ".55" : ".3"})`, background: `rgba(16,185,129,${refilledFlash === med.id ? ".20" : ".08"})`, color: "#2dd4a0", fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
                       >
                         {refilledFlash === med.id ? "✓ Refilled" : "Refilled"}
                       </button>
@@ -1032,7 +1032,7 @@ export default function App({ onNavChange }) {
                           href={`https://medlineplus.gov/search.html?query=${encodeURIComponent(selectedMed.name)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ padding: "5px 12px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 6, color: "#10b981", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600, textDecoration: "none", display: "inline-block" }}
+                          style={{ padding: "5px 12px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 6, color: "#2dd4a0", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600, textDecoration: "none", display: "inline-block" }}
                         >
                           Learn More ↗
                         </a>
@@ -1125,7 +1125,7 @@ export default function App({ onNavChange }) {
                     <button
                       onClick={() => handleCompleteRefill(selectedMed)}
                       title={`Advance refill date by ${selectedMed.daysSupply ?? 30} days`}
-                      style={{ flex: 1, padding: "9px 10px", background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#2dd4a0", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                     >
                       {completeFlash === "refill" ? "✓ Refill Recorded!" : "✓ Complete Refill"}
                     </button>
@@ -1199,7 +1199,7 @@ export default function App({ onNavChange }) {
                           )}
                           <button
                             onClick={() => downloadICS(selectedMed, existing)}
-                            style={{ width: "100%", padding: "7px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 7, color: "#10b981", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                            style={{ width: "100%", padding: "7px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 7, color: "#2dd4a0", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                           >📅 Download Calendar File</button>
                           <div style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 6, lineHeight: 1.55, textAlign: "center" }}>
                             Open the downloaded file on your phone to add to Apple Calendar, Google Calendar, or Outlook
