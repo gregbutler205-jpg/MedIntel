@@ -58,7 +58,7 @@ export default function RIEWidget({ onNavChange }) {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 1401, display: "flex", justifyContent: "flex-end" }} onClick={() => setOpen(false)}>
           <div onClick={e => e.stopPropagation()} style={{ width: 460, maxWidth: "100%", height: "100%", background: "#07090f", borderLeft: "1px solid #1a2f4a", display: "flex", flexDirection: "column", fontFamily: "'Sora',sans-serif" }}>
             {/* Header */}
-            <div style={{ padding: "16px 18px", borderBottom: "1px solid #0d1a28", flexShrink: 0 }}>
+            <div style={{ padding: "16px 18px", borderBottom: "1px solid #1c2a40", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <span style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5" }}>Record Integrity</span>
                 <span style={{ flex: 1 }} />
@@ -113,7 +113,7 @@ export default function RIEWidget({ onNavChange }) {
                 );
               })}
             </div>
-            <div style={{ padding: "8px 14px", borderTop: "1px solid #0d1a28", fontSize: 9, color: "#4a5c6a", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
+            <div style={{ padding: "8px 14px", borderTop: "1px solid #1c2a40", fontSize: 9, color: "#4a5c6a", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
               Flags issues for your review · never changes data without confirmation
             </div>
           </div>

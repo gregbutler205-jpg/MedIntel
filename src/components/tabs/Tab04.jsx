@@ -649,7 +649,7 @@ export default function App({ onNavChange }) {
         .search-input::placeholder { color:#98afc4; }
         .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #111e30; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
         .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#f87171; }
-        .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #0d1a28; }
+        .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #1c2a40; }
         .detail-row:last-child { border-bottom:none; }
         .interaction-row { padding:10px 14px; border-radius:8px; background:#0b1220; border:1px solid #111e30; margin-bottom:6px; animation:fadeUp .35s ease both; }
         @media print {
@@ -665,7 +665,7 @@ export default function App({ onNavChange }) {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Topbar */}
-        <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
+        <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={() => onNavChange("dashboard")}
@@ -896,7 +896,7 @@ export default function App({ onNavChange }) {
                 {/* ── EDIT MODE ── */}
                 {editingMed ? (
                   <div style={{ background: "#0b1220", border: "1px solid #4f8ef7", borderRadius: 14, padding: "20px", marginBottom: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #0d1a28" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1c2a40" }}>
                       <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Edit — {editingMed.name}</div>
                       <button onClick={() => { setEditingMed(null); setDeleteConfirm(false); }}
                         style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 6, color: "#b0c4d8", fontSize: 13, cursor: "pointer", padding: "4px 8px" }}>✕</button>
@@ -1021,7 +1021,7 @@ export default function App({ onNavChange }) {
                 <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 14, padding: "20px", marginBottom: 12 }}>
 
                   {/* Drug header */}
-                  <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: "1px solid #0d1a28" }}>
+                  <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: "1px solid #1c2a40" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
                       <div>
                         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", letterSpacing: "-0.3px" }}>{selectedMed.name}</div>
@@ -1121,7 +1121,7 @@ export default function App({ onNavChange }) {
                   </div>
 
                   {/* ── Complete Refill / Renewal actions ── */}
-                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
+                  <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #1c2a40", display: "flex", gap: 8 }}>
                     <button
                       onClick={() => handleCompleteRefill(selectedMed)}
                       title={`Advance refill date by ${selectedMed.daysSupply ?? 30} days`}
@@ -1184,7 +1184,7 @@ export default function App({ onNavChange }) {
 
                       {/* Existing reminder summary */}
                       {existing && !isEditing && (
-                        <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "10px 12px" }}>
+                        <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "10px 12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                             {existing.times.map(t => (
                               <span key={t} style={{ fontSize: 11, color: "#7eb8d8", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.2)", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace" }}>

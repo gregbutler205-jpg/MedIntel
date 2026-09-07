@@ -911,7 +911,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               ) : (
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                   {log.map((e, i) => (
-                    <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", background:"#080c14", border:"1px solid #0d1a28", borderRadius:8, flexWrap:"wrap" }}>
+                    <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", background:"#080c14", border:"1px solid #1c2a40", borderRadius:8, flexWrap:"wrap" }}>
                       <div style={{ flex:1, minWidth:160 }}>
                         <div style={{ fontSize:12, fontWeight:600, color:"#c4d8ee" }}>{e.source || "Import"}</div>
                         {e.docName && <div style={{ fontSize:10, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>→ {e.docName}</div>}
@@ -1047,13 +1047,13 @@ export default function ImportTab({ onImport, onNavChange }) {
                   {/* Expanded history grid */}
                   {isExpanded && (
                     <div style={{ borderTop:"1px solid #111e30", padding:"12px 16px 14px" }}>
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, paddingBottom:6, borderBottom:"1px solid #0d1a28", marginBottom:4 }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, paddingBottom:6, borderBottom:"1px solid #1c2a40", marginBottom:4 }}>
                         {["DATE","VALUE","RANGE","FACILITY",""].map((h,j) => (
                           <div key={j} style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", padding:"0 4px" }}>{h}</div>
                         ))}
                       </div>
                       {group.map((lab, j) => (
-                        <div key={lab.id} style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, padding:"7px 0", borderBottom: j < group.length-1 ? "1px solid #0d1a28" : "none", alignItems:"center" }}>
+                        <div key={lab.id} style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, padding:"7px 0", borderBottom: j < group.length-1 ? "1px solid #1c2a40" : "none", alignItems:"center" }}>
                           <div style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>
                             {lab.date ? new Date(lab.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
                           </div>

@@ -1037,8 +1037,8 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
         .time-btn { padding:4px 10px; border-radius:6px; border:none; font-size:10px; font-family:'DM Mono',monospace; cursor:pointer; background:#0f1e30; color:#7eb8d8; font-weight:500; }
         .time-btn:hover { background:#162840; }
         .time-btn.on { background:#4f8ef7; color:#fff; }
-        .ai-panel { position:absolute; top:0; right:0; width:300px; height:100%; background:#080c14; border-left:1px solid #0d1a28; display:flex; flex-direction:column; animation:slideInRight .22s ease both; z-index:10; }
-        .drow { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #0d1a28; }
+        .ai-panel { position:absolute; top:0; right:0; width:300px; height:100%; background:#080c14; border-left:1px solid #1c2a40; display:flex; flex-direction:column; animation:slideInRight .22s ease both; z-index:10; }
+        .drow { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #1c2a40; }
         .drow:last-child { border-bottom:none; }
         .ai-q-btn { width:100%; padding:9px 12px; background:#0f1e30; border:1px solid #1a3050; border-radius:8px; color:#7eb8d8; font-family:'Sora',sans-serif; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:7px; text-align:left; font-weight:500; margin-bottom:7px; }
         .ai-q-btn:hover { background:#162840; color:#a8c4dc; }
@@ -1050,7 +1050,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
       {/* ── Main ── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Topbar */}
-        <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
+        <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 28px", gap: 16, flexShrink: 0 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={() => onNavChange("dashboard")}
@@ -1092,7 +1092,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
         <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
 
           {/* Left column — lab list */}
-          <div style={{ width: 292, minWidth: 292, borderRight: "1px solid #0d1a28", overflowY: "auto", padding: "20px 14px 20px 16px" }}>
+          <div style={{ width: 292, minWidth: 292, borderRight: "1px solid #1c2a40", overflowY: "auto", padding: "20px 14px 20px 16px" }}>
             <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:4 }}>
               <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Labs & Trends</h1>
               {dedupedLabs.length > 0 && (
@@ -1292,7 +1292,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       {listItems.map((item, i) => {
                         if (item.type === "header") {
                           return (
-                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 9, fontWeight: 700, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #0d1a28" }}>
+                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 9, fontWeight: 700, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1c2a40" }}>
                               <span>{item.cat}</span>
                               {/* DEC-P49: one launcher per panel header, scope = this panel (reconciled rows only). No per-row launchers. */}
                               <AILauncher
@@ -1532,7 +1532,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           No readings in the selected {trendRange}-month window. Try a wider range.
                         </div>
                       )}
-                      <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "1px solid #0d1a28" }}>
+                      <div style={{ display: "flex", gap: 16, marginTop: 10, paddingTop: 10, borderTop: "1px solid #1c2a40" }}>
                         {[
                           { dot: null, label: chartRangeSource === "doctor" ? "Your doctor's range" : "Reference range" },
                           { dot: "#ef4444", label: "Out of range" },
@@ -1556,7 +1556,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           const hv = parseFloat(h.value);
                           const bad = low !== null && high !== null && !isNaN(hv) && (hv < low || hv > high);
                           return (
-                            <div key={i} style={{ textAlign: "center", padding: "8px 4px", background: "#080c14", borderRadius: 6, border: bad ? "1px solid rgba(239,68,68,.3)" : "1px solid #0d1a28" }}>
+                            <div key={i} style={{ textAlign: "center", padding: "8px 4px", background: "#080c14", borderRadius: 6, border: bad ? "1px solid rgba(239,68,68,.3)" : "1px solid #1c2a40" }}>
                               <div style={{ fontSize: 8, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{h.date || "—"}</div>
                               <div style={{ fontSize: 12, fontWeight: 700, color: bad ? "#f87171" : "#a8c4dc" }}>{h.value}</div>
                             </div>
@@ -1676,7 +1676,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
           <div style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:16, width:"100%", maxWidth:580, maxHeight:"82vh", display:"flex", flexDirection:"column", overflow:"hidden", boxShadow:"0 24px 60px rgba(0,0,0,.7)" }}>
 
             {/* Modal header */}
-            <div style={{ padding:"18px 22px 14px", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"flex-start", gap:12, flexShrink:0 }}>
+            <div style={{ padding:"18px 22px 14px", borderBottom:"1px solid #1c2a40", display:"flex", alignItems:"flex-start", gap:12, flexShrink:0 }}>
               <span style={{ fontSize:18, color:"#f59e0b", marginTop:1 }}>⚡</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:"#c4d8ee", marginBottom:3 }}>Group Tests</div>
@@ -1813,7 +1813,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             </div>
 
             {/* Modal footer */}
-            <div style={{ padding:"14px 22px", borderTop:"1px solid #0d1a28", display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+            <div style={{ padding:"14px 22px", borderTop:"1px solid #1c2a40", display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
               <div style={{ flex:1, fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                 {(() => {
                   if (dupGroups.length === 0) return "No auto-detected duplicates";

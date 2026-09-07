@@ -374,8 +374,8 @@ function LogPanel({ onClose, onSave }) {
   ];
 
   return (
-    <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #0d1a28", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
-      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #1c2a40", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
+      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Log Vitals</div>
@@ -419,7 +419,7 @@ function LogPanel({ onClose, onSave }) {
           <div style={{ fontSize: 11, color: "#98afc4", lineHeight: 1.6 }}>Leave any field blank to skip it. BMI is calculated automatically from your weight and height in Profile.</div>
         </div>
       </div>
-      <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8 }}>
+      <div style={{ padding: "14px 18px", borderTop: "1px solid #1c2a40", display: "flex", gap: 8 }}>
         <button onClick={() => onSave(form)}
           style={{ flex: 1, padding: "11px", background: "#10b981", border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
           Save Entry
@@ -624,7 +624,7 @@ export default function App({ onNavChange }) {
         .time-btn{padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;background:#0f1e30;color:#7eb8d8;font-weight:500}
         .time-btn:hover{background:#162840}
         .time-btn.on{background:#4f8ef7;color:#fff}
-        .hist-row{display:grid;grid-template-columns:72px 88px 54px 54px 62px 54px 64px 52px;gap:0;padding:8px 0;border-bottom:1px solid #0d1a28;align-items:center;font-size:11px}
+        .hist-row{display:grid;grid-template-columns:72px 88px 54px 54px 62px 54px 64px 52px;gap:0;padding:8px 0;border-bottom:1px solid #1c2a40;align-items:center;font-size:11px}
         .hist-row:last-child{border-bottom:none}
         @media print { .no-print { display:none !important; } body { background:white !important; } }
       `}</style>
@@ -635,7 +635,7 @@ export default function App({ onNavChange }) {
       {/* Main */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         {/* Topbar */}
-        <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
+        <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #1c2a40", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
           <div style={{ flex:1, display:"flex", alignItems:"center", gap:8 }}>
             <button
               onClick={() => onNavChange("dashboard")}
@@ -681,7 +681,7 @@ export default function App({ onNavChange }) {
         <div style={{ flex:1, display:"flex", overflow:"hidden", position:"relative" }}>
 
           {/* Left — vital selector */}
-          <div style={{ width:234, minWidth:234, borderRight:"1px solid #0d1a28", overflowY:"auto", padding:"18px 12px" }}>
+          <div style={{ width:234, minWidth:234, borderRight:"1px solid #1c2a40", overflowY:"auto", padding:"18px 12px" }}>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:21, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px", marginBottom:3 }}>Vitals</h1>
             <p style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:14 }}>{manualReadings.length} readings · {flaggedManual} flagged</p>
 
@@ -928,7 +928,7 @@ export default function App({ onNavChange }) {
                     if (!cols.length) return null;
                     return (
                       <>
-                        <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, gap:8, borderBottom:"1px solid #0d1a28", paddingBottom:7, marginBottom:2 }}>
+                        <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, gap:8, borderBottom:"1px solid #1c2a40", paddingBottom:7, marginBottom:2 }}>
                           {cols.map(c => <div key={c.h} style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{c.h}</div>)}
                         </div>
                         {rows.length === 0 && <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", padding:"10px 0" }}>No readings yet.</div>}
@@ -951,7 +951,7 @@ export default function App({ onNavChange }) {
                   <div className="section-label">Daily Watch Data</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:6 }}>
                     {filteredData.slice(0,28).map(r => (
-                      <div key={r.ts} style={{ background:"#080c14", borderRadius:8, border:"1px solid #0d1a28", padding:"8px 10px" }}>
+                      <div key={r.ts} style={{ background:"#080c14", borderRadius:8, border:"1px solid #1c2a40", padding:"8px 10px" }}>
                         <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{formatDateUS(r.date)}</div>
                         <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:9, color:"#98afc4" }}>bpm</span></div>
                         <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>

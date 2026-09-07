@@ -46,7 +46,7 @@ function ReportArchiveRow({ showToast }) {
   }
 
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #1c2a40" }}>
       <div>
         <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>REPORT ARCHIVE</div>
         <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.6 }}>
@@ -129,7 +129,7 @@ function PilotTokenModal({ current, onSave, onClose }) {
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ borderTop: "1px solid #0d1a28" }}>
+    <div style={{ borderTop: "1px solid #1c2a40" }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{ width: "100%", background: "none", border: "none", padding: "10px 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", gap: 10 }}
@@ -524,7 +524,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
+      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>Settings &amp; Backup</div>
         <div style={{ flex: 1 }} />
         <button style={btnPrimary} onClick={handleBackupNow}>Backup Now</button>
@@ -570,7 +570,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 <span style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>Connected</span>
               </div>
             </div>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:12, borderTop:"1px solid #0d1a28" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:12, borderTop:"1px solid #1c2a40" }}>
               <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                 {syncStatus==="syncing" ? "⟳ Syncing…" :
                  syncStatus==="error"   ? "⚠ Sync failed — check connection" :
@@ -594,7 +594,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               </div>
             </div>
             {/* Weekly backup status row */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #1c2a40" }}>
               <div>
                 <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>WEEKLY SNAPSHOT</div>
                 <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
@@ -625,7 +625,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
             <ReportArchiveRow showToast={showToast} />
             {/* Sync diagnostics: key fingerprint + last merge health */}
-            <div style={{ paddingTop:10, marginTop:10, borderTop:"1px solid #0d1a28" }}>
+            <div style={{ paddingTop:10, marginTop:10, borderTop:"1px solid #1c2a40" }}>
               <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>SYNC DIAGNOSTICS</div>
               <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.7 }}>
                 Vault key fingerprint: <span style={{ color:"#7eb8d8" }}>{vaultFp || "—"}</span> · must match on every device that syncs this record (phone companion shows its own under Sync).
@@ -725,7 +725,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             { icon: "♡", iconBg: "rgba(239,68,68,.08)",  iconBorder: "rgba(239,68,68,.15)",  iconColor: "#ef4444", name: "Apple Health", sub: "Coming soon — iOS companion",                 status: "Pending", statusColor: "#f59e0b", mono: false },
             { icon: "✎", iconBg: "rgba(167,139,250,.1)", iconBorder: "rgba(167,139,250,.2)", iconColor: "#a78bfa", name: "Manual Entry", sub: "Vitals, meds, symptoms, labs",               status: "Active",  statusColor: "#10b981", mono: false },
           ].map((src, i, arr) => (
-            <div key={src.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #0d1a28" : "none" }}>
+            <div key={src.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #1c2a40" : "none" }}>
               <div style={{ width: 32, height: 32, background: src.iconBg, border: `1px solid ${src.iconBorder}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: src.mono ? 10 : 15, fontFamily: src.mono ? "'DM Mono', monospace" : "inherit", color: src.iconColor, fontWeight: src.mono ? 600 : 400, flexShrink: 0 }}>
                 {src.icon}
               </div>
@@ -766,7 +766,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <div style={sectionLbl}>Storage & Records</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
                 {liveStats.map(s => (
-                  <div key={s.label} style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: 12 }}>
+                  <div key={s.label} style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: 12 }}>
                     <div style={{ fontSize: 20, fontWeight: 700, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.val}</div>
                     <div style={{ fontSize: 10, color: "#b0c4d8", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
                   </div>
@@ -832,7 +832,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 { icon: "✦", label: "AI Tips & Prompts", sub: "Get the most from AI analysis", href: null },
                 { icon: "◷", label: "Video Walkthroughs", sub: "Step-by-step feature demos", href: null },
               ].map(item => (
-                <div key={item.label} style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10, opacity: item.href ? 1 : 0.55 }}>
+                <div key={item.label} style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10, opacity: item.href ? 1 : 0.55 }}>
                   <div style={{ fontSize: 14, color: "#4f8ef7", marginTop: 1, flexShrink: 0 }}>{item.icon}</div>
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", marginBottom: 2 }}>{item.label}</div>
@@ -859,7 +859,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={cardStyle}>
           <div style={sectionLbl}>Backup History</div>
           {backups.slice(0, 5).map(b => (
-            <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #0d1a28" }}>
+            <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #1c2a40" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: 12, color: "#7eb8d8" }}>{b.type}</div>
               <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(b.date)}</div>
@@ -905,14 +905,14 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Data since</div>
-                <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
+                <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
                   {oldest}
                 </div>
               </div>
 
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>App version</div>
-                <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
+                <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
                   Insina Health v{APP_VERSION}
                 </div>
               </div>
@@ -931,7 +931,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
 
           {/* Current mode status */}
-          <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "14px 16px" }}>
             <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Current Mode</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <div style={{
@@ -950,7 +950,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               }
             </div>
             {currentMode === "advanced" && consentDate && (
-              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #0d1a28", fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #1c2a40", fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>
                 Consent given: {consentDate}<br />
                 Consent version: v{consentVersion}
               </div>
@@ -958,7 +958,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           </div>
 
           {/* Switch controls */}
-          <div style={{ background: "#07090f", border: "1px solid #0d1a28", borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "14px 16px" }}>
             <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Switch Mode</div>
 
             {currentMode === "advanced" ? (
@@ -1044,7 +1044,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           Grouping different names for the same test (e.g. FK506 / Tacrolimus) lives in Labs &amp; Trends → Group Tests.
         </div>
         {labCatOrder.map((cat, idx) => (
-          <div key={cat} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: idx < labCatOrder.length - 1 ? "1px solid #0d1a28" : "none" }}>
+          <div key={cat} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: idx < labCatOrder.length - 1 ? "1px solid #1c2a40" : "none" }}>
             <div style={{ width: 18, textAlign: "right", fontSize: 9, color: "#3a5060", fontFamily: "'DM Mono', monospace", flexShrink: 0 }}>{idx + 1}</div>
             <div style={{ flex: 1, fontSize: 12, color: "#c4d8ee" }}>{cat}</div>
             <div style={{ display: "flex", gap: 4 }}>
@@ -1101,7 +1101,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div>
           <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Pilot access token</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, background: "#07090f", border: "1px solid #0d1a28", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
+            <div style={{ flex: 1, background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
               {pilotToken ? "•".repeat(20) : "Not set — not needed for founder use"}
             </div>
             <button onClick={() => setModal("pilot_token")} style={btnGhost}>{pilotToken ? "Change" : "Set"}</button>

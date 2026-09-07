@@ -39,7 +39,7 @@ function NoteItem({ note, active, onClick }) {
     <div
       onClick={onClick}
       style={{
-        padding: "11px 14px", cursor: "pointer", borderBottom: "1px solid #0d1a28",
+        padding: "11px 14px", cursor: "pointer", borderBottom: "1px solid #1c2a40",
         borderLeft: `2px solid ${active ? "#4f8ef7" : "transparent"}`,
         background: active ? "rgba(79,142,247,.07)" : "transparent",
         transition: "background .12s",
@@ -140,7 +140,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#07090f" }}>
       {/* Toolbar */}
-      <div style={{ height: 50, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 20px", gap: 14, flexShrink: 0 }}>
+      <div style={{ height: 50, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 20px", gap: 14, flexShrink: 0 }}>
         <select
           value={note.tag}
           onChange={e => onUpdate({ ...note, tag: e.target.value })}
@@ -401,7 +401,7 @@ export default function Notes() {
       <style>{`@media print { .no-print { display:none !important; } aside { display:none !important; } body { background:white !important; } }`}</style>
 
       {/* Topbar */}
-      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
+      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         
         <div style={{ flex: 1 }} />
         <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
@@ -412,8 +412,8 @@ export default function Notes() {
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
       {/* Left list panel */}
-      <div style={{ width: 290, minWidth: 290, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #0d1a28" }}>
+      <div style={{ width: 290, minWidth: 290, background: "#080c14", borderRight: "1px solid #1c2a40", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #1c2a40" }}>
           <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 2 }}>Notes</div>
           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#a0b4c8", letterSpacing: "1.5px", textTransform: "uppercase" }}>
             {notes.length} entries · {notes.filter(n => n.pinned).length} pinned
@@ -421,7 +421,7 @@ export default function Notes() {
         </div>
 
         {/* Search */}
-        <div style={{ padding: "10px 12px", borderBottom: "1px solid #0d1a28" }}>
+        <div style={{ padding: "10px 12px", borderBottom: "1px solid #1c2a40" }}>
           <div style={{ background: "#0b1220", border: "1px solid #111e30", borderRadius: 8, padding: "7px 12px", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: "#98afc4", fontSize: 13 }}>⌕</span>
             <input
@@ -434,7 +434,7 @@ export default function Notes() {
         </div>
 
         {/* Filter pills */}
-        <div style={{ padding: "8px 12px", display: "flex", gap: 5, flexWrap: "wrap", borderBottom: "1px solid #0d1a28" }}>
+        <div style={{ padding: "8px 12px", display: "flex", gap: 5, flexWrap: "wrap", borderBottom: "1px solid #1c2a40" }}>
           {FILTERS.map(f => (
             <div
               key={f}
@@ -470,7 +470,7 @@ export default function Notes() {
         </div>
 
         {/* New note button */}
-        <div style={{ padding: 12, borderTop: "1px solid #0d1a28" }}>
+        <div style={{ padding: 12, borderTop: "1px solid #1c2a40" }}>
           <button
             onClick={() => setShowNew(true)}
             style={{ width: "100%", padding: 10, background: "linear-gradient(135deg,rgba(79,142,247,.15),rgba(167,139,250,.1))", border: "1px solid rgba(79,142,247,.3)", borderRadius: 10, color: "#7eb8d8", fontFamily: "'Sora', sans-serif", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}

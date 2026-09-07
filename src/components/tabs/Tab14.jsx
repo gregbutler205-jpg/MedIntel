@@ -622,7 +622,7 @@ function AttachModal({ appt, onSave, onClose }) {
     const m = ATT_META[item.type];
     const checked = sel.has(attKey(item));
     return (
-      <div onClick={() => toggle(item)} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px", borderRadius:8, background: checked ? "rgba(79,142,247,.10)" : "#080c14", border:`1px solid ${checked ? "rgba(79,142,247,.35)" : "#0d1a28"}`, marginBottom:6, cursor:"pointer" }}>
+      <div onClick={() => toggle(item)} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px", borderRadius:8, background: checked ? "rgba(79,142,247,.10)" : "#080c14", border:`1px solid ${checked ? "rgba(79,142,247,.35)" : "#1c2a40"}`, marginBottom:6, cursor:"pointer" }}>
         <input type="checkbox" readOnly checked={checked} style={{ width:14, height:14 }} />
         <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
         <div style={{ flex:1, minWidth:0 }}>
@@ -678,7 +678,7 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
   const prep = loadVisitPrep(appt.id);
   const atts = appt.attachments || [];
   return (
-    <div style={{ marginTop:14, background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"14px 16px" }}>
+    <div style={{ marginTop:14, background:"#080c14", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
         <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase" }}>Records &amp; Documents</span>
         <button className="apt-btn" style={{ background:"rgba(79,142,247,.10)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8", padding:"5px 11px" }} onClick={onAttach}>+ Attach</button>
@@ -702,7 +702,7 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
       {atts.map(att => {
         const m = ATT_META[att.type] || ATT_META.document;
         return (
-          <div key={attKey(att)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, background:"#0b1220", border:"1px solid #0d1a28", marginBottom:6 }}>
+          <div key={attKey(att)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, background:"#0b1220", border:"1px solid #1c2a40", marginBottom:6 }}>
             <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{att.title}</div>
@@ -977,7 +977,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
         {rows.map(r => {
           const isOpen = openRow === r.key;
           return (
-            <div key={r.key} style={{ background: "#080c14", border: `1px solid ${isOpen ? "rgba(79,142,247,.35)" : "#0d1a28"}`, borderRadius: 10, marginBottom: 8, overflow: "hidden" }}>
+            <div key={r.key} style={{ background: "#080c14", border: `1px solid ${isOpen ? "rgba(79,142,247,.35)" : "#1c2a40"}`, borderRadius: 10, marginBottom: 8, overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", cursor: "pointer" }}
                    onClick={() => { setErr(""); setOpenRow(isOpen ? null : r.key); }}>
                 <span style={{ color: "#7eb8d8", fontSize: 15 }}>{r.icon}</span>
@@ -1182,7 +1182,7 @@ Please provide:
       </button>
       {error && <div style={{ marginTop:10, fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>⚠ {error}</div>}
       {analysis && (
-        <div style={{ marginTop:14, background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"14px 16px", fontSize:12, color:"#a8c4dc", lineHeight:1.75, whiteSpace:"pre-wrap" }}>
+        <div style={{ marginTop:14, background:"#080c14", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px", fontSize:12, color:"#a8c4dc", lineHeight:1.75, whiteSpace:"pre-wrap" }}>
           {analysis}
         </div>
       )}
@@ -1205,7 +1205,7 @@ function CalendarPickerModal({ calendars, onPick, onClose }) {
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
           {calendars.map(c => (
             <button key={c.id} onClick={() => onPick(c)}
-              style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 13px", background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, cursor:"pointer", textAlign:"left", transition:"border-color .15s" }}
+              style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 13px", background:"#080c14", border:"1px solid #1c2a40", borderRadius:10, cursor:"pointer", textAlign:"left", transition:"border-color .15s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "#1a2f4a"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#0d1a28"}>
               <span style={{ width:10, height:10, borderRadius:"50%", background:c.color, flexShrink:0 }} />
@@ -1496,7 +1496,7 @@ export default function AppointmentsTab({ onNavChange }) {
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
         .apt-card { background:#0b1220; border:1px solid #111e30; border-radius:14px; transition:border-color .2s; animation:fadeUp .35s ease both; }
         .apt-card:hover { border-color:#1a2f4a; }
-        .apt-row { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:10px; background:#080c14; border:1px solid #0d1a28; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
+        .apt-row { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:10px; background:#080c14; border:1px solid #1c2a40; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
         .apt-row:hover { border-color:#1a2f4a; }
         .apt-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; font-weight:500; cursor:pointer; border:1px solid; transition:all .15s; }
         .filter-pill { padding:5px 14px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; border:1px solid #1a2f4a; background:transparent; color:#98afc4; transition:all .15s; }
@@ -1505,7 +1505,7 @@ export default function AppointmentsTab({ onNavChange }) {
       `}</style>
 
       {/* Top bar */}
-      <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }} />
+      <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #1c2a40", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }} />
 
       <div style={{ padding:"28px", overflowY:"auto", flex:1 }}>
 
@@ -1692,7 +1692,7 @@ export default function AppointmentsTab({ onNavChange }) {
 
                 {/* Expanded detail */}
                 {isOpen && (
-                  <div style={{ margin:"-4px 0 8px 0", padding:"16px 18px", background:"#07090f", border:"1px solid #0d1a28", borderTop:"none", borderRadius:"0 0 10px 10px", animation:"fadeUp .2s ease both" }}>
+                  <div style={{ margin:"-4px 0 8px 0", padding:"16px 18px", background:"#07090f", border:"1px solid #1c2a40", borderTop:"none", borderRadius:"0 0 10px 10px", animation:"fadeUp .2s ease both" }}>
                     {/* Suggested-from banner */}
                     {appt.status === "suggested" && appt.suggestedFrom && (
                       <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 12px", background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.2)", borderRadius:8, marginBottom:12 }}>

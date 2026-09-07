@@ -115,7 +115,7 @@ export default function Records({ onNavChange }) {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #1a2840; border-radius: 4px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        .rec-row { padding: 13px 16px; border-bottom: 1px solid #0d1a28; cursor: pointer; transition: background .1s; border-left: 2px solid transparent; }
+        .rec-row { padding: 13px 16px; border-bottom: 1px solid #1c2a40; cursor: pointer; transition: background .1s; border-left: 2px solid transparent; }
         .rec-row:hover { background: #0b1220; }
         .rec-row.active { background: #0d1525; border-left-color: #4f8ef7; }
         .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
@@ -124,7 +124,7 @@ export default function Records({ onNavChange }) {
         .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #111e30; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .type-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .type-chip.active { color: #4f8ef7; border-color: #4f8ef7; background: rgba(79,142,247,.08); }
-        .detail-line { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #0d1a28; font-size: 12px; }
+        .detail-line { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #1c2a40; font-size: 12px; }
         .detail-line:last-child { border-bottom: none; }
         .search-input { background: #0b1220; border: 1px solid #111e30; color: #c4d8ee; padding: 7px 12px 7px 32px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; width: 220px; transition: border-color .15s; }
         .search-input::placeholder { color: #98afc4; }
@@ -139,7 +139,7 @@ export default function Records({ onNavChange }) {
       `}</style>
 
       {/* Topbar */}
-      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
+      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px" }}>
           Medical Records
         </div>
@@ -163,7 +163,7 @@ export default function Records({ onNavChange }) {
       </div>
 
       {/* Filter chips */}
-      <div style={{ background: "#080c14", borderBottom: "1px solid #0d1a28", padding: "10px 24px", display: "flex", gap: 8, flexShrink: 0, overflowX: "auto", alignItems: "center" }}>
+      <div style={{ background: "#080c14", borderBottom: "1px solid #1c2a40", padding: "10px 24px", display: "flex", gap: 8, flexShrink: 0, overflowX: "auto", alignItems: "center" }}>
         {FILTERS.map(f => (
           <button key={f} className={`filter-chip${filter === f ? " active" : ""}`} onClick={() => setFilter(f)}>
             {f}
@@ -179,7 +179,7 @@ export default function Records({ onNavChange }) {
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
         {/* Record list */}
-        <div style={{ width: 320, minWidth: 320, borderRight: "1px solid #0d1a28", overflowY: "auto" }}>
+        <div style={{ width: 320, minWidth: 320, borderRight: "1px solid #1c2a40", overflowY: "auto" }}>
           {filtered.length === 0 && (
             <div style={{ padding: 32, textAlign: "center", fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
               No records found

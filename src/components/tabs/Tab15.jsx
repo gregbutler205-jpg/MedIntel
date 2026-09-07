@@ -106,7 +106,7 @@ function Icd10Lookup({ value, onChange, inp }) {
             <div
               key={item.code}
               onMouseDown={() => pick(item)}
-              style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #0d1a28", display:"flex", gap:10, alignItems:"flex-start" }}
+              style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #1c2a40", display:"flex", gap:10, alignItems:"flex-start" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >

@@ -92,7 +92,7 @@ function CptLookup({ value, onChange, onPick, inp }) {
         <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, right:0, background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:8, zIndex:400, maxHeight:240, overflowY:"auto", boxShadow:"0 8px 24px rgba(0,0,0,.5)" }}>
           {results.map(item => (
             <div key={item.code} onMouseDown={() => pick(item)}
-              style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #0d1a28", display:"flex", gap:10, alignItems:"flex-start" }}
+              style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #1c2a40", display:"flex", gap:10, alignItems:"flex-start" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#4f8ef7", flexShrink:0, minWidth:52 }}>{item.code}</span>

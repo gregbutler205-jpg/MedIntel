@@ -269,7 +269,7 @@ function Timeline() {
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{a.title}</div>
               <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: prep.length ? 10 : 0 }}>{doctorName}{a.facility ? ` · ${a.facility}` : ""}</div>
               {prep.length > 0 && (
-                <div style={{ borderTop:"1px solid #0d1a28", paddingTop:8 }}>
+                <div style={{ borderTop:"1px solid #1c2a40", paddingTop:8 }}>
                   <SL mb={6}>Prep Notes</SL>
                   {prep.map((p, j) => (
                     <div key={j} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4 }}>
@@ -757,7 +757,7 @@ export default function CarePlan() {
 
       {/* UI-18/UI-10: slim header — the shared shell already carries the
           branding; the old 120px logo masthead was a duplicate. */}
-      <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }}>
+      <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #1c2a40", display:"flex", alignItems:"center", padding:"0 24px", gap:12, flexShrink:0 }}>
         <div style={{ fontFamily:serif, fontSize:20, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.3px" }}>Care Team</div>
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>

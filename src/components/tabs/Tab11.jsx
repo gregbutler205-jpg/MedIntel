@@ -1029,7 +1029,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           scripts in the srcdoc. */}
       {previewHtml && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9600, background: "rgba(0,0,0,.78)", display: "flex", flexDirection: "column" }}>
-          <div style={{ height: 48, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 20px", gap: 12, flexShrink: 0 }}>
+          <div style={{ height: 48, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 20px", gap: 12, flexShrink: 0 }}>
             <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 16, color: "#dde8f5", flex: 1 }}>Report Preview</div>
             <span style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>exactly as Save &amp; Print produces it</span>
             {/* v1.54.0 (Greg): print straight from the preview — same DEC-C9
@@ -1071,7 +1071,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
       )}
 
       {/* Topbar */}
-      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
+      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         {view === "session" ? (
           <button
             onClick={closeSession}
@@ -1169,7 +1169,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
           {/* Sidebar — Quick Prompts and Data Used collapse (UI-15). */}
-          <div style={{ width: 236, minWidth: 236, borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", padding: "16px 12px", overflowY: "auto" }}>
+          <div style={{ width: 236, minWidth: 236, borderRight: "1px solid #1c2a40", display: "flex", flexDirection: "column", padding: "16px 12px", overflowY: "auto" }}>
             <button
               onClick={() => setQuickPromptsOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 8 }}
@@ -1188,7 +1188,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               </div>
             )}
 
-            <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
+            <div style={{ borderTop: "1px solid #1c2a40", paddingTop: 14, marginBottom: 14 }}>
               <button
                 onClick={() => setDataUsedOpen(o => !o)}
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 10 }}
@@ -1205,7 +1205,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             </div>
 
             {/* Reference Documents */}
-            <div style={{ borderTop: "1px solid #0d1a28", paddingTop: 14, marginBottom: 14 }}>
+            <div style={{ borderTop: "1px solid #1c2a40", paddingTop: 14, marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                 <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Reference Docs</div>
                 <button
@@ -1300,7 +1300,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
           {/* Deterministic session header — system-composed, never model text */}
-          <div style={{ borderBottom: "1px solid #0d1a28", padding: "10px 28px", flexShrink: 0, background: "#080c14" }}>
+          <div style={{ borderBottom: "1px solid #1c2a40", padding: "10px 28px", flexShrink: 0, background: "#080c14" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
               <span style={{ fontFamily: "'DM Serif Display',serif", fontSize: 15, color: "#dde8f5" }}>
                 {activeSession ? activeSession.title : "New session"}
@@ -1405,7 +1405,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           </div>
 
           {/* End-actions bar (spec Sec 1: Save to Notes, Save and Print, Close) */}
-          <div style={{ borderTop: "1px solid #0d1a28", padding: "10px 24px", background: "#080c14", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ borderTop: "1px solid #1c2a40", padding: "10px 24px", background: "#080c14", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
             <button className="end-btn" onClick={saveToNotes} disabled={!canAct}
               title="Save this session's verbatim transcript to My Notes"
               style={{ background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", color: "#2dd4a0" }}>
@@ -1436,7 +1436,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           </div>
 
           {/* Composer */}
-          <div style={{ borderTop: "1px solid #0d1a28", padding: "14px 24px", background: "#07090f", flexShrink: 0 }}>
+          <div style={{ borderTop: "1px solid #1c2a40", padding: "14px 24px", background: "#07090f", flexShrink: 0 }}>
             {/* WO-3: paddingRight keeps Send clear of the floating Record
                 Integrity button (fixed at right:18, 48px wide). That button is
                 functional — pointer-events:none would break it — so the input

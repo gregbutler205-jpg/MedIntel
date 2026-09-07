@@ -354,7 +354,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
                 <span style={{ fontSize: 11, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{date ?? "—"}</span>
               </div>
             ))}
-            <div style={{ borderTop: "1px solid #0d1a28", marginTop: 10, paddingTop: 10 }}>
+            <div style={{ borderTop: "1px solid #1c2a40", marginTop: 10, paddingTop: 10 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
                 <span style={{ fontSize: 11, color: "#4f8ef7", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
                 <span style={{ fontSize: 11, color: lastSyncTs ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
@@ -403,11 +403,11 @@ function RefillsCard({ meds }) {
         <div style={{ fontSize:14, color:"#f59e0b", marginTop:2, transition:"transform .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>▾</div>
       </div>
       {open && (
-        <div style={{ marginTop:12, paddingTop:10, borderTop:"1px solid #0d1a28" }}>
+        <div style={{ marginTop:12, paddingTop:10, borderTop:"1px solid #1c2a40" }}>
           {refills.length === 0
             ? <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>No refills due in the next 7 days</div>
             : refills.map((r, i) => (
-              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"5px 0", borderBottom:i<refills.length-1?"1px solid #0d1a28":"none" }}>
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"5px 0", borderBottom:i<refills.length-1?"1px solid #1c2a40":"none" }}>
                 <div style={{ width:5, height:5, borderRadius:"50%", background:"#f59e0b", flexShrink:0, marginTop:3 }} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:11, color:"#c4d8ee" }}>{r.name}</div>
@@ -958,7 +958,7 @@ function AppShell() {
         .alert-row { display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #111e30; margin-bottom:8px; animation:fadeUp .4s ease both; }
         .upcoming-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; background:#0b1220; border:1px solid #111e30; margin-bottom:8px; cursor:pointer; transition:border-color .15s; animation:fadeUp .4s ease both; }
         .upcoming-row:hover { border-color:#1a2f4a; }
-        .vital-row { display:grid; grid-template-columns:80px 100px 50px 60px; gap:0; padding:10px 0; border-bottom:1px solid #0d1a28; align-items:center; font-size:12px; }
+        .vital-row { display:grid; grid-template-columns:80px 100px 50px 60px; gap:0; padding:10px 0; border-bottom:1px solid #1c2a40; align-items:center; font-size:12px; }
         .vital-row:last-child { border-bottom:none; }
         .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
         .badge-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px; }
@@ -1003,7 +1003,7 @@ function AppShell() {
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
               {/* Topbar */}
-              <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 16px", gap: 12, flexShrink: 0 }}>
+              <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 16px", gap: 12, flexShrink: 0 }}>
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
                   {activeNav !== "dashboard" && (
                     <button
@@ -1177,7 +1177,7 @@ function AppShell() {
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:8 }}>
                             {vitals.map(({ label, val, unit, date, color, flag }) => (
-                              <div key={label} style={{ background:"#080c14", border:`1px solid ${flag ? "rgba(239,68,68,.25)" : "#0d1a28"}`, borderRadius:8, padding:"10px 12px" }}>
+                              <div key={label} style={{ background:"#080c14", border:`1px solid ${flag ? "rgba(239,68,68,.25)" : "#1c2a40"}`, borderRadius:8, padding:"10px 12px" }}>
                                 <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
                                 <div style={{ fontSize:14, fontWeight:700, color: val != null ? (flag ? "#f87171" : color) : "#4a5c6a", lineHeight:1, marginBottom:2 }}>
                                   {val != null ? `${val}${unit ? " " + unit : ""}` : "—"}
@@ -1288,7 +1288,7 @@ function AppShell() {
                               const initials = (d.name || "").split(" ").filter(w => /^[A-Z]/.test(w)).slice(0,2).map(w=>w[0]).join("") || "?";
                               const accentColor = d.color || "#4f8ef7";
                               return (
-                                <div key={i} style={{ background:"#080c14", border:"1px solid #0d1a28", borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"flex-start", gap:10 }}>
+                                <div key={i} style={{ background:"#080c14", border:"1px solid #1c2a40", borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"flex-start", gap:10 }}>
                                   {/* Avatar */}
                                   <div style={{ width:36, height:36, borderRadius:"50%", background: d.pcp ? "linear-gradient(135deg,rgba(79,142,247,.3),rgba(167,139,250,.2))" : `${accentColor}18`, border:`1px solid ${d.pcp ? "rgba(79,142,247,.4)" : accentColor + "28"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:600, color: accentColor, flexShrink:0 }}>
                                     {initials}
@@ -1342,7 +1342,7 @@ function AppShell() {
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                             {featuredLabs.map(({ label, lab }) => {
                               if (!lab) return (
-                                <div key={label} style={{ background: "#080c14", border: "1px solid #0d1a28", borderRadius: 8, padding: "10px 12px", opacity: 0.45 }}>
+                                <div key={label} style={{ background: "#080c14", border: "1px solid #1c2a40", borderRadius: 8, padding: "10px 12px", opacity: 0.45 }}>
                                   <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
                                   <div style={{ fontSize: 13, color: "#6a8090" }}>—</div>
                                 </div>
@@ -1351,7 +1351,7 @@ function AppShell() {
                               const isFlag = lab.flag;
                               const color = isFlag ? "#f59e0b" : "#2dd4a0";
                               return (
-                                <div key={label} style={{ background: "#080c14", border: `1px solid ${isFlag ? "rgba(245,158,11,.25)" : "#0d1a28"}`, borderRadius: 8, padding: "10px 12px" }}>
+                                <div key={label} style={{ background: "#080c14", border: `1px solid ${isFlag ? "rgba(245,158,11,.25)" : "#1c2a40"}`, borderRadius: 8, padding: "10px 12px" }}>
                                   <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
                                   <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1 }}>{lab.value}</div>
                                   <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{lab.unit || ""}{lab.date ? ` · ${lab.date.slice(5).replace("-","/")}` : ""}</div>

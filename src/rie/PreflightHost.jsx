@@ -73,7 +73,7 @@ export default function PreflightHost({ onNavChange }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: "#07090f", border: "1px solid #1a2f4a", borderRadius: 16, width: 560, maxWidth: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", fontFamily: "'Sora',sans-serif" }}>
-        <div style={{ padding: "18px 20px 12px", borderBottom: "1px solid #0d1a28", flexShrink: 0 }}>
+        <div style={{ padding: "18px 20px 12px", borderBottom: "1px solid #1c2a40", flexShrink: 0 }}>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5" }}>Before generating: {REPORT_LABELS[ctx.reportType] || "Report"}</div>
           <div style={{ fontSize: 11, color: "#98afc4", fontFamily: mono, marginTop: 4 }}>
             {crit.length > 0 ? `${crit.length} issue(s) should be resolved or overridden before sharing.` : "A few items to review — none block this report."}
@@ -96,7 +96,7 @@ export default function PreflightHost({ onNavChange }) {
           )}
         </div>
 
-        <div style={{ padding: "12px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 10, justifyContent: "flex-end", flexShrink: 0 }}>
+        <div style={{ padding: "12px 18px", borderTop: "1px solid #1c2a40", display: "flex", gap: 10, justifyContent: "flex-end", flexShrink: 0 }}>
           <button onClick={close} style={{ padding: "9px 18px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 9, color: "#b0c4d8", fontSize: 13, cursor: "pointer" }}>Cancel</button>
           <button onClick={proceed}
             style={{ padding: "9px 20px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer",

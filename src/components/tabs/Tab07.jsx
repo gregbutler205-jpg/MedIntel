@@ -79,9 +79,9 @@ function LogPanel({ onClose, onSave }) {
   };
 
   return (
-    <div style={{ position: "absolute", top: 0, right: 0, width: 340, height: "100%", background: "#080c14", borderLeft: "1px solid #0d1a28", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
+    <div style={{ position: "absolute", top: 0, right: 0, width: 340, height: "100%", background: "#080c14", borderLeft: "1px solid #1c2a40", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
       {/* Header */}
-      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 9, color: "#4f8ef7", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>
             {step === 1 ? "STEP 1 OF 2" : "STEP 2 OF 2"}
@@ -132,7 +132,7 @@ function LogPanel({ onClose, onSave }) {
               </div>
             ))}
           </div>
-          <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", flexShrink: 0 }}>
+          <div style={{ padding: "14px 18px", borderTop: "1px solid #1c2a40", flexShrink: 0 }}>
             <button onClick={() => canProceed && setStep(2)}
               style={{ width: "100%", padding: "11px", background: canProceed ? "#4f8ef7" : "#0f1e30", border: "none", borderRadius: 9, color: canProceed ? "#fff" : "#98afc4", fontSize: 13, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: canProceed ? "pointer" : "default", transition: "all .15s" }}>
               Next →
@@ -191,7 +191,7 @@ function LogPanel({ onClose, onSave }) {
             </div>
           </div>
 
-          <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", display: "flex", gap: 8, flexShrink: 0 }}>
+          <div style={{ padding: "14px 18px", borderTop: "1px solid #1c2a40", display: "flex", gap: 8, flexShrink: 0 }}>
             <button onClick={() => setStep(1)}
               style={{ padding: "11px 14px", background: "#0b1220", border: "1px solid #111e30", borderRadius: 9, color: "#b0c4d8", fontSize: 13, fontFamily: "'Sora',sans-serif", cursor: "pointer" }}>
               ← Back
@@ -237,8 +237,8 @@ function SeverityBar({ value }) {
 // Detail side panel
 function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
   return (
-    <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #0d1a28", display: "flex", flexDirection: "column", zIndex: 10, animation: "slideInRight .2s ease both" }}>
-      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+    <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #1c2a40", display: "flex", flexDirection: "column", zIndex: 10, animation: "slideInRight .2s ease both" }}>
+      <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
           <div style={{ fontSize: 9, color: entry.status === "active" ? "#f87171" : "#2dd4a0", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 5, fontWeight: 600 }}>
             {entry.status === "active" ? "● ACTIVE" : `✓ RESOLVED${entry.resolvedDate ? ` ${entry.resolvedDate}` : ""}`}
@@ -303,7 +303,7 @@ function DetailPanel({ entry, onClose, onResolve, onNavToAI }) {
       </div>
 
       {entry.status === "active" && (
-        <div style={{ padding: "14px 18px", borderTop: "1px solid #0d1a28", flexShrink: 0 }}>
+        <div style={{ padding: "14px 18px", borderTop: "1px solid #1c2a40", flexShrink: 0 }}>
           <button onClick={() => onResolve(entry.id)}
             style={{ width: "100%", padding: "10px", background: "#0b1220", border: "1px solid #10b981", borderRadius: 9, color: "#2dd4a0", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer" }}>
             ✓ Mark as Resolved
@@ -411,7 +411,7 @@ export default function App({ onNavChange }) {
       {/* Main */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         {/* Topbar */}
-        <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #0d1a28", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
+        <div style={{ height:54, background:"#080c14", borderBottom:"1px solid #1c2a40", display:"flex", alignItems:"center", padding:"0 28px", gap:16, flexShrink:0 }}>
           <div style={{ flex:1, display:"flex", alignItems:"center", gap:8 }}>
             <button
               onClick={() => onNavChange("dashboard")}
@@ -545,7 +545,7 @@ export default function App({ onNavChange }) {
                       </div>
                       <SeverityBar value={entry.severity} />
                       {entry.note && (
-                        <div style={{ fontSize:11, color:"#b0c4d8", marginTop:9, lineHeight:1.55, borderTop:"1px solid #0d1a28", paddingTop:9 }}>
+                        <div style={{ fontSize:11, color:"#b0c4d8", marginTop:9, lineHeight:1.55, borderTop:"1px solid #1c2a40", paddingTop:9 }}>
                           {entry.note}
                         </div>
                       )}

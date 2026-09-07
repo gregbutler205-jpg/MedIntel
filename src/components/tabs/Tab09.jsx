@@ -613,7 +613,7 @@ export default function DocumentsTab() {
         .doc-cat { display:flex; align-items:center; gap:9px; padding:7px 12px; border-radius:8px; cursor:pointer; transition:all .15s; font-size:12px; color:#b0c4d8; user-select:none; }
         .doc-cat:hover { background:rgba(79,142,247,.05); color:#7eb8d8; }
         .doc-cat.active { background:rgba(79,142,247,.08); color:#4f8ef7; }
-        .doc-row { padding:12px 14px; border-radius:10px; border:1px solid #0d1a28; background:#080c14; cursor:pointer; transition:all .15s; margin-bottom:6px; animation:fadeUp .3s ease both; }
+        .doc-row { padding:12px 14px; border-radius:10px; border:1px solid #1c2a40; background:#080c14; cursor:pointer; transition:all .15s; margin-bottom:6px; animation:fadeUp .3s ease both; }
         .doc-row:hover { border-color:#111e30; background:#0a0f1c; }
         .doc-row.selected { border-color:#1a2f4a; background:#0b1220; }
         .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:9px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#4f8ef7; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
@@ -622,7 +622,7 @@ export default function DocumentsTab() {
         .doc-search:focus { border-color:#1a2f4a; }
         .doc-search::placeholder { color:#a0b4c8; }
         .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
-        .preview-area { font-family:'DM Mono',monospace; font-size:11px; color:#b0c4d8; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #0d1a28; border-radius:10px; padding:18px; overflow-y:auto; flex:1; min-height:0; }
+        .preview-area { font-family:'DM Mono',monospace; font-size:11px; color:#b0c4d8; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #1c2a40; border-radius:10px; padding:18px; overflow-y:auto; flex:1; min-height:0; }
         .filter-chip { padding:5px 12px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #111e30; background:transparent; color:#b0c4d8; }
         .filter-chip.active { border-color:rgba(79,142,247,.4); background:rgba(79,142,247,.08); color:#7eb8d8; }
         .act-btn { padding:6px 13px; border-radius:7px; font-family:'Sora',sans-serif; font-size:11px; cursor:pointer; transition:all .15s; }
@@ -635,7 +635,7 @@ export default function DocumentsTab() {
       <input ref={scanFileRef} type="file" accept=".pdf" onChange={handleScanFileSelected} style={{ display: "none" }} />
 
       {/* Topbar */}
-      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
+      <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         <div style={{ flex: 1 }} />
         <button onClick={() => setShowUpload(true)}
           style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
@@ -650,7 +650,7 @@ export default function DocumentsTab() {
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
         {/* Category sidebar */}
-        <div style={{ width: 210, minWidth: 210, background: "#080c14", borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", padding: "20px 10px" }}>
+        <div style={{ width: 210, minWidth: 210, background: "#080c14", borderRight: "1px solid #1c2a40", display: "flex", flexDirection: "column", padding: "20px 10px" }}>
           <div className="section-label" style={{ padding: "0 12px" }}>Categories</div>
           {categories.map(cat => (
             <div
@@ -679,7 +679,7 @@ export default function DocumentsTab() {
             ) : null;
           })()}
 
-          <div style={{ marginTop: "auto", padding: "12px", borderTop: "1px solid #0d1a28" }}>
+          <div style={{ marginTop: "auto", padding: "12px", borderTop: "1px solid #1c2a40" }}>
             <button onClick={() => setShowUpload(true)}
               style={{ width: "100%", padding: "9px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#7eb8d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>
               + Upload Document
@@ -688,9 +688,9 @@ export default function DocumentsTab() {
         </div>
 
         {/* Document list */}
-        <div style={{ width: 320, minWidth: 320, borderRight: "1px solid #0d1a28", display: "flex", flexDirection: "column", background: "#07090f" }}>
+        <div style={{ width: 320, minWidth: 320, borderRight: "1px solid #1c2a40", display: "flex", flexDirection: "column", background: "#07090f" }}>
           {/* Search + filters */}
-          <div style={{ padding: "16px 14px 12px", borderBottom: "1px solid #0d1a28" }}>
+          <div style={{ padding: "16px 14px 12px", borderBottom: "1px solid #1c2a40" }}>
             <input className="doc-search" placeholder="Search documents, providers, tags…"
               value={search} onChange={e => setSearch(e.target.value)} />
             <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
@@ -760,7 +760,7 @@ export default function DocumentsTab() {
           {selectedDoc ? (
             <>
               {/* Detail header */}
-              <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid #0d1a28", background: "#07090f", flexShrink: 0 }}>
+              <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid #1c2a40", background: "#07090f", flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
                   <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 19, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px", lineHeight: 1.3, flex: 1, minWidth: 0, paddingRight: 12 }}>
                     {selectedDoc.flagged && <span style={{ color: "#f87171", marginRight: 8 }}>⚠</span>}
@@ -929,7 +929,7 @@ export default function DocumentsTab() {
                         {docFindings.map(f => {
                           const fc = FINDING_COLORS[f.category] || FINDING_COLORS.other;
                           return (
-                            <div key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", background: "#080c14", border: "1px solid #0d1a28", borderRadius: 8 }}>
+                            <div key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", background: "#080c14", border: "1px solid #1c2a40", borderRadius: 8 }}>
                               <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 10, fontFamily: "'DM Mono',monospace", background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`, flexShrink: 0, marginTop: 1, whiteSpace: "nowrap" }}>
                                 {f.category}
                               </span>

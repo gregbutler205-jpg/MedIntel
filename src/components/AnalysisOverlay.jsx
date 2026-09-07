@@ -65,7 +65,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
       `}</style>
 
       {/* Screen chrome: header bar with actions (hidden in print) */}
-      <div className="ao-chrome" style={{ height: 56, background: "#080c14", borderBottom: "1px solid #0d1a28", display: "flex", alignItems: "center", padding: "0 22px", gap: 12, flexShrink: 0 }}>
+      <div className="ao-chrome" style={{ height: 56, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 22px", gap: 12, flexShrink: 0 }}>
         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</div>
         <span style={{
           fontSize: 9, fontFamily: "'DM Mono',monospace", flexShrink: 0,
@@ -97,7 +97,7 @@ export default function AnalysisOverlay({ title, content, mode = "standard", tim
       {/* DEC-046: once the report exists in My Notes, offer prep marking.
           ao-chrome → hidden in print. */}
       {markNoteId && (
-        <div className="ao-chrome" style={{ background: "#0a1018", borderBottom: "1px solid #0d1a28", padding: "9px 22px", flexShrink: 0 }}>
+        <div className="ao-chrome" style={{ background: "#0a1018", borderBottom: "1px solid #1c2a40", padding: "9px 22px", flexShrink: 0 }}>
           <PrepMarkPicker noteId={markNoteId} reportText={safeContent} />
         </div>
       )}
