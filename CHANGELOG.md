@@ -12,6 +12,44 @@ entry here, then tag the release in git (`git tag v1.5.0 && git push --tags`).
 
 ---
 
+## v1.60.0 (2026-09-06)
+
+WO_ACCESSIBLE_TOKENS_01, the mechanical accessibility pass under DEC-049
+(accessibility baseline) and DEC-050 (accessible token amendment). Unmerged
+on `feat/accessible-tokens-01` pending chat-level code review.
+
+### Changed
+- **Accessible color tokens.** Text and icon uses of the danger red, success
+  green, and accent blue move to the DEC-050 values (#f87171, #2dd4a0,
+  #6ea3ff); borders and dividers move from #0d1a28 / #111e30 to #1c2a40; the
+  dim text in the password field moves to #8fabc7. Definitions in
+  `index.css` and the companion, search, and profile palette objects change
+  with them, and a new `--accent-blue` carries the text and interactive
+  accent while `--accent` stays the brand fill. Filled buttons, avatar
+  gradients, indicator bars, data-record swatches, and every print surface
+  keep their previous colors on purpose; the session report lists each.
+- **12px floor.** Every font size below 12px in app code (1,017
+  declarations across 52 files) is raised to 12px. Print templates are
+  untouched.
+- **44px hit areas.** Buttons, role=button elements, selects, text areas,
+  text inputs, and links present at least a 44px box; icon buttons keep
+  their icon size and grow their hit area. An `.a11y-compact` opt-out exists
+  for a control that cannot reach 44px without a layout change.
+- **Visible focus everywhere.** One global `:focus-visible` ring (page
+  colored gap plus accent-blue) replaces the onboarding-only outline.
+- **Sidebar icons.** The unicode navigation glyphs become lucide-react icons
+  beside their labels; the AI Analysis row keeps the Insina AI mark
+  (DEC-P47).
+
+### Added
+- `npm run test:a11y`: axe-core WCAG 2.x A/AA check plus before/after
+  screenshots of the five main routes at 1280px and 390px, run in a local
+  Chrome against the fictional demo record (`scripts/a11yAxe.mjs`,
+  `a11y-report/` output, git-ignored). Opt-in until the deploy pipeline
+  decision is made.
+- Dependencies: lucide-react 1.41.0 (runtime), axe-core 4.13.0 and
+  puppeteer-core 25 (dev).
+
 ## v1.59.0 (2026-09-03)
 
 ### Added
