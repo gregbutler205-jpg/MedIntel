@@ -231,7 +231,7 @@ function Phase5({ onManualEntry, onReview, onBasics, onFinish }) {
               <button onClick={invoke} style={ghost}>Download PDF</button>
               <button onClick={invoke} style={ghost}>Print</button>
             </div>
-            <p style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
+            <p style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>
               To save a PDF, choose “Save as PDF” in the print dialog.
             </p>
           </>

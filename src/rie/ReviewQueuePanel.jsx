@@ -50,7 +50,7 @@ export default function RIEWidget({ onNavChange }) {
           boxShadow: `0 0 14px ${dotColor}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 }}>
         ⛨
         {badge > 0 && (
-          <span style={{ position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, background: dotColor, color: "#fff", fontSize: 10, fontWeight: 700, fontFamily: mono, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{badge}</span>
+          <span style={{ position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, background: dotColor, color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: mono, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{badge}</span>
         )}
       </button>
 
@@ -66,14 +66,14 @@ export default function RIEWidget({ onNavChange }) {
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 {["critical", "warning", "info"].map(s => (
-                  <span key={s} style={{ fontSize: 10, fontFamily: mono, color: SEV[s].color, background: SEV[s].bg, border: `1px solid ${SEV[s].bd}`, borderRadius: 5, padding: "2px 8px" }}>{c[s]} {SEV[s].label}</span>
+                  <span key={s} style={{ fontSize: 12, fontFamily: mono, color: SEV[s].color, background: SEV[s].bg, border: `1px solid ${SEV[s].bd}`, borderRadius: 5, padding: "2px 8px" }}>{c[s]} {SEV[s].label}</span>
                 ))}
                 <span style={{ flex: 1 }} />
-                <button onClick={rescan} disabled={scanning} style={{ fontSize: 10, fontFamily: mono, color: "#7eb8d8", background: "rgba(79,142,247,.10)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, padding: "4px 9px", cursor: "pointer" }}>{scanning ? "Scanning…" : "↻ Re-scan"}</button>
+                <button onClick={rescan} disabled={scanning} style={{ fontSize: 12, fontFamily: mono, color: "#7eb8d8", background: "rgba(79,142,247,.10)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, padding: "4px 9px", cursor: "pointer" }}>{scanning ? "Scanning…" : "↻ Re-scan"}</button>
               </div>
               {safeFixable > 0 && (
                 <button onClick={() => { applySafeFixes(findings); setFindings(runFullScan()); }}
-                  style={{ marginTop: 10, width: "100%", padding: "7px 0", fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#2dd4a0", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, cursor: "pointer" }}>
+                  style={{ marginTop: 10, width: "100%", padding: "7px 0", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#2dd4a0", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 7, cursor: "pointer" }}>
                   Apply {safeFixable} safe fix{safeFixable > 1 ? "es" : ""} (excludes medication names &amp; critical)
                 </button>
               )}
@@ -85,7 +85,7 @@ export default function RIEWidget({ onNavChange }) {
                 <div style={{ textAlign: "center", padding: "60px 20px", color: "#98afc4" }}>
                   <div style={{ fontSize: 30, color: "#2dd4a0", marginBottom: 10 }}>✓</div>
                   <div style={{ fontSize: 13 }}>No integrity issues found.</div>
-                  <div style={{ fontSize: 10, color: "#6a8090", fontFamily: mono, marginTop: 6 }}>Your record looks clean.</div>
+                  <div style={{ fontSize: 12, color: "#6a8090", fontFamily: mono, marginTop: 6 }}>Your record looks clean.</div>
                 </div>
               )}
               {findings.map(f => {
@@ -93,12 +93,12 @@ export default function RIEWidget({ onNavChange }) {
                 return (
                   <div key={f.id} style={{ background: "#0b1220", border: `1px solid ${sv.bd}`, borderLeft: `3px solid ${sv.color}`, borderRadius: 9, padding: "11px 13px", marginBottom: 9 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                      <span style={{ fontSize: 8.5, fontFamily: mono, color: sv.color, background: sv.bg, border: `1px solid ${sv.bd}`, borderRadius: 4, padding: "1px 6px", textTransform: "uppercase", letterSpacing: ".5px" }}>{sv.label}</span>
-                      <span style={{ fontSize: 9, color: "#6a8090", fontFamily: mono, textTransform: "uppercase" }}>{f.module}</span>
+                      <span style={{ fontSize: 12, fontFamily: mono, color: sv.color, background: sv.bg, border: `1px solid ${sv.bd}`, borderRadius: 4, padding: "1px 6px", textTransform: "uppercase", letterSpacing: ".5px" }}>{sv.label}</span>
+                      <span style={{ fontSize: 12, color: "#6a8090", fontFamily: mono, textTransform: "uppercase" }}>{f.module}</span>
                     </div>
                     <div style={{ fontSize: 12, color: "#c4d8ee", lineHeight: 1.5 }}>{f.message}</div>
                     {f.suggestion && (
-                      <div style={{ marginTop: 6, fontSize: 11, fontFamily: mono, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ marginTop: 6, fontSize: 12, fontFamily: mono, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span style={{ color: "#f87171", textDecoration: "line-through" }}>{f.original}</span>
                         <span style={{ color: "#6a8090" }}>→</span>
                         <span style={{ color: "#2dd4a0" }}>{f.suggestion}</span>
@@ -113,7 +113,7 @@ export default function RIEWidget({ onNavChange }) {
                 );
               })}
             </div>
-            <div style={{ padding: "8px 14px", borderTop: "1px solid #1c2a40", fontSize: 9, color: "#4a5c6a", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
+            <div style={{ padding: "8px 14px", borderTop: "1px solid #1c2a40", fontSize: 12, color: "#4a5c6a", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
               Flags issues for your review · never changes data without confirmation
             </div>
           </div>
@@ -124,5 +124,5 @@ export default function RIEWidget({ onNavChange }) {
 }
 
 function btn(color) {
-  return { fontSize: 10.5, fontFamily: "'Sora',sans-serif", color, background: "transparent", border: `1px solid ${color}55`, borderRadius: 6, padding: "5px 11px", cursor: "pointer" };
+  return { fontSize: 12, fontFamily: "'Sora',sans-serif", color, background: "transparent", border: `1px solid ${color}55`, borderRadius: 6, padding: "5px 11px", cursor: "pointer" };
 }

@@ -47,10 +47,10 @@ export default function Cards({ onBack, queueSync }) {
               <div style={{ display: "flex", gap: 8 }}>
                 {["front", "back"].map(side => (
                   <div key={side} style={{ flex: 1 }}>
-                    <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>{side}</div>
+                    <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>{side}</div>
                     {c[side]
                       ? <img src={c[side]} alt={side} onClick={() => setViewing({ card: c, side })} style={{ width: "100%", borderRadius: 8, border: `1px solid ${C.b2}`, display: "block" }} />
-                      : <div style={{ padding: "20px 0", textAlign: "center", border: `1px dashed ${C.b2}`, borderRadius: 8, color: C.ghost, fontSize: 10, fontFamily: mono }}>none</div>}
+                      : <div style={{ padding: "20px 0", textAlign: "center", border: `1px dashed ${C.b2}`, borderRadius: 8, color: C.ghost, fontSize: 12, fontFamily: mono }}>none</div>}
                   </div>
                 ))}
               </div>
@@ -59,7 +59,7 @@ export default function Cards({ onBack, queueSync }) {
               </div>
             </Card>
           ))}
-        <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "8px 0 20px" }}>Syncs with the web app · stored in your record</div>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "8px 0 20px" }}>Syncs with the web app · stored in your record</div>
       </div>
     </div>
   );
@@ -85,7 +85,7 @@ function Editor({ card, onSave, onCancel }) {
     const id = `cc-${side}`;
     return (
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>{side}</div>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>{side}</div>
         <input id={id} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
           onChange={e => { pick(side, e.target.files?.[0]); e.target.value = ""; }} />
         {form[side]
@@ -109,14 +109,14 @@ function Editor({ card, onSave, onCancel }) {
       <BackBar title={card?.id ? "Edit Card" : "Add Card"} onBack={onCancel} />
       <div style={{ overflowY: "auto", padding: 16 }}>
         <Card>
-          <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textTransform: "uppercase", marginBottom: 5 }}>Card Name</div>
+          <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textTransform: "uppercase", marginBottom: 5 }}>Card Name</div>
           <input value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} placeholder="e.g. Primary Insurance"
             style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 8, padding: "10px 12px", color: C.p, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 14 }} />
           <div style={{ display: "flex", gap: 10 }}>
             <Uploader side="front" />
             <Uploader side="back" />
           </div>
-          {err && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10 }}>{err}</div>}
+          {err && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10 }}>{err}</div>}
           <div style={{ marginTop: 16 }}>
             <Btn color={C.green} onClick={() => {
               if (!form.label.trim()) { setErr("Give the card a name."); return; }
@@ -152,7 +152,7 @@ function Viewer({ card, side, onClose }) {
           )}
           {img && <Btn onClick={share}>⤴ Share / Send</Btn>}
         </div>
-        {note && <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, textAlign: "center", marginTop: 10 }}>{note}</div>}
+        {note && <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textAlign: "center", marginTop: 10 }}>{note}</div>}
       </div>
     </div>
   );

@@ -118,7 +118,7 @@ export default function AdvisoryModal() {
           ))}
           {/* DEC-043 item 5: source + verification context, small and factual */}
           {mode !== "info" && p.advisory?.metaLine && (
-            <p style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: -6 }}>{p.advisory.metaLine}</p>
+            <p style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: -6 }}>{p.advisory.metaLine}</p>
           )}
           {mode === "info" && (
             <p style={{ fontSize: 15, lineHeight: 1.65, color: "var(--text-secondary)" }}>

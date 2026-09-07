@@ -43,10 +43,10 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>{greeting}{firstName() ? "," : ""}</div>
+          <div style={{ fontSize: 12, color: C.dim, fontFamily: mono }}>{greeting}{firstName() ? "," : ""}</div>
           {firstName() && <div style={{ fontFamily: serif, fontSize: 26, color: C.p, lineHeight: 1.15 }}>{firstName()}</div>}
           {!isDemoMode() && (
-            <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
               {lastSynced ? `Synced ${lastSynced}` : "Not synced yet"}
             </div>
           )}
@@ -57,7 +57,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
             🔔
           </button>
           <button onClick={openEmergency}
-            style={{ background: "rgba(239,68,68,.1)", border: `1px solid ${C.red}40`, borderRadius: 10, padding: "8px 12px", color: C.red, fontSize: 11, fontFamily: mono, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, lineHeight: 1.2 }}>
+            style={{ background: "rgba(239,68,68,.1)", border: `1px solid ${C.red}40`, borderRadius: 10, padding: "8px 12px", color: C.red, fontSize: 12, fontFamily: mono, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, lineHeight: 1.2 }}>
             <span style={{ fontSize: 16 }}>🚨</span>Emergency
           </button>
         </div>
@@ -78,7 +78,7 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
             <div key={a.id} style={{ background: C.card, border: `1px solid ${LEVEL_COLOR[a.level]}40`, borderLeft: `3px solid ${LEVEL_COLOR[a.level]}`, borderRadius: 10, padding: "10px 12px", marginBottom: 8, display: "flex", gap: 10, alignItems: "flex-start" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, color: LEVEL_COLOR[a.level], fontWeight: 700, marginBottom: 2 }}>{a.title}</div>
-                <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.5 }}>{a.detail}</div>
+                <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.5 }}>{a.detail}</div>
               </div>
               {!a.fixed && <button onClick={() => dismiss(a.id)} style={{ background: "none", border: "none", color: C.ghost, cursor: "pointer", fontSize: 14, flexShrink: 0 }}>✕</button>}
             </div>
@@ -98,10 +98,10 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
             <span style={{ fontSize: 22 }}>🎙️</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{appt.title} {relDate(appt.date).toLowerCase()}</div>
-              <div style={{ fontSize: 10, color: C.amber, fontFamily: mono }}>Review the brief & capture the visit</div>
-              <div style={{ fontSize: 10, color: C.s, fontFamily: mono, marginTop: 3 }}>Tap for directions & details ›</div>
+              <div style={{ fontSize: 12, color: C.amber, fontFamily: mono }}>Review the brief & capture the visit</div>
+              <div style={{ fontSize: 12, color: C.s, fontFamily: mono, marginTop: 3 }}>Tap for directions & details ›</div>
             </div>
-            <button onClick={e => { e.stopPropagation(); startVisit(appt); }} style={{ background: "#4f8ef7", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, fontFamily: mono, cursor: "pointer" }}>Start</button>
+            <button onClick={e => { e.stopPropagation(); startVisit(appt); }} style={{ background: "#4f8ef7", color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, fontFamily: mono, cursor: "pointer" }}>Start</button>
           </div>
         </Card>
       )}
@@ -110,14 +110,14 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
       <Card style={{ marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
           <SL mb={0}>Latest Vitals</SL>
-          <button onClick={() => openLog("vitals")} style={{ marginLeft: "auto", fontSize: 11, color: C.blue, fontFamily: mono, background: "none", border: "none", cursor: "pointer", padding: 0 }}>+ Log</button>
+          <button onClick={() => openLog("vitals")} style={{ marginLeft: "auto", fontSize: 12, color: C.blue, fontFamily: mono, background: "none", border: "none", cursor: "pointer", padding: 0 }}>+ Log</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
           <Vital label="Blood Pressure" unit="mmHg" val={bp ? `${bp.bp_s}/${bp.bp_d}` : "—"} color={C.blue} />
           <Vital label="Weight" unit="lbs" val={wt ? `${wt.weight}` : "—"} color={C.green} />
           <Vital label="Oxygen" unit="SpO₂" val={spo ? `${spo.spo2}%` : "—"} color={C.purple} />
         </div>
-        {bp && <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 8, textAlign: "center" }}>Last recorded {fmtShort(bp.date)}</div>}
+        {bp && <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 8, textAlign: "center" }}>Last recorded {fmtShort(bp.date)}</div>}
       </Card>
 
       {/* Quick launch */}
@@ -143,9 +143,9 @@ export default function Today({ goTab, openLog, openEmergency, openSettings, ope
 function Glance({ label, value, sub, color, onClick }) {
   return (
     <button onClick={onClick} style={{ background: C.card, border: `1px solid ${C.b2}`, borderRadius: 10, padding: "10px 8px", textAlign: "left", cursor: "pointer" }}>
-      <div style={{ fontSize: 8, color: C.ghost, fontFamily: mono, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</div>
+      <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</div>
     </button>
   );
 }
@@ -153,8 +153,8 @@ function Vital({ label, unit, val, color }) {
   return (
     <div style={{ background: C.bg, border: `1px solid ${C.b2}`, borderRadius: 8, padding: "10px 6px", textAlign: "center" }}>
       <div style={{ fontSize: 16, fontWeight: 700, color, letterSpacing: "-0.5px" }}>{val}</div>
-      <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{unit}</div>
-      <div style={{ fontSize: 8, color: C.ghost, fontFamily: mono, marginTop: 1 }}>{label}</div>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{unit}</div>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 1 }}>{label}</div>
     </div>
   );
 }

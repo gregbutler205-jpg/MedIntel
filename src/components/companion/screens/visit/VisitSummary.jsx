@@ -30,7 +30,7 @@ export default function VisitSummary({ visit: initial, onClose }) {
       {/* Saved confirmation */}
       <Card style={{ marginBottom: 12, border: `1px solid ${C.green}40` }}>
         <div style={{ fontSize: 12, color: C.green, fontFamily: mono }}>✓ Visit saved to your record</div>
-        <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 3 }}>
           {visit.hasAudio ? "Audio captured · " : ""}{visit.durationSec ? `${Math.round(visit.durationSec / 60)} min · ` : ""}
           {visit.notes ? "notes saved" : visit.hasAudio ? "audio saved" : "no notes"} · syncs to Drive
         </div>
@@ -38,7 +38,7 @@ export default function VisitSummary({ visit: initial, onClose }) {
 
       {/* Transcription stub notice (audio path) */}
       {audioPendingTranscription && (
-        <div style={{ background: "#0d1a28", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 11, color: C.dim, fontFamily: mono, lineHeight: 1.5 }}>
+        <div style={{ background: "#0d1a28", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 12, color: C.dim, fontFamily: mono, lineHeight: 1.5 }}>
           🎧 Audio transcription isn’t wired up yet, so the AI summary below is built from your written notes. Full audio transcription is coming.
         </div>
       )}
@@ -46,8 +46,8 @@ export default function VisitSummary({ visit: initial, onClose }) {
       {!summarized ? (
         <>
           <Btn onClick={generate} disabled={busy}>{busy ? "Summarizing…" : "✦ Generate AI Summary"}</Btn>
-          {err && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10 }}>{err}</div>}
-          <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>
+          {err && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10 }}>{err}</div>}
+          <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>
             You can do this later — the visit is already saved. Summarizing needs a connection.
           </div>
         </>
@@ -82,12 +82,12 @@ export default function VisitSummary({ visit: initial, onClose }) {
                 {it.kind === "med-change" ? (
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontSize: 11, color: C.purple, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px" }}>💊 Medication change</span>
+                      <span style={{ fontSize: 12, color: C.purple, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px" }}>💊 Medication change</span>
                     </div>
                     <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{it.text}</div>
-                    {it.med?.detail && <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>{it.med.detail}</div>}
+                    {it.med?.detail && <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>{it.med.detail}</div>}
                     {it.confirmed
-                      ? <div style={{ fontSize: 11, color: C.green, fontFamily: mono, marginTop: 6 }}>✓ Confirmed — medication list updated</div>
+                      ? <div style={{ fontSize: 12, color: C.green, fontFamily: mono, marginTop: 6 }}>✓ Confirmed — medication list updated</div>
                       : <button onClick={() => confirmMed(it.id)} style={{ marginTop: 8, background: "rgba(167,139,250,.14)", border: `1px solid ${C.purple}55`, borderRadius: 8, padding: "8px 14px", color: C.purple, fontSize: 12, fontFamily: mono, fontWeight: 600, cursor: "pointer" }}>
                           Confirm this change
                         </button>}
@@ -95,11 +95,11 @@ export default function VisitSummary({ visit: initial, onClose }) {
                 ) : (
                   <button onClick={() => toggle(it.id)} style={{ display: "flex", alignItems: "flex-start", gap: 10, width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0 }}>
                     <div style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${it.done ? C.green : C.ghost}`, background: it.done ? C.green + "22" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                      {it.done && <span style={{ color: C.green, fontSize: 11 }}>✓</span>}
+                      {it.done && <span style={{ color: C.green, fontSize: 12 }}>✓</span>}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, color: it.done ? C.ghost : C.p, textDecoration: it.done ? "line-through" : "none" }}>{it.text}</div>
-                      {it.due && <div style={{ fontSize: 10, color: C.amber, fontFamily: mono, marginTop: 2 }}>Due {it.due}</div>}
+                      {it.due && <div style={{ fontSize: 12, color: C.amber, fontFamily: mono, marginTop: 2 }}>Due {it.due}</div>}
                     </div>
                   </button>
                 )}
@@ -109,7 +109,7 @@ export default function VisitSummary({ visit: initial, onClose }) {
         </>
       )}
 
-      <div style={{ fontSize: 11, color: C.dim, fontFamily: mono, textAlign: "center", lineHeight: 1.6, margin: "8px 0 14px" }}>
+      <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, textAlign: "center", lineHeight: 1.6, margin: "8px 0 14px" }}>
         Mobile captured this visit. Open the web app for deeper review and editing.
       </div>
       <Btn onClick={onClose} color={C.blue}>Done</Btn>

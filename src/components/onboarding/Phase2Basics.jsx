@@ -10,7 +10,7 @@ import { toE164US, maskUSPhone, validateTransplantDate, validateDob } from "../.
 
 const ORGANS = ["Liver", "Kidney", "Heart", "Lung", "Pancreas", "Multi-organ", "Other"];
 
-const lbl = { display: "block", fontSize: 11, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 6 };
+const lbl = { display: "block", fontSize: 12, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 6 };
 const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "10px 14px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 14, outline: "none", colorScheme: "var(--scheme)" };
 const errStyle = { fontSize: 12, color: "var(--red)", marginTop: 5 };
 const warnStyle = { fontSize: 12, color: "var(--amber)", marginTop: 5 };
@@ -154,7 +154,7 @@ export default function Phase2Basics({ initialTier0, onContinue, onSkip }) {
                   onMouseEnter={e => e.currentTarget.style.background = "var(--accent-tint)"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >
-                  {c.name} <span style={{ color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--font-mono)" }}>· {c.city}, {c.state}</span>
+                  {c.name} <span style={{ color: "var(--text-dim)", fontSize: 12, fontFamily: "var(--font-mono)" }}>· {c.city}, {c.state}</span>
                 </div>
               ))}
             </div>

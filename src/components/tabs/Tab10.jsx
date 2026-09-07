@@ -28,7 +28,7 @@ const FILTERS = ["All", "Appt", "Labs", "Meds", "Symptoms", "General", "Urgent"]
 function TagBadge({ tag }) {
   const s = TAG_STYLES[tag] || TAG_STYLES.General;
   return (
-    <span style={{ background: s.bg, color: s.color, borderRadius: 4, padding: "2px 7px", fontSize: 9, fontFamily: "'DM Mono', monospace" }}>
+    <span style={{ background: s.bg, color: s.color, borderRadius: 4, padding: "2px 7px", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>
       {tag}
     </span>
   );
@@ -50,19 +50,19 @@ function NoteItem({ note, active, onClick }) {
           {note.title}
         </div>
         {note.aiGenerated && (
-          <span title="AI-generated content" style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#6ea3ff", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
+          <span title="AI-generated content" style={{ fontSize: 12, background: "rgba(79,142,247,.14)", color: "#6ea3ff", border: "1px solid rgba(79,142,247,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>AI</span>
         )}
         {note.prepTargets?.length > 0 && (
-          <span title={`Marked for appointment prep: ${note.prepTargets.map(t => t.name).join(", ")}`} style={{ fontSize: 8, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>PREP</span>
+          <span title={`Marked for appointment prep: ${note.prepTargets.map(t => t.name).join(", ")}`} style={{ fontSize: 12, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.3)", padding: "1px 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, marginRight: 4 }}>PREP</span>
         )}
         {note.pinned && <span style={{ color: "#f59e0b", flexShrink: 0, display: "flex" }} title="Pinned"><PinIcon size={11} /></span>}
       </div>
-      <div style={{ fontSize: 10, color: "#98afc4", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+      <div style={{ fontSize: 12, color: "#98afc4", lineHeight: 1.4, marginBottom: 6, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
         {note.preview}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <TagBadge tag={note.tag} />
-        <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{formatDateUS(note.date)}</span>
+        <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginLeft: "auto" }}>{formatDateUS(note.date)}</span>
       </div>
     </div>
   );
@@ -71,7 +71,7 @@ function NoteItem({ note, active, onClick }) {
 function ChecklistSection({ section, onToggle }) {
   return (
     <div style={{ marginBottom: 4 }}>
-      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
+      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
         {section.header}
       </div>
       {section.items.map(item => (
@@ -85,7 +85,7 @@ function ChecklistSection({ section, onToggle }) {
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all .15s",
             }}
           >
-            {item.done && <span style={{ fontSize: 9, color: "#2dd4a0" }}>✓</span>}
+            {item.done && <span style={{ fontSize: 12, color: "#2dd4a0" }}>✓</span>}
           </div>
           <div style={{ fontSize: 13, color: item.done ? "#b0c4d8" : "#a8c4dc", lineHeight: 1.55, textDecoration: item.done ? "line-through" : "none", transition: "color .15s" }}>
             {item.text}
@@ -99,7 +99,7 @@ function ChecklistSection({ section, onToggle }) {
 function TextSection({ section, onEdit }) {
   return (
     <div style={{ marginBottom: 4 }}>
-      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
+      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.4px", textTransform: "uppercase", marginBottom: 10, marginTop: 18 }}>
         {section.header}
       </div>
       <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px" }}>
@@ -144,18 +144,18 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         <select
           value={note.tag}
           onChange={e => onUpdate({ ...note, tag: e.target.value })}
-          style={{ background: "#0b1220", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", outline: "none", cursor: "pointer" }}
+          style={{ background: "#0b1220", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, padding: "3px 8px", fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", outline: "none", cursor: "pointer" }}
         >
           {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
         </select>
-        <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(note.date)}</span>
+        <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(note.date)}</span>
         <div style={{ flex: 1 }} />
         <span onClick={() => onPin(note.id)} role="button" style={{ color: note.pinned ? "#f59e0b" : "#98afc4", cursor: "pointer", display: "flex" }} title={note.pinned ? "Unpin" : "Pin"}><PinIcon size={14} /></span>
         <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
-        <span onClick={() => onAI(note)} style={{ fontSize: 10, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
+        <span onClick={() => onAI(note)} style={{ fontSize: 12, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
           onMouseEnter={e => e.target.style.color = "#7eb8d8"} onMouseLeave={e => e.target.style.color = "#98afc4"}>✦ AI</span>
         <div style={{ width: 1, height: 16, background: "#0d1a28" }} />
-        <span onClick={() => onDelete(note.id)} style={{ fontSize: 10, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
+        <span onClick={() => onDelete(note.id)} style={{ fontSize: 12, color: "#98afc4", cursor: "pointer", fontFamily: "'DM Mono', monospace", transition: "color .12s" }}
           onMouseEnter={e => e.target.style.color = "#ef4444"} onMouseLeave={e => e.target.style.color = "#98afc4"}>Delete</span>
       </div>
 
@@ -166,14 +166,14 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
           onChange={e => onUpdate({ ...note, title: e.target.value })}
           style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#dde8f5", fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.3px", marginBottom: 4 }}
         />
-        <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{formatDateUS(note.date)}</div>
+        <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>{formatDateUS(note.date)}</div>
 
         {/* DEC-022: explicit AI-generated label — distinguishes this from
             clinician or patient-authored text, plus a markdown download. */}
         {note.aiGenerated && (
           <div style={{ background: "rgba(79,142,247,.07)", border: "1px solid rgba(79,142,247,.22)", borderRadius: 8, padding: "9px 13px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 8, background: "rgba(79,142,247,.14)", color: "#6ea3ff", border: "1px solid rgba(79,142,247,.3)", padding: "1px 6px", borderRadius: 3, fontFamily: "'DM Mono', monospace", letterSpacing: "0.5px", flexShrink: 0 }}>AI</span>
-            <span style={{ fontSize: 11, color: "#7eb8d8", flex: 1, lineHeight: 1.5 }}>
+            <span style={{ fontSize: 12, background: "rgba(79,142,247,.14)", color: "#6ea3ff", border: "1px solid rgba(79,142,247,.3)", padding: "1px 6px", borderRadius: 3, fontFamily: "'DM Mono', monospace", letterSpacing: "0.5px", flexShrink: 0 }}>AI</span>
+            <span style={{ fontSize: 12, color: "#7eb8d8", flex: 1, lineHeight: 1.5 }}>
               AI-generated analysis — informational only, not clinician text. Verify against source records.
             </span>
             <button
@@ -185,7 +185,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
                 mode: note.aiMode,
               })}
               title="Download this analysis as a dated markdown file"
-              style={{ background: "none", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, color: "#6ea3ff", fontSize: 10, fontFamily: "'DM Mono', monospace", padding: "3px 10px", cursor: "pointer", flexShrink: 0 }}
+              style={{ background: "none", border: "1px solid rgba(79,142,247,.3)", borderRadius: 6, color: "#6ea3ff", fontSize: 12, fontFamily: "'DM Mono', monospace", padding: "3px 10px", cursor: "pointer", flexShrink: 0 }}
             >↓ .md</button>
           </div>
         )}
@@ -214,10 +214,10 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
           <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 14 }}>📅</span>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8" }}>{note.linked.label}</div>
-              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{note.linked.date}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#7eb8d8" }}>{note.linked.label}</div>
+              <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{note.linked.date}</div>
             </div>
-            <span style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", marginLeft: "auto", cursor: "pointer" }}>View →</span>
+            <span style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", marginLeft: "auto", cursor: "pointer" }}>View →</span>
           </div>
         )}
 
@@ -230,7 +230,7 @@ function EditorPanel({ note, onUpdate, onDelete, onPin, onAI }) {
         <div style={{ background: "linear-gradient(135deg,rgba(79,142,247,.08),rgba(167,139,250,.05))", border: "1px solid rgba(79,142,247,.2)", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginTop: 20 }}>
           <span style={{ color: "#6ea3ff", fontSize: 14 }}>✦</span>
           <div style={{ fontSize: 12, color: "#6ea3ff", flex: 1 }}>AI can summarize this note into a pre-visit brief or suggest questions from your labs.</div>
-          <button onClick={() => onAI(note)} style={{ fontSize: 11, color: "#6ea3ff", border: "1px solid rgba(79,142,247,.35)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Generate →</button>
+          <button onClick={() => onAI(note)} style={{ fontSize: 12, color: "#6ea3ff", border: "1px solid rgba(79,142,247,.35)", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Generate →</button>
         </div>
       </div>
     </div>
@@ -261,7 +261,7 @@ function NewNoteModal({ onSave, onClose }) {
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 480 }}>
         <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 18 }}>New Note</div>
         <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} />
-        <select value={tag} onChange={e => setTag(e.target.value)} style={{ ...inputStyle, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" }}>
+        <select value={tag} onChange={e => setTag(e.target.value)} style={{ ...inputStyle, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", fontSize: 12, cursor: "pointer" }}>
           {Object.keys(TAG_STYLES).map(t => <option key={t}>{t}</option>)}
         </select>
         <textarea placeholder="Start writing..." value={body} onChange={e => setBody(e.target.value)} rows={5}
@@ -330,7 +330,7 @@ function AIPanel({ note, onClose }) {
           <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#dde8f5", flex: 1 }}>AI Note Summary</div>
           <span onClick={onClose} style={{ color: "#98afc4", cursor: "pointer", fontSize: 16 }}>✕</span>
         </div>
-        <div style={{ fontSize: 11, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{note.title}</div>
+        <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{note.title}</div>
         {loading && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "20px 0" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981", animation: "pulse 2s infinite" }} />
@@ -404,7 +404,7 @@ export default function Notes() {
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         
         <div style={{ flex: 1 }} />
-        <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+        <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
           <PrintLabel />
         </button>
       </div>
@@ -415,7 +415,7 @@ export default function Notes() {
       <div style={{ width: 290, minWidth: 290, background: "#080c14", borderRight: "1px solid #1c2a40", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #1c2a40" }}>
           <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 2 }}>Notes</div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "#a0b4c8", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#a0b4c8", letterSpacing: "1.5px", textTransform: "uppercase" }}>
             {notes.length} entries · {notes.filter(n => n.pinned).length} pinned
           </div>
         </div>
@@ -428,7 +428,7 @@ export default function Notes() {
               placeholder="Search notes..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ background: "transparent", border: "none", outline: "none", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, width: "100%" }}
+              style={{ background: "transparent", border: "none", outline: "none", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 12, width: "100%" }}
             />
           </div>
         </div>
@@ -442,7 +442,7 @@ export default function Notes() {
               style={{
                 background: filter === f ? "rgba(79,142,247,.15)" : "#0b1220",
                 border: `1px solid ${filter === f ? "rgba(79,142,247,.35)" : "#1c2a40"}`,
-                borderRadius: 20, padding: "3px 10px", fontSize: 10,
+                borderRadius: 20, padding: "3px 10px", fontSize: 12,
                 color: filter === f ? "#6ea3ff" : "#b0c4d8",
                 fontFamily: "'DM Mono', monospace", cursor: "pointer", transition: "all .12s",
               }}
@@ -454,13 +454,13 @@ export default function Notes() {
         <div style={{ flex: 1, overflowY: "auto" }}>
           {pinned.length > 0 && (
             <>
-              <div style={{ padding: "8px 14px 3px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>PINNED</div>
+              <div style={{ padding: "8px 14px 3px", fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>PINNED</div>
               {pinned.map(n => <NoteItem key={n.id} note={n} active={selectedId === n.id} onClick={() => setSelectedId(n.id)} />)}
             </>
           )}
           {recent.length > 0 && (
             <>
-              <div style={{ padding: "10px 14px 3px", fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>RECENT</div>
+              <div style={{ padding: "10px 14px 3px", fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase" }}>RECENT</div>
               {recent.map(n => <NoteItem key={n.id} note={n} active={selectedId === n.id} onClick={() => setSelectedId(n.id)} />)}
             </>
           )}

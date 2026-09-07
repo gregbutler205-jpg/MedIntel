@@ -39,7 +39,7 @@ export default function Settings({ onBack }) {
             own vault instead of restoring. */}
         <Card style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>Sync with the web app</div>
-          <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 4, marginBottom: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 4, marginBottom: 10, lineHeight: 1.5 }}>
             Pull your record from Google Drive and share the web app's vault, so this phone shows your data and syncs both ways. You'll unlock with your existing password.
           </div>
           <button onClick={startDriveRestore}
@@ -49,12 +49,12 @@ export default function Settings({ onBack }) {
         </Card>
 
         {perm === "denied" && (
-          <div style={{ background: "#1c1200", border: `1px solid ${C.amber}40`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 11, color: "#fcd34d", fontFamily: mono, lineHeight: 1.5 }}>
+          <div style={{ background: "#1c1200", border: `1px solid ${C.amber}40`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 12, color: "#fcd34d", fontFamily: mono, lineHeight: 1.5 }}>
             Notifications are blocked in your browser settings — enable them there to use these.
           </div>
         )}
         {perm === "unsupported" && (
-          <div style={{ background: "#0d1a28", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 11, color: C.dim, fontFamily: mono }}>
+          <div style={{ background: "#0d1a28", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontSize: 12, color: C.dim, fontFamily: mono }}>
             This browser doesn’t support notifications. The app works fully without them.
           </div>
         )}
@@ -64,14 +64,14 @@ export default function Settings({ onBack }) {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{t.label}</div>
-                <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2, lineHeight: 1.4 }}>{t.blurb}</div>
+                <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 2, lineHeight: 1.4 }}>{t.blurb}</div>
               </div>
               <Toggle on={prefs[t.key]} onClick={() => toggle(t.key)} />
             </div>
           </Card>
         ))}
 
-        <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, lineHeight: 1.5, marginTop: 8, paddingBottom: 24 }}>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, lineHeight: 1.5, marginTop: 8, paddingBottom: 24 }}>
           Medication reminders are set per dose-time on the Meds screen. Reminders run while the app is open; background push will arrive in a later update.
         </div>
       </div>

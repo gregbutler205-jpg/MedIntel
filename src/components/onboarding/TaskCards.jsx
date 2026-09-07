@@ -10,7 +10,7 @@ import { saveState } from "../../lib/onboardingState.js";
 
 const card = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 6 };
 const ctaBtn = { minHeight: 36, padding: "7px 16px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 8, color: "var(--btn-p-fg)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
-const quietBtn = { background: "none", border: "none", color: "var(--text-dim)", fontSize: 11, cursor: "pointer", fontFamily: "var(--font-sans)", padding: "4px 8px", minHeight: 30 };
+const quietBtn = { background: "none", border: "none", color: "var(--text-dim)", fontSize: 12, cursor: "pointer", fontFamily: "var(--font-sans)", padding: "4px 8px", minHeight: 30 };
 
 export default function TaskCards({ onNav }) {
   const [tasks, setTasks] = useState(() => visibleTasks());
@@ -44,7 +44,7 @@ export default function TaskCards({ onNav }) {
 
   return (
     <div className="ob-focus" style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-      <div style={{ fontSize: 10, letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--text-label)", fontFamily: "var(--font-mono)" }}>
+      <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--text-label)", fontFamily: "var(--font-mono)" }}>
         Next steps
       </div>
       {tasks.map(t => t.storagePrompt ? (
@@ -62,7 +62,7 @@ export default function TaskCards({ onNav }) {
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             <div style={{ flex: 1 }}>
               {/* benefit before ask (§7) */}
-              <div style={{ fontSize: 11.5, color: "var(--text-secondary)", lineHeight: 1.5 }}>{t.benefit}</div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>{t.benefit}</div>
               <div style={{ fontSize: 13.5, color: "var(--text-bright)", fontWeight: 600, marginTop: 3 }}>{t.reason}</div>
             </div>
             <button aria-label="Dismiss this task" onClick={() => { dismissTask(t.key); refresh(); }}
@@ -70,7 +70,7 @@ export default function TaskCards({ onNav }) {
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <button style={ctaBtn} onClick={() => go(t)}>{t.ctaLabel}</button>
-            <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>~{t.minutes} min</span>
+            <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>~{t.minutes} min</span>
             <button style={quietBtn} onClick={() => { snoozeTask(t.key); refresh(); }}>Snooze a week</button>
           </div>
         </div>

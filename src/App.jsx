@@ -192,8 +192,8 @@ function DataFreshnessCard() {
       <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
         {rows.map(({ label, date }) => (
           <div key={label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-            <span style={{ fontSize:11, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>{label}</span>
-            <span style={{ fontSize:11, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily:"'DM Mono',monospace" }}>
+            <span style={{ fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>{label}</span>
+            <span style={{ fontSize:12, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily:"'DM Mono',monospace" }}>
               {date ?? "—"}
             </span>
           </div>
@@ -290,7 +290,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
       onMouseLeave={e => { e.currentTarget.style.background = extra.background || "#0b1220"; e.currentTarget.style.borderColor = extra.borderColor || "#111e30"; }}
     >
       <span style={{ fontSize: 22, lineHeight: 1 }}>{icon}</span>
-      <span style={{ fontSize: 10, color: extra.labelColor || "#7eb8d8", fontFamily: "'DM Mono',monospace", textAlign: "center", lineHeight: 1.3, whiteSpace: "pre-line" }}>{label}</span>
+      <span style={{ fontSize: 12, color: extra.labelColor || "#7eb8d8", fontFamily: "'DM Mono',monospace", textAlign: "center", lineHeight: 1.3, whiteSpace: "pre-line" }}>{label}</span>
     </button>
   );
 
@@ -332,11 +332,11 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
           <span style={{ lineHeight: 1, color: "var(--accent-soft)" }}><ClockIcon size={17} /></span>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: syncColor, flexShrink: 0, boxShadow: `0 0 5px ${syncColor}80` }} />
-            <span style={{ fontSize: 9, color: syncColor, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>
+            <span style={{ fontSize: 12, color: syncColor, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>
               {syncStatus === "syncing" ? "Syncing…" : "Last Updated"}
             </span>
           </div>
-          <span style={{ fontSize: 9, color: "#c4d8ee", fontFamily: "'DM Mono',monospace" }}>
+          <span style={{ fontSize: 12, color: "#c4d8ee", fontFamily: "'DM Mono',monospace" }}>
             {fmtSync(lastSyncTs) || "—"}
           </span>
         </button>
@@ -347,25 +347,25 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
             padding: "16px", minWidth: 230, zIndex: 200,
             boxShadow: "0 8px 32px rgba(0,0,0,.5)",
           }}>
-            <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Data Freshness</div>
+            <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>Data Freshness</div>
             {freshnessRows.map(({ label, date }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-                <span style={{ fontSize: 11, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{label}</span>
-                <span style={{ fontSize: 11, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{date ?? "—"}</span>
+                <span style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{label}</span>
+                <span style={{ fontSize: 12, color: date ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{date ?? "—"}</span>
               </div>
             ))}
             <div style={{ borderTop: "1px solid #1c2a40", marginTop: 10, paddingTop: 10 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-                <span style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
-                <span style={{ fontSize: 11, color: lastSyncTs ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+                <span style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Last Sync</span>
+                <span style={{ fontSize: 12, color: lastSyncTs ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                   {lastSyncTs ? new Date(lastSyncTs).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "—"}
                 </span>
               </div>
               {/* Last Drive backup — a date, not a time: backups are weekly, so
                   "Jul 9, 2026" answers "am I protected?" better than a clock time. */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Last Backup</span>
-                <span style={{ fontSize: 11, color: lastWeeklyBackup ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+                <span style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Last Backup</span>
+                <span style={{ fontSize: 12, color: lastWeeklyBackup ? "#c4d8ee" : "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                   {lastWeeklyBackup
                     ? formatDateUS(lastWeeklyBackup)
                     : "—"}
@@ -373,7 +373,7 @@ function DashboardHotButtons({ setActiveNav, syncStatus, lastSyncTs, lastWeeklyB
               </div>
               <button
                 onClick={() => { onSync(); setShowFreshnessPopup(false); }}
-                style={{ width: "100%", padding: "7px 0", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#7eb8d8", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                style={{ width: "100%", padding: "7px 0", background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.35)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
               >
                 Sync Now
               </button>
@@ -398,22 +398,22 @@ function RefillsCard({ meds }) {
         <div>
           <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6 }}>Refills ≤7 Days</div>
           <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:6 }}>{refills.length}</div>
-          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmt(now)} – {fmt(end)}</div>
+          <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmt(now)} – {fmt(end)}</div>
         </div>
         <div style={{ fontSize:14, color:"#f59e0b", marginTop:2, transition:"transform .2s", transform:open?"rotate(180deg)":"rotate(0deg)" }}>▾</div>
       </div>
       {open && (
         <div style={{ marginTop:12, paddingTop:10, borderTop:"1px solid #1c2a40" }}>
           {refills.length === 0
-            ? <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>No refills due in the next 7 days</div>
+            ? <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>No refills due in the next 7 days</div>
             : refills.map((r, i) => (
               <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"5px 0", borderBottom:i<refills.length-1?"1px solid #1c2a40":"none" }}>
                 <div style={{ width:5, height:5, borderRadius:"50%", background:"#f59e0b", flexShrink:0, marginTop:3 }} />
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:11, color:"#c4d8ee" }}>{r.name}</div>
-                  {r.rxNumber && <div style={{ fontSize:9, color:"#4a6070", fontFamily:"'DM Mono',monospace", marginTop:1 }}>Rx# {r.rxNumber}</div>}
+                  <div style={{ fontSize:12, color:"#c4d8ee" }}>{r.name}</div>
+                  {r.rxNumber && <div style={{ fontSize:12, color:"#4a6070", fontFamily:"'DM Mono',monospace", marginTop:1 }}>Rx# {r.rxNumber}</div>}
                 </div>
-                <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{r.refillDate}</div>
+                <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{r.refillDate}</div>
               </div>
             ))
           }
@@ -429,7 +429,7 @@ function BPCard({ readings }) {
       <div style={{ width:28, height:3, background:"#4f8ef7", borderRadius:2, marginBottom:14, boxShadow:"0 0 10px #4f8ef760" }} />
       <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6 }}>Blood Pressure</div>
       <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:6 }}>{r.bp_s ?? "--"}/{r.bp_d ?? "--"}</div>
-      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Recorded {formatDateUS(r.date, "--")}</div>
+      <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Recorded {formatDateUS(r.date, "--")}</div>
     </div>
   );
 }
@@ -467,8 +467,8 @@ function BMICard({ readings }) {
       <div style={{ width:28, height:3, background:"#10b981", borderRadius:2, marginBottom:14, boxShadow:"0 0 10px #10b98160" }} />
       <div style={{ fontSize:12, fontWeight:600, color:"#7eb8d8", marginBottom:6 }}>BMI</div>
       <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1, marginBottom:6 }}>{bmi != null ? bmi : "--"}</div>
-      <div style={{ fontSize:11, color, fontWeight:600, marginBottom:3 }}>{label}</div>
-      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+      <div style={{ fontSize:12, color, fontWeight:600, marginBottom:3 }}>{label}</div>
+      <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
         {weight != null ? `From ${weight} lbs · auto-calculated` : "Log weight in Vitals"}
       </div>
     </div>
@@ -491,7 +491,7 @@ function WeightCard({ readings }) {
         <div style={{ fontSize:26, fontWeight:700, color:"#dde8f5", letterSpacing:"-1px", lineHeight:1 }}>{cur != null ? `${cur} lbs` : "--"}</div>
         {diff != null && <div style={{ fontSize:16, color:tcolor, fontWeight:700 }}>{arrow}</div>}
       </div>
-      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+      <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
         Recorded {readings[0]?.date ?? "--"}{tlabel ? <> · <span style={{ color:tcolor }}>{tlabel}</span></> : null}
       </div>
     </div>
@@ -960,7 +960,7 @@ function AppShell() {
         .upcoming-row:hover { border-color:#1a2f4a; }
         .vital-row { display:grid; grid-template-columns:80px 100px 50px 60px; gap:0; padding:10px 0; border-bottom:1px solid #1c2a40; align-items:center; font-size:12px; }
         .vital-row:last-child { border-bottom:none; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
+        .section-label { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
         .badge-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px; }
         .ai-btn { width:100%; padding:12px; background:linear-gradient(135deg, rgba(79,142,247,.15), rgba(167,139,250,.1)); border:1px solid rgba(79,142,247,.3); border-radius:10px; color:#7eb8d8; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
         .ai-btn:hover { background:linear-gradient(135deg, rgba(79,142,247,.25), rgba(167,139,250,.18)); border-color:rgba(79,142,247,.5); color:#b8d4f0; }
@@ -1017,7 +1017,7 @@ function AppShell() {
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                         <polyline points="9 22 9 12 15 12 15 22"/>
                       </svg>
-                      <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
+                      <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Home</span>
                     </button>
                   )}
                   {/* UI-26: Search sits beside Home, same visual weight */}
@@ -1034,18 +1034,18 @@ function AppShell() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
-                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
+                    <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Search</span>
                   </button>
                   <div className="live-dot" />
-                  <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+                  <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
                 </div>
                 {/* ── Google Drive sync ── */}
                 {googleUser ? (
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#f87171" : lastSyncTs?"#2dd4a0":"#4a5c6a" }}>
+                    <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", color: syncStatus==="syncing"?"#f59e0b" : syncStatus==="error"?"#f87171" : lastSyncTs?"#2dd4a0":"#4a5c6a" }}>
                       {syncStatus==="syncing" ? "Syncing…" : syncStatus==="error" ? "Sync error" : lastSyncTs ? `↑ ${new Date(lastSyncTs).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` : ""}
                     </span>
-                    <button onClick={signIn} title="Sync with Google Drive" style={{ padding:"3px 8px", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.2)", borderRadius:6, color:"#2dd4a0", fontSize:9, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>↑↓</button>
+                    <button onClick={signIn} title="Sync with Google Drive" style={{ padding:"3px 8px", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.2)", borderRadius:6, color:"#2dd4a0", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>↑↓</button>
                     {/* DEC-P49: persistent entry button, left of the avatar, hidden on Import Records */}
                     {activeNav !== "import" && <AIEntryButton iconSize={32} source="nav" onNavigate={() => setActiveNav("ai")} />}
                     {googleUser.picture
@@ -1055,7 +1055,7 @@ function AppShell() {
                   </div>
                 ) : (
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <button onClick={signIn} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", background:"rgba(255,255,255,.04)", border:"1px solid #1a2f4a", borderRadius:20, color:"#98afc4", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                    <button onClick={signIn} style={{ display:"flex", alignItems:"center", gap:5, padding:"4px 10px", background:"rgba(255,255,255,.04)", border:"1px solid #1a2f4a", borderRadius:20, color:"#98afc4", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
                       <svg width="11" height="11" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                       Backup
                     </button>
@@ -1088,7 +1088,7 @@ function AppShell() {
                         <span style={{ color:"var(--accent-soft)", display:"flex" }}><SaveIcon /></span>
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:"#dde8f5" }}>Weekly backup overdue</div>
-                          <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
+                          <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
                             {/* UI-2: never "NaN days ago" — unparseable timestamps fall back */}
                             {daysAgoLabel(lastWeeklyBackup, null)
                               ? `Last backed up ${daysAgoLabel(lastWeeklyBackup, null)}.`
@@ -1109,7 +1109,7 @@ function AppShell() {
                             setLastWeeklyBackup(ts);
                             setShowBackupBanner(false);
                           }}
-                          style={{ padding:"7px 14px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}
+                          style={{ padding:"7px 14px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}
                         >
                           Download backup
                         </button>
@@ -1173,16 +1173,16 @@ function AppShell() {
                         <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"18px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Current Vitals</div>
-                            <div style={{ fontSize:10, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("vitals")}>Log / View all →</div>
+                            <div style={{ fontSize:12, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("vitals")}>Log / View all →</div>
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:8 }}>
                             {vitals.map(({ label, val, unit, date, color, flag }) => (
                               <div key={label} style={{ background:"#080c14", border:`1px solid ${flag ? "rgba(239,68,68,.25)" : "#1c2a40"}`, borderRadius:8, padding:"10px 12px" }}>
-                                <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                                <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
                                 <div style={{ fontSize:14, fontWeight:700, color: val != null ? (flag ? "#f87171" : color) : "#4a5c6a", lineHeight:1, marginBottom:2 }}>
                                   {val != null ? `${val}${unit ? " " + unit : ""}` : "—"}
                                 </div>
-                                {date && val != null && <div style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>{formatDateUS(date)}</div>}
+                                {date && val != null && <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>{formatDateUS(date)}</div>}
                               </div>
                             ))}
                           </div>
@@ -1198,14 +1198,14 @@ function AppShell() {
                             <div style={{ width: 8, height: 8, borderRadius: "50%", background: urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981", flexShrink: 0, boxShadow: `0 0 8px ${urgency === "high" ? "#ef4444" : urgency === "med" ? "#f59e0b" : "#10b981"}80` }} />
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 13, fontWeight: 500, color: "#c4d8ee", marginBottom: 2 }}>{label}</div>
-                              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doctor}</div>
+                              <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doctor}</div>
                               {(facility || address) && (
-                                <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 1 }}>
+                                <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 1 }}>
                                   {[facility, address].filter(Boolean).join(" · ")}
                                 </div>
                               )}
                             </div>
-                            <div style={{ fontSize: 11, color: urgency === "high" ? "#f87171" : "#7eb8d8", fontWeight: 600, fontFamily: "'DM Mono',monospace" }}>{date}</div>
+                            <div style={{ fontSize: 12, color: urgency === "high" ? "#f87171" : "#7eb8d8", fontWeight: 600, fontFamily: "'DM Mono',monospace" }}>{date}</div>
                           </div>
                         ))}
                       </div>
@@ -1213,7 +1213,7 @@ function AppShell() {
                       <div>
                         <div className="section-label">Active Alerts</div>
                         {alerts.length === 0 && (
-                          <div style={{ fontSize: 11, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", padding: "10px 0" }}>No active alerts</div>
+                          <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", padding: "10px 0" }}>No active alerts</div>
                         )}
                         {alerts.map(({ type, text, time: t, fp, source }, i) => (
                           <div className="alert-row" key={fp || i} style={{ animationDelay: `${260 + i * 60}ms`, borderLeft: `3px solid ${type === "warn" ? "#f59e0b" : type === "ok" ? "#10b981" : "#4f8ef7"}` }}>
@@ -1221,7 +1221,7 @@ function AppShell() {
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.45 }}>{text}</div>
                             </div>
-                            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{t}</div>
+                            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{t}</div>
                             {fp && (
                               <button
                                 onClick={() => handleDismissAlert(fp, source)}
@@ -1251,7 +1251,7 @@ function AppShell() {
                           <div style={{ textAlign: "center", fontFamily: "'Sora',sans-serif", fontSize: 14, fontWeight: 600, color: "var(--text-primary)", letterSpacing: ".2px", margin: "-4px 0 10px" }}>
                             Insina <span style={{ color: "var(--accent-blue, var(--accent))" }}>AI</span>
                           </div>
-                          <div style={{ fontSize: 11, color: "#98afc4", marginBottom: 12, lineHeight: 1.5, fontFamily: "'DM Mono',monospace" }}>Cross-references all your data automatically.</div>
+                          <div style={{ fontSize: 12, color: "#98afc4", marginBottom: 12, lineHeight: 1.5, fontFamily: "'DM Mono',monospace" }}>Cross-references all your data automatically.</div>
                           {["Analyze my current health status", "Review my medications for interactions", "Prep for Hepatology appt"].map((q, i) => (
                             <AILauncher key={i} className="ai-btn" label={q} question={q} scope={{ source: "dashboard", items: [] }} onNavigate={() => setActiveNav("ai")}
                               style={{ width: "100%", marginBottom: 8, animationDelay: `${320 + i * 50}ms`, justifyContent: "flex-start", textAlign: "left" }} />
@@ -1281,7 +1281,7 @@ function AppShell() {
                         <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
                             <div className="section-label" style={{ marginBottom:0 }}>Care Team</div>
-                            <div style={{ fontSize:10, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
+                            <div style={{ fontSize:12, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("careplan")}>Manage →</div>
                           </div>
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:10 }}>
                             {visible.slice(0,10).map((d, i) => {
@@ -1297,11 +1297,11 @@ function AppShell() {
                                   <div style={{ flex:1, minWidth:0 }}>
                                     <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
                                       <span style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{d.name || "—"}</span>
-                                      {d.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
+                                      {d.pcp && <span style={{ fontSize:12, background:"rgba(79,142,247,.12)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
                                     </div>
-                                    {(d.role || d.specialty) && <div style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.role}{d.specialty ? ` · ${d.specialty}` : ""}</div>}
-                                    {d.facility && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.facility}</div>}
-                                    {d.phone && <div style={{ fontSize:11, color:"#6ea3ff", fontFamily:"'DM Mono',monospace" }}>{displayPhone(d.phone)}</div>}
+                                    {(d.role || d.specialty) && <div style={{ fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.role}{d.specialty ? ` · ${d.specialty}` : ""}</div>}
+                                    {d.facility && <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:1 }}>{d.facility}</div>}
+                                    {d.phone && <div style={{ fontSize:12, color:"#6ea3ff", fontFamily:"'DM Mono',monospace" }}>{displayPhone(d.phone)}</div>}
                                   </div>
                                 </div>
                               );
@@ -1316,11 +1316,11 @@ function AppShell() {
                       <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                           <div className="section-label" style={{ marginBottom:0 }}>Active Conditions</div>
-                          <div style={{ fontSize:10, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("conditions")}>Manage →</div>
+                          <div style={{ fontSize:12, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", cursor:"pointer" }} onClick={() => setActiveNav("conditions")}>Manage →</div>
                         </div>
                         <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
                           {activeConditions.map(c => (
-                            <div key={c.id} style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", borderRadius:20, padding:"4px 12px", fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
+                            <div key={c.id} style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.2)", borderRadius:20, padding:"4px 12px", fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
                               {c.name}{c.icd10 ? ` · ${c.icd10}` : ""}
                             </div>
                           ))}
@@ -1337,13 +1337,13 @@ function AppShell() {
                         <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "18px 20px", marginBottom: 14 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                             <div className="section-label" style={{ marginBottom: 0 }}>Recent Lab Results</div>
-                            <div style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("labs")}>View all →</div>
+                            <div style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", cursor: "pointer" }} onClick={() => setActiveNav("labs")}>View all →</div>
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 }}>
                             {featuredLabs.map(({ label, lab }) => {
                               if (!lab) return (
                                 <div key={label} style={{ background: "#080c14", border: "1px solid #1c2a40", borderRadius: 8, padding: "10px 12px", opacity: 0.45 }}>
-                                  <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
+                                  <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
                                   <div style={{ fontSize: 13, color: "#6a8090" }}>—</div>
                                 </div>
                               );
@@ -1352,9 +1352,9 @@ function AppShell() {
                               const color = isFlag ? "#f59e0b" : "#2dd4a0";
                               return (
                                 <div key={label} style={{ background: "#080c14", border: `1px solid ${isFlag ? "rgba(245,158,11,.25)" : "#1c2a40"}`, borderRadius: 8, padding: "10px 12px" }}>
-                                  <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
+                                  <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{label}</div>
                                   <div style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1 }}>{lab.value}</div>
-                                  <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{lab.unit || ""}{lab.date ? ` · ${lab.date.slice(5).replace("-","/")}` : ""}</div>
+                                  <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{lab.unit || ""}{lab.date ? ` · ${lab.date.slice(5).replace("-","/")}` : ""}</div>
                                 </div>
                               );
                             })}
@@ -1378,10 +1378,10 @@ function AppShell() {
           onClick={e => { if (e.target === e.currentTarget) { setShowVitalsModal(false); setQuickReading({ date:"", time:"", bp_s:"", bp_d:"", hr:"", resting_hr:"", o2:"", weight:"", temp:"", glucose:"", sleep:"" }); } }}
         >
           <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:16, padding:"24px", width:"min(94vw, 580px)", maxHeight:"90vh", overflowY:"auto" }}>
-            <div style={{ fontSize:11, fontWeight:700, color:"#dde8f5", fontFamily:"'DM Mono',monospace", letterSpacing:"2px", textTransform:"uppercase", marginBottom:20 }}>New Vital Reading</div>
+            <div style={{ fontSize:12, fontWeight:700, color:"#dde8f5", fontFamily:"'DM Mono',monospace", letterSpacing:"2px", textTransform:"uppercase", marginBottom:20 }}>New Vital Reading</div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:12, marginBottom:20 }}>
               <div>
-                <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>DATE</label>
+                <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>DATE</label>
                 <input
                   type="date"
                   style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
@@ -1390,7 +1390,7 @@ function AppShell() {
                 />
               </div>
               <div>
-                <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>TIME (OPTIONAL)</label>
+                <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>TIME (OPTIONAL)</label>
                 <input
                   type="time"
                   style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
@@ -1410,7 +1410,7 @@ function AppShell() {
                 { label:"SLEEP (hrs)",   key:"sleep",      placeholder:"7.5" },
               ].map(f => (
                 <div key={f.key}>
-                  <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>{f.label}</label>
+                  <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:5 }}>{f.label}</label>
                   <input
                     style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"8px 10px", fontSize:13, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
                     placeholder={f.placeholder}
@@ -1443,7 +1443,7 @@ function AppShell() {
         return (
           <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.78)", zIndex:9500, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
             <div style={{ width:360, maxWidth:"90vw", background:"#0b1220", border:"1px solid #16273c", borderRadius:14, padding:"20px 22px", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}>
-              <div style={{ fontSize:9, color: hasHard ? "#f87171" : "#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:6 }}>
+              <div style={{ fontSize:12, color: hasHard ? "#f87171" : "#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:6 }}>
                 {hasHard ? "CHECK THIS VALUE" : "UNUSUAL VALUE"}
               </div>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:17, color:"#dde8f5", marginBottom:14 }}>
@@ -1464,7 +1464,7 @@ function AppShell() {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ fontSize:11, color:"#98afc4" }}>No suggested correction — please edit the value manually.</div>
+                    <div style={{ fontSize:12, color:"#98afc4" }}>No suggested correction — please edit the value manually.</div>
                   )}
                 </div>
               ))}

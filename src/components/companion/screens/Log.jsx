@@ -34,7 +34,7 @@ function PlausibilityGateCard({ pending, onConfirm, onSuggestion, onCancel }) {
   const hasHard = hardIssues.length > 0;
   return (
     <Card style={{ marginBottom: 16, border: `1px solid ${hasHard ? C.red : C.amber}40` }}>
-      <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: hasHard ? C.red : C.amber, fontFamily: mono, marginBottom: 8 }}>
+      <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: hasHard ? C.red : C.amber, fontFamily: mono, marginBottom: 8 }}>
         {hasHard ? "Check this value" : "Unusual value"}
       </div>
       {hardIssues.map(([field, issue]) => (
@@ -46,13 +46,13 @@ function PlausibilityGateCard({ pending, onConfirm, onSuggestion, onCancel }) {
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {issue.suggestions.map(s => (
                 <button key={s} onClick={() => onSuggestion(field, s)}
-                  style={{ padding: "6px 10px", background: "rgba(79,142,247,.1)", border: `1px solid ${C.blue}40`, borderRadius: 8, color: C.blue, fontSize: 11.5, fontFamily: mono, cursor: "pointer" }}>
+                  style={{ padding: "6px 10px", background: "rgba(79,142,247,.1)", border: `1px solid ${C.blue}40`, borderRadius: 8, color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>
                   Use {s} {issue.unit}?
                 </button>
               ))}
             </div>
           ) : (
-            <div style={{ fontSize: 10.5, color: C.ghost }}>No suggested correction — edit the value manually.</div>
+            <div style={{ fontSize: 12, color: C.ghost }}>No suggested correction — edit the value manually.</div>
           )}
         </div>
       ))}
@@ -104,7 +104,7 @@ function symptomPrompt(e) {
   const sev = e.severity ? `, ${String(e.severity).toLowerCase()} severity` : "";
   return `I've been experiencing ${e.name}${sev}.${e.notes ? ` Notes: ${e.notes}.` : ""} Please cross-reference this symptom with my current labs, vitals, and medications to identify possible causes and what I should discuss with my care team.`;
 }
-const askBtn = { background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, padding: "6px 11px", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", whiteSpace: "nowrap" };
+const askBtn = { background: "rgba(79,142,247,.12)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, padding: "6px 11px", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", whiteSpace: "nowrap" };
 
 // ── Vitals ────────────────────────────────────────────────────────────────────
 const VITAL_FIELDS = [
@@ -160,10 +160,10 @@ function Vitals({ queueSync }) {
 
   return (
     <div>
-      {saved && <Card style={{ marginBottom: 12, border: `1px solid ${C.green}40` }}><span style={{ fontSize: 11, color: C.green, fontFamily: mono }}>✓ Reading saved — will sync to Drive</span></Card>}
+      {saved && <Card style={{ marginBottom: 12, border: `1px solid ${C.green}40` }}><span style={{ fontSize: 12, color: C.green, fontFamily: mono }}>✓ Reading saved — will sync to Drive</span></Card>}
 
       {(prevBP || avgSys) && (
-        <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginBottom: 10 }}>
           {prevBP && `Previous BP ${prevBP.bp_s}/${prevBP.bp_d}`}{prevBP && avgSys ? "  ·  " : ""}{avgSys && `recent avg systolic ${avgSys}`}
         </div>
       )}
@@ -181,14 +181,14 @@ function Vitals({ queueSync }) {
         <Card style={{ marginBottom: 16 }}>
           <SL>New Reading</SL>
           <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>Date</div>
+            <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>Date</div>
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
               style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, padding: "9px 10px", color: C.p, fontSize: 14, fontFamily: mono, outline: "none", boxSizing: "border-box" }} />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
             {VITAL_FIELDS.map(f => (
               <div key={f.key}>
-                <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{f.label}</div>
+                <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{f.label}</div>
                 <input type="number" inputMode="decimal" value={form[f.key]} placeholder={f.ph} onChange={e => set(f.key, e.target.value)}
                   style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, padding: "9px 10px", color: C.p, fontSize: 14, fontFamily: mono, outline: "none", boxSizing: "border-box" }} />
               </div>
@@ -202,8 +202,8 @@ function Vitals({ queueSync }) {
       {recent.length === 0 ? <Empty>No readings recorded yet.</Empty> : recent.slice(0, 12).map(r => (
         <div key={r.id || r.ts} style={{ background: C.card, border: `1px solid ${C.b2}`, borderRadius: 10, padding: "10px 14px", marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ fontSize: 10, color: C.ghost, fontFamily: mono }}>{formatDateUS(r.date)}</span>
-            {r.source === "companion" && <span style={{ fontSize: 9, color: C.blue, fontFamily: mono }}>📱 companion</span>}
+            <span style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>{formatDateUS(r.date)}</span>
+            {r.source === "companion" && <span style={{ fontSize: 12, color: C.blue, fontFamily: mono }}>📱 companion</span>}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px" }}>
             {r.bp_s && r.bp_d && <Stat label="BP" val={`${r.bp_s}/${r.bp_d}`} color={C.blue} />}
@@ -221,7 +221,7 @@ function Vitals({ queueSync }) {
   );
 }
 function Stat({ label, val, color }) {
-  return <div><div style={{ fontSize: 9, color: C.ghost, fontFamily: mono }}>{label}</div><div style={{ fontSize: 13, fontWeight: 700, color }}>{val}</div></div>;
+  return <div><div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>{label}</div><div style={{ fontSize: 13, fontWeight: 700, color }}>{val}</div></div>;
 }
 
 // ── Symptoms ──────────────────────────────────────────────────────────────────
@@ -258,7 +258,7 @@ function Symptoms({ queueSync, askAI }) {
       {savedEntry && (
         <Card style={{ marginBottom: 12, border: `1px solid ${C.green}40` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, color: C.green, fontFamily: mono, flex: 1, minWidth: 130 }}>✓ {savedEntry.name} saved — will sync to Drive</span>
+            <span style={{ fontSize: 12, color: C.green, fontFamily: mono, flex: 1, minWidth: 130 }}>✓ {savedEntry.name} saved — will sync to Drive</span>
             {askAI && <button onClick={() => askAI(symptomPrompt(savedEntry), "symptomPrep")} style={askBtn}>✦ Ask Insina about this</button>}
           </div>
         </Card>
@@ -268,7 +268,7 @@ function Symptoms({ queueSync, askAI }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
           {COMMON.map(s => (
             <button key={s} onClick={() => setName(s)}
-              style={{ padding: "6px 10px", borderRadius: 16, border: `1px solid ${name === s ? C.blue : C.b2}`, background: name === s ? "rgba(79,142,247,.12)" : "transparent", color: name === s ? C.blue : C.dim, fontSize: 11, cursor: "pointer" }}>
+              style={{ padding: "6px 10px", borderRadius: 16, border: `1px solid ${name === s ? C.blue : C.b2}`, background: name === s ? "rgba(79,142,247,.12)" : "transparent", color: name === s ? C.blue : C.dim, fontSize: 12, cursor: "pointer" }}>
               {s}
             </button>
           ))}
@@ -278,7 +278,7 @@ function Symptoms({ queueSync, askAI }) {
         <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
           {SEV.map(s => (
             <button key={s} onClick={() => setSeverity(s)}
-              style={{ flex: 1, padding: "8px 0", borderRadius: 6, border: `1.5px solid ${severity === s ? sevColor(s) : C.b2}`, background: severity === s ? sevColor(s) + "22" : "transparent", color: severity === s ? sevColor(s) : C.ghost, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>
+              style={{ flex: 1, padding: "8px 0", borderRadius: 6, border: `1.5px solid ${severity === s ? sevColor(s) : C.b2}`, background: severity === s ? sevColor(s) + "22" : "transparent", color: severity === s ? sevColor(s) : C.ghost, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>
               {s}
             </button>
           ))}
@@ -298,8 +298,8 @@ function Symptoms({ queueSync, askAI }) {
               <span style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{e.name}</span>
               <Pill color={sevColor(e.severity)}>{e.severity}</Pill>
             </div>
-            <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{formatDateUS(e.date)}</div>
-            {e.notes && <div style={{ fontSize: 11, color: C.dim, marginTop: 3 }}>{e.notes}</div>}
+            <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{formatDateUS(e.date)}</div>
+            {e.notes && <div style={{ fontSize: 12, color: C.dim, marginTop: 3 }}>{e.notes}</div>}
             {askAI && <button onClick={() => askAI(symptomPrompt(e), "symptomPrep")} style={{ ...askBtn, marginTop: 8 }}>✦ Ask Insina about this</button>}
           </div>
           <button onClick={() => remove(e.id)} style={{ background: "none", border: "none", color: C.ghost, cursor: "pointer", fontSize: 14, alignSelf: "flex-start" }}>✕</button>
@@ -382,7 +382,7 @@ Include only the sub-object matching "kind"; omit any numeric field you don't kn
 
   return (
     <div>
-      <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.6, marginBottom: 12 }}>
+      <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6, marginBottom: 12 }}>
         Say what happened in plain language — e.g. <span style={{ color: C.s }}>“skipped my evening dose, felt nauseous”</span> or <span style={{ color: C.s }}>“BP was 138 over 84 this morning.”</span> Insina drafts an entry; you confirm before it’s filed.
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
@@ -391,7 +391,7 @@ Include only the sub-object matching "kind"; omit any numeric field you don't kn
         <MicButton onText={t => setText(prev => (prev ? prev + " " : "") + t)} />
       </div>
       <Btn onClick={interpret} disabled={busy || !text.trim()}>{busy ? "Interpreting…" : "Interpret"}</Btn>
-      {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10 }}>{error}</div>}
 
       {pending && (
         <PlausibilityGateCard
@@ -409,7 +409,7 @@ Include only the sub-object matching "kind"; omit any numeric field you don't kn
           <Pill color={C.blue}>{draft.kind}</Pill>
           {draft.kind === "vital" && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Reading Date</div>
+              <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Reading Date</div>
               <input type="date" value={draftDate} onChange={e => setDraftDate(e.target.value)}
                 style={{ padding: "7px 10px", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, color: C.p, fontSize: 12, fontFamily: mono, outline: "none" }} />
             </div>

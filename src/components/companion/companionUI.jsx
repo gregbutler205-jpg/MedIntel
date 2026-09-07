@@ -30,7 +30,7 @@ export const LEVEL_COLOR = { critical: C.red, caution: C.amber, info: C.blue, ok
 // ── Section label ───────────────────────────────────────────────────────────
 export function SL({ children, mb = 8 }) {
   return (
-    <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: C.dim, fontFamily: mono, marginBottom: mb }}>
+    <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: C.dim, fontFamily: mono, marginBottom: mb }}>
       {children}
     </div>
   );
@@ -59,7 +59,7 @@ export function BackBar({ title, onBack, right }) {
 // ── Pill / chip ─────────────────────────────────────────────────────────────
 export function Pill({ children, color = C.blue }) {
   return (
-    <span style={{ fontSize: 9, background: color + "22", color, border: `1px solid ${color}40`, borderRadius: 10, padding: "2px 8px", fontFamily: mono, flexShrink: 0 }}>
+    <span style={{ fontSize: 12, background: color + "22", color, border: `1px solid ${color}40`, borderRadius: 10, padding: "2px 8px", fontFamily: mono, flexShrink: 0 }}>
       {children}
     </span>
   );

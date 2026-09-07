@@ -106,16 +106,16 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
           <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", flex:1, minWidth:200 }}>
             Review before adding to your record
           </div>
-          <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono }}>{doc.title}</div>
+          <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono }}>{doc.title}</div>
         </div>
 
         {/* Body: source left, rows right */}
         <div style={{ display:"flex", flex:1, minHeight:0 }}>
           <div style={{ width:"42%", minWidth:280, borderRight:"1px solid #1c2a40", overflowY:"auto", padding:14, background:"#07090f" }}>
-            <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:10 }}>Source Document</div>
-            {pages === null && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, padding:"20px 0", textAlign:"center" }}>Rendering pages…</div>}
+            <div style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:10 }}>Source Document</div>
+            {pages === null && <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, padding:"20px 0", textAlign:"center" }}>Rendering pages…</div>}
             {pages && pages.length === 0 && (
-              <div style={{ fontSize:11.5, color:"#98afc4", fontFamily:mono, lineHeight:1.7, background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, lineHeight:1.7, background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
                 The original file isn't held in this session{doc.fileName ? ` (${doc.fileName})` : ""}.
                 Open it from Source Documents or your Drive report archive to compare against the rows.
               </div>
@@ -126,7 +126,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
           </div>
 
           <div style={{ flex:1, overflowY:"auto", padding:"14px 18px" }}>
-            <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:10 }}>
+            <div style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:10 }}>
               Extracted rows — include, correct, acknowledge
             </div>
 
@@ -141,18 +141,18 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                   <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                     <label style={{ display:"flex", alignItems:"center", gap:7, cursor:"pointer", flexShrink:0 }}>
                       <input type="checkbox" checked={included} onChange={() => toggleInclude(r)} style={{ accentColor:"#6ea3ff", width:14, height:14 }} />
-                      <span style={{ fontSize:10, color: included ? "#7eb8d8" : "#6a8090", fontFamily:mono }}>{included ? "include" : "excluded"}</span>
+                      <span style={{ fontSize:12, color: included ? "#7eb8d8" : "#6a8090", fontFamily:mono }}>{included ? "include" : "excluded"}</span>
                     </label>
                     <span style={{ fontSize:13, fontWeight:600, color: isMonitored ? "#6ea3ff" : "#c4d8ee", minWidth:120 }}>{r.name}</span>
                     {r.flags.map(f => (
-                      <span key={f} style={{ fontSize:9, fontFamily:mono, borderRadius:9, padding:"1px 8px",
+                      <span key={f} style={{ fontSize:12, fontFamily:mono, borderRadius:9, padding:"1px 8px",
                         background: f === "monitored_analyte" ? "rgba(79,142,247,.12)" : "rgba(245,158,11,.12)",
                         color: f === "monitored_analyte" ? "#6ea3ff" : "#f59e0b",
                         border: `1px solid ${f === "monitored_analyte" ? "rgba(79,142,247,.35)" : "rgba(245,158,11,.35)"}` }}>
                         {FLAG_LABELS[f] || f}
                       </span>
                     ))}
-                    {r.correction && <span style={{ fontSize:9, fontFamily:mono, color:"#2dd4a0", border:"1px solid rgba(16,185,129,.3)", borderRadius:9, padding:"1px 8px" }}>CORRECTED</span>}
+                    {r.correction && <span style={{ fontSize:12, fontFamily:mono, color:"#2dd4a0", border:"1px solid rgba(16,185,129,.3)", borderRadius:9, padding:"1px 8px" }}>CORRECTED</span>}
                   </div>
 
                   {editingId === r.id ? (
@@ -160,7 +160,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                       {["value", "unit", "date"].map(k => (
                         <input key={k} value={editVals[k]} onChange={e => setEditVals(v => ({ ...v, [k]: e.target.value }))}
                           placeholder={k} type={k === "date" ? "date" : "text"}
-                          style={{ background:"#07090f", border:"1px solid #1a2f4a", borderRadius:7, padding:"5px 9px", color:"#c4d8ee", fontFamily:mono, fontSize:11, width: k === "value" ? 90 : k === "unit" ? 80 : 140 }} />
+                          style={{ background:"#07090f", border:"1px solid #1a2f4a", borderRadius:7, padding:"5px 9px", color:"#c4d8ee", fontFamily:mono, fontSize:12, width: k === "value" ? 90 : k === "unit" ? 80 : 140 }} />
                       ))}
                       <button onClick={() => saveEdit(r)} style={btn("#6ea3ff")}>Save</button>
                       <button onClick={() => setEditingId(null)} style={btn("#98afc4")}>Cancel</button>
@@ -170,16 +170,16 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                       <span style={{ fontSize:14, fontWeight:700, color: r.flags.includes("out_of_range") ? "#f59e0b" : "#2dd4a0" }}>
                         {String(r.value)}{r.unit ? ` ${r.unit}` : ""}
                       </span>
-                      {r.refRange && <span style={{ fontSize:10, color:"#98afc4" }}>ref {r.refRange}</span>}
-                      {r.date && <span style={{ fontSize:10, color:"#98afc4" }}>{r.date}</span>}
-                      <span style={{ fontSize:10, color:"#6a8090" }}>{r.category}</span>
+                      {r.refRange && <span style={{ fontSize:12, color:"#98afc4" }}>ref {r.refRange}</span>}
+                      {r.date && <span style={{ fontSize:12, color:"#98afc4" }}>{r.date}</span>}
+                      <span style={{ fontSize:12, color:"#6a8090" }}>{r.category}</span>
                       {included && (
-                        <button onClick={() => startEdit(r)} style={{ background:"transparent", border:"none", color:"#4a6a8a", cursor:"pointer", fontSize:10, fontFamily:mono, textDecoration:"underline", padding:0 }}>
+                        <button onClick={() => startEdit(r)} style={{ background:"transparent", border:"none", color:"#4a6a8a", cursor:"pointer", fontSize:12, fontFamily:mono, textDecoration:"underline", padding:0 }}>
                           correct
                         </button>
                       )}
                       {r.correction && (
-                        <span style={{ fontSize:9.5, color:"#6a8090" }}>
+                        <span style={{ fontSize:12, color:"#6a8090" }}>
                           was {String(r.correction.originalValue)}{r.correction.originalUnit ? ` ${r.correction.originalUnit}` : ""}
                         </span>
                       )}
@@ -189,7 +189,7 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
                   {flagged(r) && included && (
                     <label style={{ display:"flex", alignItems:"center", gap:8, marginTop:8, cursor:"pointer" }}>
                       <input type="checkbox" checked={acks.has(r.id)} onChange={() => toggleAck(r.id)} style={{ accentColor:"#f59e0b", width:13, height:13 }} />
-                      <span style={{ fontSize:10.5, color: acks.has(r.id) ? "#2dd4a0" : "#f59e0b", fontFamily:mono }}>
+                      <span style={{ fontSize:12, color: acks.has(r.id) ? "#2dd4a0" : "#f59e0b", fontFamily:mono }}>
                         I've reviewed this {r.flags.includes("monitored_analyte") ? "monitored" : "flagged"} value against the source document
                       </span>
                     </label>
@@ -224,4 +224,4 @@ export default function LabBatchReview({ doc, file, onDone, onClose }) {
   );
 }
 
-const btn = (color) => ({ padding:"5px 12px", background:"transparent", border:`1px solid ${color}40`, borderRadius:7, color, fontFamily:mono, fontSize:10.5, cursor:"pointer" });
+const btn = (color) => ({ padding:"5px 12px", background:"transparent", border:`1px solid ${color}40`, borderRadius:7, color, fontFamily:mono, fontSize:12, cursor:"pointer" });

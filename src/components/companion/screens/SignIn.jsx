@@ -15,7 +15,7 @@ export default function SignIn({ onSignIn, onSkip }) {
     }}>
       <img src={LOGO} alt="Insina Health" style={{ width: 176, height: 176, objectFit: "contain", marginBottom: 24, opacity: 0.95 }} />
       <div style={{ fontFamily: serif, fontSize: 30, color: C.p, lineHeight: 1.1 }}>Insina Health</div>
-      <div style={{ fontSize: 11, color: C.s, fontFamily: mono, letterSpacing: "3px", textTransform: "uppercase", marginTop: 6 }}>Companion</div>
+      <div style={{ fontSize: 12, color: C.s, fontFamily: mono, letterSpacing: "3px", textTransform: "uppercase", marginTop: 6 }}>Companion</div>
 
       <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.7, margin: "22px 0 30px", maxWidth: 300 }}>
         Sign in with Google to sync your health record. Your data stays in your own Google Drive — Insina’s servers never see it.
@@ -33,7 +33,7 @@ export default function SignIn({ onSignIn, onSkip }) {
         </button>
       </div>
 
-      <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 30, maxWidth: 300 }}>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 30, maxWidth: 300 }}>
         You can capture vitals, meds, symptoms, and visits offline either way — they’ll sync once you connect.
       </div>
     </div>

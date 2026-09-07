@@ -635,19 +635,19 @@ export default function App({ onNavChange }) {
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #1a2840; border-radius: 4px; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
+        .section-label { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono', monospace; margin-bottom:12px; }
         .stat-card { background:#0b1220; border:1px solid #1c2a40; border-radius:14px; padding:18px 20px; animation:fadeUp .35s ease both; transition:border-color .2s; }
         .stat-card:hover { border-color:#1a2f4a; }
         .med-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:6px; cursor:pointer; transition:all .15s; animation:fadeUp .35s ease both; }
         .med-row:hover { border-color:#1a2f4a; }
         .med-row.selected { border-color:#6ea3ff; background:rgba(79,142,247,.06); }
-        .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; white-space:nowrap; }
+        .filter-pill { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; white-space:nowrap; }
         .filter-pill:hover { color:#7eb8d8; border-color:#1a2f4a; }
         .filter-pill.active { background:rgba(79,142,247,.1); border-color:#6ea3ff; color:#6ea3ff; }
         .search-input { background:#0b1220; border:1px solid #1c2a40; border-radius:8px; padding:8px 12px; font-size:12px; font-family:'Sora',sans-serif; color:#c4d8ee; outline:none; width:100%; transition:border-color .15s; }
         .search-input:focus { border-color:#6ea3ff; }
         .search-input::placeholder { color:#98afc4; }
-        .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
+        .toggle-btn { padding:5px 12px; border-radius:20px; border:1px solid #1c2a40; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer; background:#0b1220; color:#b0c4d8; transition:all .15s; }
         .toggle-btn.on { background:rgba(239,68,68,.1); border-color:#ef4444; color:#f87171; }
         .detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #1c2a40; }
         .detail-row:last-child { border-bottom:none; }
@@ -678,7 +678,7 @@ export default function App({ onNavChange }) {
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
-              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Home</span>
             </button>
             {/* UI-26: Search beside Home — opens the App-level SearchPopup */}
             <button
@@ -692,18 +692,18 @@ export default function App({ onNavChange }) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Search</span>
             </button>
             <div className="live-dot" />
-            <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
-          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
+          <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
             Last import: {getLastImportLabel()}
           </div>
-          <button onClick={() => requestReport("medications", () => printRefillReport(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#f87171", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          <button onClick={() => requestReport("medications", () => printRefillReport(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#f87171", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
             <PrintLabel>Refill Report</PrintLabel>
           </button>
-          <button onClick={() => requestReport("medications", () => printMedicationList(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          <button onClick={() => requestReport("medications", () => printMedicationList(meds))} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
             <PrintLabel>Print Med List</PrintLabel>
           </button>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>G</div>
@@ -740,9 +740,9 @@ export default function App({ onNavChange }) {
               <div className="stat-card" key={label} style={{ animationDelay: `${i * 55}ms`, cursor: clickable ? "pointer" : "default" }} onClick={clickable ? () => setShowFlagged(f => !f) : undefined}>
                 <div style={{ width: 28, height: 3, background: color, borderRadius: 2, marginBottom: 14, boxShadow: `0 0 10px ${color}60` }} />
                 <div style={{ fontSize: 24, fontWeight: 700, color: "#dde8f5", letterSpacing: "-0.5px", lineHeight: 1, marginBottom: 5 }}>{value}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#7eb8d8", marginBottom: 3 }}>{label}</div>
-                <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
-                {clickable && <div style={{ marginTop:8, fontSize:10, color: showFlagged ? "#f87171" : "#6ea3ff", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#7eb8d8", marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{sub}</div>
+                {clickable && <div style={{ marginTop:8, fontSize:12, color: showFlagged ? "#f87171" : "#6ea3ff", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "✕ Clear filter" : "→ Filter to flagged"}</div>}
               </div>
             ))}
           </div>
@@ -763,11 +763,11 @@ export default function App({ onNavChange }) {
                 />
                 <button
                   onClick={() => setShowFlagged(!showFlagged)}
-                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#f87171" : "#6ea3ff", transition:"all .15s" }}
+                  style={{ padding:"5px 12px", borderRadius:20, border:"1px solid", fontFamily:"'DM Mono',monospace", fontSize:12, cursor:"pointer", background: showFlagged ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.10)", borderColor: showFlagged ? "#ef4444" : "rgba(79,142,247,.4)", color: showFlagged ? "#f87171" : "#6ea3ff", transition:"all .15s" }}
                 >
                   {showFlagged ? "✕ Flagged only" : "▲ Show Flagged"}
                 </button>
-                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", daysSupply:30, prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#2dd4a0", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                <button onClick={() => { setShowAddForm(true); setEditingMed({ id:null, name:"", brand:"", dose:"", frequency:"Once daily", schedule:"", category:"Immunosuppressant", refillDate:"", renewalDate:"", daysSupply:30, prescriber:"", pharmacy:"", rxNumber:"", status:"ok", flag:false, color:"#4f8ef7" }); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(16,185,129,.1)", border:"1px solid rgba(16,185,129,.3)", borderRadius:8, color:"#2dd4a0", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
                   + Add Med
                 </button>
               </div>
@@ -791,15 +791,15 @@ export default function App({ onNavChange }) {
               {/* Pending meds section */}
               {pendingMeds.length > 0 && (
                 <div style={{ marginBottom:16, padding:"14px", background:"rgba(245,158,11,.05)", border:"1px solid rgba(245,158,11,.2)", borderRadius:10 }}>
-                  <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:10 }}>IMPORTED — PENDING APPROVAL ({pendingMeds.length})</div>
+                  <div style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:10 }}>IMPORTED — PENDING APPROVAL ({pendingMeds.length})</div>
                   {pendingMeds.map((m, i) => (
                     <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"9px 12px", background:"#080c14", borderRadius:8, border:"1px solid #1a2f4a", marginBottom:6 }}>
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{m.name} {m.dose}</div>
-                        <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.frequency} · {m.prescriber}</div>
+                        <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.frequency} · {m.prescriber}</div>
                       </div>
-                      <button onClick={() => handleApprovePending(m)} style={{ padding:"5px 12px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:6, color:"#2dd4a0", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Add</button>
-                      <button onClick={() => handleRejectPending(m)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:6, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✗ Skip</button>
+                      <button onClick={() => handleApprovePending(m)} style={{ padding:"5px 12px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.3)", borderRadius:6, color:"#2dd4a0", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Add</button>
+                      <button onClick={() => handleRejectPending(m)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:6, color:"#b0c4d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✗ Skip</button>
                     </div>
                   ))}
                 </div>
@@ -824,28 +824,28 @@ export default function App({ onNavChange }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee" }}>{med.name}</span>
-                        <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.brand}</span>
+                        <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.brand}</span>
                         {med.flag && (
-                          <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>REVIEW</span>
+                          <span style={{ fontSize: 12, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>REVIEW</span>
                         )}
                         {calcDaysLeft(med.refillDate) <= 7 && (
-                          <span style={{ fontSize: 9, background: "rgba(245,158,11,.15)", color: "#f59e0b", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>REFILL THIS WEEK</span>
+                          <span style={{ fontSize: 12, background: "rgba(245,158,11,.15)", color: "#f59e0b", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>REFILL THIS WEEK</span>
                         )}
                         {med.renewalDate && calcDaysLeft(med.renewalDate) <= 30 && (
-                          <span style={{ fontSize: 9, background: "rgba(239,68,68,.12)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>RENEWAL DUE</span>
+                          <span style={{ fontSize: 12, background: "rgba(239,68,68,.12)", color: "#f87171", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>RENEWAL DUE</span>
                         )}
                       </div>
-                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}{med.rxNumber ? <span style={{ color:"#4a6070" }}> · Rx# {med.rxNumber}</span> : ""}</div>
+                      <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{med.dose} · {med.frequency} · {med.schedule}{med.rxNumber ? <span style={{ color:"#4a6070" }}> · Rx# {med.rxNumber}</span> : ""}</div>
                     </div>
 
                     {/* Refill badge */}
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       {(() => { const dl = calcDaysLeft(med.refillDate); return (
-                        <div style={{ fontSize: 11, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace", fontWeight: dl <= 10 ? 600 : 400 }}>
+                        <div style={{ fontSize: 12, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace", fontWeight: dl <= 10 ? 600 : 400 }}>
                           {dl <= 10 ? `⚠ ${dl}d` : `${dl}d`}
                         </div>
                       ); })()}
-                      <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{fmtRefillDate(med.refillDate)}</div>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{fmtRefillDate(med.refillDate)}</div>
                     </div>
 
                     {/* Quick Refilled button */}
@@ -853,7 +853,7 @@ export default function App({ onNavChange }) {
                       <button
                         onClick={(e) => markRefilled(med, e)}
                         title="Mark refilled — advances the refill date by the days supply"
-                        style={{ flexShrink: 0, padding: "5px 11px", borderRadius: 7, border: `1px solid rgba(16,185,129,${refilledFlash === med.id ? ".55" : ".3"})`, background: `rgba(16,185,129,${refilledFlash === med.id ? ".20" : ".08"})`, color: "#2dd4a0", fontFamily: "'Sora',sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+                        style={{ flexShrink: 0, padding: "5px 11px", borderRadius: 7, border: `1px solid rgba(16,185,129,${refilledFlash === med.id ? ".55" : ".3"})`, background: `rgba(16,185,129,${refilledFlash === med.id ? ".20" : ".08"})`, color: "#2dd4a0", fontFamily: "'Sora',sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
                       >
                         {refilledFlash === med.id ? "✓ Refilled" : "Refilled"}
                       </button>
@@ -862,7 +862,7 @@ export default function App({ onNavChange }) {
                     {/* Status dot + reminder badge */}
                     <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
                       {reminders.find(r => r.medId === med.id) && (
-                        <span style={{ fontSize: 9, color: "#f59e0b", fontFamily: "'DM Mono',monospace" }} title="Calendar reminder set">◷</span>
+                        <span style={{ fontSize: 12, color: "#f59e0b", fontFamily: "'DM Mono',monospace" }} title="Calendar reminder set">◷</span>
                       )}
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor(med.status), boxShadow: `0 0 6px ${statusColor(med.status)}80` }} />
                     </div>
@@ -878,12 +878,12 @@ export default function App({ onNavChange }) {
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                       {ix.drugs.map((d, j) => (
                         <span key={d}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#a8c4dc" }}>{d}</span>
-                          {j < ix.drugs.length - 1 && <span style={{ fontSize: 10, color: "#a0b4c8", margin: "0 4px" }}>+</span>}
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "#a8c4dc" }}>{d}</span>
+                          {j < ix.drugs.length - 1 && <span style={{ fontSize: 12, color: "#a0b4c8", margin: "0 4px" }}>+</span>}
                         </span>
                       ))}
                     </div>
-                    <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{ix.note}</div>
+                    <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{ix.note}</div>
                   </div>
                 ))}
               </div>
@@ -913,7 +913,7 @@ export default function App({ onNavChange }) {
                       { label: "Rx Number", key: "rxNumber" },
                     ].map(({ label, key }) => (
                       <div key={key} style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
+                        <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
                         <input
                           type="text"
                           value={editingMed[key] ?? ""}
@@ -925,7 +925,7 @@ export default function App({ onNavChange }) {
 
                     {/* Days Supply */}
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Days Supply</div>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Days Supply</div>
                       <input
                         type="number"
                         min="1" max="365"
@@ -933,12 +933,12 @@ export default function App({ onNavChange }) {
                         onChange={e => setEditingMed(prev => ({ ...prev, daysSupply: parseInt(e.target.value) || 30 }))}
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
                       />
-                      <div style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>Used by Complete Refill to calculate the next fill date</div>
+                      <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>Used by Complete Refill to calculate the next fill date</div>
                     </div>
 
                     {/* Refill Date */}
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Refill Date</div>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Refill Date</div>
                       <input
                         type="date"
                         value={editingMed.refillDate ?? ""}
@@ -946,7 +946,7 @@ export default function App({ onNavChange }) {
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
                       />
                       {editingMed.refillDate && (
-                        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
                           {calcDaysLeft(editingMed.refillDate)} days from today
                         </div>
                       )}
@@ -954,7 +954,7 @@ export default function App({ onNavChange }) {
 
                     {/* Renewal Date */}
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Renewal Date (Rx from doctor)</div>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Renewal Date (Rx from doctor)</div>
                       <input
                         type="date"
                         value={editingMed.renewalDate ?? ""}
@@ -962,7 +962,7 @@ export default function App({ onNavChange }) {
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}
                       />
                       {editingMed.renewalDate && (
-                        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>
                           {calcDaysLeft(editingMed.renewalDate)} days until renewal
                         </div>
                       )}
@@ -970,7 +970,7 @@ export default function App({ onNavChange }) {
 
                     {/* Category */}
                     <div style={{ marginBottom: 18 }}>
-                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Category</div>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>Category</div>
                       <select value={editingMed.category}
                         onChange={e => setEditingMed(prev => ({ ...prev, category: e.target.value }))}
                         style={{ width: "100%", padding: "8px 11px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }}>
@@ -1025,19 +1025,19 @@ export default function App({ onNavChange }) {
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
                       <div>
                         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", letterSpacing: "-0.3px" }}>{selectedMed.name}</div>
-                        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>{selectedMed.brand} · {selectedMed.category}</div>
+                        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>{selectedMed.brand} · {selectedMed.category}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <a
                           href={`https://medlineplus.gov/search.html?query=${encodeURIComponent(selectedMed.name)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ padding: "5px 12px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 6, color: "#2dd4a0", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600, textDecoration: "none", display: "inline-block" }}
+                          style={{ padding: "5px 12px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 6, color: "#2dd4a0", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600, textDecoration: "none", display: "inline-block" }}
                         >
                           Learn More ↗
                         </a>
                         <button onClick={() => { setEditingMed({ ...selectedMed, refillDate: toIsoDate(selectedMed.refillDate) || selectedMed.refillDate, renewalDate: toIsoDate(selectedMed.renewalDate) || selectedMed.renewalDate || "", daysSupply: selectedMed.daysSupply ?? 30 }); setDeleteConfirm(false); }}
-                          style={{ padding: "5px 12px", background: "#0f1e30", border: "1px solid #1a3050", borderRadius: 6, color: "#7eb8d8", fontSize: 11, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
+                          style={{ padding: "5px 12px", background: "#0f1e30", border: "1px solid #1a3050", borderRadius: 6, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", cursor: "pointer", fontWeight: 600 }}>
                           Edit
                         </button>
                         <div style={{ width: 10, height: 10, borderRadius: "50%", background: selectedMed.color, boxShadow: `0 0 10px ${selectedMed.color}80` }} />
@@ -1046,8 +1046,8 @@ export default function App({ onNavChange }) {
 
                     {selectedMed.flag && (
                       <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "9px 12px", marginTop: 10 }}>
-                        <div style={{ fontSize: 9, color: "#f87171", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", marginBottom: 4 }}>FLAGGED FOR REVIEW</div>
-                        <div style={{ fontSize: 11, color: "#c4d8ee", lineHeight: 1.5 }}>{selectedMed.flagNote}</div>
+                        <div style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", marginBottom: 4 }}>FLAGGED FOR REVIEW</div>
+                        <div style={{ fontSize: 12, color: "#c4d8ee", lineHeight: 1.5 }}>{selectedMed.flagNote}</div>
                       </div>
                     )}
                   </div>
@@ -1061,7 +1061,7 @@ export default function App({ onNavChange }) {
                     ["Last Taken", selectedMed.lastTaken],
                   ].map(([k, v]) => (
                     <div className="detail-row" key={k}>
-                      <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
+                      <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
                       <span style={{ fontSize: 12, color: "#a8c4dc", fontWeight: 500, textAlign: "right", maxWidth: "60%" }}>{v}</span>
                     </div>
                   ))}
@@ -1078,7 +1078,7 @@ export default function App({ onNavChange }) {
                     const dl = calcDaysLeft(selectedMed.refillDate);
                     return (
                       <div className="detail-row" key={k}>
-                        <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
+                        <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{k}</span>
                         <span style={{ fontSize: 12, color: dl <= 10 && k === "Days Remaining" ? "#f59e0b" : "#a8c4dc", fontWeight: dl <= 10 && k === "Days Remaining" ? 600 : 500, textAlign: "right" }}>{v}</span>
                       </div>
                     );
@@ -1093,10 +1093,10 @@ export default function App({ onNavChange }) {
                     if (!display) return null;
                     return (
                       <div className="detail-row">
-                        <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>Renewal Date</span>
+                        <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>Renewal Date</span>
                         <span style={{ fontSize: 12, color: rd <= 30 ? "#f87171" : "#a8c4dc", fontWeight: rd <= 30 ? 600 : 500, textAlign: "right" }}>
                           {display}
-                          {rd <= 30 && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, marginLeft: 6 }}>DUE IN {rd}d</span>}
+                          {rd <= 30 && <span style={{ fontSize: 12, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "1px 6px", borderRadius: 8, marginLeft: 6 }}>DUE IN {rd}d</span>}
                         </span>
                       </div>
                     );
@@ -1110,8 +1110,8 @@ export default function App({ onNavChange }) {
                       const pct = Math.min(100, Math.round(dl / sup * 100));
                       return (<>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                          <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
-                          <span style={{ fontSize: 10, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{pct}%</span>
+                          <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>SUPPLY REMAINING</span>
+                          <span style={{ fontSize: 12, color: dl <= 10 ? "#f59e0b" : "#98afc4", fontFamily: "'DM Mono',monospace" }}>{pct}%</span>
                         </div>
                         <div style={{ height: 4, background: "#0d1a28", borderRadius: 4, overflow: "hidden" }}>
                           <div style={{ height: "100%", width: `${pct}%`, background: dl <= 10 ? "#f59e0b" : selectedMed.color, borderRadius: 4, boxShadow: `0 0 8px ${dl <= 10 ? "#f59e0b" : selectedMed.color}60`, transition: "width .4s ease" }} />
@@ -1125,14 +1125,14 @@ export default function App({ onNavChange }) {
                     <button
                       onClick={() => handleCompleteRefill(selectedMed)}
                       title={`Advance refill date by ${selectedMed.daysSupply ?? 30} days`}
-                      style={{ flex: 1, padding: "9px 10px", background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#2dd4a0", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(16,185,129,.1)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#2dd4a0", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                     >
                       {completeFlash === "refill" ? "✓ Refill Recorded!" : "✓ Complete Refill"}
                     </button>
                     <button
                       onClick={() => handleCompleteRenewal(selectedMed)}
                       title="Advance renewal date by 1 year"
-                      style={{ flex: 1, padding: "9px 10px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#7eb8d8", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                     >
                       {completeFlash === "renewal" ? "✓ Renewal Recorded!" : "↺ Complete Renewal"}
                     </button>
@@ -1153,7 +1153,7 @@ export default function App({ onNavChange }) {
                     }} style={{
                       width: "100%", marginBottom: 7, padding: "10px 12px", background: "linear-gradient(135deg, rgba(79,142,247,.1), rgba(167,139,250,.07))",
                       border: "1px solid rgba(79,142,247,.25)", borderRadius: 9, color: "#7eb8d8", fontFamily: "'Sora',sans-serif",
-                      fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, textAlign: "left"
+                      fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, textAlign: "left"
                     }}>
                       <span style={{ color: "#6ea3ff", fontSize: 13, flexShrink: 0 }}>✦</span>
                       <span>{q}</span>
@@ -1177,7 +1177,7 @@ export default function App({ onNavChange }) {
                                 : { times: ["08:00"], endDate: "", enabled: true });
                               setEditingReminder(selectedMed.id);
                             }}
-                            style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                            style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                           >{existing ? "Edit" : "+ Set Reminder"}</button>
                         )}
                       </div>
@@ -1187,21 +1187,21 @@ export default function App({ onNavChange }) {
                         <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "10px 12px" }}>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                             {existing.times.map(t => (
-                              <span key={t} style={{ fontSize: 11, color: "#7eb8d8", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.2)", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace" }}>
+                              <span key={t} style={{ fontSize: 12, color: "#7eb8d8", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.2)", borderRadius: 6, padding: "2px 8px", fontFamily: "'DM Mono',monospace" }}>
                                 {new Date(`2000-01-01T${t}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                               </span>
                             ))}
                           </div>
                           {existing.endDate && (
-                            <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
+                            <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
                               Until {new Date(existing.endDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                             </div>
                           )}
                           <button
                             onClick={() => downloadICS(selectedMed, existing)}
-                            style={{ width: "100%", padding: "7px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 7, color: "#2dd4a0", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                            style={{ width: "100%", padding: "7px 10px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 7, color: "#2dd4a0", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                           >📅 Download Calendar File</button>
-                          <div style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 6, lineHeight: 1.55, textAlign: "center" }}>
+                          <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 6, lineHeight: 1.55, textAlign: "center" }}>
                             Open the downloaded file on your phone to add to Apple Calendar, Google Calendar, or Outlook
                           </div>
                         </div>
@@ -1209,7 +1209,7 @@ export default function App({ onNavChange }) {
 
                       {/* No reminder placeholder */}
                       {!existing && !isEditing && (
-                        <div style={{ fontSize: 11, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", textAlign: "center", padding: "8px 0" }}>
+                        <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", textAlign: "center", padding: "8px 0" }}>
                           No reminders set for this medication
                         </div>
                       )}
@@ -1217,7 +1217,7 @@ export default function App({ onNavChange }) {
                       {/* Editor */}
                       {isEditing && (
                         <div>
-                          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Reminder Times</div>
+                          <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Reminder Times</div>
                           {reminderForm.times.map((t, i) => (
                             <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
                               <input
@@ -1238,12 +1238,12 @@ export default function App({ onNavChange }) {
                           ))}
                           {reminderForm.times.length < 5 && (
                             <button onClick={() => setReminderForm(f => ({ ...f, times: [...f.times, "12:00"] }))}
-                              style={{ width: "100%", marginBottom: 14, padding: "6px 10px", fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", background: "none", border: "1px dashed rgba(79,142,247,.3)", borderRadius: 6, cursor: "pointer" }}>
+                              style={{ width: "100%", marginBottom: 14, padding: "6px 10px", fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", background: "none", border: "1px dashed rgba(79,142,247,.3)", borderRadius: 6, cursor: "pointer" }}>
                               + Add another time
                             </button>
                           )}
 
-                          <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>End Date (optional)</div>
+                          <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>End Date (optional)</div>
                           <input
                             type="date"
                             value={reminderForm.endDate}
@@ -1251,11 +1251,11 @@ export default function App({ onNavChange }) {
                             style={{ width: "100%", padding: "7px 10px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 7, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none", marginBottom: 4 }}
                           />
                           {reminderForm.endDate
-                            ? <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>Reminder stops after this date</div>
+                            ? <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>Reminder stops after this date</div>
                             : <div style={{ marginBottom: 12 }} />
                           }
 
-                          <div style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginBottom: 10, padding: "7px 10px", background: "rgba(79,142,247,.05)", borderRadius: 6, border: "1px solid rgba(79,142,247,.1)", lineHeight: 1.6 }}>
+                          <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginBottom: 10, padding: "7px 10px", background: "rgba(79,142,247,.05)", borderRadius: 6, border: "1px solid rgba(79,142,247,.1)", lineHeight: 1.6 }}>
                             📅 Saving downloads a calendar file. Open it on your phone to add the reminder to Apple Calendar, Google Calendar, or Outlook — your device will handle all alerts.
                           </div>
 

@@ -95,15 +95,15 @@ function StudyModal({ study, conditions, onSave, onClose }) {
             <div style={{ display:"flex", gap:8 }}>
               <input style={{ ...inp, flex:1 }} value={form.reportLink} onChange={e => set("reportLink", e.target.value)} placeholder="Paste the report's Drive link — or upload it →" />
               <button type="button" onClick={() => uploadRef.current?.click()} disabled={uploadState === "busy"}
-                style={{ padding:"8px 12px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap", opacity: uploadState === "busy" ? 0.6 : 1 }}>
+                style={{ padding:"8px 12px", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:8, color:"#a78bfa", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap", opacity: uploadState === "busy" ? 0.6 : 1 }}>
                 {uploadState === "busy" ? "⏳ Uploading…" : "⬆ Upload to Drive"}
               </button>
               <input ref={uploadRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleReportUpload} style={{ display:"none" }} />
             </div>
             {uploadState && uploadState !== "busy" && (
-              <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace", marginTop:5 }}>{uploadState}</div>
+              <div style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", marginTop:5 }}>{uploadState}</div>
             )}
-            <div style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:5 }}>
+            <div style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:5 }}>
               The file goes to your own Drive ("Insina Health Reports / Imaging &amp; Diagnostics") — Insina keeps only this link, never the document.
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function DiagnosticsTab() {
         {/* Print header */}
         <div style={{ display:"none" }}>
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, marginBottom:4 }}>Diagnostics</h2>
-          <p style={{ fontSize:11, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
+          <p style={{ fontSize:12, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
         </div>
 
         {/* List */}
@@ -217,12 +217,12 @@ export default function DiagnosticsTab() {
                   <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8, flexWrap:"wrap" }}>
                     <span style={{ fontSize:16, fontWeight:600, color:"#c4d8ee" }}>{s.name}</span>
                     {s.relatedCondition && (
-                      <span style={{ fontSize:10, color:"#a78bfa", fontFamily:"'DM Mono',monospace", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:10, padding:"2px 8px" }}>
+                      <span style={{ fontSize:12, color:"#a78bfa", fontFamily:"'DM Mono',monospace", background:"rgba(167,139,250,.1)", border:"1px solid rgba(167,139,250,.3)", borderRadius:10, padding:"2px 8px" }}>
                         {s.relatedCondition}
                       </span>
                     )}
                   </div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:18, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:s.impression?8:0 }}>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:18, fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:s.impression?8:0 }}>
                     {s.date            && <span>📅 {fmtDate(s.date)}</span>}
                     {s.orderedBy       && <span>Ordered by {s.orderedBy}</span>}
                     {s.readingProvider && <span>Read by {s.readingProvider}</span>}
@@ -233,17 +233,17 @@ export default function DiagnosticsTab() {
                   </div>
                   {s.impression && <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.55 }}>{s.impression}</div>}
                   {s.migratedFromImaging && !s.impression && (
-                    <div style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:4 }}>
+                    <div style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:4 }}>
                       Migrated from Imaging History — add ordered-by, reading provider, and impression when known.
                     </div>
                   )}
                 </div>
                 <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16, alignItems:"center" }} className="no-print">
                   {s.fromRecords
-                    ? <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
+                    ? <span style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
                     : <>
-                        <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
-                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                        <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:12 }}>Edit</button>
+                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
                       </>}
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function DiagnosticsTab() {
   );
 }
 
-const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
+const lbl = { display:"block", fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1c2a40", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
 const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
 const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };

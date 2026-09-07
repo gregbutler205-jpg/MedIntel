@@ -67,7 +67,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
           <div style={{
-            fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase",
+            fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase",
             color: "#6ea3ff", fontFamily: "'DM Mono', monospace", marginBottom: 8,
           }}>AI Analysis Setup</div>
           <div style={{
@@ -86,7 +86,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           padding: "16px 18px", marginBottom: 20,
         }}>
           <div style={{
-            fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase",
+            fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase",
             color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 10,
           }}>Before You Start</div>
 
@@ -107,7 +107,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           <button
             onClick={() => setShowWhatIsSent(p => !p)}
             style={{
-              background: "none", border: "none", color: "#6ea3ff", fontSize: 11,
+              background: "none", border: "none", color: "#6ea3ff", fontSize: 12,
               fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 10,
               display: "flex", alignItems: "center", gap: 5,
             }}
@@ -116,7 +116,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
           </button>
           {showWhatIsSent && (
             <div style={{
-              fontSize: 11, color: "#a8c4dc", lineHeight: 1.7, marginBottom: 12,
+              fontSize: 12, color: "#a8c4dc", lineHeight: 1.7, marginBottom: 12,
               background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "12px 14px",
             }}>
               Only the record fields your specific question needs — for example, relevant lab
@@ -124,7 +124,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               pseudonymous ID. Your legal name, date of birth, address, phone number, email,
               and insurance or ID numbers are never sent; the app is built so those fields are
               never read into an AI request in the first place, not filtered out afterward.
-              See <code style={{ fontFamily: "'DM Mono', monospace", fontSize: 10.5, color: "#7eb8d8" }}>PRIVACY_POLICY.md</code> for the complete picture.
+              See <code style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#7eb8d8" }}>PRIVACY_POLICY.md</code> for the complete picture.
             </div>
           )}
 
@@ -174,7 +174,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               </div>
               <span style={{ fontWeight: 700, fontSize: 14, color: "#dde8f5" }}>Standard Mode</span>
               <span style={{
-                fontSize: 9, fontFamily: "'DM Mono', monospace",
+                fontSize: 12, fontFamily: "'DM Mono', monospace",
                 background: "#10b98118", color: "#2dd4a0",
                 border: "1px solid #10b98130", borderRadius: 4, padding: "2px 7px",
                 letterSpacing: "0.5px",
@@ -215,7 +215,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               </div>
               <span style={{ fontWeight: 700, fontSize: 14, color: "#dde8f5" }}>Advanced Mode</span>
               <span style={{
-                fontSize: 9, fontFamily: "'DM Mono', monospace",
+                fontSize: 12, fontFamily: "'DM Mono', monospace",
                 background: "#4f8ef718", color: "#6ea3ff",
                 border: "1px solid #4f8ef730", borderRadius: 4, padding: "2px 7px",
                 letterSpacing: "0.5px",
@@ -239,7 +239,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
             marginBottom: 20,
           }}>
             <div style={{
-              fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase",
+              fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase",
               color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 10,
             }}>Informed Consent Required</div>
 
@@ -248,7 +248,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               onClick={() => setShowConsent(p => !p)}
               style={{
                 background: "none", border: "none",
-                color: "#6ea3ff", fontSize: 11,
+                color: "#6ea3ff", fontSize: 12,
                 fontFamily: "'DM Mono', monospace",
                 cursor: "pointer", padding: 0, marginBottom: 10,
                 display: "flex", alignItems: "center", gap: 5,
@@ -290,7 +290,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
               onClick={handlePrintConsent}
               style={{
                 background: "none", border: "none",
-                color: "#98afc4", fontSize: 10,
+                color: "#98afc4", fontSize: 12,
                 fontFamily: "'DM Mono', monospace",
                 cursor: "pointer", padding: 0,
                 display: "flex", alignItems: "center", gap: 5,
@@ -335,7 +335,7 @@ export default function AIModeOnboardingModal({ onConfirm }) {
         </button>
 
         <div style={{
-          fontSize: 10, color: "#4a5c6a",
+          fontSize: 12, color: "#4a5c6a",
           fontFamily: "'DM Mono', monospace",
           textAlign: "center", marginTop: 12, lineHeight: 1.5,
         }}>

@@ -48,7 +48,7 @@ export default function Lock({ onUnlocked }) {
     }}>
       <img src={LOGO} alt="Insina Health" style={{ width: 96, height: 96, objectFit: "contain", marginBottom: 14, opacity: 0.95 }} />
       <div style={{ fontFamily: serif, fontSize: 24, color: C.p }}>Insina Health</div>
-      <div style={{ fontSize: 10, color: C.s, fontFamily: mono, letterSpacing: "3px", textTransform: "uppercase", margin: "4px 0 26px" }}>
+      <div style={{ fontSize: 12, color: C.s, fontFamily: mono, letterSpacing: "3px", textTransform: "uppercase", margin: "4px 0 26px" }}>
         {mode === "setup" ? "Protect your record" : "Unlock your record"}
       </div>
 
@@ -87,12 +87,12 @@ function PinEntry({ onUnlocked, onUsePassphrase }) {
         value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ""))}
         onKeyDown={e => e.key === "Enter" && submit()}
         placeholder="••••" style={inputStyle} />
-      {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
       <div style={{ marginTop: 12 }}>
         <Btn onClick={submit} disabled={busy || pin.length < 4}>{busy ? "Unlocking…" : "Unlock"}</Btn>
       </div>
       <button onClick={onUsePassphrase}
-        style={{ width: "100%", marginTop: 12, background: "none", border: "none", color: C.ghost, fontSize: 11, fontFamily: mono, cursor: "pointer", padding: 6 }}>
+        style={{ width: "100%", marginTop: 12, background: "none", border: "none", color: C.ghost, fontSize: 12, fontFamily: mono, cursor: "pointer", padding: 6 }}>
         Use password instead
       </button>
     </Card>
@@ -116,17 +116,17 @@ function PassphraseEntry({ onUnlocked }) {
   return (
     <Card>
       <SL>Enter your password</SL>
-      <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
+      <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
         The same password you use on the web app.
       </div>
       <input type="password" autoFocus value={pass} onChange={e => setPass(e.target.value)}
         onKeyDown={e => e.key === "Enter" && submit()}
         style={{ ...inputStyle, letterSpacing: "1px", textAlign: "left", fontSize: 14 }} />
-      {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
       <div style={{ marginTop: 12 }}>
         <Btn onClick={submit} disabled={busy || !pass}>{busy ? "Unlocking…" : "Unlock"}</Btn>
       </div>
-      <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 12 }}>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 12 }}>
         Forgot it? Use your recovery key on the web app, then set a new password there.
       </div>
     </Card>
@@ -158,7 +158,7 @@ function VaultSetup({ onUnlocked }) {
     return (
       <Card>
         <SL>Save your recovery key</SL>
-        <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
           If you ever forget your password, this key is the ONLY way back into your record. Save it somewhere safe — it will not be shown again.
         </div>
         <div style={{ background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 8, padding: "12px", fontFamily: mono, fontSize: 12, color: C.p, wordBreak: "break-all", lineHeight: 1.7 }}>
@@ -166,7 +166,7 @@ function VaultSetup({ onUnlocked }) {
         </div>
         <label style={{ display: "flex", alignItems: "flex-start", gap: 8, margin: "12px 0", cursor: "pointer" }}>
           <input type="checkbox" checked={recoverySaved} onChange={e => setRecoverySaved(e.target.checked)} style={{ marginTop: 2 }} />
-          <span style={{ fontSize: 11, color: C.s, lineHeight: 1.5 }}>I've saved this key somewhere safe.</span>
+          <span style={{ fontSize: 12, color: C.s, lineHeight: 1.5 }}>I've saved this key somewhere safe.</span>
         </label>
         <Btn onClick={onUnlocked} disabled={!recoverySaved}>Continue</Btn>
       </Card>
@@ -176,7 +176,7 @@ function VaultSetup({ onUnlocked }) {
   return (
     <Card>
       <SL>Create a password</SL>
-      <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
+      <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
         Your health record is encrypted on this device. Pick a password (8+ characters) — you'll get a recovery key next, and can set a short PIN for everyday unlocks after that.
       </div>
       <input type="password" placeholder="Password" value={pass} onChange={e => setPass(e.target.value)}
@@ -184,7 +184,7 @@ function VaultSetup({ onUnlocked }) {
       <input type="password" placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)}
         onKeyDown={e => e.key === "Enter" && submit()}
         style={{ ...inputStyle, letterSpacing: "1px", textAlign: "left", fontSize: 14 }} />
-      {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
       <div style={{ marginTop: 12 }}>
         <Btn onClick={submit} disabled={busy || !pass || !confirm}>{busy ? "Setting up…" : "Encrypt my record"}</Btn>
       </div>
@@ -197,7 +197,7 @@ function VaultSetup({ onUnlocked }) {
         style={{ width: "100%", background: "none", border: `1px solid ${C.b1}`, borderRadius: 10, padding: "11px", color: C.p, fontSize: 12.5, fontFamily: sans, fontWeight: 600, cursor: "pointer" }}>
         Already use Insina? Restore from Google Drive
       </button>
-      <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 8 }}>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, lineHeight: 1.6, marginTop: 8 }}>
         Pulls your record from Drive and shares the web app's vault — then unlock with your existing password.
       </div>
     </Card>
@@ -224,7 +224,7 @@ function PinSetup({ onDone }) {
   return (
     <Card>
       <SL>Set a quick-unlock PIN</SL>
-      <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
+      <div style={{ fontSize: 12, color: C.dim, lineHeight: 1.6, marginBottom: 10 }}>
         Next time, unlock with a short PIN instead of the full password. Five wrong tries disables the PIN and asks for the password again.
       </div>
       <input type="password" inputMode="numeric" pattern="[0-9]*" placeholder="PIN (4–8 digits)" maxLength={8}
@@ -234,12 +234,12 @@ function PinSetup({ onDone }) {
         value={confirm} onChange={e => setConfirm(e.target.value.replace(/\D/g, ""))}
         onKeyDown={e => e.key === "Enter" && submit()}
         style={inputStyle} />
-      {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginTop: 10, lineHeight: 1.5 }}>{error}</div>}
       <div style={{ marginTop: 12 }}>
         <Btn onClick={submit} disabled={busy || !pin || !confirm}>{busy ? "Saving…" : "Set PIN"}</Btn>
       </div>
       <button onClick={onDone}
-        style={{ width: "100%", marginTop: 12, background: "none", border: "none", color: C.ghost, fontSize: 11, fontFamily: mono, cursor: "pointer", padding: 6 }}>
+        style={{ width: "100%", marginTop: 12, background: "none", border: "none", color: C.ghost, fontSize: 12, fontFamily: mono, cursor: "pointer", padding: 6 }}>
         Skip — ask for my password each time
       </button>
     </Card>

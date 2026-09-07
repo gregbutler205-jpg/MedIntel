@@ -25,14 +25,14 @@ const primaryBtn = { minHeight: 40, padding: "8px 20px", background: "var(--btn-
 const ghostBtn = { minHeight: 40, padding: "8px 14px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 9, color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 12.5, cursor: "pointer" };
 const dangerBtn = { ...ghostBtn, color: "var(--red)", borderColor: "rgba(239,68,68,.3)" };
 const inp = { width: "100%", minHeight: 38, background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 8, padding: "7px 10px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 13, outline: "none", colorScheme: "var(--scheme)" };
-const lbl = { display: "block", fontSize: 10, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 4 };
+const lbl = { display: "block", fontSize: 12, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 4 };
 const modalWrap = { position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 };
 
 // §8 confidence chips; §4.4 duplicate detection overrides the badge.
 function Chip({ item, match }) {
-  if (match) return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-dup-bg)", border: "1px solid var(--chip-dup-bd)", color: "var(--chip-dup-fg)" }}>{match.type === "duplicate" ? "Possible duplicate" : "Possible conflict"}</span>;
-  if (item.confidence >= CONFIDENCE_HIGH) return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-hi-bg)", color: "var(--chip-hi-fg)" }}>High confidence</span>;
-  return <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-warn-bg)", color: "var(--chip-warn-fg)" }}>Needs review</span>;
+  if (match) return <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-dup-bg)", border: "1px solid var(--chip-dup-bd)", color: "var(--chip-dup-fg)" }}>{match.type === "duplicate" ? "Possible duplicate" : "Possible conflict"}</span>;
+  if (item.confidence >= CONFIDENCE_HIGH) return <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-hi-bg)", color: "var(--chip-hi-fg)" }}>High confidence</span>;
+  return <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 9, background: "var(--chip-warn-bg)", color: "var(--chip-warn-fg)" }}>Needs review</span>;
 }
 
 function fieldSummary(item) {
@@ -81,12 +81,12 @@ function SourcePanel({ item, onZoom }) {
           )}
         </button>
       ) : (
-        <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--font-mono)", lineHeight: 1.6, border: "1px dashed var(--border-strong)", borderRadius: 8, padding: 8, maxHeight: 130, overflow: "hidden" }}>
+        <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono)", lineHeight: 1.6, border: "1px dashed var(--border-strong)", borderRadius: 8, padding: 8, maxHeight: 130, overflow: "hidden" }}>
           {doc?.source_name || "Source"}{item.source_page ? ` · p.${item.source_page}` : ""}
           {entry?.extractedText ? <div style={{ marginTop: 4, color: "var(--text-secondary)", whiteSpace: "pre-wrap" }}>{entry.extractedText.slice(0, 160)}…</div> : null}
         </div>
       )}
-      <div style={{ fontSize: 9.5, color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: 4, textAlign: "center" }}>
+      <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono)", marginTop: 4, textAlign: "center" }}>
         {doc?.source_name}{doc?.doc_date ? ` · ${doc.doc_date}` : ""}
       </div>
     </div>
@@ -187,9 +187,9 @@ function CompareModal({ item, match, onResolve, onClose }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: mergeMode ? "1fr 1fr 1fr" : "1fr 1fr 1fr", gap: 0, border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
-          <div style={{ padding: "8px 12px", background: "var(--bg-deep)", fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase" }}>Field</div>
-          <div style={{ padding: "8px 12px", background: "var(--bg-deep)", fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase" }}>Current — {existingSource}</div>
-          <div style={{ padding: "8px 12px", background: "var(--bg-deep)", fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase" }}>New — {stagedDoc?.source_name || "imported"}{stagedDoc?.doc_date ? ` (${stagedDoc.doc_date})` : ""}</div>
+          <div style={{ padding: "8px 12px", background: "var(--bg-deep)", fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase" }}>Field</div>
+          <div style={{ padding: "8px 12px", background: "var(--bg-deep)", fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase" }}>Current — {existingSource}</div>
+          <div style={{ padding: "8px 12px", background: "var(--bg-deep)", fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase" }}>New — {stagedDoc?.source_name || "imported"}{stagedDoc?.doc_date ? ` (${stagedDoc.doc_date})` : ""}</div>
           {fieldsToShow.map(k => {
             const differs = differing.includes(k);
             return (
@@ -226,7 +226,7 @@ function FragmentRow({ k, differs, mergeMode, pick, current, staged, onPick }) {
   const hl = differs ? { color: "var(--amber)" } : {};
   return (
     <>
-      <div style={{ ...cellBase, fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--text-label)" }}>{k.replace(/_/g, " ")}</div>
+      <div style={{ ...cellBase, fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-label)" }}>{k.replace(/_/g, " ")}</div>
       <div style={{ ...cellBase, ...hl, cursor: mergeMode && differs ? "pointer" : "default", background: mergeMode && pick === "current" ? "var(--accent-tint)" : "transparent" }}
         onClick={() => mergeMode && differs && onPick("current")}>
         {mergeMode && differs && <input type="radio" readOnly checked={pick === "current"} style={{ marginRight: 6 }} />}{current}
@@ -329,10 +329,10 @@ export default function ReviewQueue({ onDone, embedded = false }) {
           return (
             <div key={item.id} style={{ ...card, display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ flex: 1, fontSize: 13, color: "var(--text-primary)" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-dim)", marginRight: 8 }}>{CAT_LABEL[item.category]}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-dim)", marginRight: 8 }}>{CAT_LABEL[item.category]}</span>
                 {fieldSummary(item)}
               </span>
-              <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>{daysLeft}d left</span>
+              <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-dim)" }}>{daysLeft}d left</span>
               <button style={ghostBtn} onClick={() => handleAction("restore", item)}>Restore</button>
             </div>
           );
@@ -371,11 +371,11 @@ export default function ReviewQueue({ onDone, embedded = false }) {
       <div className="ob-focus" style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ textAlign: "center" }}>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 400, color: "var(--text-bright)" }}>{CAT_LABEL[cat]}</h2>
-          <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginTop: 4 }}>
+          <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginTop: 4 }}>
             Showing {remaining} of {total}
           </div>
           {(cat === "medication" || cat === "allergy" || cat === "condition") && (
-            <div style={{ fontSize: 11.5, color: "var(--text-secondary)", marginTop: 6 }}>
+            <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 6 }}>
               These affect your reports directly, so each one needs your individual OK.
             </div>
           )}
@@ -416,7 +416,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
 
         {deferred.length > 0 && (
           <div style={{ ...card, borderStyle: "dashed" }}>
-            <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase", marginBottom: 8 }}>Marked “Not sure” ({deferred.length})</div>
+            <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--text-label)", textTransform: "uppercase", marginBottom: 8 }}>Marked “Not sure” ({deferred.length})</div>
             {deferred.map(item => (
               <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0" }}>
                 <span style={{ flex: 1, fontSize: 12.5, color: "var(--text-secondary)" }}>{fieldSummary(item)}</span>
@@ -474,7 +474,7 @@ export default function ReviewQueue({ onDone, embedded = false }) {
             style={{ ...card, display: "flex", alignItems: "center", gap: 12, cursor: "pointer", textAlign: "left" }}>
             <span style={{ flex: 1 }}>
               <span style={{ fontSize: 14, color: "var(--text-bright)", fontWeight: 600 }}>{CAT_LABEL[cat]}</span>
-              {perItem && <span style={{ marginLeft: 10, fontSize: 9.5, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "var(--chip-warn-bg)", padding: "2px 8px", borderRadius: 8 }}>ITEM-BY-ITEM</span>}
+              {perItem && <span style={{ marginLeft: 10, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "var(--chip-warn-bg)", padding: "2px 8px", borderRadius: 8 }}>ITEM-BY-ITEM</span>}
             </span>
             <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--accent-soft)" }}>
               {staged.length} to review{deferred.length ? ` · ${deferred.length} not sure` : ""}

@@ -98,7 +98,7 @@ function Icd10Lookup({ value, onChange, inp }) {
         placeholder="Type code or diagnosis name to search…"
       />
       {loading && (
-        <div style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", fontSize:10, color:"#6a8090" }}>…</div>
+        <div style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", fontSize:12, color:"#6a8090" }}>…</div>
       )}
       {open && results.length > 0 && (
         <div style={{ position:"absolute", top:"calc(100% + 4px)", left:0, right:0, background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:8, zIndex:400, maxHeight:240, overflowY:"auto", boxShadow:"0 8px 24px rgba(0,0,0,.5)" }}>
@@ -110,7 +110,7 @@ function Icd10Lookup({ value, onChange, inp }) {
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
-              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#6ea3ff", flexShrink:0, minWidth:52 }}>{item.code}</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", color:"#6ea3ff", flexShrink:0, minWidth:52 }}>{item.code}</span>
               <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.name}</span>
             </div>
           ))}
@@ -344,7 +344,7 @@ export default function ConditionsTab() {
         }
         .cond-card { background:#0b1220; border:1px solid #1c2a40; border-radius:12px; padding:16px 18px; margin-bottom:10px; transition:border-color .15s; }
         .cond-card:hover { border-color:#1a2f4a; }
-        .filter-btn { padding:6px 14px; border-radius:20px; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; transition:all .15s; }
+        .filter-btn { padding:6px 14px; border-radius:20px; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; font-family:'DM Mono',monospace; font-size:12px; cursor:pointer; transition:all .15s; }
         .filter-btn.active { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.4); color:#6ea3ff; }
       `}</style>
 
@@ -367,7 +367,7 @@ export default function ConditionsTab() {
 
         {/* v1.57.0: scan result strip (mirrors the calendar-sync message) */}
         {scanMsg && (
-          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", color:"#7eb8d8", marginBottom:16 }}>
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:12, fontFamily:"'DM Mono',monospace", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", color:"#7eb8d8", marginBottom:16 }}>
             {scanMsg}
           </div>
         )}
@@ -377,11 +377,11 @@ export default function ConditionsTab() {
           <div className="no-print" style={{ background:"rgba(245,158,11,.05)", border:"1px solid rgba(245,158,11,.25)", borderRadius:12, padding:"16px 18px", marginBottom:22 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
               <span style={{ fontSize:12, color:"#f59e0b" }}>✦</span>
-              <span style={{ fontSize:11, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>
+              <span style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>
                 Suggested from your records ({suggestions.length})
               </span>
             </div>
-            <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:14, lineHeight:1.5 }}>
+            <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:14, lineHeight:1.5 }}>
               These condition names appear in your records but aren't on your Conditions list. Nothing is added until you review it —
               Confirm to add one (you can edit details first), or Dismiss it and it won't be suggested again.
             </div>
@@ -389,19 +389,19 @@ export default function ConditionsTab() {
               <div key={sug.condId} style={{ background:"#0b1220", border:"1px solid rgba(245,158,11,.18)", borderRadius:10, padding:"12px 14px", marginBottom:8 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                   <div style={{ fontSize:14, fontWeight:600, color:"#dde8f5", flex:1, minWidth:160 }}>{sug.name}</div>
-                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#2dd4a0", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
-                  <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer" }}>Dismiss</button>
+                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#2dd4a0", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
+                  <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Dismiss</button>
                 </div>
                 <div style={{ marginTop:8 }}>
                   {sug.sources.slice(0, 3).map((s, i) => (
-                    <div key={i} style={{ fontSize:10.5, color:"#98afc4", fontFamily:"'DM Mono',monospace", lineHeight:1.6, marginBottom:2 }}>
+                    <div key={i} style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", lineHeight:1.6, marginBottom:2 }}>
                       <span style={{ color:"#f59e0b" }}>{s.store}</span>
                       {" — "}{s.title}{s.date ? ` (${formatDateUS(s.date)})` : ""}
                       {s.snippet ? <span style={{ color:"#6a8090" }}>{" · “"}{s.snippet}{"”"}</span> : null}
                     </div>
                   ))}
                   {sug.sources.length > 3 && (
-                    <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>+ {sug.sources.length - 3} more place{sug.sources.length - 3 !== 1 ? "s" : ""} in your records</div>
+                    <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>+ {sug.sources.length - 3} more place{sug.sources.length - 3 !== 1 ? "s" : ""} in your records</div>
                   )}
                 </div>
               </div>
@@ -411,7 +411,7 @@ export default function ConditionsTab() {
 
         {/* UI-29: save confirmation strip */}
         {savedMsg && (
-          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", color:"#2dd4a0", marginBottom:16 }}>
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:12, fontFamily:"'DM Mono',monospace", background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", color:"#2dd4a0", marginBottom:16 }}>
             ✓ {savedMsg}
           </div>
         )}
@@ -419,7 +419,7 @@ export default function ConditionsTab() {
         {/* Print header (only visible when printing) */}
         <div style={{ display:"none" }} className="print-only">
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, marginBottom:4 }}>Medical Conditions</h2>
-          <p style={{ fontSize:11, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
+          <p style={{ fontSize:12, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
         </div>
 
         {/* Summary stats */}
@@ -431,7 +431,7 @@ export default function ConditionsTab() {
           ].map(s => (
             <div key={s.label} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
               <div style={{ fontSize:22, fontWeight:700, color:s.color, letterSpacing:"-0.5px" }}>{s.count}</div>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{s.label}</div>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -466,11 +466,11 @@ export default function ConditionsTab() {
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
                       <span style={{ fontSize:15, fontWeight:600, color:"#c4d8ee" }}>{c.name}</span>
-                      {c.icd10 && <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", background:"#07090f", border:"1px solid #1c2a40", borderRadius:4, padding:"1px 6px" }}>{c.icd10}</span>}
-                      <span style={{ fontSize:10, background:s.bg, border:`1px solid ${s.border}`, borderRadius:12, padding:"2px 8px", color:s.color, fontFamily:"'DM Mono',monospace" }}>{s.label}</span>
-                      <span style={{ fontSize:10, color:sev.color, fontFamily:"'DM Mono',monospace" }}>▪ {c.severity.charAt(0).toUpperCase()+c.severity.slice(1)}</span>
+                      {c.icd10 && <span style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", background:"#07090f", border:"1px solid #1c2a40", borderRadius:4, padding:"1px 6px" }}>{c.icd10}</span>}
+                      <span style={{ fontSize:12, background:s.bg, border:`1px solid ${s.border}`, borderRadius:12, padding:"2px 8px", color:s.color, fontFamily:"'DM Mono',monospace" }}>{s.label}</span>
+                      <span style={{ fontSize:12, color:sev.color, fontFamily:"'DM Mono',monospace" }}>▪ {c.severity.charAt(0).toUpperCase()+c.severity.slice(1)}</span>
                     </div>
-                    <div style={{ display:"flex", gap:20, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:c.notes?8:0 }}>
+                    <div style={{ display:"flex", gap:20, fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:c.notes?8:0 }}>
                       {c.diagnosedDate && <span>Dx: {fmtDate(c.diagnosedDate)}</span>}
                       {c.provider && <span>Provider: {c.provider}</span>}
                     </div>
@@ -484,7 +484,7 @@ export default function ConditionsTab() {
                           {isLong && !open ? `${c.notes.slice(0, LONG).trimEnd()}…` : c.notes}
                           {isLong && (
                             <button onClick={() => toggleExpanded(c.id)} className="no-print"
-                              style={{ marginLeft:8, background:"none", border:"none", color:"var(--accent-blue)", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", padding:0 }}>
+                              style={{ marginLeft:8, background:"none", border:"none", color:"var(--accent-blue)", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", padding:0 }}>
                               {open ? "Show less" : "Show more"}
                             </button>
                           )}
@@ -493,8 +493,8 @@ export default function ConditionsTab() {
                     })()}
                   </div>
                   <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16 }} className="no-print">
-                    <button onClick={() => setModal(c)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
-                    <button onClick={() => setDeleteId(c.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                    <button onClick={() => setModal(c)} style={{ ...btnGhost, padding:"5px 12px", fontSize:12 }}>Edit</button>
+                    <button onClick={() => setDeleteId(c.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
                   </div>
                 </div>
               </div>
@@ -545,7 +545,7 @@ export default function ConditionsTab() {
 }
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
-const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
+const lbl = { display:"block", fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1c2a40", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
 const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
 const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };

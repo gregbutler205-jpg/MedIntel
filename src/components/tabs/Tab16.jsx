@@ -95,7 +95,7 @@ function CptLookup({ value, onChange, onPick, inp }) {
               style={{ padding:"9px 14px", cursor:"pointer", borderBottom:"1px solid #1c2a40", display:"flex", gap:10, alignItems:"flex-start" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(79,142,247,.07)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <span style={{ fontSize:11, fontFamily:"'DM Mono',monospace", color:"#6ea3ff", flexShrink:0, minWidth:52 }}>{item.code}</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", color:"#6ea3ff", flexShrink:0, minWidth:52 }}>{item.code}</span>
               <span style={{ fontSize:12, color:"#c4d8ee", lineHeight:1.4 }}>{item.desc}</span>
             </div>
           ))}
@@ -133,9 +133,9 @@ function SurgeryModal({ surgery, onSave, onClose }) {
               onPick={item => { set("cpt", item.code); set("procedure", form.procedure || item.desc); setCptError(""); }}
               inp={inp}
             />
-            {cptError && <div style={{ fontSize:11, color:"#f87171", marginTop:5 }}>{cptError}</div>}
+            {cptError && <div style={{ fontSize:12, color:"#f87171", marginTop:5 }}>{cptError}</div>}
             {form.icd10 && !form.cpt && (
-              <div style={{ fontSize:11, color:"#98afc4", marginTop:6, fontFamily:"'DM Mono',monospace" }}>
+              <div style={{ fontSize:12, color:"#98afc4", marginTop:6, fontFamily:"'DM Mono',monospace" }}>
                 Legacy ICD-10 on this entry: {form.icd10}
               </div>
             )}
@@ -307,7 +307,7 @@ export default function SurgeriesTab() {
         </div>
 
         {(scanMsg || savedMsg) && (
-          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace", background: savedMsg ? "rgba(16,185,129,.08)" : "rgba(79,142,247,.08)", border:`1px solid ${savedMsg ? "rgba(16,185,129,.25)" : "rgba(79,142,247,.25)"}`, color: savedMsg ? "#2dd4a0" : "#7eb8d8", marginBottom:16 }}>
+          <div role="status" aria-live="polite" className="no-print" style={{ padding:"8px 14px", borderRadius:9, fontSize:12, fontFamily:"'DM Mono',monospace", background: savedMsg ? "rgba(16,185,129,.08)" : "rgba(79,142,247,.08)", border:`1px solid ${savedMsg ? "rgba(16,185,129,.25)" : "rgba(79,142,247,.25)"}`, color: savedMsg ? "#2dd4a0" : "#7eb8d8", marginBottom:16 }}>
             {savedMsg ? `✓ ${savedMsg}` : scanMsg}
           </div>
         )}
@@ -317,11 +317,11 @@ export default function SurgeriesTab() {
           <div className="no-print" style={{ background:"rgba(245,158,11,.05)", border:"1px solid rgba(245,158,11,.25)", borderRadius:12, padding:"16px 18px", marginBottom:22 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
               <span style={{ fontSize:12, color:"#f59e0b" }}>✦</span>
-              <span style={{ fontSize:11, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>
+              <span style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>
                 Suggested from your records ({suggestions.length})
               </span>
             </div>
-            <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:14, lineHeight:1.5 }}>
+            <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:14, lineHeight:1.5 }}>
               These procedures are described in your records but aren't on your Procedures list. Nothing is added until you review it —
               Confirm to add one (the date comes from the document; edit anything first), or Dismiss it and it won't be suggested again.
             </div>
@@ -330,21 +330,21 @@ export default function SurgeriesTab() {
                 <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                   <div style={{ flex:1, minWidth:160 }}>
                     <div style={{ fontSize:14, fontWeight:600, color:"#dde8f5" }}>{sug.name}</div>
-                    {sug.date && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{formatDateUS(sug.date)}</div>}
+                    {sug.date && <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{formatDateUS(sug.date)}</div>}
                   </div>
-                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#2dd4a0", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
-                  <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer" }}>Dismiss</button>
+                  <button onClick={() => openConfirmSuggestion(sug)} style={{ padding:"6px 14px", background:"rgba(16,185,129,.12)", border:"1px solid rgba(16,185,129,.35)", borderRadius:8, color:"#2dd4a0", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>Confirm &amp; review</button>
+                  <button onClick={() => handleDismissSuggestion(sug)} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Dismiss</button>
                 </div>
                 <div style={{ marginTop:8 }}>
                   {sug.sources.slice(0, 3).map((s, i) => (
-                    <div key={i} style={{ fontSize:10.5, color:"#98afc4", fontFamily:"'DM Mono',monospace", lineHeight:1.6, marginBottom:2 }}>
+                    <div key={i} style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", lineHeight:1.6, marginBottom:2 }}>
                       <span style={{ color:"#f59e0b" }}>{s.store}</span>
                       {" — "}{s.title}{s.date ? ` (${formatDateUS(s.date)})` : ""}
                       {s.snippet ? <span style={{ color:"#6a8090" }}>{" · “"}{s.snippet}{"”"}</span> : null}
                     </div>
                   ))}
                   {sug.sources.length > 3 && (
-                    <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>+ {sug.sources.length - 3} more place{sug.sources.length - 3 !== 1 ? "s" : ""} in your records</div>
+                    <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>+ {sug.sources.length - 3} more place{sug.sources.length - 3 !== 1 ? "s" : ""} in your records</div>
                   )}
                 </div>
               </div>
@@ -355,7 +355,7 @@ export default function SurgeriesTab() {
         {/* Print header */}
         <div style={{ display:"none" }}>
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:22, marginBottom:4 }}>Procedure History</h2>
-          <p style={{ fontSize:11, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
+          <p style={{ fontSize:12, color:"#666", marginBottom:20 }}>Printed {new Date().toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" })}</p>
         </div>
 
         {/* List */}
@@ -372,16 +372,16 @@ export default function SurgeriesTab() {
                 <div style={{ flex:1 }}>
                   {/* Top row */}
                   <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
-                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#a0b4c8", background:"#07090f", border:"1px solid #1c2a40", borderRadius:20, padding:"2px 10px" }}>#{allProcedures.length - i}</span>
+                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#a0b4c8", background:"#07090f", border:"1px solid #1c2a40", borderRadius:20, padding:"2px 10px" }}>#{allProcedures.length - i}</span>
                     <span style={{ fontSize:16, fontWeight:600, color:"#c4d8ee" }}>{s.procedure}</span>
                     {s.outcome && (
-                      <span style={{ fontSize:10, color:outcomeColor(s.outcome), fontFamily:"'DM Mono',monospace", background:"rgba(0,0,0,.3)", borderRadius:10, padding:"2px 8px" }}>
+                      <span style={{ fontSize:12, color:outcomeColor(s.outcome), fontFamily:"'DM Mono',monospace", background:"rgba(0,0,0,.3)", borderRadius:10, padding:"2px 8px" }}>
                         {s.outcome}
                       </span>
                     )}
                   </div>
                   {/* Details row */}
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:18, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:s.notes?8:0 }}>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:18, fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:s.notes?8:0 }}>
                     {/* WO-2: CPT going forward; legacy entries keep their stored code labeled ICD-10 */}
                     {s.cpt      && <span style={{ color:"#7eb8d8" }}>CPT {s.cpt}</span>}
                     {!s.cpt && s.icd10 && <span>ICD-10 {s.icd10}</span>}
@@ -395,10 +395,10 @@ export default function SurgeriesTab() {
                 </div>
                 <div style={{ display:"flex", gap:8, flexShrink:0, marginLeft:16, alignItems:"center" }} className="no-print">
                   {s.fromRecords
-                    ? <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
+                    ? <span style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>from Medical Records ↗</span>
                     : <>
-                        <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:11 }}>Edit</button>
-                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
+                        <button onClick={() => setModal(s)} style={{ ...btnGhost, padding:"5px 12px", fontSize:12 }}>Edit</button>
+                        <button onClick={() => setDeleteId(s.id)} style={{ padding:"5px 12px", background:"transparent", border:"1px solid rgba(239,68,68,.3)", borderRadius:7, color:"#f87171", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>Delete</button>
                       </>}
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function SurgeriesTab() {
   );
 }
 
-const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
+const lbl = { display:"block", fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1c2a40", borderRadius:8, padding:"8px 10px", color:"#a8c4dc", fontFamily:"'DM Mono',monospace", fontSize:12, outline:"none" };
 const btnPrimary = { padding:"8px 16px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };
 const btnGhost   = { padding:"8px 16px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#b0c4d8", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" };

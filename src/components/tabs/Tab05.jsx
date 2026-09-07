@@ -63,7 +63,7 @@ function RangeBar({ value, low, high, customLow = null, customHigh = null, compa
       {/* Value badge */}
       <div style={{
         position: "absolute", top: 0, left: `${valPct}%`, transform: "translateX(-50%)",
-        background: badgeColor, color: "#fff", fontSize: compact ? 8.5 : 9.5,
+        background: badgeColor, color: "#fff", fontSize: compact ? 12 : 12,
         fontWeight: 700, fontFamily: "'DM Mono',monospace",
         padding: compact ? "1px 5px" : "2px 7px", borderRadius: 20,
         whiteSpace: "nowrap", lineHeight: 1.4,
@@ -99,22 +99,22 @@ function RangeBar({ value, low, high, customLow = null, customHigh = null, compa
           {/* Custom range labels — bright green, primary */}
           {hasCustom && (
             <div style={{ position: "relative", height: 14 }}>
-              <span style={{ position: "absolute", left: `${custLowPct}%`, transform: "translateX(-50%)", fontSize: 8, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{customLow}</span>
-              <span style={{ position: "absolute", left: `${custHighPct}%`, transform: "translateX(-50%)", fontSize: 8, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{customHigh}</span>
+              <span style={{ position: "absolute", left: `${custLowPct}%`, transform: "translateX(-50%)", fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{customLow}</span>
+              <span style={{ position: "absolute", left: `${custHighPct}%`, transform: "translateX(-50%)", fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{customHigh}</span>
             </div>
           )}
           {/* Lab range labels — dim when custom present, normal when sole range */}
           {labLowPct !== null && (
             <div style={{ position: "relative", height: 13 }}>
-              <span style={{ position: "absolute", left: `${labLowPct}%`, transform: "translateX(-50%)", fontSize: hasCustom ? 7.5 : 8, color: hasCustom ? "#4a5c6a" : "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{low}</span>
-              <span style={{ position: "absolute", left: `${labHighPct}%`, transform: "translateX(-50%)", fontSize: hasCustom ? 7.5 : 8, color: hasCustom ? "#4a5c6a" : "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{high}</span>
+              <span style={{ position: "absolute", left: `${labLowPct}%`, transform: "translateX(-50%)", fontSize: hasCustom ? 12 : 12, color: hasCustom ? "#4a5c6a" : "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{low}</span>
+              <span style={{ position: "absolute", left: `${labHighPct}%`, transform: "translateX(-50%)", fontSize: hasCustom ? 12 : 12, color: hasCustom ? "#4a5c6a" : "#98afc4", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap" }}>{high}</span>
             </div>
           )}
           {/* Legend when both ranges shown */}
           {hasCustom && labLowPct !== null && (
             <div style={{ display: "flex", gap: 10, marginTop: 3 }}>
-              <span style={{ fontSize: 7.5, color: "#2dd4a0", fontFamily: "'DM Mono',monospace" }}>▬ Your range</span>
-              <span style={{ fontSize: 7.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>▬ Lab range</span>
+              <span style={{ fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono',monospace" }}>▬ Your range</span>
+              <span style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>▬ Lab range</span>
             </div>
           )}
         </div>
@@ -152,8 +152,8 @@ function TrendChart({ lab, color, monthLabels, dates = [] }) {
         <rect x={PL} y={refHY} width={cW} height={refLY - refHY} fill="rgba(16,185,129,0.06)" />
         <line x1={PL} y1={refHY} x2={PL + cW} y2={refHY} stroke="#2dd4a0" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.5} />
         <line x1={PL} y1={refLY} x2={PL + cW} y2={refLY} stroke="#2dd4a0" strokeWidth={0.8} strokeDasharray="4,3" opacity={0.5} />
-        <text x={PL - 4} y={refHY + 3} textAnchor="end" fontSize={8} fill="#2dd4a0" fontFamily="DM Mono" opacity={0.7}>{lab.high}</text>
-        <text x={PL - 4} y={refLY + 3} textAnchor="end" fontSize={8} fill="#2dd4a0" fontFamily="DM Mono" opacity={0.7}>{lab.low}</text>
+        <text x={PL - 4} y={refHY + 3} textAnchor="end" fontSize={12} fill="#2dd4a0" fontFamily="DM Mono" opacity={0.7}>{lab.high}</text>
+        <text x={PL - 4} y={refLY + 3} textAnchor="end" fontSize={12} fill="#2dd4a0" fontFamily="DM Mono" opacity={0.7}>{lab.low}</text>
       </>}
       {/* Area */}
       <polygon points={areaPts} fill={`${color}14`} />
@@ -175,7 +175,7 @@ function TrendChart({ lab, color, monthLabels, dates = [] }) {
       })}
       {/* X labels */}
       {monthLabels.map((m, i) => (
-        <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{m}</text>
+        <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{m}</text>
       ))}
     </svg>
   );
@@ -438,7 +438,7 @@ function renderMarkdown(rawText) {
       const content = trimmed.replace(/^[-•]\s+/, "");
       return (
         <div key={i} style={{ display:"flex", gap:8, marginBottom:4, paddingLeft:4 }}>
-          <span style={{ color:"#6ea3ff", flexShrink:0, marginTop:4, fontSize:9 }}>▸</span>
+          <span style={{ color:"#6ea3ff", flexShrink:0, marginTop:4, fontSize:12 }}>▸</span>
           <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(content, AI_BOLD_STYLE) }} style={{ lineHeight:1.7 }} />
         </div>
       );
@@ -447,7 +447,7 @@ function renderMarkdown(rawText) {
     if (numMatch) return (
       <div key={i} style={{ display:"flex", gap:8, marginBottom:5, paddingLeft:4 }}>
         <span style={{ color:"#6ea3ff", fontWeight:700, flexShrink:0, minWidth:22,
-          fontFamily:"'DM Mono',monospace", fontSize:11 }}>{numMatch[1]}.</span>
+          fontFamily:"'DM Mono',monospace", fontSize:12 }}>{numMatch[1]}.</span>
         <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(numMatch[2], AI_BOLD_STYLE) }} style={{ lineHeight:1.7 }} />
       </div>
     );
@@ -500,11 +500,11 @@ function LabGroupReorder({ presentCats }) {
     setItems(a); commit(a);
   };
   const endDrag = () => { if (dragIndex.current !== null) commit(items); dragIndex.current = null; };
-  const arrow = (disabled) => ({ background: "transparent", border: "1px solid #1a2f4a", borderRadius: 5, color: disabled ? "#2a3c5a" : "#7eb8d8", fontSize: 11, width: 22, height: 20, cursor: disabled ? "default" : "pointer", lineHeight: 1 });
+  const arrow = (disabled) => ({ background: "transparent", border: "1px solid #1a2f4a", borderRadius: 5, color: disabled ? "#2a3c5a" : "#7eb8d8", fontSize: 12, width: 22, height: 20, cursor: disabled ? "default" : "pointer", lineHeight: 1 });
 
   return (
     <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 10, padding: 12, marginBottom: 12 }}>
-      <div style={{ fontSize: 9, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
+      <div style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
         Drag to reorder · applies to the tab and the printout
       </div>
       {items.map((cat, i) => (
@@ -514,7 +514,7 @@ function LabGroupReorder({ presentCats }) {
           onDrop={endDrag} onDragEnd={endDrag}
           style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", marginBottom: 5, background: "#07090f", border: "1px solid #1c2a40", borderRadius: 7, cursor: "grab" }}>
           <span style={{ color: "#4a6070", fontSize: 13 }}>⠿</span>
-          <span style={{ flex: 1, fontSize: 11, color: "#c4d8ee" }}>{cat}</span>
+          <span style={{ flex: 1, fontSize: 12, color: "#c4d8ee" }}>{cat}</span>
           <button onClick={() => move(i, -1)} disabled={i === 0} style={arrow(i === 0)}>↑</button>
           <button onClick={() => move(i, 1)} disabled={i === items.length - 1} style={arrow(i === items.length - 1)}>↓</button>
         </div>
@@ -584,7 +584,7 @@ function detectDuplicates(labs) {
 // so an ordinary flag never reads as urgent (and vice versa).
 function FlaggedBadge() {
   return (
-    <span style={{ fontSize: 8, fontWeight: 700, background: "rgba(245,158,11,.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,.35)", padding: "0 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, lineHeight: 1.6 }}>
+    <span style={{ fontSize: 12, fontWeight: 700, background: "rgba(245,158,11,.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,.35)", padding: "0 5px", borderRadius: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px", flexShrink: 0, lineHeight: 1.6 }}>
       FLAGGED
     </span>
   );
@@ -1030,17 +1030,17 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
         @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
         @keyframes slideInRight { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
+        .section-label { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
         .lab-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:9px; background:#0b1220; border:1px solid #1c2a40; margin-bottom:5px; cursor:pointer; transition:all .12s; animation:fadeUp .3s ease both; }
         .lab-row:hover { border-color:#1a2f4a; }
         .lab-row.sel { border-color:#6ea3ff; background:rgba(79,142,247,.07); }
-        .time-btn { padding:4px 10px; border-radius:6px; border:none; font-size:10px; font-family:'DM Mono',monospace; cursor:pointer; background:#0f1e30; color:#7eb8d8; font-weight:500; }
+        .time-btn { padding:4px 10px; border-radius:6px; border:none; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer; background:#0f1e30; color:#7eb8d8; font-weight:500; }
         .time-btn:hover { background:#162840; }
         .time-btn.on { background:#4f8ef7; color:#fff; }
         .ai-panel { position:absolute; top:0; right:0; width:300px; height:100%; background:#080c14; border-left:1px solid #1c2a40; display:flex; flex-direction:column; animation:slideInRight .22s ease both; z-index:10; }
         .drow { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #1c2a40; }
         .drow:last-child { border-bottom:none; }
-        .ai-q-btn { width:100%; padding:9px 12px; background:#0f1e30; border:1px solid #1a3050; border-radius:8px; color:#7eb8d8; font-family:'Sora',sans-serif; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:7px; text-align:left; font-weight:500; margin-bottom:7px; }
+        .ai-q-btn { width:100%; padding:9px 12px; background:#0f1e30; border:1px solid #1a3050; border-radius:8px; color:#7eb8d8; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:7px; text-align:left; font-weight:500; margin-bottom:7px; }
         .ai-q-btn:hover { background:#162840; color:#a8c4dc; }
       `}</style>
 
@@ -1063,7 +1063,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
-              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Home</span>
             </button>
             {/* UI-26: Search beside Home — opens the App-level SearchPopup */}
             <button
@@ -1077,12 +1077,12 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Search</span>
             </button>
             <div className="live-dot" />
-            <span style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
-          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
+          <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
             Last import: {getLastImportLabel()}
           </div>
           <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#fff" }}>G</div>
@@ -1097,12 +1097,12 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               <h1 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 22, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Labs & Trends</h1>
               {dedupedLabs.length > 0 && (
                 <button onClick={() => requestReport("labs", () => printLabReport(importedLabs, PRINT_LOGO))}
-                  style={{ marginTop:4, padding:"4px 10px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:6, color:"#7eb8d8", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
+                  style={{ marginTop:4, padding:"4px 10px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:6, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}>
                   <PrintLabel>Print Report</PrintLabel>
                 </button>
               )}
             </div>
-            <p style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+            <p style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
               {dedupedLabs.length > 0 ? `${dedupedLabs.length} tests · ${flaggedCount} flagged` : "No imported labs yet"}
             </p>
 
@@ -1110,34 +1110,34 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 18 }}>
               <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: flaggedCount > 0 ? "#f87171" : "#a0b4c8", lineHeight: 1, marginBottom: 3 }}>{flaggedCount}</div>
-                <div style={{ fontSize: 10, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight: 600 }}>Flagged</div>
-                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{showFlagged ? "click to clear" : "click to filter"}</div>
+                <div style={{ fontSize: 12, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight: 600 }}>Flagged</div>
+                <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{showFlagged ? "click to clear" : "click to filter"}</div>
               </div>
               <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: "#2dd4a0", lineHeight: 1, marginBottom: 3 }}>{normalCount}</div>
-                <div style={{ fontSize: 10, color: "#7eb8d8", fontWeight: 600 }}>Normal</div>
-                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>within range</div>
+                <div style={{ fontSize: 12, color: "#7eb8d8", fontWeight: 600 }}>Normal</div>
+                <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>within range</div>
               </div>
             </div>
 
             {/* A-01: urgent tripwire flags — deterministic, not AI-generated */}
             {urgentTripwireFlags.length > 0 && (
               <div style={{ marginBottom: 10, background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.35)", borderRadius: 8, padding: "10px 12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, fontSize: 11, fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#f87171" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#f87171" }}>
                   <span style={{ fontSize: 13 }}>⚠</span>
                   <span>{urgentTripwireFlags.length} urgent threshold flag{urgentTripwireFlags.length > 1 ? "s" : ""}</span>
                 </div>
                 {urgentTripwireFlags.map(f => (
-                  <div key={`${f.canonicalId}|${f.date}|${f.value}`} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, fontSize: 10.5, color: "#f0c4c4", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
+                  <div key={`${f.canonicalId}|${f.date}|${f.value}`} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6, fontSize: 12, color: "#f0c4c4", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
                     <span style={{ flex: 1 }}>{f.analyte}: {f.value}{f.unit ? ` ${f.unit}` : ""} ({formatDateUS(f.date, "unknown date")}) — {f.guidance}</span>
-                    <button onClick={() => dismissTripwireFlag(f)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(239,68,68,.4)", borderRadius: 5, color: "#f87171", fontSize: 9, fontFamily: "'Sora',sans-serif", padding: "2px 6px", cursor: "pointer" }}>Dismiss</button>
+                    <button onClick={() => dismissTripwireFlag(f)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(239,68,68,.4)", borderRadius: 5, color: "#f87171", fontSize: 12, fontFamily: "'Sora',sans-serif", padding: "2px 6px", cursor: "pointer" }}>Dismiss</button>
                   </div>
                 ))}
               </div>
             )}
 
             {/* A-01: evaluation status — surfaced, not hidden, per spec (stale/unavailable is an app-state fact, not an alarm) */}
-            <div style={{ marginBottom: 14, fontSize: 9.5, fontFamily: "'DM Mono',monospace", color: tripwireEnv.status === "stale" ? "#f59e0b" : "#6a8090" }}>
+            <div style={{ marginBottom: 14, fontSize: 12, fontFamily: "'DM Mono',monospace", color: tripwireEnv.status === "stale" ? "#f59e0b" : "#6a8090" }}>
               {tripwireEnv.status === "current" && `Threshold check: current (as of ${new Date(tripwireEnv.evaluatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })})`}
               {tripwireEnv.status === "stale" && "Threshold check: stale — new results have arrived since the last check ran"}
               {tripwireEnv.status === "unavailable" && "Threshold check: not yet active (pending clinical review of the default threshold library)"}
@@ -1147,34 +1147,34 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 value, unit — alias-aware). Removed rows are tombstoned; the
                 healer's equivalence guard keeps them from coming back. */}
             {exactDupes > 0 && (
-              <button onClick={handleRemoveDuplicates} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background:"rgba(239,68,68,.07)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#ef8888", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
+              <button onClick={handleRemoveDuplicates} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background:"rgba(239,68,68,.07)", border:"1px solid rgba(239,68,68,.3)", borderRadius:8, color:"#ef8888", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
                 <span style={{ fontSize:13 }}>🧹</span>
                 <span style={{ flex:1, textAlign:"left" }}>Remove {exactDupes} exact duplicate{exactDupes !== 1 ? "s" : ""}</span>
-                <span style={{ fontSize:10, opacity:0.65 }}>Keeps one copy</span>
+                <span style={{ fontSize:12, opacity:0.65 }}>Keeps one copy</span>
               </button>
             )}
             {dedupeNote && (
-              <div style={{ marginBottom:10, fontSize:10.5, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", lineHeight:1.5 }}>{dedupeNote}</div>
+              <div style={{ marginBottom:10, fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", lineHeight:1.5 }}>{dedupeNote}</div>
             )}
 
             {/* A-04 / UI-3: Group Tests — always available (manual grouping),
                 highlighted when duplicate candidates are auto-detected. */}
             {importedLabs.length > 0 && (
-              <button onClick={openDupModal} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background: duplicateGroups.length > 0 ? "rgba(245,158,11,.07)" : "rgba(79,142,247,.06)", border:`1px solid ${duplicateGroups.length > 0 ? "rgba(245,158,11,.3)" : "rgba(79,142,247,.22)"}`, borderRadius:8, color: duplicateGroups.length > 0 ? "#f59e0b" : "#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
+              <button onClick={openDupModal} style={{ width:"100%", marginBottom:10, padding:"8px 12px", background: duplicateGroups.length > 0 ? "rgba(245,158,11,.07)" : "rgba(79,142,247,.06)", border:`1px solid ${duplicateGroups.length > 0 ? "rgba(245,158,11,.3)" : "rgba(79,142,247,.22)"}`, borderRadius:8, color: duplicateGroups.length > 0 ? "#f59e0b" : "#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:7, fontWeight:600 }}>
                 <span style={{ fontSize:13 }}>⚡</span>
                 <span style={{ flex:1, textAlign:"left" }}>
                   {duplicateGroups.length > 0
                     ? `${duplicateGroups.length} possible duplicate${duplicateGroups.length > 1 ? "s" : ""} — Group Tests`
                     : "Group Tests"}
                 </span>
-                <span style={{ fontSize:10, opacity:0.65 }}>Review →</span>
+                <span style={{ fontSize:12, opacity:0.65 }}>Review →</span>
               </button>
             )}
 
             {/* Add Lab button */}
             <button
               onClick={() => setShowAddLab(o => !o)}
-              style={{ width:"100%", marginBottom:14, padding:"8px 12px", background: showAddLab ? "rgba(16,185,129,.12)" : "rgba(79,142,247,.08)", border:`1px solid ${showAddLab ? "rgba(16,185,129,.35)" : "rgba(79,142,247,.25)"}`, borderRadius:8, color: showAddLab ? "#2dd4a0" : "#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:6, fontWeight:600 }}
+              style={{ width:"100%", marginBottom:14, padding:"8px 12px", background: showAddLab ? "rgba(16,185,129,.12)" : "rgba(79,142,247,.08)", border:`1px solid ${showAddLab ? "rgba(16,185,129,.35)" : "rgba(79,142,247,.25)"}`, borderRadius:8, color: showAddLab ? "#2dd4a0" : "#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", cursor:"pointer", display:"flex", alignItems:"center", gap:6, fontWeight:600 }}
             >
               <span style={{ fontSize:14 }}>{showAddLab ? "✕" : "+"}</span>
               {showAddLab ? "Cancel" : "Add Lab Result"}
@@ -1183,7 +1183,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
             {/* Inline Add Lab form */}
             {showAddLab && (
               <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:10, padding:"14px", marginBottom:14, animation:"fadeUp .2s ease both" }}>
-                <div style={{ fontSize:9, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:12 }}>NEW LAB RESULT</div>
+                <div style={{ fontSize:12, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:12 }}>NEW LAB RESULT</div>
                 {[
                   { label:"Test Name *", key:"name", placeholder:"e.g. Creatinine", type:"text" },
                   { label:"Result Value *", key:"value", placeholder:"e.g. 1.2", type:"text" },
@@ -1192,34 +1192,34 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   { label:"Date", key:"date", placeholder:"", type:"date" },
                 ].map(f => (
                   <div key={f.key} style={{ marginBottom:9 }}>
-                    <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>{f.label}</div>
+                    <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>{f.label}</div>
                     <input
                       type={f.type}
                       placeholder={f.placeholder}
                       value={newLab[f.key]}
                       onChange={e => setNewLab(p => ({ ...p, [f.key]: e.target.value }))}
-                      style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
+                      style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:12, fontFamily:"'DM Mono',monospace", outline:"none" }}
                     />
                   </div>
                 ))}
                 <div style={{ marginBottom:9 }}>
-                  <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Category</div>
+                  <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Category</div>
                   <select
                     value={newLab.category}
                     onChange={e => setNewLab(p => ({ ...p, category: e.target.value }))}
-                    style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
+                    style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:12, fontFamily:"'DM Mono',monospace", outline:"none" }}
                   >
                     {ALL_LAB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div style={{ marginBottom:12 }}>
-                  <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Notes</div>
+                  <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Notes</div>
                   <input
                     type="text"
                     placeholder="Optional notes"
                     value={newLab.notes}
                     onChange={e => setNewLab(p => ({ ...p, notes: e.target.value }))}
-                    style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:11, fontFamily:"'DM Mono',monospace", outline:"none" }}
+                    style={{ width:"100%", padding:"7px 10px", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, color:"#c4d8ee", fontSize:12, fontFamily:"'DM Mono',monospace", outline:"none" }}
                   />
                 </div>
                 <button
@@ -1234,7 +1234,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
 
             {/* ── Imported Labs (deduplicated — latest per test name) ── */}
             {importedLabs.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "32px 12px", color: "#6a8090", fontSize: 11, fontFamily: "'DM Mono',monospace", lineHeight: 1.7 }}>
+              <div style={{ textAlign: "center", padding: "32px 12px", color: "#6a8090", fontSize: 12, fontFamily: "'DM Mono',monospace", lineHeight: 1.7 }}>
                 No lab results imported yet.<br />
                 Use Import Records to upload a PDF lab report.
               </div>
@@ -1275,7 +1275,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
                         {cats.map(c => (
                           <button key={c} onClick={() => setImportedCatFilter(c)}
-                            style={{ padding: "2px 8px", borderRadius: 5, border: "none", cursor: "pointer", fontSize: 9, fontFamily: "'DM Mono',monospace",
+                            style={{ padding: "2px 8px", borderRadius: 5, border: "none", cursor: "pointer", fontSize: 12, fontFamily: "'DM Mono',monospace",
                               background: importedCatFilter === c ? "#4f8ef7" : "#0f1e30",
                               color: importedCatFilter === c ? "#fff" : "#7eb8d8" }}>
                             {c}
@@ -1283,7 +1283,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                         ))}
                         {presentOrdered.length > 1 && (
                           <button onClick={() => setReorderOpen(o => !o)} title="Reorder lab groups"
-                            style={{ marginLeft: "auto", padding: "2px 9px", borderRadius: 5, border: `1px solid ${reorderOpen ? "#4f8ef7" : "#1a2f4a"}`, cursor: "pointer", fontSize: 9, fontFamily: "'DM Mono',monospace", background: reorderOpen ? "rgba(79,142,247,.15)" : "transparent", color: "#7eb8d8" }}>
+                            style={{ marginLeft: "auto", padding: "2px 9px", borderRadius: 5, border: `1px solid ${reorderOpen ? "#4f8ef7" : "#1a2f4a"}`, cursor: "pointer", fontSize: 12, fontFamily: "'DM Mono',monospace", background: reorderOpen ? "rgba(79,142,247,.15)" : "transparent", color: "#7eb8d8" }}>
                             ⠿ Reorder Groups
                           </button>
                         )}
@@ -1292,14 +1292,14 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       {listItems.map((item, i) => {
                         if (item.type === "header") {
                           return (
-                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 9, fontWeight: 700, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1c2a40" }}>
+                            <div key={`hdr-${item.cat}`} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, fontSize: 12, fontWeight: 700, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: i === 0 ? 2 : 14, marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1c2a40" }}>
                               <span>{item.cat}</span>
                               {/* DEC-P49: one launcher per panel header, scope = this panel (reconciled rows only). No per-row launchers. */}
                               <AILauncher
                                 label="Ask about this panel"
                                 scope={{ source: "labs_panel", items: [{ kind: "panel", id: item.cat, label: `${item.cat} panel${item.latest ? `, ${formatDateUS(item.latest)}` : ""}`, date: item.latest || undefined }] }}
                                 onNavigate={() => onNavChange?.("ai")}
-                                style={{ padding: "3px 9px", fontSize: 10, borderRadius: 8, textTransform: "none", letterSpacing: 0, fontWeight: 400 }}
+                                style={{ padding: "3px 9px", fontSize: 12, borderRadius: 8, textTransform: "none", letterSpacing: 0, fontWeight: 400 }}
                               />
                             </div>
                           );
@@ -1317,20 +1317,20 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <div style={{ width: 6, height: 6, borderRadius: "50%", background: oor ? "#f59e0b" : "#10b981", flexShrink: 0 }} />
                               <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", textAlign: "left", display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", textAlign: "left", display: "flex", alignItems: "center", gap: 6 }}>
                                   {displayLabName(lab.name)}
                                   {oor === true && <FlaggedBadge />}
                                 </div>
-                                <div style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>
+                                <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>
                                   {formatDateUS(lab.date, "—")}{histCount > 1 ? ` · ${histCount} readings` : ""}
                                 </div>
                               </div>
                               <div style={{ fontSize: 12, fontWeight: 700, color: oor ? "#f59e0b" : "#2dd4a0", flexShrink: 0, textAlign: "right" }}>
-                                {lab.value} <span style={{ fontSize: 9, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
+                                {lab.value} <span style={{ fontSize: 12, color: "#98afc4", fontWeight: 400 }}>{lab.unit}</span>
                               </div>
                             </div>
                             {lab.refRange && (
-                              <div style={{ fontSize: 8, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14, textAlign: "left" }}>ref: {lab.refRange}</div>
+                              <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace", paddingLeft: 14, textAlign: "left" }}>ref: {lab.refRange}</div>
                             )}
                           </div>
                         );
@@ -1393,16 +1393,16 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 4 }}>
                         <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400 }}>{selectedImportedLab.name}</h2>
-                        {inRange === false && <span style={{ fontSize: 9, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE{customRange ? " (your range)" : ""}</span>}
+                        {inRange === false && <span style={{ fontSize: 12, background: "rgba(239,68,68,.15)", color: "#f87171", padding: "3px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", fontWeight: 600 }}>OUT OF RANGE{customRange ? " (your range)" : ""}</span>}
                       </div>
-                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
+                      <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
                         {selectedImportedLab.category}{selectedImportedLab.refRange ? ` · Normal range: ${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : ""}
                         {selectedImportedLab.date ? ` · ${formatDateUS(selectedImportedLab.date)}` : ""}
                         {selectedImportedLab.facility ? ` · ${selectedImportedLab.facility}` : ""}
                       </div>
                     </div>
                     {lookupLabDef(selectedImportedLab.name) && (
-                      <button onClick={() => setShowDescription(d => !d)} style={{ padding:"7px 14px", background: showDescription ? "rgba(79,142,247,.2)" : "rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
+                      <button onClick={() => setShowDescription(d => !d)} style={{ padding:"7px 14px", background: showDescription ? "rgba(79,142,247,.2)" : "rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.35)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", whiteSpace:"nowrap" }}>
                         {showDescription ? "✕ Hide Description" : "📋 Test Description"}
                       </button>
                     )}
@@ -1416,11 +1416,11 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                         <div style={{ fontSize:12, color:"#a8c4dc", lineHeight:1.7, marginBottom:10 }}>{def.description}</div>
                         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                           <div style={{ background:"#080c14", borderRadius:8, padding:"10px 12px" }}>
-                            <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Normal Range</div>
+                            <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Normal Range</div>
                             <div style={{ fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>{def.normalRange}</div>
                           </div>
                           <div style={{ background:"#080c14", borderRadius:8, padding:"10px 12px" }}>
-                            <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Why It Matters</div>
+                            <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:4 }}>Why It Matters</div>
                             <div style={{ fontSize:12, color:"#7eb8d8", lineHeight:1.5 }}>{def.whyMatters}</div>
                           </div>
                         </div>
@@ -1433,11 +1433,11 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
                       <span style={{ fontSize: 36, fontWeight: 700, color: inRange === false ? "#f87171" : inRange === true ? "#2dd4a0" : "#dde8f5", letterSpacing: "-1px" }}>{selectedImportedLab.value}</span>
                       <span style={{ fontSize: 16, color: "#7eb8d8" }}>{selectedImportedLab.unit}</span>
-                      {inRange === true && <span style={{ fontSize: 11, color: "#2dd4a0", fontFamily: "'DM Mono',monospace" }}>✓ Within normal range</span>}
-                      {inRange === false && <span style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace" }}>⚠ Outside normal range</span>}
+                      {inRange === true && <span style={{ fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono',monospace" }}>✓ Within normal range</span>}
+                      {inRange === false && <span style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace" }}>⚠ Outside normal range</span>}
                     </div>
                     {selectedImportedLab.refRange && (
-                      <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+                      <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
                         Lab range: {selectedImportedLab.refRange} {selectedImportedLab.unit}
                         {customRange && <span style={{ color: "#2dd4a0", marginLeft: 12 }}>· Your range: {customRange.low}–{customRange.high}</span>}
                       </div>
@@ -1449,17 +1449,17 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     {/* ── Custom Range Editor ── */}
                     <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #1c2a40" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: customRange && editingCustomRange !== labKey ? 8 : 0 }}>
-                        <span style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontWeight: 600, letterSpacing: "0.5px" }}>YOUR DOCTOR'S RANGE</span>
+                        <span style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontWeight: 600, letterSpacing: "0.5px" }}>YOUR DOCTOR'S RANGE</span>
                         <div style={{ display: "flex", gap: 6 }}>
                           {customRange && editingCustomRange !== labKey && <>
                             <button onClick={() => { setCustomRangeForm({ low: String(customRange.low), high: String(customRange.high) }); setEditingCustomRange(labKey); }}
-                              style={{ fontSize: 9, color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✎ Edit</button>
+                              style={{ fontSize: 12, color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✎ Edit</button>
                             <button onClick={() => removeCustomRange(selectedImportedLab.name)}
-                              style={{ fontSize: 9, color: "#f87171", background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✕ Remove</button>
+                              style={{ fontSize: 12, color: "#f87171", background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>✕ Remove</button>
                           </>}
                           {!customRange && editingCustomRange !== labKey && (
                             <button onClick={() => { setCustomRangeForm({ low: "", high: "" }); setEditingCustomRange(labKey); }}
-                              style={{ fontSize: 9, color: "#2dd4a0", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>+ Set Range</button>
+                              style={{ fontSize: 12, color: "#2dd4a0", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 5, padding: "2px 9px", cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>+ Set Range</button>
                           )}
                         </div>
                       </div>
@@ -1474,16 +1474,16 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                         <div style={{ display: "flex", alignItems: "flex-end", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
                           {[["LOW", "low"], ["HIGH", "high"]].map(([label, field]) => (
                             <div key={field}>
-                              <label style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "block", marginBottom: 3 }}>{label}</label>
+                              <label style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "block", marginBottom: 3 }}>{label}</label>
                               <input type="number" step="any" value={customRangeForm[field]}
                                 onChange={e => setCustomRangeForm(p => ({ ...p, [field]: e.target.value }))}
                                 style={{ width: 72, padding: "6px 8px", background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 6, color: "#c4d8ee", fontSize: 12, fontFamily: "'DM Mono',monospace", outline: "none" }} />
                             </div>
                           ))}
                           <button onClick={() => saveCustomRange(selectedImportedLab.name, customRangeForm.low, customRangeForm.high)}
-                            style={{ padding: "6px 14px", background: "#10b981", border: "none", borderRadius: 7, color: "#fff", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer", fontWeight: 600 }}>Save</button>
+                            style={{ padding: "6px 14px", background: "#10b981", border: "none", borderRadius: 7, color: "#fff", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer", fontWeight: 600 }}>Save</button>
                           <button onClick={() => setEditingCustomRange(null)}
-                            style={{ padding: "6px 10px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 7, color: "#7eb8d8", fontSize: 11, cursor: "pointer" }}>✕</button>
+                            style={{ padding: "6px 10px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 7, color: "#7eb8d8", fontSize: 12, cursor: "pointer" }}>✕</button>
                         </div>
                       )}
                     </div>
@@ -1498,7 +1498,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       ["Reference Range", selectedImportedLab.refRange ? `${selectedImportedLab.refRange} ${selectedImportedLab.unit}` : "—"],
                     ].map(([k, v]) => (
                       <div key={k} style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px" }}>
-                        <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{k}</div>
+                        <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 5 }}>{k}</div>
                         <div style={{ fontSize: 13, color: "#c4d8ee", fontWeight: 500 }}>{v}</div>
                       </div>
                     ))}
@@ -1506,7 +1506,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
 
                   {selectedImportedLab.notes && (
                     <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "14px 16px", marginBottom: 18 }}>
-                      <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Notes</div>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Notes</div>
                       <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.6 }}>{selectedImportedLab.notes}</div>
                     </div>
                   )}
@@ -1519,7 +1519,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                         <div style={{ display: "flex", gap: 4 }}>
                           {[3, 6, 12].map(mo => (
                             <button key={mo} className="time-btn" onClick={() => setTrendRange(mo)}
-                              style={{ padding: "3px 10px", fontSize: 10, background: trendRange === mo ? "#4f8ef7" : "#0f1e30", color: trendRange === mo ? "#fff" : "#7eb8d8", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>
+                              style={{ padding: "3px 10px", fontSize: 12, background: trendRange === mo ? "#4f8ef7" : "#0f1e30", color: trendRange === mo ? "#fff" : "#7eb8d8", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "'DM Mono',monospace" }}>
                               {mo}mo
                             </button>
                           ))}
@@ -1528,7 +1528,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                       {chartData ? (
                         <TrendChart lab={chartData} color={lineColor} monthLabels={histLabels} dates={chartDates} />
                       ) : (
-                        <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace", padding: "16px 0", textAlign: "center" }}>
+                        <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace", padding: "16px 0", textAlign: "center" }}>
                           No readings in the selected {trendRange}-month window. Try a wider range.
                         </div>
                       )}
@@ -1538,7 +1538,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           { dot: "#ef4444", label: "Out of range" },
                           { dot: lineColor, label: "In range" },
                         ].map(({ dot, label }) => (
-                          <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
+                          <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                             {dot ? <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot }} /> : <div style={{ width: 14, height: 1, borderTop: "1px dashed #10b981" }} />}
                             {label}
                           </div>
@@ -1557,7 +1557,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           const bad = low !== null && high !== null && !isNaN(hv) && (hv < low || hv > high);
                           return (
                             <div key={i} style={{ textAlign: "center", padding: "8px 4px", background: "#080c14", borderRadius: 6, border: bad ? "1px solid rgba(239,68,68,.3)" : "1px solid #1c2a40" }}>
-                              <div style={{ fontSize: 8, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{h.date || "—"}</div>
+                              <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>{h.date || "—"}</div>
                               <div style={{ fontSize: 12, fontWeight: 700, color: bad ? "#f87171" : "#a8c4dc" }}>{h.value}</div>
                             </div>
                           );
@@ -1575,8 +1575,8 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 14, color: "#6ea3ff" }}>✦</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", letterSpacing: "0.5px" }}>AI Lab Analysis</span>
-                  {importedLabs.length > 0 && <span style={{ fontSize: 9, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.25)", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>{importedLabs.length} imported</span>}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#7eb8d8", letterSpacing: "0.5px" }}>AI Lab Analysis</span>
+                  {importedLabs.length > 0 && <span style={{ fontSize: 12, background: "rgba(16,185,129,.12)", color: "#2dd4a0", border: "1px solid rgba(16,185,129,.25)", padding: "1px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace" }}>{importedLabs.length} imported</span>}
                 </div>
                 <button
                   onClick={analyzeAllLabs}
@@ -1595,7 +1595,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   onChange={e => setSessionContext(e.target.value)}
                   placeholder="Optional: anything going on right now the Full Analysis should know? (e.g. new symptom, missed doses)"
                   disabled={aiAnalyzing || aiQALoading}
-                  style={{ width: "100%", background: "#0b1220", border: `1px solid ${sessionContext.trim() ? "rgba(79,142,247,.4)" : "#1c2a40"}`, color: "#c4d8ee", padding: "8px 12px", borderRadius: 8, fontFamily: "'Sora',sans-serif", fontSize: 11.5, outline: "none" }}
+                  style={{ width: "100%", background: "#0b1220", border: `1px solid ${sessionContext.trim() ? "rgba(79,142,247,.4)" : "#1c2a40"}`, color: "#c4d8ee", padding: "8px 12px", borderRadius: 8, fontFamily: "'Sora',sans-serif", fontSize: 12, outline: "none" }}
                 />
               </div>
 
@@ -1616,7 +1616,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 >Ask ↑</button>
               </div>
 
-              {aiError && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>{aiError}</div>}
+              {aiError && <div style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>{aiError}</div>}
 
               {/* Q&A thread */}
               {aiQA.length > 0 && (
@@ -1632,7 +1632,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                               {renderMarkdown(item.a)}
                               <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8, paddingTop:6, borderTop:"1px solid #1c2a40" }}>
                                 <button onClick={() => printAIResponse(item.q, item.a, PRINT_LOGO)}
-                                  style={{ background:"none", border:"none", color:"#6ea3ff", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                                  style={{ background:"none", border:"none", color:"#6ea3ff", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.65, display:"flex", alignItems:"center", gap:5, padding:0 }}>
                                   <PrintLabel />
                                 </button>
                               </div>
@@ -1651,14 +1651,14 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   {renderMarkdown(aiAnalysis)}
                   <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", gap:14, marginTop:10, paddingTop:8, borderTop:"1px solid #1c2a40" }}>
                     <button onClick={() => setAnalysisOverlay({ title: "Full Lab Analysis", content: aiAnalysis, mode: "standard", timestamp: new Date().toISOString() })}
-                      style={{ background:"none", border:"none", color:"#6ea3ff", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.8, display:"flex", alignItems:"center", gap:5, padding:0 }}>
+                      style={{ background:"none", border:"none", color:"#6ea3ff", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace", opacity:0.8, display:"flex", alignItems:"center", gap:5, padding:0 }}>
                       ⤢ Open as report
                     </button>
                   </div>
                 </div>
               )}
               {!aiAnalysis && !aiAnalyzing && aiQA.length === 0 && !aiError && (
-                <div style={{ fontSize: 11, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
+                <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
                   {importedLabs.length > 0
                     ? "Ask a question above or click Full Analysis for a complete review."
                     : "Import lab results using the Import Records tab, then ask questions here."}
@@ -1680,7 +1680,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
               <span style={{ fontSize:18, color:"#f59e0b", marginTop:1 }}>⚡</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:14, fontWeight:700, color:"#c4d8ee", marginBottom:3 }}>Group Tests</div>
-                <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", lineHeight:1.55 }}>
+                <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", lineHeight:1.55 }}>
                   Group different names for the same test (e.g. FK506 and Tacrolimus) so trends and
                   analysis treat them as one. Your original entries are never renamed or deleted —
                   grouping is reversible.
@@ -1698,14 +1698,14 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 if (!confirmed.length) return null;
                 return (
                   <div style={{ marginBottom:18 }}>
-                    <div style={{ fontSize:9, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Confirmed groups</div>
+                    <div style={{ fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Confirmed groups</div>
                     {confirmed.map(grp => (
                       <div key={grp.canonical} style={{ background:"#0b1220", border:"1px solid rgba(16,185,129,.25)", borderRadius:10, padding:"10px 13px", marginBottom:8, display:"flex", alignItems:"center", gap:10 }}>
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:12, color:"#c4d8ee", fontWeight:600 }}>{grp.canonical}</div>
-                          <div style={{ fontSize:9, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.5 }}>grouped from: {grp.sources.join(", ")}</div>
+                          <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.5 }}>grouped from: {grp.sources.join(", ")}</div>
                         </div>
-                        <button onClick={() => ungroup(grp.canonical)} style={{ flexShrink:0, background:"none", border:"1px solid #1a2840", borderRadius:6, color:"#a0b4c8", fontSize:10, fontFamily:"'DM Mono',monospace", padding:"4px 10px", cursor:"pointer" }}>Ungroup</button>
+                        <button onClick={() => ungroup(grp.canonical)} style={{ flexShrink:0, background:"none", border:"1px solid #1a2840", borderRadius:6, color:"#a0b4c8", fontSize:12, fontFamily:"'DM Mono',monospace", padding:"4px 10px", cursor:"pointer" }}>Ungroup</button>
                       </div>
                     ))}
                   </div>
@@ -1718,14 +1718,14 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                 const toggle = (name) => setManualSel(sel => sel.includes(name) ? sel.filter(n => n !== name) : [...sel, name]);
                 return (
                   <div style={{ marginBottom:18 }}>
-                    <div style={{ fontSize:9, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Group manually</div>
-                    <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginBottom:8 }}>Select two or more names that are the same test, then name the group.</div>
+                    <div style={{ fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Group manually</div>
+                    <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginBottom:8 }}>Select two or more names that are the same test, then name the group.</div>
                     <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10, maxHeight:120, overflowY:"auto" }}>
                       {distinctNames.map(name => {
                         const on = manualSel.includes(name);
                         return (
                           <button key={name} onClick={() => toggle(name)}
-                            style={{ padding:"5px 10px", borderRadius:14, border:`1px solid ${on ? "rgba(79,142,247,.5)" : "#1a2840"}`, background: on ? "rgba(79,142,247,.12)" : "transparent", color: on ? "#7eb8d8" : "#98afc4", fontSize:10.5, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+                            style={{ padding:"5px 10px", borderRadius:14, border:`1px solid ${on ? "rgba(79,142,247,.5)" : "#1a2840"}`, background: on ? "rgba(79,142,247,.12)" : "transparent", color: on ? "#7eb8d8" : "#98afc4", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
                             {on ? "✓ " : ""}{name}
                           </button>
                         );
@@ -1749,7 +1749,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
 
               {/* Auto-detected candidates */}
               {dupGroups.length > 0 && (
-                <div style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Possible duplicates</div>
+                <div style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:8 }}>Possible duplicates</div>
               )}
               {dupGroups.map((g, gi) => {
                 const dec = dupDecisions[g.norm] || { canonical: g.variants[0]?.name, skip: false };
@@ -1758,10 +1758,10 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                   <div key={g.norm} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px", marginBottom:12 }}>
                     {/* Group heading */}
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-                      <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", background:"rgba(245,158,11,.12)", color:"#f59e0b", border:"1px solid rgba(245,158,11,.28)", padding:"1px 7px", borderRadius:4, letterSpacing:"0.5px" }}>
+                      <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", background:"rgba(245,158,11,.12)", color:"#f59e0b", border:"1px solid rgba(245,158,11,.28)", padding:"1px 7px", borderRadius:4, letterSpacing:"0.5px" }}>
                         GROUP {gi + 1}
                       </span>
-                      <span style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                      <span style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                         {g.names.length} variants · {totalEntries} total entries
                       </span>
                     </div>
@@ -1785,17 +1785,17 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                           </div>
                           <div style={{ flex:1, minWidth:0 }}>
                             <div style={{ fontSize:12, color:"#c4d8ee", fontWeight:600 }}>{v.name}</div>
-                            <div style={{ fontSize:9, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                            <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                               {v.count} entr{v.count === 1 ? "y" : "ies"}{v.dateRange ? ` · ${v.dateRange}` : ""}
                             </div>
                           </div>
                           {isSelected && (
-                            <span style={{ fontSize:8, background:"rgba(79,142,247,.15)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.3)", padding:"1px 7px", borderRadius:3, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
+                            <span style={{ fontSize:12, background:"rgba(79,142,247,.15)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.3)", padding:"1px 7px", borderRadius:3, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
                               CANONICAL
                             </span>
                           )}
                           {gi === 0 && v === g.variants[0] && !isSelected && !dec.skip && (
-                            <span style={{ fontSize:8, color:"#6a8090", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>most common</span>
+                            <span style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>most common</span>
                           )}
                         </div>
                       );
@@ -1804,7 +1804,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     {/* Skip toggle */}
                     <button
                       onClick={() => setDupDecisions(d => ({ ...d, [g.norm]: { ...d[g.norm], skip: !dec.skip } }))}
-                      style={{ marginTop:6, padding:"4px 11px", background: dec.skip ? "rgba(167,139,250,.12)" : "transparent", border:`1px solid ${dec.skip ? "rgba(167,139,250,.35)" : "#1a2840"}`, borderRadius:6, color: dec.skip ? "#a78bfa" : "#6a8090", fontSize:10, fontFamily:"'DM Mono',monospace", cursor:"pointer", transition:"all .12s" }}>
+                      style={{ marginTop:6, padding:"4px 11px", background: dec.skip ? "rgba(167,139,250,.12)" : "transparent", border:`1px solid ${dec.skip ? "rgba(167,139,250,.35)" : "#1a2840"}`, borderRadius:6, color: dec.skip ? "#a78bfa" : "#6a8090", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", transition:"all .12s" }}>
                       {dec.skip ? "✓ Keeping separate" : "Keep separate (skip)"}
                     </button>
                   </div>
@@ -1814,7 +1814,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
 
             {/* Modal footer */}
             <div style={{ padding:"14px 22px", borderTop:"1px solid #1c2a40", display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-              <div style={{ flex:1, fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+              <div style={{ flex:1, fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                 {(() => {
                   if (dupGroups.length === 0) return "No auto-detected duplicates";
                   const grouping = dupGroups.filter(g => !dupDecisions[g.norm]?.skip).length;
@@ -1859,7 +1859,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
         return (
           <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.78)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
             <div style={{ width:360, maxWidth:"90vw", background:"#0b1220", border:"1px solid #16273c", borderRadius:14, padding:"20px 22px", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}>
-              <div style={{ fontSize:9, color: hasHard ? "#f87171" : "#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:6 }}>
+              <div style={{ fontSize:12, color: hasHard ? "#f87171" : "#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:6 }}>
                 {hasHard ? "CHECK THIS VALUE" : "UNUSUAL VALUE"}
               </div>
               <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:17, color:"#dde8f5", marginBottom:14 }}>
@@ -1879,7 +1879,7 @@ ${formatTripwireEnvelope(qaTripwireEnvelope)}`;
                     ))}
                   </div>
                 ) : (
-                  <div style={{ fontSize:11, color:"#98afc4", marginBottom:4 }}>No suggested correction — please edit the value manually.</div>
+                  <div style={{ fontSize:12, color:"#98afc4", marginBottom:4 }}>No suggested correction — please edit the value manually.</div>
                 )
               )}
               <div style={{ display:"flex", gap:8, marginTop:16 }}>

@@ -68,7 +68,7 @@ export default function PrepMarkPicker({ noteId, reportText, onChanged, persist 
 
   return (
     <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-      <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: mono, letterSpacing: "0.8px", textTransform: "uppercase" }}>
+      <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: mono, letterSpacing: "0.8px", textTransform: "uppercase" }}>
         Include in appointment prep for:
       </span>
       {careTeam.map(m => {
@@ -77,7 +77,7 @@ export default function PrepMarkPicker({ noteId, reportText, onChanged, persist 
           <button key={memberKey(m)} onClick={() => toggle(m)}
             title={m.specialty || m.role || ""}
             style={{
-              padding: "4px 10px", borderRadius: 12, fontSize: 11, fontFamily: "'Sora',sans-serif",
+              padding: "4px 10px", borderRadius: 12, fontSize: 12, fontFamily: "'Sora',sans-serif",
               cursor: "pointer", transition: "all .12s",
               background: on ? "rgba(79,142,247,.16)" : "transparent",
               border: `1px solid ${on ? "rgba(79,142,247,.45)" : "#1a2f4a"}`,
@@ -89,7 +89,7 @@ export default function PrepMarkPicker({ noteId, reportText, onChanged, persist 
       })}
       <button onClick={apply} disabled={applied && !dirty}
         style={{
-          padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "'Sora',sans-serif",
+          padding: "4px 12px", borderRadius: 8, fontSize: 12, fontFamily: "'Sora',sans-serif",
           cursor: applied && !dirty ? "default" : "pointer",
           background: applied && !dirty ? "rgba(16,185,129,.10)" : "rgba(16,185,129,.16)",
           border: "1px solid rgba(16,185,129,.35)", color: "#2dd4a0",
@@ -98,7 +98,7 @@ export default function PrepMarkPicker({ noteId, reportText, onChanged, persist 
           ? (count ? "✓ Marked for prep" : "✓ Marks cleared")
           : (count ? `Mark for prep (${count})` : (applied ? "Remove marks" : "Mark for prep"))}
       </button>
-      <span style={{ fontSize: 9, color: "#4a5c6a", fontFamily: mono }}>
+      <span style={{ fontSize: 12, color: "#4a5c6a", fontFamily: mono }}>
         Included when you prep for that doctor · clears after the visit
       </span>
     </div>

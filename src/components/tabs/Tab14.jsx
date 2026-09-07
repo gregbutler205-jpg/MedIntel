@@ -289,7 +289,7 @@ function ApptModal({ appt, onSave, onClose }) {
               <label style={lbl}>Provider / Doctor</label>
               <button
                 onClick={openQuickAdd}
-                style={{ background:"none", border:"none", color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:11, cursor:"pointer", padding:0, marginBottom:5 }}
+                style={{ background:"none", border:"none", color:"#6ea3ff", fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer", padding:0, marginBottom:5 }}
               >+ Add to Care Team</button>
             </div>
             <input style={inp} placeholder="e.g. Dr. Ari Cohen" value={form.provider} onChange={e=>set("provider",e.target.value)} onBlur={handleProviderBlur} />
@@ -392,7 +392,7 @@ function ApptModal({ appt, onSave, onClose }) {
           <div role="dialog" aria-modal="true" aria-label="Add care team member" style={{ position:"fixed", inset:0, zIndex:1002, background:"rgba(8,12,20,.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
             <div style={{ background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:14, width:"100%", maxWidth:440, padding:24 }}>
               <h3 style={{ fontFamily:"'DM Serif Display',serif", fontSize:18, color:"#dde8f5", fontWeight:400, marginBottom:6 }}>Add to Care Team</h3>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:16 }}>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'Sora',sans-serif", marginBottom:16 }}>
                 Saves this provider to your Care Team and returns you to the appointment. Address, email, and other details can be added later on the Care Team tab.
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
@@ -450,7 +450,7 @@ function ApptModal({ appt, onSave, onClose }) {
   );
 }
 
-const lbl = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
+const lbl = { display:"block", fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
 const inp = { width:"100%", background:"#080c14", border:"1px solid #1a2f4a", borderRadius:8, padding:"9px 12px", color:"#c4d8ee", fontFamily:"'Sora',sans-serif", fontSize:12, outline:"none" };
 
 // ── Keyword / date extractor for smart record matching ───────────────────────
@@ -627,7 +627,7 @@ function AttachModal({ appt, onSave, onClose }) {
         <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.title}</div>
-          <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{item.date ? ` · ${formatDateUS(item.date)}` : ""}</div>
+          <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{item.date ? ` · ${formatDateUS(item.date)}` : ""}</div>
         </div>
       </div>
     );
@@ -640,22 +640,22 @@ function AttachModal({ appt, onSave, onClose }) {
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400 }}>Attach Records</h2>
           <button onClick={onClose} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
         </div>
-        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Tie documents, imaging, notes, or clinical records to &ldquo;{appt.title}&rdquo;.</div>
+        <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Tie documents, imaging, notes, or clinical records to &ldquo;{appt.title}&rdquo;.</div>
 
         {items.length === 0 && <div style={{ fontSize:12, color:"#98afc4", textAlign:"center", padding:"24px 0" }}>No documents, imaging, or notes saved yet.</div>}
 
         {suggested.length > 0 && <>
-          <div style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"4px 0 8px" }}>✦ Suggested (matches date / provider)</div>
+          <div style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"4px 0 8px" }}>✦ Suggested (matches date / provider)</div>
           {suggested.map(i => <Row key={attKey(i)} item={i} />)}
         </>}
         {others.length > 0 && <>
-          <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"14px 0 8px" }}>
+          <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", margin:"14px 0 8px" }}>
             All records — newest first{others.length > othersShown ? ` (showing ${Math.min(othersShown, others.length)} of ${others.length})` : ""}
           </div>
           {others.slice(0, othersShown).map(i => <Row key={attKey(i)} item={i} />)}
           {others.length > othersShown && (
             <button onClick={() => setOthersShown(n => n + 10)}
-              style={{ width:"100%", padding:"8px 0", background:"transparent", border:"1px dashed #1a2f4a", borderRadius:8, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", marginBottom:6 }}>
+              style={{ width:"100%", padding:"8px 0", background:"transparent", border:"1px dashed #1a2f4a", borderRadius:8, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", fontSize:12, cursor:"pointer", marginBottom:6 }}>
               Load 10 more ({others.length - othersShown} remaining)
             </button>
           )}
@@ -680,7 +680,7 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
   return (
     <div style={{ marginTop:14, background:"#080c14", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
-        <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase" }}>Records &amp; Documents</span>
+        <span style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase" }}>Records &amp; Documents</span>
         <button className="apt-btn" style={{ background:"rgba(79,142,247,.10)", borderColor:"rgba(79,142,247,.3)", color:"#7eb8d8", padding:"5px 11px" }} onClick={onAttach}>+ Attach</button>
       </div>
 
@@ -689,14 +689,14 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
           <span style={{ color:ATT_META.prep.color, fontSize:13 }}>✦</span>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontSize:12, color:"#c4d8ee" }}>Consultation Prep</div>
-            <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>AI-generated prep for this visit</div>
+            <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>AI-generated prep for this visit</div>
           </div>
-          <button onClick={onViewPrep} style={{ background:"none", border:"none", color:"#f59e0b", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ View</button>
+          <button onClick={onViewPrep} style={{ background:"none", border:"none", color:"#f59e0b", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>⎙ View</button>
         </div>
       )}
 
       {atts.length === 0 && !prep && (
-        <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"6px 0" }}>No records attached yet. Use "+ Attach" to link documents, imaging, or notes.</div>
+        <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"6px 0" }}>No records attached yet. Use "+ Attach" to link documents, imaging, or notes.</div>
       )}
 
       {atts.map(att => {
@@ -706,9 +706,9 @@ function ApptDocuments({ appt, onAttach, onDetach, onOpen, onViewPrep }) {
             <span style={{ color:m.color, fontSize:13 }}>{m.icon}</span>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:12, color:"#c4d8ee", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{att.title}</div>
-              <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{att.date ? ` · ${formatDateUS(att.date)}` : ""}</div>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{m.label}{att.date ? ` · ${formatDateUS(att.date)}` : ""}</div>
             </div>
-            {m.nav && <button onClick={() => onOpen(att)} title={`Open in ${m.label}`} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:11, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>↗ Open</button>}
+            {m.nav && <button onClick={() => onOpen(att)} title={`Open in ${m.label}`} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}>↗ Open</button>}
             <button onClick={() => onDetach(att)} title="Detach" style={{ background:"none", border:"none", color:"#6b7a8d", fontSize:13, cursor:"pointer" }}>✕</button>
           </div>
         );
@@ -829,7 +829,7 @@ const pvSaveBtn = (enabled) => ({
   background: "rgba(16,185,129,.12)", border: "1px solid rgba(16,185,129,.35)", color: "#2dd4a0",
 });
 const fileInp = {
-  width: "100%", fontSize: 11, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", marginBottom: 8,
+  width: "100%", fontSize: 12, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", marginBottom: 8,
   background: "#080c14", border: "1px solid #1a2f4a", borderRadius: 8, padding: "8px 10px",
 };
 
@@ -842,7 +842,7 @@ function FileCaptureForm({ appt, category, accept, hint, onCapture, busy }) {
       <input type="file" accept={accept} disabled={busy} style={fileInp}
         onChange={e => { const f = e.target.files?.[0]; if (!f) return; setFile(f); if (!title) setTitle(f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ")); }} />
       <input style={pvField} placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} disabled={busy} />
-      {hint && <div style={{ fontSize: 9.5, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>{hint}</div>}
       <button disabled={!canSave} style={pvSaveBtn(canSave)}
         onClick={() => onCapture(() => captureDocument({ file, title, category, apptDate: appt.date }))}>
         {busy ? "Saving…" : "✓ Save & Attach"}
@@ -866,7 +866,7 @@ function ImagingCaptureForm({ appt, onCapture, busy }) {
       </div>
       <input type="file" accept="image/*" disabled={busy} style={fileInp}
         onChange={e => setFile(e.target.files?.[0] || null)} />
-      <div style={{ fontSize: 9.5, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Optional image is compressed. Facility &amp; date auto-fill from this visit.</div>
+      <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>Optional image is compressed. Facility &amp; date auto-fill from this visit.</div>
       <button disabled={!canSave} style={pvSaveBtn(canSave)}
         onClick={() => onCapture(() => captureImaging({ imgType, bodyPart, facility: appt.facility, apptDate: appt.date, file }))}>
         {busy ? "Saving…" : "✓ Save & Attach"}
@@ -972,7 +972,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
           Capture anything from &ldquo;{appt.title}&rdquo;? Add what applies below — each item is saved and attached to this appointment automatically.
         </div>
 
-        {err && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>⚠ {err}</div>}
+        {err && <div style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>⚠ {err}</div>}
 
         {rows.map(r => {
           const isOpen = openRow === r.key;
@@ -983,7 +983,7 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
                 <span style={{ color: "#7eb8d8", fontSize: 15 }}>{r.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, color: "#c4d8ee", fontWeight: 600 }}>{r.label}</div>
-                  <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{r.desc}</div>
+                  <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginTop: 2 }}>{r.desc}</div>
                 </div>
                 <button style={{ padding: "6px 14px", background: isOpen ? "transparent" : "rgba(79,142,247,.14)", border: `1px solid ${isOpen ? "#1a2f4a" : "rgba(79,142,247,.4)"}`, borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'Sora',sans-serif", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
                   {isOpen ? "Close" : "+ Add"}
@@ -996,14 +996,14 @@ function PostVisitModal({ appt, onCaptured, onClose }) {
 
         {captured.length > 0 && (
           <div style={{ marginTop: 14, padding: "10px 12px", background: "rgba(16,185,129,.06)", border: "1px solid rgba(16,185,129,.2)", borderRadius: 10 }}>
-            <div style={{ fontSize: 10, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Attached to this visit</div>
+            <div style={{ fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>Attached to this visit</div>
             {captured.map((c, i) => {
               const m = ATT_META[c.type] || ATT_META.document;
               return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "#c4d8ee", marginBottom: 4 }}>
                   <span style={{ color: m.color }}>{m.icon}</span>
                   <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.title || m.label}</span>
-                  <span style={{ fontSize: 9, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{m.label}</span>
+                  <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{m.label}</span>
                 </div>
               );
             })}
@@ -1128,16 +1128,16 @@ Please provide:
 
   return (
     <div style={{ marginTop:16, background:"rgba(79,142,247,.04)", border:"1px solid rgba(79,142,247,.15)", borderRadius:12, padding:18 }}>
-      <div style={{ fontSize:11, fontWeight:600, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
+      <div style={{ fontSize:12, fontWeight:600, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", marginBottom:12, display:"flex", alignItems:"center", gap:6 }}>
         <span>✦</span> AI Appointment Prep
-        {stale && <span style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:0 }}>· details changed — regenerate</span>}
-        {analysis && <button onClick={() => requestReport("consultationPrep", () => printConsultationPrep(appt, analysis))} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:10, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}><PrintLabel size={11} /></button>}
+        {stale && <span style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", letterSpacing:0 }}>· details changed — regenerate</span>}
+        {analysis && <button onClick={() => requestReport("consultationPrep", () => printConsultationPrep(appt, analysis))} style={{ marginLeft:"auto", padding:"3px 10px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:6, color:"#7eb8d8", fontSize:12, cursor:"pointer", fontFamily:"'DM Mono',monospace" }}><PrintLabel size={11} /></button>}
       </div>
       {/* DEC-046: what marked analyses will ride into this prep — visible and
           excludable BEFORE generating, never silently included. */}
       {markedForVisit.reports.length > 0 && (
         <div style={{ marginBottom:12, background:"rgba(16,185,129,.04)", border:"1px solid rgba(16,185,129,.18)", borderRadius:8, padding:"10px 13px" }}>
-          <div style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:7 }}>
+          <div style={{ fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:7 }}>
             Marked analyses for this visit ({includedReports.length} of {markedForVisit.reports.length} included)
           </div>
           {markedForVisit.reports.map(r => {
@@ -1146,25 +1146,25 @@ Please provide:
               <div key={r.id} style={{ display:"flex", alignItems:"center", gap:9, marginBottom:5 }}>
                 <div onClick={() => toggleExclude(r.id)} role="checkbox" aria-checked={included}
                   style={{ width:14, height:14, border:`1px solid ${included ? "#10b981" : "#1a2f4a"}`, borderRadius:3, background: included ? "rgba(16,185,129,.12)" : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                  {included && <span style={{ fontSize:9, color:"#2dd4a0" }}>✓</span>}
+                  {included && <span style={{ fontSize:12, color:"#2dd4a0" }}>✓</span>}
                 </div>
-                <span style={{ fontSize:11, color: included ? "#c4d8ee" : "#4a5c6a", flex:1, lineHeight:1.4 }}>{r.title}</span>
-                <span style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{formatDateUS(r.date)}</span>
+                <span style={{ fontSize:12, color: included ? "#c4d8ee" : "#4a5c6a", flex:1, lineHeight:1.4 }}>{r.title}</span>
+                <span style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>{formatDateUS(r.date)}</span>
               </div>
             );
           })}
           {markedForVisit.droppedCount > 0 && (
-            <div style={{ fontSize:9, color:"#f59e0b", fontFamily:"'DM Mono',monospace", marginTop:4 }}>
+            <div style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", marginTop:4 }}>
               +{markedForVisit.droppedCount} older marked {markedForVisit.droppedCount === 1 ? "report" : "reports"} not included (3 newest only)
             </div>
           )}
-          <div style={{ fontSize:9, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:6 }}>
+          <div style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", marginTop:6 }}>
             Marked in My Notes · included in this prep · clears when the visit is completed
           </div>
         </div>
       )}
       <div style={{ marginBottom:10 }}>
-        <label style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", display:"block", marginBottom:5 }}>Additional Questions / Context</label>
+        <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px", textTransform:"uppercase", display:"block", marginBottom:5 }}>Additional Questions / Context</label>
         <textarea
           value={additionalQ}
           onChange={e => setAdditionalQ(e.target.value)}
@@ -1180,7 +1180,7 @@ Please provide:
       >
         {loading ? "⏳ Analyzing…" : "✦ Generate Prep Analysis"}
       </button>
-      {error && <div style={{ marginTop:10, fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>⚠ {error}</div>}
+      {error && <div style={{ marginTop:10, fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>⚠ {error}</div>}
       {analysis && (
         <div style={{ marginTop:14, background:"#080c14", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px", fontSize:12, color:"#a8c4dc", lineHeight:1.75, whiteSpace:"pre-wrap" }}>
           {analysis}
@@ -1199,7 +1199,7 @@ function CalendarPickerModal({ calendars, onPick, onClose }) {
           <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:20, color:"#dde8f5", fontWeight:400 }}>Choose your medical calendar</h2>
           <button onClick={onClose} style={{ background:"none", border:"none", color:"#7eb8d8", fontSize:18, cursor:"pointer" }}>✕</button>
         </div>
-        <p style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>
+        <p style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:16 }}>
           Insina will pull appointments from the calendar you pick. You can change this later.
         </p>
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
@@ -1210,7 +1210,7 @@ function CalendarPickerModal({ calendars, onPick, onClose }) {
               onMouseLeave={e => e.currentTarget.style.borderColor = "#0d1a28"}>
               <span style={{ width:10, height:10, borderRadius:"50%", background:c.color, flexShrink:0 }} />
               <span style={{ flex:1, fontSize:13, color:"#c4d8ee" }}>{c.summary}</span>
-              {c.primary && <span style={{ fontSize:9, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", border:"1px solid #1a2f4a", borderRadius:8, padding:"1px 7px" }}>primary</span>}
+              {c.primary && <span style={{ fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace", border:"1px solid #1a2f4a", borderRadius:8, padding:"1px 7px" }}>primary</span>}
             </button>
           ))}
         </div>
@@ -1499,7 +1499,7 @@ export default function AppointmentsTab({ onNavChange }) {
         .apt-row { display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:10px; background:#080c14; border:1px solid #1c2a40; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
         .apt-row:hover { border-color:#1a2f4a; }
         .apt-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; font-weight:500; cursor:pointer; border:1px solid; transition:all .15s; }
-        .filter-pill { padding:5px 14px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; border:1px solid #1a2f4a; background:transparent; color:#98afc4; transition:all .15s; }
+        .filter-pill { padding:5px 14px; border-radius:20px; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer; border:1px solid #1a2f4a; background:transparent; color:#98afc4; transition:all .15s; }
         .filter-pill.active { background:rgba(79,142,247,.15); border-color:rgba(79,142,247,.4); color:#7eb8d8; }
         input:focus, select:focus, textarea:focus { border-color:#2a4a7a !important; }
       `}</style>
@@ -1541,7 +1541,7 @@ export default function AppointmentsTab({ onNavChange }) {
         {(syncMsg || getSelectedCalendar()) && (
           <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, flexWrap:"wrap" }}>
             {syncMsg && (
-              <div role="status" aria-live="polite" style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:11.5, fontFamily:"'DM Mono',monospace",
+              <div role="status" aria-live="polite" style={{ flex:"1 1 auto", padding:"8px 14px", borderRadius:9, fontSize:12, fontFamily:"'DM Mono',monospace",
                 background: syncMsg.kind === "ok" ? "rgba(16,185,129,.08)" : "rgba(239,68,68,.08)",
                 border: `1px solid ${syncMsg.kind === "ok" ? "rgba(16,185,129,.25)" : "rgba(239,68,68,.25)"}`,
                 color: syncMsg.kind === "ok" ? "#2dd4a0" : "#f87171" }}>
@@ -1549,10 +1549,10 @@ export default function AppointmentsTab({ onNavChange }) {
               </div>
             )}
             {getSelectedCalendar() && (
-              <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+              <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                 Calendar: {getSelectedCalendar().summary} · auto-syncs daily
                 <button onClick={() => { setSelectedCalendar(null); setSyncMsg(null); }}
-                  style={{ marginLeft:8, background:"none", border:"none", color:"#7eb8d8", fontSize:10, cursor:"pointer", textDecoration:"underline", fontFamily:"'DM Mono',monospace" }}>
+                  style={{ marginLeft:8, background:"none", border:"none", color:"#7eb8d8", fontSize:12, cursor:"pointer", textDecoration:"underline", fontFamily:"'DM Mono',monospace" }}>
                   change
                 </button>
               </span>
@@ -1564,14 +1564,14 @@ export default function AppointmentsTab({ onNavChange }) {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:24 }}>
           {/* Next appointment */}
           <div className="apt-card" style={{ padding:20 }}>
-            <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>Next Appointment</div>
+            <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>Next Appointment</div>
             {nextAppt ? (
               <>
                 <div style={{ fontSize:18, fontWeight:700, color:"#dde8f5", marginBottom:4 }}>{nextAppt.title}</div>
                 <div style={{ fontSize:12, color:"#7eb8d8", marginBottom:6 }}>{nextAppt.provider}</div>
-                <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(nextAppt.date)} · {nextAppt.time || "TBD"}</div>
+                <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(nextAppt.date)} · {nextAppt.time || "TBD"}</div>
                 {nextDays !== null && (
-                  <div style={{ marginTop:10, display:"inline-block", padding:"3px 10px", borderRadius:20, background: nextDays <= 3 ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.12)", border:`1px solid ${nextDays<=3?"rgba(239,68,68,.3)":"rgba(79,142,247,.3)"}`, fontSize:10, color:nextDays<=3?"#f87171":"#6ea3ff", fontFamily:"'DM Mono',monospace" }}>
+                  <div style={{ marginTop:10, display:"inline-block", padding:"3px 10px", borderRadius:20, background: nextDays <= 3 ? "rgba(239,68,68,.12)" : "rgba(79,142,247,.12)", border:`1px solid ${nextDays<=3?"rgba(239,68,68,.3)":"rgba(79,142,247,.3)"}`, fontSize:12, color:nextDays<=3?"#f87171":"#6ea3ff", fontFamily:"'DM Mono',monospace" }}>
                     {nextDays === 0 ? "Today" : nextDays === 1 ? "Tomorrow" : `In ${nextDays} days`}
                   </div>
                 )}
@@ -1583,7 +1583,7 @@ export default function AppointmentsTab({ onNavChange }) {
 
           {/* This month */}
           <div className="apt-card" style={{ padding:20 }}>
-            <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>This Month</div>
+            <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>This Month</div>
             {(() => {
               const now = new Date();
               const thisMonth = appts.filter(a => {
@@ -1593,9 +1593,9 @@ export default function AppointmentsTab({ onNavChange }) {
               return thisMonth.length > 0 ? (
                 <>
                   <div style={{ fontSize:32, fontWeight:700, color:"#6ea3ff", lineHeight:1, marginBottom:6 }}>{thisMonth.length}</div>
-                  <div style={{ fontSize:11, color:"#7eb8d8" }}>appointment{thisMonth.length !== 1 ? "s" : ""} remaining</div>
+                  <div style={{ fontSize:12, color:"#7eb8d8" }}>appointment{thisMonth.length !== 1 ? "s" : ""} remaining</div>
                   {thisMonth.map((a,i) => (
-                    <div key={i} style={{ marginTop:6, fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+                    <div key={i} style={{ marginTop:6, fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                       {new Date(a.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})} — {a.title}
                     </div>
                   ))}
@@ -1608,17 +1608,17 @@ export default function AppointmentsTab({ onNavChange }) {
 
           {/* Prep needed */}
           <div className="apt-card" style={{ padding:20 }}>
-            <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>Prep Required</div>
+            <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>Prep Required</div>
             {(() => {
               const prepNeeded = appts.filter(a => a.status === "upcoming" && a.prepInstructions);
               return prepNeeded.length > 0 ? (
                 <>
                   <div style={{ fontSize:32, fontWeight:700, color:"#f59e0b", lineHeight:1, marginBottom:6 }}>{prepNeeded.length}</div>
-                  <div style={{ fontSize:11, color:"#7eb8d8", marginBottom:8 }}>upcoming with prep</div>
+                  <div style={{ fontSize:12, color:"#7eb8d8", marginBottom:8 }}>upcoming with prep</div>
                   {prepNeeded.slice(0,2).map((a,i) => (
                     <div key={i} style={{ marginTop:6, padding:"6px 10px", background:"rgba(245,158,11,.06)", border:"1px solid rgba(245,158,11,.15)", borderRadius:7 }}>
-                      <div style={{ fontSize:11, color:"#f59e0b", marginBottom:2 }}>{a.title}</div>
-                      <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{a.prepInstructions}</div>
+                      <div style={{ fontSize:12, color:"#f59e0b", marginBottom:2 }}>{a.title}</div>
+                      <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{a.prepInstructions}</div>
                     </div>
                   ))}
                 </>
@@ -1659,7 +1659,7 @@ export default function AppointmentsTab({ onNavChange }) {
                     <div style={{ fontSize:18, fontWeight:700, color:"#dde8f5", lineHeight:1 }}>
                       {appt.date ? new Date(appt.date+"T12:00:00").getDate() : "—"}
                     </div>
-                    <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", textTransform:"uppercase" }}>
+                    <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", textTransform:"uppercase" }}>
                       {appt.date ? new Date(appt.date+"T12:00:00").toLocaleDateString("en-US",{month:"short"}) : ""}
                     </div>
                   </div>
@@ -1667,27 +1667,27 @@ export default function AppointmentsTab({ onNavChange }) {
                   {/* Info */}
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:2 }}>{appt.title}</div>
-                    <div style={{ fontSize:11, color:"#7eb8d8" }}>{appt.provider}{appt.specialty ? ` · ${appt.specialty}` : ""}</div>
-                    {appt.facility && <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{appt.facility}</div>}
+                    <div style={{ fontSize:12, color:"#7eb8d8" }}>{appt.provider}{appt.specialty ? ` · ${appt.specialty}` : ""}</div>
+                    {appt.facility && <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>{appt.facility}</div>}
                   </div>
 
                   {/* Time */}
                   <div style={{ textAlign:"right", flexShrink:0 }}>
                     <div style={{ fontSize:12, color:"#b0c4d8", fontFamily:"'DM Mono',monospace" }}>{appt.time || "—"}</div>
                     {days !== null && appt.status === "upcoming" && (
-                      <div style={{ fontSize:10, color:days<=3?"#f87171":days<=7?"#f59e0b":"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
+                      <div style={{ fontSize:12, color:days<=3?"#f87171":days<=7?"#f59e0b":"#98afc4", fontFamily:"'DM Mono',monospace", marginTop:2 }}>
                         {days === 0 ? "Today" : days === 1 ? "Tomorrow" : days < 0 ? "Past" : `${days}d`}
                       </div>
                     )}
                   </div>
 
                   {/* Status badge */}
-                  <div style={{ padding:"3px 10px", borderRadius:20, background:`${statCfg.color}18`, border:`1px solid ${statCfg.color}40`, fontSize:9, color:statCfg.color, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
+                  <div style={{ padding:"3px 10px", borderRadius:20, background:`${statCfg.color}18`, border:`1px solid ${statCfg.color}40`, fontSize:12, color:statCfg.color, fontFamily:"'DM Mono',monospace", flexShrink:0 }}>
                     {statCfg.label}
                   </div>
 
                   {/* Chevron */}
-                  <div style={{ fontSize:11, color:"#a0b4c8", transition:"transform .2s", transform:isOpen?"rotate(180deg)":"rotate(0deg)", flexShrink:0 }}>▾</div>
+                  <div style={{ fontSize:12, color:"#a0b4c8", transition:"transform .2s", transform:isOpen?"rotate(180deg)":"rotate(0deg)", flexShrink:0 }}>▾</div>
                 </div>
 
                 {/* Expanded detail */}
@@ -1696,8 +1696,8 @@ export default function AppointmentsTab({ onNavChange }) {
                     {/* Suggested-from banner */}
                     {appt.status === "suggested" && appt.suggestedFrom && (
                       <div style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 12px", background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.2)", borderRadius:8, marginBottom:12 }}>
-                        <span style={{ fontSize:11, color:"#f59e0b" }}>✦</span>
-                        <span style={{ fontSize:11, color:"#c4a44a", fontFamily:"'DM Mono',monospace" }}>Auto-suggested from: <strong style={{ color:"#f59e0b" }}>{appt.suggestedFrom}</strong></span>
+                        <span style={{ fontSize:12, color:"#f59e0b" }}>✦</span>
+                        <span style={{ fontSize:12, color:"#c4a44a", fontFamily:"'DM Mono',monospace" }}>Auto-suggested from: <strong style={{ color:"#f59e0b" }}>{appt.suggestedFrom}</strong></span>
                       </div>
                     )}
                     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:14 }}>
@@ -1743,7 +1743,7 @@ export default function AppointmentsTab({ onNavChange }) {
                               label="Prepare for this visit"
                               scope={{ source: "appointment", items: [{ kind: "appointment", id: String(appt.id), label: `Visit: ${appt.provider || appt.title}, ${formatDateUS(appt.date)}`, date: appt.date }] }}
                               onNavigate={() => onNavChange?.("ai")}
-                              style={{ padding: "6px 12px", fontSize: 11, borderRadius: 8 }}
+                              style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
                             />
                           )}
                           <button className="apt-btn"
@@ -1853,7 +1853,7 @@ export default function AppointmentsTab({ onNavChange }) {
 function Detail({ label, value, full }) {
   return (
     <div style={full ? { gridColumn:"1/-1" } : {}}>
-      <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:3 }}>{label}</div>
+      <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:3 }}>{label}</div>
       <div style={{ fontSize:12, color:"#b0c4d8" }}>{value}</div>
     </div>
   );

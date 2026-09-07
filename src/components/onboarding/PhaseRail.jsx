@@ -9,7 +9,7 @@ const TOTAL = 5;
 export default function PhaseRail({ current }) {
   return (
     <div aria-label={`Step ${current} of 5`} style={{ width: "100%", maxWidth: 470, margin: "0 auto 8px", textAlign: "center" }}>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "2px", color: "var(--accent-blue)" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "2px", color: "var(--accent-blue)" }}>
         STEP {current} OF {TOTAL}
       </div>
       <div aria-hidden="true" style={{ height: 3, background: "var(--accent-tint)", borderRadius: 999, marginTop: 10, overflow: "hidden" }}>

@@ -404,7 +404,7 @@ function renderMarkdown(rawText) {
       const content = trimmed.replace(/^[-•]\s+/, "");
       return (
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, paddingLeft: 4 }}>
-          <span style={{ color: "#6ea3ff", flexShrink: 0, marginTop: 4, fontSize: 9 }}>▸</span>
+          <span style={{ color: "#6ea3ff", flexShrink: 0, marginTop: 4, fontSize: 12 }}>▸</span>
           <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(content, AI_BOLD_STYLE) }} style={{ lineHeight: 1.7 }} />
         </div>
       );
@@ -415,7 +415,7 @@ function renderMarkdown(rawText) {
       return (
         <div key={i} style={{ display: "flex", gap: 8, marginBottom: 5, paddingLeft: 4 }}>
           <span style={{ color: "#6ea3ff", fontWeight: 700, flexShrink: 0, minWidth: 22,
-            fontFamily: "'DM Mono',monospace", fontSize: 11 }}>{numMatch[1]}.</span>
+            fontFamily: "'DM Mono',monospace", fontSize: 12 }}>{numMatch[1]}.</span>
           <span dangerouslySetInnerHTML={{ __html: applyBoldSafe(numMatch[2], AI_BOLD_STYLE) }} style={{ lineHeight: 1.7 }} />
         </div>
       );
@@ -444,7 +444,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
         background: isUser ? "linear-gradient(135deg,#4f8ef7,#a78bfa)" : "rgba(79,142,247,.12)",
         border: isUser ? "none" : "1px solid rgba(79,142,247,.25)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: isUser ? 11 : 14, fontWeight: 700,
+        fontSize: isUser ? 12 : 14, fontWeight: 700,
         color: isUser ? "#fff" : "#6ea3ff",
       }}>
         {isUser ? ((() => { try { const p = JSON.parse(localStorage.getItem("mi_profile_personal") || "{}"); return (p.name || "?")[0].toUpperCase(); } catch { return "?"; } })()) : "✦"}
@@ -465,7 +465,7 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
               {!streaming && text && (
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{
-                    fontSize: 9, fontFamily: "'DM Mono',monospace",
+                    fontSize: 12, fontFamily: "'DM Mono',monospace",
                     background: isAdvanced ? "rgba(79,142,247,.12)" : "rgba(16,185,129,.10)",
                     color: isAdvanced ? "#6ea3ff" : "#2dd4a0",
                     border: `1px solid ${isAdvanced ? "rgba(79,142,247,.25)" : "rgba(16,185,129,.25)"}`,
@@ -473,14 +473,14 @@ function Message({ role, text, streaming, mode, ts, isAdvancedUi }) {
                   }}>
                     {isAdvanced ? "Advanced" : "Standard"}
                   </span>
-                  {tsLabel && <span style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{tsLabel}</span>}
+                  {tsLabel && <span style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>{tsLabel}</span>}
                 </div>
               )}
               {renderMarkdown(text)}
               {streaming && <span style={{ display: "inline-block", width: 8, height: 14, background: "#4f8ef7", marginLeft: 2, animation: "cursorBlink 1s step-end infinite", verticalAlign: "text-bottom" }} />}
               {/* Footer disclaimer — all responses */}
               {!streaming && text && (
-                <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #1c2a40", fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
+                <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #1c2a40", fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>
                   {isAdvancedUi ? "Advanced Mode" : "Standard Mode"} — Informational only. This is not medical advice. Always consult your physician before making any health decisions.
                 </div>
               )}
@@ -508,7 +508,7 @@ function TypingIndicator() {
 function SegmentDivider({ recordChanged, dateIso }) {
   const dateStr = (() => { try { return new Date(dateIso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); } catch { return ""; } })();
   return (
-    <div style={{ borderTop: "1.5px dashed rgba(245,158,11,.4)", margin: "22px 0 18px", paddingTop: 8, fontSize: 10.5, color: "#c4a060", fontFamily: "'DM Mono',monospace", lineHeight: 1.5, fontStyle: "italic" }}>
+    <div style={{ borderTop: "1.5px dashed rgba(245,158,11,.4)", margin: "22px 0 18px", paddingTop: 8, fontSize: 12, color: "#c4a060", fontFamily: "'DM Mono',monospace", lineHeight: 1.5, fontStyle: "italic" }}>
       {recordChanged ? SESSION_COPY.dividerRecordChanged(dateStr) : SESSION_COPY.dividerCorpusChanged(dateStr)}
     </div>
   );
@@ -1003,7 +1003,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         @keyframes fadeUp   { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
         @keyframes dotBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-        .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #1c2a40; border-radius:8px; color:#b0c4d8; font-size:11.5px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
+        .preset-btn { width:100%; text-align:left; padding:9px 11px; background:#0b1220; border:1px solid #1c2a40; border-radius:8px; color:#b0c4d8; font-size:12px; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
         .preset-btn:hover { border-color:#1a2f4a; color:#7eb8d8; background:#0d1828; }
         .send-btn { padding:0 18px; height:40px; background:rgba(79,142,247,.12); border:1px solid rgba(79,142,247,.3); border-radius:8px; color:#6ea3ff; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; flex-shrink:0; }
         .send-btn:hover { background:rgba(79,142,247,.2); border-color:rgba(79,142,247,.5); }
@@ -1013,7 +1013,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         .chat-input { flex:1; min-width:0; background:#0b1220; border:1px solid #1c2a40; color:#c4d8ee; padding:10px 14px; border-radius:8px; font-family:'Sora',sans-serif; font-size:12px; outline:none; resize:none; transition:border-color .15s; line-height:1.5; min-height:42px; max-height:180px; overflow-y:auto; }
         .chat-input::placeholder { color:#98afc4; }
         .chat-input:focus { border-color:#1a2f4a; }
-        .end-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; }
+        .end-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:600; font-family:'Sora',sans-serif; cursor:pointer; transition:all .15s; }
         .end-btn:disabled { opacity:.45; cursor:not-allowed; }
         .sess-row { width:100%; text-align:left; background:#0b1220; border:1px solid #1c2a40; border-radius:10px; padding:13px 16px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:14px; margin-bottom:8px; }
         .sess-row:hover { border-color:#1a2f4a; background:#0d1828; }
@@ -1031,7 +1031,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         <div style={{ position: "fixed", inset: 0, zIndex: 9600, background: "rgba(0,0,0,.78)", display: "flex", flexDirection: "column" }}>
           <div style={{ height: 48, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 20px", gap: 12, flexShrink: 0 }}>
             <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 16, color: "#dde8f5", flex: 1 }}>Report Preview</div>
-            <span style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>exactly as Save &amp; Print produces it</span>
+            <span style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>exactly as Save &amp; Print produces it</span>
             {/* v1.54.0 (Greg): print straight from the preview — same DEC-C9
                 flow as the main button: saves to Notes FIRST, then prints. */}
             <button onClick={() => { setPreviewHtml(null); saveAndPrint(); }}
@@ -1076,7 +1076,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <button
             onClick={closeSession}
             title="Back to your sessions"
-            style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:11, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:4 }}
+            style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:12, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:4 }}
             onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "#4a5c6a"; e.currentTarget.style.background = "none"; }}
           >
@@ -1087,7 +1087,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <button
             onClick={() => onNavChange("dashboard")}
             title="Back to Dashboard"
-            style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:11, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:4 }}
+            style={{ display:"flex", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", color:"#4a5c6a", fontSize:12, fontFamily:"'DM Mono',monospace", padding:"4px 6px", borderRadius:6, marginRight:4 }}
             onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "#4a5c6a"; e.currentTarget.style.background = "none"; }}
           >
@@ -1099,11 +1099,11 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           <AIMark variant="full" size={40} />
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 20, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px" }}>AI Analysis</div>
         </div>
-        <span style={{ fontSize: 8, background: "#4f8ef7", color: "#fff", padding: "2px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px" }}>AI</span>
+        <span style={{ fontSize: 12, background: "#4f8ef7", color: "#fff", padding: "2px 6px", borderRadius: 8, fontFamily: "'DM Mono',monospace", letterSpacing: "0.5px" }}>AI</span>
         <div style={{ flex: 1 }} />
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {CONTEXT_TAGS.map(t => (
-            <span key={t.label} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
+            <span key={t.label} style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", background: `${t.color}15`, color: t.color, border: `1px solid ${t.color}28`, padding: "2px 8px", borderRadius: 4, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           ))}
         </div>
         {view === "index" && (
@@ -1125,7 +1125,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0,
       }}>
         <span style={{
-          fontSize: 9, fontFamily: "'DM Mono',monospace",
+          fontSize: 12, fontFamily: "'DM Mono',monospace",
           background: isAdvanced ? "rgba(79,142,247,.15)" : "rgba(16,185,129,.12)",
           color: isAdvanced ? "#6ea3ff" : "#2dd4a0",
           border: `1px solid ${isAdvanced ? "rgba(79,142,247,.3)" : "rgba(16,185,129,.3)"}`,
@@ -1133,14 +1133,14 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
         }}>
           {isAdvanced ? "Advanced Mode" : "Standard Mode"}
         </span>
-        <span style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+        <span style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
           {isAdvanced ? "deeper analysis · consent given" : "recommended for daily use"}
         </span>
         {onNavChange && (
           <button
             onClick={() => onNavChange("backup")}
             title="Change AI mode in Settings & Backup"
-            style={{ background: "none", border: "1px solid #1c2a40", borderRadius: 4, color: "#7eb8d8", fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 9px", cursor: "pointer", letterSpacing: "0.4px" }}
+            style={{ background: "none", border: "1px solid #1c2a40", borderRadius: 4, color: "#7eb8d8", fontSize: 12, fontFamily: "'DM Mono',monospace", padding: "2px 9px", cursor: "pointer", letterSpacing: "0.4px" }}
           >Change</button>
         )}
         <div style={{ flex: 1 }} />
@@ -1153,7 +1153,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           padding: "10px 24px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
         }}>
           <span style={{ fontSize: 12, color: "#f59e0b" }}>⚠</span>
-          <span style={{ fontSize: 11, color: "#c4a060", fontFamily: "'DM Mono',monospace", flex: 1 }}>
+          <span style={{ fontSize: 12, color: "#c4a060", fontFamily: "'DM Mono',monospace", flex: 1 }}>
             Advanced Mode consent has been updated. You have been switched to Standard Mode.
             To re-enable Advanced Mode, go to <strong>Settings &amp; Backup → AI Analysis Mode</strong> and re-consent.
           </span>
@@ -1174,8 +1174,8 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               onClick={() => setQuickPromptsOpen(o => !o)}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 8 }}
             >
-              <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Quick Prompts</span>
-              <span style={{ fontSize: 9, color: "#4a5c6a" }}>{quickPromptsOpen ? "▾" : "▸"}</span>
+              <span style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Quick Prompts</span>
+              <span style={{ fontSize: 12, color: "#4a5c6a" }}>{quickPromptsOpen ? "▾" : "▸"}</span>
             </button>
             {quickPromptsOpen && (
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 18 }}>
@@ -1193,11 +1193,11 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                 onClick={() => setDataUsedOpen(o => !o)}
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", marginBottom: 10 }}
               >
-                <span style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>Data used in this analysis</span>
-                <span style={{ fontSize: 9, color: "#4a5c6a" }}>{dataUsedOpen ? "▾" : "▸"}</span>
+                <span style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", textAlign: "left" }}>Data used in this analysis</span>
+                <span style={{ fontSize: 12, color: "#4a5c6a" }}>{dataUsedOpen ? "▾" : "▸"}</span>
               </button>
               {dataUsedOpen && contextCounts.map(({ label, color }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", marginBottom: 7 }}>
                   <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0 }} />
                   {label}
                 </div>
@@ -1207,30 +1207,30 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             {/* Reference Documents */}
             <div style={{ borderTop: "1px solid #1c2a40", paddingTop: 14, marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Reference Docs</div>
+                <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>Reference Docs</div>
                 <button
                   onClick={() => refFileRef.current?.click()}
                   disabled={refUploading}
-                  style={{ fontSize: 9, padding: "2px 8px", background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                  style={{ fontSize: 12, padding: "2px 8px", background: "rgba(167,139,250,.1)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                 >{refUploading ? "…" : "+ PDF"}</button>
                 <input ref={refFileRef} type="file" accept="application/pdf" onChange={handleRefDocUpload} style={{ display: "none" }} />
               </div>
-              {refError && <div style={{ fontSize: 9, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
+              {refError && <div style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 6 }}>{refError}</div>}
               {refDocs.length === 0
-                ? <div style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>No reference docs.<br />Upload a PDF to include it in AI context.</div>
+                ? <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace", lineHeight: 1.5 }}>No reference docs.<br />Upload a PDF to include it in AI context.</div>
                 : refDocs.map(d => (
                   <div key={d.id} style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 6, background: "#0b1220", border: "1px solid rgba(167,139,250,.15)", borderRadius: 7, padding: "6px 8px" }}>
-                    <span style={{ fontSize: 10, color: "#a78bfa", flexShrink: 0, marginTop: 1 }}>▣</span>
+                    <span style={{ fontSize: 12, color: "#a78bfa", flexShrink: 0, marginTop: 1 }}>▣</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
-                      <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {formatDateUS(d.addedDate)}</div>
+                      <div style={{ fontSize: 12, color: "#c4d8ee", fontFamily: "'DM Mono',monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.name}</div>
+                      <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>Added {formatDateUS(d.addedDate)}</div>
                       <button
                         onClick={() => analyzeDoc(d)}
                         disabled={streaming}
-                        style={{ marginTop: 4, background: "none", border: "none", color: streaming ? "#3a4c5a" : "#a78bfa", fontSize: 9, fontFamily: "'DM Mono',monospace", cursor: streaming ? "not-allowed" : "pointer", padding: 0, letterSpacing: "0.3px" }}
+                        style={{ marginTop: 4, background: "none", border: "none", color: streaming ? "#3a4c5a" : "#a78bfa", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: streaming ? "not-allowed" : "pointer", padding: 0, letterSpacing: "0.3px" }}
                       >Analyze ▸</button>
                     </div>
-                    <button onClick={() => removeRefDoc(d.id)} style={{ background: "transparent", border: "none", color: "#6a8090", cursor: "pointer", fontSize: 11, flexShrink: 0, padding: 0 }}>✕</button>
+                    <button onClick={() => removeRefDoc(d.id)} style={{ background: "transparent", border: "none", color: "#6a8090", cursor: "pointer", fontSize: 12, flexShrink: 0, padding: 0 }}>✕</button>
                   </div>
                 ))
               }
@@ -1240,7 +1240,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           {/* Session list */}
           <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
             {error && (
-              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
                 ⚠ {error}
               </div>
             )}
@@ -1259,7 +1259,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               </div>
             ) : (
               <>
-                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>
+                <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 12 }}>
                   Your sessions — newest first
                 </div>
                 {[...sessionsList]
@@ -1272,18 +1272,18 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                         <span style={{ fontSize: 14, color: "#6ea3ff", flexShrink: 0 }}>✦</span>
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span style={{ display: "block", fontSize: 13, color: "#dde8f5", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
-                          <span style={{ display: "block", fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>
+                          <span style={{ display: "block", fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>
                             {fmtShort(s.createdAt)} · {s.segments.length} part{s.segments.length !== 1 ? "s" : ""} · {msgCount} message{msgCount !== 1 ? "s" : ""}
                           </span>
                         </span>
                         {st.stale && (
                           <span title="Your record has changed since this session's last part"
-                            style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "rgba(245,158,11,.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,.3)", padding: "2px 8px", borderRadius: 9, flexShrink: 0 }}>
+                            style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", background: "rgba(245,158,11,.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,.3)", padding: "2px 8px", borderRadius: 9, flexShrink: 0 }}>
                             record changed
                           </span>
                         )}
                         <span style={{
-                          fontSize: 9, fontFamily: "'DM Mono',monospace", padding: "2px 8px", borderRadius: 9, flexShrink: 0,
+                          fontSize: 12, fontFamily: "'DM Mono',monospace", padding: "2px 8px", borderRadius: 9, flexShrink: 0,
                           background: s.state === "saved" ? "rgba(16,185,129,.1)" : "rgba(79,142,247,.1)",
                           color: s.state === "saved" ? "#2dd4a0" : "#7eb8d8",
                           border: `1px solid ${s.state === "saved" ? "rgba(16,185,129,.3)" : "rgba(79,142,247,.3)"}`,
@@ -1305,15 +1305,15 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               <span style={{ fontFamily: "'DM Serif Display',serif", fontSize: 15, color: "#dde8f5" }}>
                 {activeSession ? activeSession.title : "New session"}
               </span>
-              <span style={{ fontSize: 10, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
+              <span style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono',monospace" }}>
                 {patientName}{patientName ? " · " : ""}started {fmtShort(activeSession?.createdAt || new Date().toISOString())}
               </span>
               <div style={{ flex: 1 }} />
-              <span style={{ fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+              <span style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
                 record {headerStamp?.recordHash || "—"} · reference set {headerStamp?.corpusVersion || CORPUS_VERSION}
               </span>
             </div>
-            <div style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>
+            <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 3 }}>
               {SESSION_COPY.headerFooter}
             </div>
           </div>
@@ -1321,7 +1321,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
           {/* Reopen staleness notice (UI hint; the persisted divider renders
               in-thread once the next turn opens its freshly stamped segment) */}
           {reopenStale.stale && (
-            <div style={{ background: "rgba(245,158,11,.07)", borderBottom: "1px solid rgba(245,158,11,.2)", padding: "8px 28px", fontSize: 10.5, color: "#c4a060", fontFamily: "'DM Mono',monospace", flexShrink: 0, lineHeight: 1.5 }}>
+            <div style={{ background: "rgba(245,158,11,.07)", borderBottom: "1px solid rgba(245,158,11,.2)", padding: "8px 28px", fontSize: 12, color: "#c4a060", fontFamily: "'DM Mono',monospace", flexShrink: 0, lineHeight: 1.5 }}>
               {SESSION_COPY.staleReopenNotice}
             </div>
           )}
@@ -1376,26 +1376,26 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             )}
 
             {coldStartRetry && !streaming && (
-              <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.25)", borderRadius:8, padding:"10px 14px", fontSize:11, color:"#c4a060", fontFamily:"'DM Mono',monospace", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
+              <div style={{ background:"rgba(245,158,11,.08)", border:"1px solid rgba(245,158,11,.25)", borderRadius:8, padding:"10px 14px", fontSize:12, color:"#c4a060", fontFamily:"'DM Mono',monospace", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
                 <span style={{ flex:1 }}>⚠ Server cold start — the proxy is waking up (Render free tier). Wait ~30–60 seconds then click Retry.</span>
                 <button onClick={() => {
                   const text = coldStartRetry;
                   setColdStartRetry(null);
                   sendMessage(text);
-                }} style={{ padding:"5px 14px", background:"rgba(245,158,11,.15)", border:"1px solid rgba(245,158,11,.35)", borderRadius:6, color:"#f59e0b", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
+                }} style={{ padding:"5px 14px", background:"rgba(245,158,11,.15)", border:"1px solid rgba(245,158,11,.35)", borderRadius:6, color:"#f59e0b", fontFamily:"'DM Mono',monospace", fontSize:12, cursor:"pointer", whiteSpace:"nowrap", flexShrink:0 }}>
                   ↺ Retry
                 </button>
               </div>
             )}
 
             {error && (
-              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
+              <div style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>
                 ⚠ {error}
               </div>
             )}
 
             {summaryNote && (
-              <div style={{ background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10, lineHeight: 1.55 }}>
+              <div style={{ background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#c4a060", fontFamily: "'DM Mono',monospace", marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10, lineHeight: 1.55 }}>
                 <span style={{ flex: 1 }}><PrinterIcon size={11} style={{ marginRight: 5, verticalAlign: "-1px" }} />{summaryNote}</span>
                 <button onClick={() => setSummaryNote("")} style={{ background: "none", border: "none", color: "#c4a060", cursor: "pointer", fontSize: 13, padding: 0, flexShrink: 0 }}>✕</button>
               </div>
@@ -1428,7 +1428,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
               style={{ background: "transparent", border: "1px solid #1c2a40", color: "#98afc4" }}>
               Close
             </button>
-            <span style={{ fontSize: 9.5, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
+            <span style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace" }}>
               {activeSession?.state === "saved"
                 ? (unsaved ? "new turns not yet saved" : "saved to Notes")
                 : (activeSession ? "not saved yet" : "")}
@@ -1444,13 +1444,13 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
             {/* DEC-P50: scope preview. Chips say which record slices the next
                 run reads; removing them all reverts to the single Full record chip. */}
             <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginBottom: 8, paddingRight: 64 }}>
-              <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", letterSpacing: ".8px" }}>Reads:</span>
+              <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", letterSpacing: ".8px" }}>Reads:</span>
               {scopeChips(scopeItems).map((chip, i) => (
-                <span key={`${chip.kind}-${chip.id ?? i}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 9px", borderRadius: 12, fontSize: 10.5, fontFamily: "'DM Mono',monospace", background: chip.removable ? "rgba(79,142,247,.12)" : "rgba(255,255,255,.04)", border: `1px solid ${chip.removable ? "rgba(79,142,247,.35)" : "#1a2f4a"}`, color: chip.removable ? "#7eb8d8" : "#98afc4" }}>
+                <span key={`${chip.kind}-${chip.id ?? i}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 9px", borderRadius: 12, fontSize: 12, fontFamily: "'DM Mono',monospace", background: chip.removable ? "rgba(79,142,247,.12)" : "rgba(255,255,255,.04)", border: `1px solid ${chip.removable ? "rgba(79,142,247,.35)" : "#1a2f4a"}`, color: chip.removable ? "#7eb8d8" : "#98afc4" }}>
                   {chip.label}
                   {chip.removable && (
                     <button type="button" aria-label={`Remove ${chip.label} from scope`} onClick={() => removeScopeChip(chip)}
-                      style={{ background: "none", border: "none", color: "#7eb8d8", cursor: "pointer", padding: 0, fontSize: 11, lineHeight: 1 }}>✕</button>
+                      style={{ background: "none", border: "none", color: "#7eb8d8", cursor: "pointer", padding: 0, fontSize: 12, lineHeight: 1 }}>✕</button>
                   )}
                 </span>
               ))}
@@ -1476,7 +1476,7 @@ Important: Do NOT make any diagnosis. Your role is to help me understand what th
                     title={questionsLeft === 0 ? `Daily limit reached — ${DAILY_QUESTION_LIMIT} questions per day, resets at midnight` : undefined}>Send ↑</button>
               }
             </div>
-            <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between", paddingRight: 64 }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", display: "flex", justifyContent: "space-between", paddingRight: 64 }}>
               <span>Shift+Enter for new line · Enter to send</span>
               <span>
                 <span style={{ color: questionsLeft === 0 ? "#f87171" : questionsLeft <= 3 ? "#f59e0b" : "#a0b4c8" }}>

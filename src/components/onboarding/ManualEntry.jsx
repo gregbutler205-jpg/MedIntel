@@ -16,7 +16,7 @@ const FREQUENCIES = [
   ["QID", "Four times daily"], ["PRN", "As needed"], ["weekly", "Weekly"], ["custom", "Custom…"],
 ];
 
-const lbl = { display: "block", fontSize: 11, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 6 };
+const lbl = { display: "block", fontSize: 12, color: "var(--text-label)", fontFamily: "var(--font-mono)", letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 6 };
 const inp = { width: "100%", minHeight: "var(--touch-target)", background: "var(--bg-deep)", border: "1px solid var(--border-strong)", borderRadius: 10, padding: "10px 14px", color: "var(--text-primary)", fontFamily: "var(--font-sans)", fontSize: 14, outline: "none", colorScheme: "var(--scheme)" };
 const primaryBtn = { minHeight: "var(--touch-target)", padding: "10px 28px", background: "var(--btn-p-bg)", border: "1px solid var(--btn-p-bd)", borderRadius: 10, color: "var(--btn-p-fg)", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 600, cursor: "pointer" };
 const ghostBtn = { minHeight: "var(--touch-target)", padding: "10px 20px", background: "transparent", border: "1px solid var(--border-strong)", borderRadius: 10, color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: 13, cursor: "pointer" };
@@ -135,7 +135,7 @@ export default function ManualEntry({ onDone, onCancel }) {
                     style={{ padding: "11px 14px", cursor: "pointer", borderBottom: "1px solid var(--divider)", fontSize: 14, color: "var(--text-primary)", minHeight: "var(--touch-target)" }}
                     onMouseEnter={e => e.currentTarget.style.background = "var(--accent-tint)"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    {cap(d.name)} <span style={{ color: "var(--text-dim)", fontSize: 11, fontFamily: "var(--font-mono)" }}>· {d.brand}</span>
+                    {cap(d.name)} <span style={{ color: "var(--text-dim)", fontSize: 12, fontFamily: "var(--font-mono)" }}>· {d.brand}</span>
                   </div>
                 ))}
               </div>
@@ -154,7 +154,7 @@ export default function ManualEntry({ onDone, onCancel }) {
             <div style={{ gridColumn: "1/-1", fontSize: 15, color: "var(--text-bright)", fontWeight: 600 }}>
               {cap(draft.name)}
               {draft.brand && <span style={{ color: "var(--text-dim)", fontWeight: 400, fontSize: 12, fontFamily: "var(--font-mono)" }}> · {draft.brand}</span>}
-              {draft.unverified && <span style={{ marginLeft: 8, fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "var(--chip-warn-bg)", padding: "2px 8px", borderRadius: 8 }}>name to verify later</span>}
+              {draft.unverified && <span style={{ marginLeft: 8, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--amber)", background: "var(--chip-warn-bg)", padding: "2px 8px", borderRadius: 8 }}>name to verify later</span>}
             </div>
             <div>
               <label style={lbl}>Strength</label>
@@ -211,7 +211,7 @@ export default function ManualEntry({ onDone, onCancel }) {
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "var(--bg-deep)", border: "1px solid var(--border)", borderRadius: 10 }}>
                 <span style={{ flex: 1, fontSize: 13, color: "var(--text-primary)" }}>
                   <strong>{m.name}</strong>{m.dose ? ` ${m.dose}` : ""} — {m.frequency}
-                  {m.unverifiedName && <span style={{ marginLeft: 8, fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--amber)" }}>name to verify</span>}
+                  {m.unverifiedName && <span style={{ marginLeft: 8, fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--amber)" }}>name to verify</span>}
                 </span>
                 <button aria-label={`Remove ${m.name}`} onClick={() => setMeds(list => list.filter((_, j) => j !== i))}
                   style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: 14, minWidth: 32, minHeight: 32 }}>✕</button>
@@ -233,7 +233,7 @@ export default function ManualEntry({ onDone, onCancel }) {
             </button>
           )}
           {hasNkdaAssertion() && allergies.length === 0 && (
-            <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--green)" }}>✓ No known allergies recorded</span>
+            <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--green)" }}>✓ No known allergies recorded</span>
           )}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

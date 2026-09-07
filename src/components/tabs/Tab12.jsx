@@ -649,7 +649,7 @@ export default function ImportTab({ onImport, onNavChange }) {
 
   const inp = (label, key, props = {}) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-      <label style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{label}</label>
+      <label style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{label}</label>
       <input
         value={form[key] ?? ""}
         onChange={e => handleChange(key, e.target.value)}
@@ -676,7 +676,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         .btn-success { background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.3); color:#2dd4a0; }
         select.dark-sel { background:#07090f; border:1px solid #1a2f4a; border-radius:8px; padding:8px 12px; color:#c4d8ee; font-family:'Sora',sans-serif; font-size:12px; outline:none; width:100%; }
         .flag-toggle { display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:12px; }
+        .section-label { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:12px; }
         @media print {
           body * { visibility:hidden; }
           #lab-print-area, #lab-print-area * { visibility:visible; }
@@ -744,7 +744,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         {/* Document type selector + upload */}
         {mode === "upload" && (
         <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"14px 18px", marginBottom:20 }}>
-          <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:10 }}>Upload Document Type</div>
+          <div style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:10 }}>Upload Document Type</div>
           <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:14 }}>
             {DOC_TYPES.map(dt => {
               const active = uploadDocType === dt.label;
@@ -754,7 +754,7 @@ export default function ImportTab({ onImport, onNavChange }) {
                   onClick={() => setUploadDocType(dt.label)}
                   disabled={pdfStatus === "extracting" || pdfStatus === "parsing"}
                   style={{
-                    padding:"5px 13px", borderRadius:20, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", transition:"all .15s", border:"1px solid",
+                    padding:"5px 13px", borderRadius:20, fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", transition:"all .15s", border:"1px solid",
                     background: active ? `${dt.color}18` : "#07090f",
                     borderColor: active ? `${dt.color}50` : "#1a2f4a",
                     color: active ? dt.color : "#98afc4",
@@ -773,7 +773,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               : pdfStatus === "parsing"    ? "✦ Extracting…"
               : `⬆ Upload ${uploadDocType} PDF${""}`}
           </button>
-          <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", alignSelf:"center" }}>select one or multiple</span>
+          <span style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace", alignSelf:"center" }}>select one or multiple</span>
           <input ref={fileInputRef} type="file" accept="application/pdf" multiple onChange={handlePdfUpload} style={{ display:"none" }} />
         </div>
         )}
@@ -782,17 +782,17 @@ export default function ImportTab({ onImport, onNavChange }) {
         {batchProgress !== null && (
           <div style={{ background:"#0b1220", border:"1px solid rgba(167,139,250,.25)", borderRadius:10, padding:"14px 18px", marginBottom:20 }}>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-              <span style={{ fontSize:11, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>
+              <span style={{ fontSize:12, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>
                 Processing {batchProgress.done + 1} of {batchProgress.total}
               </span>
-              <span style={{ fontSize:11, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+              <span style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                 {Math.round(((batchProgress.done) / batchProgress.total) * 100)}%
               </span>
             </div>
             <div style={{ background:"#07090f", borderRadius:4, height:4, overflow:"hidden", marginBottom:10 }}>
               <div style={{ height:"100%", background:"#a78bfa", borderRadius:4, width:`${(batchProgress.done / batchProgress.total) * 100}%`, transition:"width .3s ease" }} />
             </div>
-            <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+            <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
               {batchProgress.current}
             </div>
           </div>
@@ -802,24 +802,24 @@ export default function ImportTab({ onImport, onNavChange }) {
         {batchSummary.length > 0 && (
           <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"14px 18px", marginBottom:20, animation:"fadeUp .3s ease both" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-              <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
+              <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", fontWeight:600 }}>
                 Batch Import — {batchSummary.filter(s=>s.ok).length} of {batchSummary.length} succeeded
               </div>
-              <button onClick={() => setBatchSummary([])} style={{ background:"transparent", border:"none", color:"#6a8090", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Clear</button>
+              <button onClick={() => setBatchSummary([])} style={{ background:"transparent", border:"none", color:"#6a8090", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Clear</button>
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
               {batchSummary.map((item, i) => (
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 10px", background: item.ok ? "rgba(16,185,129,.04)" : "rgba(239,68,68,.04)", border:`1px solid ${item.ok ? "rgba(16,185,129,.15)" : "rgba(239,68,68,.2)"}`, borderRadius:7 }}>
-                  <span style={{ fontSize:11, color: item.ok ? "#2dd4a0" : "#f87171", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
+                  <span style={{ fontSize:12, color: item.ok ? "#2dd4a0" : "#f87171", flexShrink:0 }}>{item.ok ? "✓" : "⚠"}</span>
                   <div style={{ flex:1, minWidth:0 }}>
                     {item.ok ? (
-                      <span style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace" }}>
+                      <span style={{ fontSize:12, color:"#c4d8ee", fontFamily:"'DM Mono',monospace" }}>
                         {item.title || item.name}
                         {item.count !== undefined && <span style={{ color:"#6a8090" }}> — {item.count} result{item.count!==1?"s":""}</span>}
                         {item.date && <span style={{ color:"#6a8090" }}> · {formatDateUS(item.date)}</span>}
                       </span>
                     ) : (
-                      <span style={{ fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
+                      <span style={{ fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
                         {item.name} — {item.error}
                       </span>
                     )}
@@ -833,7 +833,7 @@ export default function ImportTab({ onImport, onNavChange }) {
         {/* PDF error */}
         {pdfStatus === "error" && (
           <div style={{ background:"rgba(239,68,68,.08)", border:"1px solid rgba(239,68,68,.25)", borderRadius:10, padding:"12px 16px", marginBottom:20, fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace" }}>
-            ⚠ {pdfError} <button onClick={() => { setPdfStatus("idle"); setPdfError(""); }} style={{ marginLeft:12, background:"transparent", border:"none", color:"#f87171", cursor:"pointer", textDecoration:"underline", fontSize:11 }}>Dismiss</button>
+            ⚠ {pdfError} <button onClick={() => { setPdfStatus("idle"); setPdfError(""); }} style={{ marginLeft:12, background:"transparent", border:"none", color:"#f87171", cursor:"pointer", textDecoration:"underline", fontSize:12 }}>Dismiss</button>
           </div>
         )}
 
@@ -868,20 +868,20 @@ export default function ImportTab({ onImport, onNavChange }) {
                 ✦ Document extracted — review then save
               </div>
               <div style={{ display:"flex", gap:8 }}>
-                <button onClick={discardDoc} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
-                <button onClick={confirmDoc} style={{ padding:"6px 14px", background:`${docPreview._color}18`, border:`1px solid ${docPreview._color}40`, borderRadius:7, color: docPreview._color, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save to Records</button>
-                <button onClick={sendToAI} style={{ padding:"6px 14px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:7, color:"#6ea3ff", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>✦ Interpret with AI ▸</button>
+                <button onClick={discardDoc} style={{ padding:"6px 14px", background:"transparent", border:"1px solid #1a2f4a", borderRadius:7, color:"#b0c4d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>Discard</button>
+                <button onClick={confirmDoc} style={{ padding:"6px 14px", background:`${docPreview._color}18`, border:`1px solid ${docPreview._color}40`, borderRadius:7, color: docPreview._color, fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>✓ Save to Records</button>
+                <button onClick={sendToAI} style={{ padding:"6px 14px", background:"rgba(79,142,247,.12)", border:"1px solid rgba(79,142,247,.35)", borderRadius:7, color:"#6ea3ff", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer", display:"flex", alignItems:"center", gap:5 }}>✦ Interpret with AI ▸</button>
               </div>
             </div>
             <div style={{ background:"#07090f", border:"1px solid #1c2a40", borderRadius:10, padding:"14px 16px" }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-                <span style={{ fontSize:9, background:`${docPreview._color}18`, color: docPreview._color, border:`1px solid ${docPreview._color}30`, padding:"2px 8px", borderRadius:4, fontFamily:"'DM Mono',monospace", letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{docPreview._recordType || docPreview._label}</span>
+                <span style={{ fontSize:12, background:`${docPreview._color}18`, color: docPreview._color, border:`1px solid ${docPreview._color}30`, padding:"2px 8px", borderRadius:4, fontFamily:"'DM Mono',monospace", letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{docPreview._recordType || docPreview._label}</span>
                 <span style={{ fontSize:15, fontWeight:600, color:"#dde8f5" }}>{docPreview.title}</span>
               </div>
               <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:10 }}>
-                {docPreview.date    && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>📅 {formatDateUS(docPreview.date)}</span>}
-                {docPreview.facility && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>🏥 {docPreview.facility}</span>}
-                {docPreview.provider && <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>👤 {docPreview.provider}</span>}
+                {docPreview.date    && <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>📅 {formatDateUS(docPreview.date)}</span>}
+                {docPreview.facility && <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>🏥 {docPreview.facility}</span>}
+                {docPreview.provider && <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>👤 {docPreview.provider}</span>}
               </div>
               {docPreview.summary && <p style={{ fontSize:12, color:"#b0c4d8", lineHeight:1.7 }}>{docPreview.summary}</p>}
             </div>
@@ -903,7 +903,7 @@ export default function ImportTab({ onImport, onNavChange }) {
           try { log = JSON.parse(localStorage.getItem("mi_importLog") || "[]"); } catch {}
           return (
             <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"16px 18px" }}>
-              <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:12 }}>Import History</div>
+              <div style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:12 }}>Import History</div>
               {log.length === 0 ? (
                 <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", padding:"12px 0" }}>
                   No imports recorded yet. Completed uploads and batch imports will appear here.
@@ -914,12 +914,12 @@ export default function ImportTab({ onImport, onNavChange }) {
                     <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", background:"#080c14", border:"1px solid #1c2a40", borderRadius:8, flexWrap:"wrap" }}>
                       <div style={{ flex:1, minWidth:160 }}>
                         <div style={{ fontSize:12, fontWeight:600, color:"#c4d8ee" }}>{e.source || "Import"}</div>
-                        {e.docName && <div style={{ fontSize:10, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>→ {e.docName}</div>}
+                        {e.docName && <div style={{ fontSize:12, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>→ {e.docName}</div>}
                       </div>
-                      <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{e.ts ? `${formatDateUS(e.ts)} · ${new Date(e.ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" })}` : "—"}</span>
-                      <span style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>{e.records ?? 0} record{(e.records ?? 0) !== 1 ? "s" : ""}</span>
-                      {e.excluded > 0 && <span style={{ fontSize:10, color:"#f59e0b", fontFamily:"'DM Mono',monospace" }}>{e.excluded} excluded in review</span>}
-                      <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace", padding:"2px 8px", borderRadius:4,
+                      <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{e.ts ? `${formatDateUS(e.ts)} · ${new Date(e.ts).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" })}` : "—"}</span>
+                      <span style={{ fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>{e.records ?? 0} record{(e.records ?? 0) !== 1 ? "s" : ""}</span>
+                      {e.excluded > 0 && <span style={{ fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace" }}>{e.excluded} excluded in review</span>}
+                      <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", padding:"2px 8px", borderRadius:4,
                         background: (e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.1)" : "rgba(16,185,129,.1)",
                         color: (e.status || "Saved").startsWith("Discard") ? "#f87171" : "#2dd4a0",
                         border: `1px solid ${(e.status || "Saved").startsWith("Discard") ? "rgba(239,68,68,.25)" : "rgba(16,185,129,.25)"}` }}>
@@ -956,7 +956,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               </div>
 
               <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-                <label style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase" }}>Category</label>
+                <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase" }}>Category</label>
                 <select
                   className="dark-sel"
                   value={form.category}
@@ -971,7 +971,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               <label className="flag-toggle">
                 <div style={{ width:16, height:16, borderRadius:4, border:`1px solid ${form.flag ? "#ef4444" : "#1a2f4a"}`, background: form.flag ? "rgba(239,68,68,.2)" : "#07090f", display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s" }}
                   onClick={() => handleChange("flag", !form.flag)}>
-                  {form.flag && <span style={{ color:"#f87171", fontSize:10 }}>✓</span>}
+                  {form.flag && <span style={{ color:"#f87171", fontSize:12 }}>✓</span>}
                 </div>
                 <span style={{ fontSize:12, color: form.flag ? "#f87171" : "#98afc4" }}>Flag as out of range</span>
               </label>
@@ -1000,7 +1000,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               <select className="dark-sel" style={{ width:"auto", minWidth:160 }} value={catFilter} onChange={e => setCatFilter(e.target.value)}>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"7px 12px", background:"#0b1220", border:"1px solid #1c2a40", borderRadius:8 }}>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"7px 12px", background:"#0b1220", border:"1px solid #1c2a40", borderRadius:8 }}>
                 {grouped.length} test{grouped.length !== 1 ? "s" : ""} · {labs.length} total readings
               </div>
             </div>
@@ -1009,7 +1009,7 @@ export default function ImportTab({ onImport, onNavChange }) {
               <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:14, padding:32, textAlign:"center" }}>
                 <div style={{ fontSize:24, marginBottom:10, color:"#1a2f4a" }}>◈</div>
                 <div style={{ fontSize:14, color:"#a0b4c8", marginBottom:6 }}>No lab results yet</div>
-                <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Use the form to add your first result</div>
+                <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Use the form to add your first result</div>
               </div>
             )}
 
@@ -1028,18 +1028,18 @@ export default function ImportTab({ onImport, onNavChange }) {
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                         <span style={{ fontSize:14, fontWeight:600, color:"#dde8f5" }}>{latest.name}</span>
-                        {anyFlagged && <span style={{ fontSize:9, background:"rgba(239,68,68,.15)", border:"1px solid rgba(239,68,68,.3)", color:"#f87171", borderRadius:4, padding:"1px 6px", fontFamily:"'DM Mono',monospace" }}>FLAGGED</span>}
-                        <span style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace" }}>{latest.category}</span>
+                        {anyFlagged && <span style={{ fontSize:12, background:"rgba(239,68,68,.15)", border:"1px solid rgba(239,68,68,.3)", color:"#f87171", borderRadius:4, padding:"1px 6px", fontFamily:"'DM Mono',monospace" }}>FLAGGED</span>}
+                        <span style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace" }}>{latest.category}</span>
                       </div>
                       <div style={{ display:"flex", alignItems:"baseline", gap:6 }}>
                         <span style={{ fontSize:20, fontWeight:700, color: latest.flag ? "#f87171" : "#6ea3ff", letterSpacing:"-0.5px" }}>{latest.value}</span>
-                        <span style={{ fontSize:11, color:"#7eb8d8" }}>{latest.unit}</span>
-                        {latest.refRange && <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {latest.refRange}</span>}
-                        <span style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {formatDateUS(latest.date, "—")}</span>
+                        <span style={{ fontSize:12, color:"#7eb8d8" }}>{latest.unit}</span>
+                        {latest.refRange && <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>ref: {latest.refRange}</span>}
+                        <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>· {formatDateUS(latest.date, "—")}</span>
                       </div>
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-                      <span style={{ fontSize:10, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>{group.length} reading{group.length !== 1 ? "s" : ""}</span>
+                      <span style={{ fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>{group.length} reading{group.length !== 1 ? "s" : ""}</span>
                       <span style={{ fontSize:12, color:"#6a8090", transition:"transform .2s", transform:isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
                     </div>
                   </div>
@@ -1049,22 +1049,22 @@ export default function ImportTab({ onImport, onNavChange }) {
                     <div style={{ borderTop:"1px solid #1c2a40", padding:"12px 16px 14px" }}>
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, paddingBottom:6, borderBottom:"1px solid #1c2a40", marginBottom:4 }}>
                         {["DATE","VALUE","RANGE","FACILITY",""].map((h,j) => (
-                          <div key={j} style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", padding:"0 4px" }}>{h}</div>
+                          <div key={j} style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", padding:"0 4px" }}>{h}</div>
                         ))}
                       </div>
                       {group.map((lab, j) => (
                         <div key={lab.id} style={{ display:"grid", gridTemplateColumns:"1fr 80px 120px 120px auto", gap:0, padding:"7px 0", borderBottom: j < group.length-1 ? "1px solid #1c2a40" : "none", alignItems:"center" }}>
-                          <div style={{ fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>
+                          <div style={{ fontSize:12, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>
                             {lab.date ? new Date(lab.date + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}
                           </div>
                           <div style={{ fontSize:13, fontWeight:700, color: lab.flag ? "#f87171" : "#2dd4a0", padding:"0 4px" }}>
-                            {lab.value} <span style={{ fontSize:9, color:"#7eb8d8", fontWeight:400 }}>{lab.unit}</span>
+                            {lab.value} <span style={{ fontSize:12, color:"#7eb8d8", fontWeight:400 }}>{lab.unit}</span>
                           </div>
-                          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.refRange || "—"}</div>
-                          <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.facility || "—"}</div>
+                          <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.refRange || "—"}</div>
+                          <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", padding:"0 4px" }}>{lab.facility || "—"}</div>
                           <div style={{ display:"flex", gap:4, padding:"0 4px" }}>
-                            <button className="imp-btn btn-ghost" style={{ padding:"3px 8px", fontSize:10 }} onClick={e => { e.stopPropagation(); handleEdit(lab); }}>Edit</button>
-                            <button className="imp-btn btn-danger" style={{ padding:"3px 8px", fontSize:10 }} onClick={e => { e.stopPropagation(); setDeleteId(lab.id); }}>✕</button>
+                            <button className="imp-btn btn-ghost" style={{ padding:"3px 8px", fontSize:12 }} onClick={e => { e.stopPropagation(); handleEdit(lab); }}>Edit</button>
+                            <button className="imp-btn btn-danger" style={{ padding:"3px 8px", fontSize:12 }} onClick={e => { e.stopPropagation(); setDeleteId(lab.id); }}>✕</button>
                           </div>
                         </div>
                       ))}

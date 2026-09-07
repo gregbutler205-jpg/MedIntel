@@ -167,9 +167,9 @@ function UploadModal({ onSave, onClose }) {
 
   const inp = {
     width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8,
-    padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono',monospace", fontSize: 11, outline: "none",
+    padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono',monospace", fontSize: 12, outline: "none",
   };
-  const lbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 5, display: "block" };
+  const lbl = { fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 5, display: "block" };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
@@ -192,16 +192,16 @@ function UploadModal({ onSave, onClose }) {
             <div>
               <div style={{ fontSize: 22, marginBottom: 6 }}>📄</div>
               <div style={{ fontSize: 13, color: "#c4d8ee", marginBottom: 3 }}>{file.name}</div>
-              <div style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>
+              <div style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>
                 {(file.size / 1024).toFixed(1)} KB
               </div>
-              <div style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>Click to change file</div>
+              <div style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginTop: 6 }}>Click to change file</div>
             </div>
           ) : (
             <>
               <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
               <div style={{ fontSize: 12, color: "#7eb8d8" }}>Click or drag & drop to upload</div>
-              <div style={{ fontSize: 10, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>PDF, JPG, PNG, TXT, DOCX supported</div>
+              <div style={{ fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>PDF, JPG, PNG, TXT, DOCX supported</div>
             </>
           )}
         </div>
@@ -252,10 +252,10 @@ function UploadModal({ onSave, onClose }) {
             <input type="checkbox" checked={isRef} onChange={e => setIsRef(e.target.checked)}
               style={{ marginTop: 2, accentColor: "#6ea3ff", width: 14, height: 14, flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 11, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontWeight: 500 }}>
+              <div style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace", fontWeight: 500 }}>
                 Include as AI Reference
               </div>
-              <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginTop: 3, lineHeight: 1.5 }}>
                 AI will consult this document when answering health queries. Best for transplant guidelines, care handbooks, and key clinical reference materials from your care team.
               </div>
             </div>
@@ -616,16 +616,16 @@ export default function DocumentsTab() {
         .doc-row { padding:12px 14px; border-radius:10px; border:1px solid #1c2a40; background:#080c14; cursor:pointer; transition:all .15s; margin-bottom:6px; animation:fadeUp .3s ease both; }
         .doc-row:hover { border-color:#1c2a40; background:#0a0f1c; }
         .doc-row.selected { border-color:#1a2f4a; background:#0b1220; }
-        .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:9px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#6ea3ff; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
+        .tag { display:inline-block; padding:2px 7px; border-radius:10px; font-size:12px; font-family:'DM Mono',monospace; background:rgba(79,142,247,.1); color:#6ea3ff; border:1px solid rgba(79,142,247,.2); margin-right:4px; margin-bottom:2px; }
         .tag.urgent { background:rgba(239,68,68,.1); color:#f87171; border-color:rgba(239,68,68,.2); }
         .doc-search { background:#080c14; border:1px solid #1c2a40; border-radius:8px; padding:8px 12px; color:#a8c4dc; font-family:'Sora',sans-serif; font-size:12px; width:100%; outline:none; transition:border-color .15s; }
         .doc-search:focus { border-color:#1a2f4a; }
         .doc-search::placeholder { color:#a0b4c8; }
-        .section-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
-        .preview-area { font-family:'DM Mono',monospace; font-size:11px; color:#b0c4d8; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #1c2a40; border-radius:10px; padding:18px; overflow-y:auto; flex:1; min-height:0; }
-        .filter-chip { padding:5px 12px; border-radius:20px; font-size:11px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; }
+        .section-label { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#a0b4c8; font-family:'DM Mono',monospace; margin-bottom:10px; }
+        .preview-area { font-family:'DM Mono',monospace; font-size:12px; color:#b0c4d8; line-height:1.8; white-space:pre-wrap; background:#080c14; border:1px solid #1c2a40; border-radius:10px; padding:18px; overflow-y:auto; flex:1; min-height:0; }
+        .filter-chip { padding:5px 12px; border-radius:20px; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s; border:1px solid #1c2a40; background:transparent; color:#b0c4d8; }
         .filter-chip.active { border-color:rgba(79,142,247,.4); background:rgba(79,142,247,.08); color:#7eb8d8; }
-        .act-btn { padding:6px 13px; border-radius:7px; font-family:'Sora',sans-serif; font-size:11px; cursor:pointer; transition:all .15s; }
+        .act-btn { padding:6px 13px; border-radius:7px; font-family:'Sora',sans-serif; font-size:12px; cursor:pointer; transition:all .15s; }
         .extracting-pulse { animation:pulse 2s ease infinite; }
         ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:#1a2840; border-radius:4px; }
         @media print { .no-print { display:none !important; } aside { display:none !important; } }
@@ -638,11 +638,11 @@ export default function DocumentsTab() {
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
         <div style={{ flex: 1 }} />
         <button onClick={() => setShowUpload(true)}
-          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
           + Upload
         </button>
         <button onClick={() => window.print()}
-          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"transparent", border:"1px solid #1c2a40", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
           <PrintLabel />
         </button>
       </div>
@@ -661,7 +661,7 @@ export default function DocumentsTab() {
             >
               <span style={{ fontSize: 12, width: 14, textAlign: "center", flexShrink: 0 }}>{cat.icon}</span>
               <span style={{ flex: 1 }}>{cat.label}</span>
-              <span style={{ fontSize: 10, fontFamily: "'DM Mono',monospace", color: selectedCategory === cat.id ? "#6ea3ff" : "#a0b4c8" }}>
+              <span style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", color: selectedCategory === cat.id ? "#6ea3ff" : "#a0b4c8" }}>
                 {cat.count}
               </span>
             </div>
@@ -672,7 +672,7 @@ export default function DocumentsTab() {
             const refCount = loadRefDocs().length;
             return refCount > 0 ? (
               <div style={{ margin: "12px 10px 0", padding: "8px 10px", background: "rgba(79,142,247,.06)", border: "1px solid rgba(79,142,247,.15)", borderRadius: 8 }}>
-                <div style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>
+                <div style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>
                   {refCount} AI Reference doc{refCount !== 1 ? "s" : ""} active
                 </div>
               </div>
@@ -681,7 +681,7 @@ export default function DocumentsTab() {
 
           <div style={{ marginTop: "auto", padding: "12px", borderTop: "1px solid #1c2a40" }}>
             <button onClick={() => setShowUpload(true)}
-              style={{ width: "100%", padding: "9px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#7eb8d8", fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>
+              style={{ width: "100%", padding: "9px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#7eb8d8", fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>
               + Upload Document
             </button>
           </div>
@@ -705,7 +705,7 @@ export default function DocumentsTab() {
 
           {/* List */}
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 10px" }}>
-            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10, paddingLeft: 4 }}>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10, paddingLeft: 4 }}>
               {filtered.length} document{filtered.length !== 1 ? "s" : ""}
             </div>
 
@@ -729,25 +729,25 @@ export default function DocumentsTab() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", lineHeight: 1.35, marginBottom: 3, paddingRight: 8 }}>
                       {doc.flagged && <span style={{ color: "#f87171", marginRight: 5 }}>⚠</span>}
-                      {doc.isRef && <span style={{ color: "#6ea3ff", marginRight: 5, fontSize: 10 }}>✦</span>}
+                      {doc.isRef && <span style={{ color: "#6ea3ff", marginRight: 5, fontSize: 12 }}>✦</span>}
                       {doc.title}
                     </div>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: doc.sourceColor || "#98afc4", flexShrink: 0 }} />
-                  <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doc.source}</span>
-                  <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{formatDateUS(doc.date)}</span>
+                  <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{doc.source}</span>
+                  <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginLeft: "auto" }}>{formatDateUS(doc.date)}</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
                   {(doc.tags || []).slice(0, 3).map(t => (
                     <span key={t} className={`tag${t === "urgent" ? " urgent" : ""}`}>{t}</span>
                   ))}
                   {doc.isScanned && !doc.extracted && (
-                    <span style={{ fontSize: 9, color: "#f59e0b", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⚡ needs extract</span>
+                    <span style={{ fontSize: 12, color: "#f59e0b", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⚡ needs extract</span>
                   )}
                   {extraction?.docId === doc.id && extraction.phase !== "error" && (
-                    <span className="extracting-pulse" style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⏳ processing…</span>
+                    <span className="extracting-pulse" style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginLeft: 2 }}>⏳ processing…</span>
                   )}
                 </div>
               </div>
@@ -827,22 +827,22 @@ export default function DocumentsTab() {
                     ...(selectedDoc.fileSize && selectedDoc.fileSize !== "—" ? [{ label: "Size",  value: selectedDoc.fileSize }] : []),
                   ].map(m => (
                     <div key={m.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{m.label}</span>
-                      <span style={{ fontSize: 11, color: m.color || "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{m.value}</span>
+                      <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{m.label}</span>
+                      <span style={{ fontSize: 12, color: m.color || "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>{m.value}</span>
                     </div>
                   ))}
                   {selectedDoc.isRef && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>AI Reference</span>
-                      <span style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Active ✦</span>
+                      <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>AI Reference</span>
+                      <span style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace" }}>Active ✦</span>
                     </div>
                   )}
                   {/* v1.48.0: link to the original report in the patient's own Drive.
                       Auto-filled by the import pass-through; editable by hand for
                       reports uploaded to Drive directly (the app can't see those). */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>Original Report</span>
-                    <span style={{ fontSize: 11, fontFamily: "'DM Mono',monospace", display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase" }}>Original Report</span>
+                    <span style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", display: "flex", gap: 8, alignItems: "center" }}>
                       {sanitizeReportUrl(selectedDoc.driveLink)
                         ? <a href={sanitizeReportUrl(selectedDoc.driveLink)} target="_blank" rel="noopener noreferrer" style={{ color: "#7eb8d8" }}>Open in Drive ↗</a>
                         : <span style={{ color: "#4a5c6a" }}>not linked</span>}
@@ -854,7 +854,7 @@ export default function DocumentsTab() {
                           if (entered.trim() && !clean) { alert("Only https:// links can be saved."); return; }
                           updateDoc(selectedDoc.id, { driveLink: clean, ...(clean ? {} : { driveFileId: "" }) });
                         }}
-                        style={{ background: "transparent", border: "none", color: "#4a6a8a", cursor: "pointer", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: 0, textDecoration: "underline" }}
+                        style={{ background: "transparent", border: "none", color: "#4a6a8a", cursor: "pointer", fontSize: 12, fontFamily: "'DM Mono',monospace", padding: 0, textDecoration: "underline" }}
                       >
                         {selectedDoc.driveLink ? "edit" : "add link"}
                       </button>
@@ -877,13 +877,13 @@ export default function DocumentsTab() {
                 {/* Extraction progress banner */}
                 {isExtracting && (
                   <div style={{ padding: "12px 16px", background: "rgba(79,142,247,.06)", border: "1px solid rgba(79,142,247,.2)", borderRadius: 10, flexShrink: 0 }}>
-                    <div style={{ fontSize: 11, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>
+                    <div style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginBottom: 4 }}>
                       {phaseLabel[extraction.phase] || "Processing…"}
                     </div>
                     <div className="extracting-pulse" style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono',monospace" }}>
                       {extraction.progress}
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
+                    <div style={{ marginTop: 8, fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace" }}>
                       This may take 1–2 minutes for large documents. Do not close this tab.
                     </div>
                   </div>
@@ -893,7 +893,7 @@ export default function DocumentsTab() {
                 {extractError && (
                   <div style={{ padding: "10px 14px", background: "rgba(239,68,68,.07)", border: "1px solid rgba(239,68,68,.2)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                     <span style={{ color: "#f87171" }}>⚠</span>
-                    <span style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono',monospace" }}>{extractError}</span>
+                    <span style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono',monospace" }}>{extractError}</span>
                     <button onClick={() => setExtraction(null)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#f87171", cursor: "pointer", fontSize: 14, lineHeight: 1 }}>✕</button>
                   </div>
                 )}
@@ -902,7 +902,7 @@ export default function DocumentsTab() {
                 {selectedDoc.isScanned && !selectedDoc.extracted && !isExtracting && (
                   <div style={{ padding: "10px 14px", background: "rgba(245,158,11,.06)", border: "1px solid rgba(245,158,11,.2)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                     <span style={{ color: "#f59e0b", fontSize: 14 }}>⚡</span>
-                    <span style={{ fontSize: 11, color: "#f59e0b", fontFamily: "'DM Mono',monospace" }}>
+                    <span style={{ fontSize: 12, color: "#f59e0b", fontFamily: "'DM Mono',monospace" }}>
                       Scanned document — click <strong>Extract with AI</strong> to read the text using Claude Vision and automatically extract clinical findings.
                     </span>
                   </div>
@@ -921,7 +921,7 @@ export default function DocumentsTab() {
                       Clinical Findings ({docFindings.length})
                     </div>
                     {docFindings.length === 0 ? (
-                      <div style={{ fontSize: 11, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", fontStyle: "italic" }}>
+                      <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", fontStyle: "italic" }}>
                         No significant clinical findings extracted from this document.
                       </div>
                     ) : (
@@ -930,12 +930,12 @@ export default function DocumentsTab() {
                           const fc = FINDING_COLORS[f.category] || FINDING_COLORS.other;
                           return (
                             <div key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 10px", background: "#080c14", border: "1px solid #1c2a40", borderRadius: 8 }}>
-                              <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 10, fontFamily: "'DM Mono',monospace", background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`, flexShrink: 0, marginTop: 1, whiteSpace: "nowrap" }}>
+                              <span style={{ fontSize: 12, padding: "2px 7px", borderRadius: 10, fontFamily: "'DM Mono',monospace", background: fc.bg, color: fc.color, border: `1px solid ${fc.border}`, flexShrink: 0, marginTop: 1, whiteSpace: "nowrap" }}>
                                 {f.category}
                               </span>
-                              <span style={{ fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", flex: 1, lineHeight: 1.5 }}>
+                              <span style={{ fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono',monospace", flex: 1, lineHeight: 1.5 }}>
                                 {f.finding}
-                                {f.permanent && <span style={{ fontSize: 9, color: "#a0b4c8", marginLeft: 6 }}>· permanent</span>}
+                                {f.permanent && <span style={{ fontSize: 12, color: "#a0b4c8", marginLeft: 6 }}>· permanent</span>}
                               </span>
                               <button
                                 onClick={() => handleDeleteFinding(f.id)}

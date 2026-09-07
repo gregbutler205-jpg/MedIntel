@@ -22,7 +22,7 @@ export default function Emergency({ onBack }) {
         {/* Identity */}
         <Card style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 18, color: C.p, fontWeight: 700 }}>{p.name || "—"}</div>
-          <div style={{ fontSize: 11, color: C.dim, fontFamily: mono, marginTop: 3, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, marginTop: 3, lineHeight: 1.6 }}>
             {[p.dob && `DOB ${formatDateUS(p.dob)}`, p.gender, p.blood && `Blood ${p.blood}`].filter(Boolean).join("  ·  ")}
           </div>
         </Card>
@@ -34,7 +34,7 @@ export default function Emergency({ onBack }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, color: C.p, fontWeight: 600 }}>{d.primary.name}</div>
-                {d.primary.relationship && <div style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>{d.primary.relationship}</div>}
+                {d.primary.relationship && <div style={{ fontSize: 12, color: C.dim, fontFamily: mono }}>{d.primary.relationship}</div>}
               </div>
               {d.primary.phone && <a href={tel(d.primary.phone)} style={{ background: "#ef4444", color: "#fff", fontSize: 12, fontFamily: mono, fontWeight: 700, padding: "8px 16px", borderRadius: 20, textDecoration: "none" }}>📞 Call</a>}
             </div>
@@ -75,14 +75,14 @@ export default function Emergency({ onBack }) {
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${C.b2}` }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, color: C.p, fontWeight: 600 }}>{c.name}</div>
-                <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono }}>{[c.specialty || c.role, c.facility].filter(Boolean).join(" · ")}</div>
+                <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>{[c.specialty || c.role, c.facility].filter(Boolean).join(" · ")}</div>
               </div>
-              {c.phone && <a href={tel(c.phone)} style={{ background: "rgba(79,142,247,.12)", color: C.blue, fontSize: 11, fontFamily: mono, padding: "6px 12px", borderRadius: 16, textDecoration: "none" }}>📞</a>}
+              {c.phone && <a href={tel(c.phone)} style={{ background: "rgba(79,142,247,.12)", color: C.blue, fontSize: 12, fontFamily: mono, padding: "6px 12px", borderRadius: 16, textDecoration: "none" }}>📞</a>}
             </div>
           ))}
         </Section>
 
-        <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "8px 0 20px" }}>Works offline · derived from your saved record</div>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "8px 0 20px" }}>Works offline · derived from your saved record</div>
       </div>
     </div>
   );
@@ -97,7 +97,7 @@ function Row({ main, sub, dot }) {
       <div style={{ width: 7, height: 7, borderRadius: "50%", background: dot, marginTop: 5, flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 12, color: C.p, fontWeight: 600 }}>{main}</div>
-        {sub && <div style={{ fontSize: 10, color: C.dim, fontFamily: mono, marginTop: 1 }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, marginTop: 1 }}>{sub}</div>}
       </div>
     </div>
   );

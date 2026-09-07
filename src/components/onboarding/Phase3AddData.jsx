@@ -276,7 +276,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
         style={{ border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border-strong)"}`, borderRadius: 12, padding: "26px 20px", textAlign: "center", cursor: "pointer", background: dragOver ? "var(--accent-tint)" : "transparent" }}
       >
         <div style={{ fontSize: 13, color: "var(--text-primary)" }}>Drag &amp; drop files here, or click to browse</div>
-        <div style={{ fontSize: 11.5, color: "var(--text-dim)", marginTop: 6, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 6, lineHeight: 1.6 }}>
           Good examples: clinic notes, after-visit summaries, medication lists, labs from the last 3–6 months, discharge summaries.
         </div>
       </div>
@@ -291,8 +291,8 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
           {files.map(f => (
             <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "1px solid var(--divider)" }}>
               <span style={{ flex: 1, fontSize: 13, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
-              {f.reason && <span style={{ flex: 2, fontSize: 11, color: f.status === "failed" ? "var(--red)" : "var(--text-secondary)", lineHeight: 1.5 }}>{f.reason}</span>}
-              <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: STATUS_COLOR[f.status] }}>{STATUS_LABEL[f.status]}</span>
+              {f.reason && <span style={{ flex: 2, fontSize: 12, color: f.status === "failed" ? "var(--red)" : "var(--text-secondary)", lineHeight: 1.5 }}>{f.reason}</span>}
+              <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: STATUS_COLOR[f.status] }}>{STATUS_LABEL[f.status]}</span>
               {f.status === "failed" && fileObjects.current.has(f.id) && (
                 <button onClick={() => processFile(f.id)} style={{ ...linkBtn, color: "var(--accent-soft)" }}>Retry</button>
               )}
@@ -326,7 +326,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
             </p>
             <textarea value={pasteText} onChange={e => setPasteText(e.target.value.slice(0, PASTE_CHAR_CAP))}
               style={{ ...inp, height: 180, resize: "vertical", fontFamily: "var(--font-mono)", fontSize: 12 }} />
-            <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--font-mono)", margin: "6px 0 14px" }}>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "var(--font-mono)", margin: "6px 0 14px" }}>
               {pasteText.length.toLocaleString()} / {PASTE_CHAR_CAP.toLocaleString()} characters
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -346,7 +346,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
               Fill the frame with the page · avoid glare · one page per shot.
               Up to {VISION_MAX_IMAGES_PER_DOC} pages are treated as one document.
             </p>
-            <p style={{ fontSize: 11.5, color: "var(--text-dim)", lineHeight: 1.7, marginBottom: 12 }}>
+            <p style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7, marginBottom: 12 }}>
               Photo on your phone but working here? Email it to yourself, open the email on this
               computer, and add the photo under Upload documents.
             </p>
@@ -356,7 +356,7 @@ export default function Phase3AddData({ onContinue, onManualEntry, onSkipEveryth
                   <div key={i} style={{ position: "relative" }}>
                     <img src={s} alt={`Page ${i + 1}`} style={{ width: 72, height: 96, objectFit: "cover", borderRadius: 6, border: "1px solid var(--border-strong)" }} />
                     <button aria-label={`Remove page ${i + 1}`} onClick={() => setShots(list => list.filter((_, j) => j !== i))}
-                      style={{ position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: "50%", background: "var(--card)", border: "1px solid var(--border-strong)", color: "var(--text-secondary)", cursor: "pointer", fontSize: 11 }}>✕</button>
+                      style={{ position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: "50%", background: "var(--card)", border: "1px solid var(--border-strong)", color: "var(--text-secondary)", cursor: "pointer", fontSize: 12 }}>✕</button>
                   </div>
                 ))}
               </div>

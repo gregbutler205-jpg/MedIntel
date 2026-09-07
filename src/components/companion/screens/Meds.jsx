@@ -59,18 +59,18 @@ export default function Meds({ queueSync, openMedList }) {
                 <button key={m.key} onClick={() => pickMode(m.key)}
                   style={{ textAlign: "left", background: active ? "rgba(79,142,247,.12)" : C.bg, border: `1px solid ${active ? C.blue : C.b2}`, borderRadius: 8, padding: "9px 10px", cursor: "pointer" }}>
                   <div style={{ fontSize: 12, color: active ? C.blue : C.s, fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, marginTop: 1, lineHeight: 1.3 }}>{m.blurb}</div>
+                  <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 1, lineHeight: 1.3 }}>{m.blurb}</div>
                 </button>
               );
             })}
           </div>
-          {chosen && <button onClick={() => setChoosing(false)} style={{ background: "none", border: "none", color: C.ghost, fontSize: 11, fontFamily: mono, cursor: "pointer", marginTop: 10 }}>Cancel</button>}
+          {chosen && <button onClick={() => setChoosing(false)} style={{ background: "none", border: "none", color: C.ghost, fontSize: 12, fontFamily: mono, cursor: "pointer", marginTop: 10 }}>Cancel</button>}
         </Card>
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-          <span style={{ fontSize: 11, color: C.dim, fontFamily: mono }}>Tracking: <span style={{ color: C.s }}>{modeLabel(mode)}</span></span>
-          <button onClick={() => setChoosing(true)} style={{ background: "none", border: "none", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>Change</button>
-          <button onClick={openMedList} style={{ marginLeft: "auto", background: "rgba(79,142,247,.12)", border: `1px solid ${C.blue}40`, borderRadius: 8, padding: "6px 12px", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>📋 My med list</button>
+          <span style={{ fontSize: 12, color: C.dim, fontFamily: mono }}>Tracking: <span style={{ color: C.s }}>{modeLabel(mode)}</span></span>
+          <button onClick={() => setChoosing(true)} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>Change</button>
+          <button onClick={openMedList} style={{ marginLeft: "auto", background: "rgba(79,142,247,.12)", border: `1px solid ${C.blue}40`, borderRadius: 8, padding: "6px 12px", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>📋 My med list</button>
         </div>
       )}
 
@@ -82,7 +82,7 @@ export default function Meds({ queueSync, openMedList }) {
             <div key={medId(m)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0" }}>
               <span style={{ fontSize: 15 }}>💊</span>
               <div style={{ flex: 1, minWidth: 0, fontSize: 12, color: C.s, fontWeight: 600 }}>{m.name}</div>
-              <span style={{ fontSize: 10, color: C.amber, fontFamily: mono }}>{relDate(m.refillDate)}</span>
+              <span style={{ fontSize: 12, color: C.amber, fontFamily: mono }}>{relDate(m.refillDate)}</span>
             </div>
           ))}
         </Card>
@@ -107,11 +107,11 @@ export default function Meds({ queueSync, openMedList }) {
                 <button onClick={() => toggleReminder(g.key)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                   <span style={{ fontSize: 14, opacity: rem.on ? 1 : 0.4 }}>🔔</span>
                   <MiniToggle on={rem.on} />
-                  <span style={{ fontSize: 11, color: rem.on ? C.s : C.ghost, fontFamily: mono }}>Reminder</span>
+                  <span style={{ fontSize: 12, color: rem.on ? C.s : C.ghost, fontFamily: mono }}>Reminder</span>
                 </button>
                 {rem.on && (
                   <input type="time" value={rem.time} onChange={e => setReminderTime(g.key, e.target.value)}
-                    style={{ marginLeft: "auto", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, color: C.p, padding: "4px 8px", fontSize: 11, fontFamily: mono }} />
+                    style={{ marginLeft: "auto", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, color: C.p, padding: "4px 8px", fontSize: 12, fontFamily: mono }} />
                 )}
               </div>
             )}
@@ -135,11 +135,11 @@ export default function Meds({ queueSync, openMedList }) {
             <div key={medId(m)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: `1px solid ${C.b2}` }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12, color: C.s, fontWeight: 600 }}>{m.name}</div>
-                <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono }}>{[m.dose, m.frequency].filter(Boolean).join(" · ")}</div>
+                <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>{[m.dose, m.frequency].filter(Boolean).join(" · ")}</div>
               </div>
               {canFlag && (
                 <button onClick={() => saveException({ group: "prn", medId: medId(m), medName: m.name, type: "prn", note: "" })}
-                  style={{ background: "rgba(79,142,247,.12)", border: `1px solid ${C.blue}40`, borderRadius: 8, padding: "5px 10px", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer", flexShrink: 0 }}>
+                  style={{ background: "rgba(79,142,247,.12)", border: `1px solid ${C.blue}40`, borderRadius: 8, padding: "5px 10px", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", flexShrink: 0 }}>
                   Took one
                 </button>
               )}
@@ -163,7 +163,7 @@ export default function Meds({ queueSync, openMedList }) {
             <div key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: `1px solid ${C.b2}` }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12, color: C.p }}>{e.medName}</div>
-                <div style={{ fontSize: 10, color: C.amber, fontFamily: mono }}>{EXCEPTION_TYPES.find(t => t.key === e.type)?.label || e.type}{e.note ? ` — ${e.note}` : ""}</div>
+                <div style={{ fontSize: 12, color: C.amber, fontFamily: mono }}>{EXCEPTION_TYPES.find(t => t.key === e.type)?.label || e.type}{e.note ? ` — ${e.note}` : ""}</div>
               </div>
               <button onClick={() => dropException(e.id)} style={{ background: "none", border: "none", color: C.ghost, cursor: "pointer", fontSize: 13 }}>✕</button>
             </div>
@@ -189,13 +189,13 @@ function GroupMeds({ meds }) {
     <div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {shown.map(m => (
-          <span key={medId(m)} style={{ fontSize: 11, color: C.dim, background: C.bg, border: `1px solid ${C.b2}`, borderRadius: 6, padding: "3px 8px" }}>
+          <span key={medId(m)} style={{ fontSize: 12, color: C.dim, background: C.bg, border: `1px solid ${C.b2}`, borderRadius: 6, padding: "3px 8px" }}>
             {m.name}{m.dose ? ` ${m.dose}` : ""}
           </span>
         ))}
       </div>
       {meds.length > 4 && (
-        <button onClick={() => setOpen(o => !o)} style={{ background: "none", border: "none", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer", padding: "6px 0 0" }}>
+        <button onClick={() => setOpen(o => !o)} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", padding: "6px 0 0" }}>
           {open ? "Show less" : `+${meds.length - 4} more`}
         </button>
       )}
@@ -219,12 +219,12 @@ function ExceptionForm({ groups, prn, onSave, onCancel }) {
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
         {EXCEPTION_TYPES.map(t => (
           <button key={t.key} onClick={() => setType(t.key)}
-            style={{ padding: "6px 10px", borderRadius: 6, border: `1.5px solid ${type === t.key ? C.amber : C.b2}`, background: type === t.key ? C.amber + "22" : "transparent", color: type === t.key ? C.amber : C.dim, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>
+            style={{ padding: "6px 10px", borderRadius: 6, border: `1.5px solid ${type === t.key ? C.amber : C.b2}`, background: type === t.key ? C.amber + "22" : "transparent", color: type === t.key ? C.amber : C.dim, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>
             {t.label}
           </button>
         ))}
       </div>
-      <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Which medication</div>
+      <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Which medication</div>
       <select value={mid} onChange={e => setMid(e.target.value)}
         style={{ width: "100%", background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 6, padding: "8px 10px", color: C.p, fontSize: 12, marginBottom: 10, boxSizing: "border-box" }}>
         {allMeds.map(m => <option key={medId(m)} value={medId(m)}>{m.name}{m.dose ? ` ${m.dose}` : ""}</option>)}

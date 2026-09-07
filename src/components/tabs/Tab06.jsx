@@ -88,7 +88,7 @@ function LineChart({ data, keys, colors, yMin, yMax, refLines = [], height = 150
         return (
           <g key={i}>
             <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
-            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#a0b4c8" fontFamily="DM Mono">{Number.isInteger(v) ? v : v.toFixed(1)}</text>
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{Number.isInteger(v) ? v : v.toFixed(1)}</text>
           </g>
         );
       })}
@@ -115,7 +115,7 @@ function LineChart({ data, keys, colors, yMin, yMax, refLines = [], height = 150
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{r[dateKey]}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{r[dateKey]}</text>;
       })}
     </svg>
   );
@@ -144,7 +144,7 @@ function BandChart({ data, minKey, maxKey, restingKey, color, yMin, yMax, height
         return (
           <g key={p}>
             <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
-            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#a0b4c8" fontFamily="DM Mono">{Math.round(v)}</text>
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{Math.round(v)}</text>
           </g>
         );
       })}
@@ -161,7 +161,7 @@ function BandChart({ data, minKey, maxKey, restingKey, color, yMin, yMax, height
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{formatDateUS(r.date)}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{formatDateUS(r.date)}</text>;
       })}
     </svg>
   );
@@ -186,7 +186,7 @@ function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, hei
         return (
           <g key={p}>
             <line x1={PL} y1={y} x2={PL + cW} y2={y} stroke="#0d1a28" strokeWidth={0.6} />
-            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={8} fill="#a0b4c8" fontFamily="DM Mono">{v.toFixed(1)}</text>
+            <text x={PL - 4} y={y + 3} textAnchor="end" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{v.toFixed(1)}</text>
           </g>
         );
       })}
@@ -213,7 +213,7 @@ function BarChart({ data, valueKey, color, yMin, yMax, targetMin, targetMax, hei
       {reversed.map((r, i) => {
         const step = Math.ceil(n / 7);
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={7.5} fill="#a0b4c8" fontFamily="DM Mono">{formatDateUS(r.date)}</text>;
+        return <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={12} fill="#a0b4c8" fontFamily="DM Mono">{formatDateUS(r.date)}</text>;
       })}
     </svg>
   );
@@ -230,7 +230,7 @@ function MiniRangeBar({ value, yMin, yMax, goodMin, goodMax }) {
   const bc = inRange ? "#10b981" : "#ef4444";
   return (
     <div style={{ position: "relative", paddingTop: 16, marginTop: 4 }}>
-      <div style={{ position: "absolute", top: 0, left: `${valPct}%`, transform: "translateX(-50%)", background: bc, color: "#fff", fontSize: 7.5, fontWeight: 700, fontFamily: "'DM Mono',monospace", padding: "1px 4px", borderRadius: 20, whiteSpace: "nowrap", lineHeight: 1.4 }}>{value}</div>
+      <div style={{ position: "absolute", top: 0, left: `${valPct}%`, transform: "translateX(-50%)", background: bc, color: "#fff", fontSize: 12, fontWeight: 700, fontFamily: "'DM Mono',monospace", padding: "1px 4px", borderRadius: 20, whiteSpace: "nowrap", lineHeight: 1.4 }}>{value}</div>
       <div style={{ position: "absolute", top: 12, left: `${valPct}%`, transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "3px solid transparent", borderRight: "3px solid transparent", borderTop: `3px solid ${bc}` }} />
       <div style={{ height: 4, borderRadius: 4, position: "relative", overflow: "hidden", background: "rgba(239,68,68,0.25)" }}>
         <div style={{ position: "absolute", left: `${lowPct}%`, width: `${highPct - lowPct}%`, height: "100%", background: "#10b981" }} />
@@ -377,7 +377,7 @@ function LogPanel({ onClose, onSave }) {
     <div style={{ position: "absolute", top: 0, right: 0, width: 320, height: "100%", background: "#080c14", borderLeft: "1px solid #1c2a40", display: "flex", flexDirection: "column", zIndex: 20, animation: "slideInRight .22s ease both" }}>
       <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
+          <div style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 4 }}>NEW ENTRY</div>
           <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 18, color: "#dde8f5" }}>Log Vitals</div>
         </div>
         <button onClick={onClose} style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 6, color: "#b0c4d8", fontSize: 14, cursor: "pointer", padding: "4px 8px" }}>✕</button>
@@ -386,25 +386,25 @@ function LogPanel({ onClose, onSave }) {
         {/* Date + optional time */}
         <div style={{ marginBottom: 16, display: "flex", gap: 8 }}>
           <div style={{ flex: 2 }}>
-            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Date of Reading</div>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Date of Reading</div>
             <input type="date" value={form.date} onChange={e => set("date", e.target.value)}
               style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: `1px solid ${form.date !== todayISO ? "#4f8ef7" : "#1c2a40"}`, borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Time (optional)</div>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Time (optional)</div>
             <input type="time" value={form.time} onChange={e => set("time", e.target.value)}
               style={{ width: "100%", padding: "9px 12px", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, color: "#c4d8ee", fontSize: 13, fontFamily: "'DM Mono',monospace", outline: "none" }} />
           </div>
         </div>
         {form.date !== todayISO && (
-          <div style={{ fontSize: 9, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginTop: -10, marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono',monospace", marginTop: -10, marginBottom: 16 }}>
             Logging for past date — {new Date(form.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}{form.time ? ` at ${form.time}` : ""}
           </div>
         )}
-        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", marginBottom: 16 }}>Leave blank to skip any vital.</div>
         {fields.map(({ label, inputs, unit }) => (
           <div key={label} style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>
               {label} <span style={{ color: "#a0b4c8" }}>· {unit}</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -416,7 +416,7 @@ function LogPanel({ onClose, onSave }) {
           </div>
         ))}
         <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 10, padding: "10px 12px", marginTop: 4 }}>
-          <div style={{ fontSize: 11, color: "#98afc4", lineHeight: 1.6 }}>Leave any field blank to skip it. BMI is calculated automatically from your weight and height in Profile.</div>
+          <div style={{ fontSize: 12, color: "#98afc4", lineHeight: 1.6 }}>Leave any field blank to skip it. BMI is calculated automatically from your weight and height in Profile.</div>
         </div>
       </div>
       <div style={{ padding: "14px 18px", borderTop: "1px solid #1c2a40", display: "flex", gap: 8 }}>
@@ -446,7 +446,7 @@ function PlausibilityGate({ pending, onConfirm, onSuggestion, onCancel }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(4,7,14,0.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
       <div style={{ width: 360, maxWidth: "90vw", background: "#0b1220", border: "1px solid #16273c", borderRadius: 14, padding: "20px 22px", boxShadow: "0 20px 60px rgba(0,0,0,.5)" }}>
-        <div style={{ fontSize: 9, color: hasHard ? "#f87171" : "#f59e0b", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 6 }}>
+        <div style={{ fontSize: 12, color: hasHard ? "#f87171" : "#f59e0b", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", marginBottom: 6 }}>
           {hasHard ? "CHECK THIS VALUE" : "UNUSUAL VALUE"}
         </div>
         <div style={{ fontFamily: "'DM Serif Display',serif", fontSize: 17, color: "#dde8f5", marginBottom: 14 }}>
@@ -468,7 +468,7 @@ function PlausibilityGate({ pending, onConfirm, onSuggestion, onCancel }) {
                 ))}
               </div>
             ) : (
-              <div style={{ fontSize: 11, color: "#98afc4" }}>No suggested correction — please edit the value manually.</div>
+              <div style={{ fontSize: 12, color: "#98afc4" }}>No suggested correction — please edit the value manually.</div>
             )}
           </div>
         ))}
@@ -617,14 +617,14 @@ export default function App({ onNavChange }) {
         @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-        .section-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
+        .section-label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#a0b4c8;font-family:'DM Mono',monospace;margin-bottom:10px}
         .vcard{background:#0b1220;border:1px solid #1c2a40;border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;animation:fadeUp .3s ease both}
         .vcard:hover{border-color:#1a2f4a}
         .vcard.sel{border-color:#6ea3ff;background:rgba(79,142,247,.07)}
-        .time-btn{padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;background:#0f1e30;color:#7eb8d8;font-weight:500}
+        .time-btn{padding:4px 10px;border-radius:6px;border:none;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;background:#0f1e30;color:#7eb8d8;font-weight:500}
         .time-btn:hover{background:#162840}
         .time-btn.on{background:#4f8ef7;color:#fff}
-        .hist-row{display:grid;grid-template-columns:72px 88px 54px 54px 62px 54px 64px 52px;gap:0;padding:8px 0;border-bottom:1px solid #1c2a40;align-items:center;font-size:11px}
+        .hist-row{display:grid;grid-template-columns:72px 88px 54px 54px 62px 54px 64px 52px;gap:0;padding:8px 0;border-bottom:1px solid #1c2a40;align-items:center;font-size:12px}
         .hist-row:last-child{border-bottom:none}
         @media print { .no-print { display:none !important; } body { background:white !important; } }
       `}</style>
@@ -648,7 +648,7 @@ export default function App({ onNavChange }) {
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
-              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Home</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Home</span>
             </button>
             {/* UI-26: Search beside Home — opens the App-level SearchPopup */}
             <button
@@ -662,16 +662,16 @@ export default function App({ onNavChange }) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <span style={{ fontSize:9, fontFamily:"'DM Mono',monospace" }}>Search</span>
+              <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace" }}>Search</span>
             </button>
             <div className="live-dot"/>
-            <span style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
+            <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{fmtDate(time)} · {fmt(time)}</span>
           </div>
           <button onClick={()=>setShowLog(true)}
             style={{ padding:"7px 16px", background:"#10b981", border:"none", borderRadius:8, color:"#fff", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer" }}>
             + Log Vitals
           </button>
-          <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
+          <button onClick={() => window.print()} style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
             <PrintLabel />
           </button>
           <div style={{ width:32, height:32, background:"linear-gradient(135deg,#4f8ef7,#a78bfa)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, cursor:"pointer", color:"#fff" }}>G</div>
@@ -683,18 +683,18 @@ export default function App({ onNavChange }) {
           {/* Left — vital selector */}
           <div style={{ width:234, minWidth:234, borderRight:"1px solid #1c2a40", overflowY:"auto", padding:"18px 12px" }}>
             <h1 style={{ fontFamily:"'DM Serif Display',serif", fontSize:21, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px", marginBottom:3 }}>Vitals</h1>
-            <p style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:14 }}>{manualReadings.length} readings · {flaggedManual} flagged</p>
+            <p style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace", marginBottom:14 }}>{manualReadings.length} readings · {flaggedManual} flagged</p>
 
             {/* Summary chips */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:7, marginBottom:14 }}>
               <div style={{ background: showFlagged ? "rgba(239,68,68,.08)" : "#0b1220", border: showFlagged ? "1px solid rgba(239,68,68,.4)" : "1px solid #1c2a40", borderRadius:10, padding:"9px 11px", cursor:"pointer", transition:"all .15s" }} onClick={() => setShowFlagged(f => !f)}>
                 <div style={{ fontSize:17, fontWeight:700, color:"#f87171", lineHeight:1, marginBottom:2 }}>{flaggedManual}</div>
-                <div style={{ fontSize:9, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight:600 }}>Flagged</div>
-                <div style={{ fontSize:8, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "clear" : "filter"}</div>
+                <div style={{ fontSize:12, color: showFlagged ? "#f87171" : "#7eb8d8", fontWeight:600 }}>Flagged</div>
+                <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{showFlagged ? "clear" : "filter"}</div>
               </div>
               <div style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"9px 11px" }}>
                 <div style={{ fontSize:17, fontWeight:700, color:"#6ea3ff", lineHeight:1, marginBottom:2 }}>{manualReadings.length}</div>
-                <div style={{ fontSize:9, color:"#7eb8d8", fontWeight:600 }}>Readings</div>
+                <div style={{ fontSize:12, color:"#7eb8d8", fontWeight:600 }}>Readings</div>
               </div>
             </div>
 
@@ -703,7 +703,7 @@ export default function App({ onNavChange }) {
               value={vitalSearch}
               onChange={e => setVitalSearch(e.target.value)}
               placeholder="Search vitals…"
-              style={{ width:"100%", background:"#080c14", border:"1px solid #1c2a40", borderRadius:8, padding:"7px 10px", fontSize:11, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", outline:"none", marginBottom:10 }}
+              style={{ width:"100%", background:"#080c14", border:"1px solid #1c2a40", borderRadius:8, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'DM Mono',monospace", outline:"none", marginBottom:10 }}
             />
 
             {/* Vital cards */}
@@ -718,17 +718,17 @@ export default function App({ onNavChange }) {
               return (
                 <div key={vc.id} className={`vcard ${isSelected?"sel":""}`} style={{ animationDelay:`${i*40}ms` }} onClick={()=>setSelectedId(vc.id)}>
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
-                    <div style={{ fontSize:9.5, fontWeight:600, color:vc.color, textTransform:"uppercase", letterSpacing:"0.5px", fontFamily:"'DM Mono',monospace" }}>{vc.label}</div>
-                    {isWatch && <span style={{ fontSize:7.5, background:"rgba(79,142,247,.15)", color:"#6ea3ff", padding:"1px 5px", borderRadius:8, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>WATCH</span>}
+                    <div style={{ fontSize:12, fontWeight:600, color:vc.color, textTransform:"uppercase", letterSpacing:"0.5px", fontFamily:"'DM Mono',monospace" }}>{vc.label}</div>
+                    {isWatch && <span style={{ fontSize:12, background:"rgba(79,142,247,.15)", color:"#6ea3ff", padding:"1px 5px", borderRadius:8, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>WATCH</span>}
                   </div>
                   <div style={{ display:"flex", alignItems:"baseline", gap:5, marginBottom:2 }}>
                     <span style={{ fontSize:19, fontWeight:700, color: status && status.color === "#ef4444" ? "#f87171" : "#dde8f5", lineHeight:1 }}>
                       {latestR ? vc.latestFn(latestR) : "—"}
                     </span>
-                    <span style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
+                    <span style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{vc.unit}</span>
                   </div>
-                  {status && <div style={{ fontSize:10, color:status.color, fontWeight:600 }}>{status.label}</div>}
-                  {latestR?.date && <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginTop:2 }}>Last: {formatDateUS(latestR.date)}</div>}
+                  {status && <div style={{ fontSize:12, color:status.color, fontWeight:600 }}>{status.label}</div>}
+                  {latestR?.date && <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginTop:2 }}>Last: {formatDateUS(latestR.date)}</div>}
                 </div>
               );
             })}
@@ -745,7 +745,7 @@ export default function App({ onNavChange }) {
 
             {showEntryForm && (
               <div style={{ marginBottom:20, padding:"18px", background:"#0b1220", border:"1px solid #1a2f4a", borderRadius:12 }}>
-                <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:14 }}>NEW VITAL READING</div>
+                <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1.5px", marginBottom:14 }}>NEW VITAL READING</div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:12 }}>
                   {[
                     { label:"DATE", key:"date", placeholder:"", type:"date" },
@@ -761,7 +761,7 @@ export default function App({ onNavChange }) {
                     { label:"SLEEP (hrs)", key:"sleep", placeholder:"7.5" },
                   ].map(f => (
                     <div key={f.key}>
-                      <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
+                      <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", display:"block", marginBottom:4 }}>{f.label}</label>
                       <input
                         type={f.type || "text"}
                         style={{ background:"#080c14", border:"1px solid #1a2f4a", borderRadius:6, padding:"7px 10px", fontSize:12, color:"#c4d8ee", fontFamily:"'Sora',sans-serif", width:"100%", outline:"none" }}
@@ -787,10 +787,10 @@ export default function App({ onNavChange }) {
                   <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:3 }}>
                     <h2 style={{ fontFamily:"'DM Serif Display',serif", fontSize:24, color:"#dde8f5", fontWeight:400, letterSpacing:"-0.4px" }}>{config.label}</h2>
                     {isWatch && (
-                      <span style={{ fontSize:9, background:"rgba(79,142,247,.15)", color:"#6ea3ff", padding:"3px 8px", borderRadius:5, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>AUTO · APPLE WATCH</span>
+                      <span style={{ fontSize:12, background:"rgba(79,142,247,.15)", color:"#6ea3ff", padding:"3px 8px", borderRadius:5, fontFamily:"'DM Mono',monospace", fontWeight:600 }}>AUTO · APPLE WATCH</span>
                     )}
                   </div>
-                  <div style={{ fontSize:11, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+                  <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                     {filteredData.length} readings in view
                     {isWatch && " · Daily sync via HealthKit"}
                   </div>
@@ -806,7 +806,7 @@ export default function App({ onNavChange }) {
                       onNavChange?.("ai");
                     }}
                     title={`Ask AI to analyze your ${config.label} trend`}
-                    style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 12px", background:"rgba(79,142,247,.14)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:11, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }}
+                    style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 12px", background:"rgba(79,142,247,.14)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:"#7eb8d8", fontSize:12, fontFamily:"'Sora',sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap" }}
                   >
                     ✦ Ask AI
                   </button>
@@ -837,9 +837,9 @@ export default function App({ onNavChange }) {
                   ];
                 })().map(({ label, value, sub, color }) => (
                   <div key={label} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"12px 14px" }}>
-                    <div style={{ fontSize:9, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
+                    <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"1px", textTransform:"uppercase", marginBottom:6 }}>{label}</div>
                     <div style={{ fontSize:16, fontWeight:700, color, marginBottom:2 }}>{value}</div>
-                    <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{sub}</div>
+                    <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{sub}</div>
                   </div>
                 ))}
               </div>
@@ -850,7 +850,7 @@ export default function App({ onNavChange }) {
                   <div className="section-label" style={{ marginBottom:0 }}>{timeRange}-Month Trend</div>
                   <div style={{ display:"flex", gap:12 }}>
                     {config.chartLabels.map((lbl, i) => (
-                      <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5, fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+                      <div key={lbl} style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                         <div style={{ width:14, height:2, background: config.chartType === "band" ? (i===0?"rgba(248,113,113,0.4)":config.color) : (config.chartColors?.[i] ?? config.color), borderRadius:2 }}/>
                         {lbl}
                       </div>
@@ -892,27 +892,27 @@ export default function App({ onNavChange }) {
                     const id = config.id;
                     // column definitions per vital
                     const cols = id === "bp"
-                      ? [{ h:"Date", fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date", fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Systolic",  fn:r=>r.bp_s??'—', c:r=>r.bp_s>=140?"#ef4444":r.bp_s>=130?"#f59e0b":"#c4d8ee", bold:true },
                          { h:"Diastolic", fn:r=>r.bp_d??'—', c:r=>r.bp_d>=90?"#ef4444":"#c4d8ee" },
                          { h:"HR",        fn:r=>r.hr??'—',   c:r=>"#7eb8d8" }]
                     : id === "o2"
-                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"O2 Sat %",     fn:r=>r.o2!=null?`${r.o2}%`:'—', c:r=>r.o2!=null&&r.o2<95?"#ef4444":r.o2!=null&&r.o2<97?"#f59e0b":"#10b981", bold:true },
                          { h:"HR",         fn:r=>r.hr??'—',  c:r=>"#7eb8d8" }]
                     : id === "weight"
-                      ? [{ h:"Date",   fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",   fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Weight (lbs)", fn:r=>r.weight??'—', c:r=>"#f59e0b", bold:true },
                          { h:"Change", fn:(r,i,arr)=>{const p=arr[i+1]; return p&&r.weight&&p.weight?(r.weight-p.weight>0?"+":"")+(r.weight-p.weight).toFixed(1):"—"}, c:(r,i,arr)=>{const p=arr[i+1]; if(!p||!r.weight||!p.weight)return"#a0b4c8"; return r.weight>p.weight?"#ef4444":r.weight<p.weight?"#10b981":"#a0b4c8";} }]
                     : id === "temp"
-                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Temp °F",  fn:r=>r.temp!=null?`${r.temp}°`:'—', c:r=>r.temp>99.5?"#ef4444":r.temp>99?"#f59e0b":"#b0c4d8", bold:true }]
                     : id === "glucose"
-                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Glucose mg/dL", fn:r=>r.glucose??'—', c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.glucose>125?"High":r.glucose>100?"Pre-diabetic":r.glucose<70?"Low":"Normal", c:r=>r.glucose>125?"#ef4444":r.glucose>100?"#f59e0b":r.glucose<70?"#ef4444":"#10b981" }]
                     : id === "resting_hr"
-                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",       fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Resting HR", fn:r=>r.resting_hr!=null?`${r.resting_hr} bpm`:'—', c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.resting_hr==null?"—":r.resting_hr>70?"Elevated":r.resting_hr<50?"Low":"Good", c:r=>r.resting_hr==null?"#a0b4c8":r.resting_hr>70?"#f59e0b":"#10b981" }]
                     : id === "bmi"
@@ -921,7 +921,7 @@ export default function App({ onNavChange }) {
                          { h:"BMI",    fn:r=>{const b=calcBMI(r.weight);return b!=null?`${b}`:'—';}, c:r=>{const b=calcBMI(r.weight);return bmiLabel(b).color;}, bold:true },
                          { h:"Category", fn:r=>bmiLabel(calcBMI(r.weight)).label, c:r=>bmiLabel(calcBMI(r.weight)).color }]
                     : id === "sleep"
-                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:8,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
+                      ? [{ h:"Date",     fn:r=><>{formatDateUS(r.date)}{r.flag&&<span style={{marginLeft:3,fontSize:12,color:"#f87171"}}>▲</span>}</>, c:r=>"#98afc4" },
                          { h:"Sleep hrs", fn:r=>r.sleep?`${r.sleep}h`:'—', c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981", bold:true },
                          { h:"Status", fn:r=>r.sleep<6?"Poor":r.sleep<7?"Below goal":"Good", c:r=>r.sleep<6?"#ef4444":r.sleep<7?"#f59e0b":"#10b981" }]
                       : [];
@@ -929,13 +929,13 @@ export default function App({ onNavChange }) {
                     return (
                       <>
                         <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, gap:8, borderBottom:"1px solid #1c2a40", paddingBottom:7, marginBottom:2 }}>
-                          {cols.map(c => <div key={c.h} style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{c.h}</div>)}
+                          {cols.map(c => <div key={c.h} style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", letterSpacing:"0.8px" }}>{c.h}</div>)}
                         </div>
-                        {rows.length === 0 && <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", padding:"10px 0" }}>No readings yet.</div>}
+                        {rows.length === 0 && <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", padding:"10px 0" }}>No readings yet.</div>}
                         {rows.map((r,i,arr) => (
                           <div key={r.ts} style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, gap:8, padding:"6px 0", borderBottom:"1px solid #0a1525" }}>
                             {cols.map((c,ci) => (
-                              <div key={ci} style={{ fontSize:11, color:c.c(r,i,arr), fontWeight:c.bold?600:400, fontFamily:"'DM Mono',monospace" }}>{c.fn(r,i,arr)}</div>
+                              <div key={ci} style={{ fontSize:12, color:c.c(r,i,arr), fontWeight:c.bold?600:400, fontFamily:"'DM Mono',monospace" }}>{c.fn(r,i,arr)}</div>
                             ))}
                           </div>
                         ))}
@@ -952,9 +952,9 @@ export default function App({ onNavChange }) {
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))", gap:6 }}>
                     {filteredData.slice(0,28).map(r => (
                       <div key={r.ts} style={{ background:"#080c14", borderRadius:8, border:"1px solid #1c2a40", padding:"8px 10px" }}>
-                        <div style={{ fontSize:8.5, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{formatDateUS(r.date)}</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:9, color:"#98afc4" }}>bpm</span></div>
-                        <div style={{ fontSize:9, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>
+                        <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{formatDateUS(r.date)}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#f87171" }}>{r.resting_hr} <span style={{ fontSize:12, color:"#98afc4" }}>bpm</span></div>
+                        <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>Range {r.hr_min}–{r.hr_max}</div>
                       </div>
                     ))}
                   </div>

@@ -239,7 +239,7 @@ export default function SearchPopup({ onClose, onNavChange }) {
           {query && (
             <button onClick={() => setQuery("")} style={{ background: "none", border: "none", color: C.ghost, cursor: "pointer", fontSize: 15, padding: "0 4px", lineHeight: 1 }}>✕</button>
           )}
-          <kbd style={{ background: "#0d1520", border: `1px solid ${C.b1}`, borderRadius: 5, color: C.ghost, fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 7px", cursor: "pointer" }} onClick={onClose}>ESC</kbd>
+          <kbd style={{ background: "#0d1520", border: `1px solid ${C.b1}`, borderRadius: 5, color: C.ghost, fontSize: 12, fontFamily: "'DM Mono',monospace", padding: "3px 7px", cursor: "pointer" }} onClick={onClose}>ESC</kbd>
         </div>
 
         {/* ── Results ── */}
@@ -255,7 +255,7 @@ export default function SearchPopup({ onClose, onNavChange }) {
                 <span style={{ fontSize: 15, color: C.green, flexShrink: 0, marginTop: 1 }}>✓</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, color: C.p, fontWeight: 600, marginBottom: 3, lineHeight: 1.45 }}>{answer.text}</div>
-                  <div style={{ fontSize: 10, color: C.dim, fontFamily: "'DM Mono',monospace" }}>
+                  <div style={{ fontSize: 12, color: C.dim, fontFamily: "'DM Mono',monospace" }}>
                     {answer.sourceLabel} · {CATEGORIES[answer.result.category]?.label} · click to open
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export default function SearchPopup({ onClose, onNavChange }) {
               >
                 <span style={{ color: C.blue, fontSize: 14 }}>✦</span>
                 Ask AI Analysis instead
-                <span style={{ color: C.dim, fontSize: 10, fontFamily: "'DM Mono',monospace" }}>· uses tokens</span>
+                <span style={{ color: C.dim, fontSize: 12, fontFamily: "'DM Mono',monospace" }}>· uses tokens</span>
               </button>
             </div>
           )}
@@ -284,7 +284,7 @@ export default function SearchPopup({ onClose, onNavChange }) {
             const cfg = CATEGORIES[cat];
             return (
               <div key={cat} style={{ padding: "12px 18px 4px" }}>
-                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: cfg.color, fontFamily: "'DM Mono',monospace", marginBottom: 6, paddingLeft: 2 }}>
+                <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: cfg.color, fontFamily: "'DM Mono',monospace", marginBottom: 6, paddingLeft: 2 }}>
                   {cfg.label}
                 </div>
                 {sortByDate(items).slice(0, 6).map((r, i) => (
@@ -299,12 +299,12 @@ export default function SearchPopup({ onClose, onNavChange }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, color: C.p, fontWeight: 600, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</div>
                       {r.subtitle && (
-                        <div style={{ fontSize: 11, color: C.dim, fontFamily: "'DM Mono',monospace", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        <div style={{ fontSize: 12, color: C.dim, fontFamily: "'DM Mono',monospace", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                           {r.subtitle}
                         </div>
                       )}
                     </div>
-                    {r.date && <div style={{ fontSize: 10, color: C.ghost, fontFamily: "'DM Mono',monospace", flexShrink: 0, paddingTop: 2 }}>{String(r.date).slice(0, 10)}</div>}
+                    {r.date && <div style={{ fontSize: 12, color: C.ghost, fontFamily: "'DM Mono',monospace", flexShrink: 0, paddingTop: 2 }}>{String(r.date).slice(0, 10)}</div>}
                   </button>
                 ))}
               </div>
@@ -329,11 +329,11 @@ export default function SearchPopup({ onClose, onNavChange }) {
         {/* ── Footer ── */}
         {total > 0 && (
           <div style={{ padding: "8px 18px", borderTop: `1px solid ${C.b2}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 10, color: C.ghost, fontFamily: "'DM Mono',monospace" }}>
+            <span style={{ fontSize: 12, color: C.ghost, fontFamily: "'DM Mono',monospace" }}>
               {total} result{total !== 1 ? "s" : ""} · click any to open that section
             </span>
             <button onClick={handleAskAI} title="Send this question to AI Analysis (uses tokens)"
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: C.blue, fontFamily: "'DM Mono',monospace", padding: 0 }}>
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: C.blue, fontFamily: "'DM Mono',monospace", padding: 0 }}>
               ✦ Ask AI instead
             </button>
           </div>

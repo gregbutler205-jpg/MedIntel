@@ -81,7 +81,7 @@ export default function AILite({ initialPrompt, initialSurface, onPromptConsumed
           <div style={{ textAlign: "center", paddingTop: 28 }}>
             <div style={{ fontSize: 30, marginBottom: 8 }}>✦</div>
             <div style={{ fontSize: 13, color: C.s, marginBottom: 3 }}>Ask a quick health question</div>
-            <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginBottom: 20 }}>Grounded in your record · informational only</div>
+            <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginBottom: 20 }}>Grounded in your record · informational only</div>
             {PROMPTS.map(q => (
               <button key={q} onClick={() => send(q)} style={{ display: "block", width: "100%", margin: "7px 0", textAlign: "left", background: C.card, border: `1px solid ${C.b2}`, borderRadius: 8, padding: "11px 13px", color: C.s, fontSize: 12, fontFamily: sans, cursor: "pointer" }}>{q}</button>
             ))}
@@ -94,7 +94,7 @@ export default function AILite({ initialPrompt, initialSurface, onPromptConsumed
             </div>
           </div>
         ))}
-        {error && <div style={{ fontSize: 11, color: C.red, fontFamily: mono, marginBottom: 8 }}>{error}</div>}
+        {error && <div style={{ fontSize: 12, color: C.red, fontFamily: mono, marginBottom: 8 }}>{error}</div>}
         <div ref={bottomRef} />
       </div>
       <div style={{ padding: "10px 16px 16px", borderTop: `1px solid ${C.b2}`, background: C.card, flexShrink: 0 }}>
@@ -105,8 +105,8 @@ export default function AILite({ initialPrompt, initialSurface, onPromptConsumed
             placeholder="Ask or dictate a question…"
             style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.b1}`, borderRadius: 20, padding: "9px 14px", color: C.p, fontSize: 12, fontFamily: sans, outline: "none" }} />
           {streaming
-            ? <button onClick={() => abortRef.current?.abort()} style={{ background: "rgba(239,68,68,.15)", border: `1px solid rgba(239,68,68,.3)`, borderRadius: 20, padding: "9px 14px", color: C.red, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>Stop</button>
-            : <button onClick={() => send()} disabled={!input.trim()} style={{ background: "rgba(79,142,247,.15)", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 20, padding: "9px 16px", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", opacity: input.trim() ? 1 : 0.4 }}>Send</button>}
+            ? <button onClick={() => abortRef.current?.abort()} style={{ background: "rgba(239,68,68,.15)", border: `1px solid rgba(239,68,68,.3)`, borderRadius: 20, padding: "9px 14px", color: C.red, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>Stop</button>
+            : <button onClick={() => send()} disabled={!input.trim()} style={{ background: "rgba(79,142,247,.15)", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 20, padding: "9px 16px", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", opacity: input.trim() ? 1 : 0.4 }}>Send</button>}
         </div>
       </div>
     </div>

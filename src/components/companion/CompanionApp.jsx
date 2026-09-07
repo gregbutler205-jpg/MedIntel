@@ -62,7 +62,7 @@ class CompanionErrorBoundary extends Component {
       <div style={{ background: C.bg, minHeight: "100dvh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: mono }}>
         <div style={{ fontSize: 32, marginBottom: 16 }}>⚠️</div>
         <div style={{ fontSize: 14, color: C.red, fontWeight: 700, marginBottom: 8 }}>Companion failed to load</div>
-        <div style={{ fontSize: 11, color: C.s, marginBottom: 20, textAlign: "center", lineHeight: 1.6 }}>{this.state.error?.message || "Unknown error"}</div>
+        <div style={{ fontSize: 12, color: C.s, marginBottom: 20, textAlign: "center", lineHeight: 1.6 }}>{this.state.error?.message || "Unknown error"}</div>
         <button onClick={() => window.location.reload()} style={{ background: "rgba(79,142,247,.15)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 8, padding: "10px 20px", color: C.blue, fontSize: 12, cursor: "pointer" }}>Reload</button>
       </div>
     );
@@ -78,24 +78,24 @@ function SyncBar({ syncState, lastSynced, onSync, vaultFp, diag }) {
   const signedIn = !!getStoredUser();
   if (!signedIn) return (
     <div style={{ background: "#0d1a28", borderBottom: `1px solid ${C.b1}`, padding: "8px 16px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-      <span style={{ fontSize: 11, color: C.dim, flex: 1, fontFamily: mono }}>Connect Drive to sync with the web app</span>
-      <button onClick={onSync} style={{ background: "rgba(79,142,247,.15)", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 8, padding: "5px 12px", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>Sign in</button>
+      <span style={{ fontSize: 12, color: C.dim, flex: 1, fontFamily: mono }}>Connect Drive to sync with the web app</span>
+      <button onClick={onSync} style={{ background: "rgba(79,142,247,.15)", border: `1px solid rgba(79,142,247,.3)`, borderRadius: 8, padding: "5px 12px", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>Sign in</button>
     </div>
   );
   return (
     <div style={{ background: "#0a1520", borderBottom: `1px solid ${C.b2}`, flexShrink: 0 }}>
       <div style={{ padding: "6px 16px", display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: syncState === "done" ? C.green : syncState === "syncing" ? C.amber : C.ghost, boxShadow: syncState === "done" ? `0 0 5px ${C.green}60` : "none", flexShrink: 0 }} />
-        <span style={{ flex: 1, fontSize: 10, color: C.ghost, fontFamily: mono }}>
+        <span style={{ flex: 1, fontSize: 12, color: C.ghost, fontFamily: mono }}>
           {syncState === "syncing" ? "Syncing with Drive…" : syncState === "done" && lastSynced ? `Synced ${lastSynced}` : syncState === "error" ? "Sync failed — tap to retry" : "Drive connected"}
           {vaultFp ? ` · key ${vaultFp}` : ""}
         </span>
-        <button onClick={onSync} disabled={syncState === "syncing"} style={{ background: "none", border: "none", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer", opacity: syncState === "syncing" ? 0.4 : 1 }}>
+        <button onClick={onSync} disabled={syncState === "syncing"} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", opacity: syncState === "syncing" ? 0.4 : 1 }}>
           {syncState === "syncing" ? "…" : "↕ Sync"}
         </button>
       </div>
       {diag?.failed > 0 && (
-        <div style={{ padding: "5px 16px 7px", fontSize: 9.5, color: C.amber, fontFamily: mono, lineHeight: 1.5 }}>
+        <div style={{ padding: "5px 16px 7px", fontSize: 12, color: C.amber, fontFamily: mono, lineHeight: 1.5 }}>
           ⚠ {diag.failed} item{diag.failed !== 1 ? "s" : ""} from Drive couldn't be read — if this key code doesn't match the one under
           Settings &amp; Backup on the web app, this phone holds a different vault key: use "Restore from Google Drive" here to re-key it.
         </div>
@@ -133,7 +133,7 @@ function NavTab({ t, active, onTab, onRecord }) {
       aria-current={active ? "page" : undefined}
       style={{ flex: 1, background: "none", border: "none", cursor: "pointer", padding: "8px 0 9px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, borderTop: `2px solid ${active ? C.blue : "transparent"}`, opacity: active || isRecord ? 1 : 0.9 }}>
       <NavIcon t={t} active={active} />
-      <span style={{ fontSize: 10, fontFamily: mono, letterSpacing: "0.5px", color: labelColor, fontWeight: 600 }}>{t.label}</span>
+      <span style={{ fontSize: 12, fontFamily: mono, letterSpacing: "0.5px", color: labelColor, fontWeight: 600 }}>{t.label}</span>
     </button>
   );
 }
@@ -313,7 +313,7 @@ function CompanionInner() {
       paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)",
     }}>
       {!online && (
-        <div style={{ background: "#141f00", borderBottom: "1px solid #3a5a00", padding: "5px 16px", fontSize: 10, color: "#a3e635", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
+        <div style={{ background: "#141f00", borderBottom: "1px solid #3a5a00", padding: "5px 16px", fontSize: 12, color: "#a3e635", fontFamily: mono, textAlign: "center", flexShrink: 0 }}>
           📶 Offline — you can still capture; it’ll sync when you’re back online
         </div>
       )}

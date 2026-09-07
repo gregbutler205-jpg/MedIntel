@@ -26,18 +26,18 @@ export default function Care({ startVisit, openVisit }) {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, color: C.p, fontWeight: 600 }}>{a.title}</div>
-                <div style={{ fontSize: 11, color: soon ? C.amber : C.s, fontFamily: mono, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: soon ? C.amber : C.s, fontFamily: mono, marginTop: 2 }}>
                   {relDate(a.date)}{a.time ? ` · ${a.time}` : ""} · {fmtShort(a.date)}
                 </div>
               </div>
               {soon && <Pill color={C.amber}>SOON</Pill>}
             </div>
             {(a.provider || a.facility) && (
-              <div style={{ fontSize: 11, color: C.dim, fontFamily: mono, marginBottom: 8 }}>{[a.provider, a.facility].filter(Boolean).join(" · ")}</div>
+              <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, marginBottom: 8 }}>{[a.provider, a.facility].filter(Boolean).join(" · ")}</div>
             )}
             {maps && (
               <button onClick={() => window.open(maps, "_blank")}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", background: "rgba(79,142,247,.1)", border: `1px solid rgba(79,142,247,.25)`, borderRadius: 8, padding: "8px 0", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", marginBottom: 8 }}>
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", background: "rgba(79,142,247,.1)", border: `1px solid rgba(79,142,247,.25)`, borderRadius: 8, padding: "8px 0", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", marginBottom: 8 }}>
                 📍 Directions
               </button>
             )}
@@ -57,7 +57,7 @@ export default function Care({ startVisit, openVisit }) {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, color: C.p, fontWeight: 600 }}>{v.apptTitle}</div>
-                  <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{formatDateUS(v.date)}{v.provider ? ` · ${v.provider}` : ""}</div>
+                  <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginTop: 2 }}>{formatDateUS(v.date)}{v.provider ? ` · ${v.provider}` : ""}</div>
                 </div>
                 <Pill color={v.status === "summarized" ? C.green : C.amber}>{v.status === "summarized" ? "summary ready" : v.status}</Pill>
               </div>

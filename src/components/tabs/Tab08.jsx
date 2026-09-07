@@ -188,13 +188,13 @@ const REFERENCE = [
 ];
 
 function SL({ children, mb = 12, style = {} }) {
-  return <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:mb, ...style }}>{children}</div>;
+  return <div style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:"#a0b4c8", fontFamily:mono, marginBottom:mb, ...style }}>{children}</div>;
 }
 
 function TypeBadge({ type }) {
   const map = { appointment:["#4f8ef7","Appt"], lab:["#10b981","Lab"], imaging:["#a78bfa","Imaging"], other:["#b0c4d8","Other"] };
   const [c, l] = map[type] || ["#4f8ef7","Appt"];
-  return <span style={{ fontSize:9, fontFamily:mono, background:`${c}18`, color:c, border:`1px solid ${c}28`, padding:"2px 7px", borderRadius:4, letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{l}</span>;
+  return <span style={{ fontSize:12, fontFamily:mono, background:`${c}18`, color:c, border:`1px solid ${c}28`, padding:"2px 7px", borderRadius:4, letterSpacing:"0.5px", textTransform:"uppercase", flexShrink:0 }}>{l}</span>;
 }
 
 const STATUS_META = {
@@ -253,7 +253,7 @@ function Timeline() {
         return (
           <div key={a.id} style={{ display:"flex", gap:14, marginBottom:14 }}>
             <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:20, flexShrink:0 }}>
-              <div onClick={() => toggleDone(a.id)} style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${isDone ? "#10b981" : c}`, background: isDone ? "#10b981" : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", transition:"all .15s", flexShrink:0 }}>
+              <div onClick={() => toggleDone(a.id)} style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${isDone ? "#10b981" : c}`, background: isDone ? "#10b981" : "transparent", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#fff", transition:"all .15s", flexShrink:0 }}>
                 {isDone ? "✓" : ""}
               </div>
               {i < arr.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
@@ -264,22 +264,22 @@ function Timeline() {
                   <TypeBadge type={apptType} />
                   {a.urgency === "high" && <span style={{ width:6, height:6, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", display:"inline-block" }} />}
                 </div>
-                <span style={{ fontSize:10, color: a.urgency === "high" ? "#f87171" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{formatDateUS(a.date)}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
+                <span style={{ fontSize:12, color: a.urgency === "high" ? "#f87171" : "#98afc4", fontFamily:mono, fontWeight: a.urgency === "high" ? 600 : 400 }}>{formatDateUS(a.date)}{a.time && a.time !== "TBD" ? ` · ${a.time}` : ""}</span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:3 }}>{a.title}</div>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom: prep.length ? 10 : 0 }}>{doctorName}{a.facility ? ` · ${a.facility}` : ""}</div>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, marginBottom: prep.length ? 10 : 0 }}>{doctorName}{a.facility ? ` · ${a.facility}` : ""}</div>
               {prep.length > 0 && (
                 <div style={{ borderTop:"1px solid #1c2a40", paddingTop:8 }}>
                   <SL mb={6}>Prep Notes</SL>
                   {prep.map((p, j) => (
                     <div key={j} style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4 }}>
-                      <span style={{ color:"#a0b4c8", fontSize:10, flexShrink:0 }}>▸</span>
+                      <span style={{ color:"#a0b4c8", fontSize:12, flexShrink:0 }}>▸</span>
                       {editingPrep === `${a.id}-${j}` ? (
-                        <input value={editVal} onChange={e => setEditVal(e.target.value)} onBlur={() => savePrep(a.id, j)} onKeyDown={e => e.key === "Enter" && savePrep(a.id, j)} autoFocus style={{ flex:1, background:"#07090f", border:"1px solid #1a2f4a", color:"#c4d8ee", borderRadius:6, padding:"3px 8px", fontFamily:mono, fontSize:11, outline:"none" }} />
+                        <input value={editVal} onChange={e => setEditVal(e.target.value)} onBlur={() => savePrep(a.id, j)} onKeyDown={e => e.key === "Enter" && savePrep(a.id, j)} autoFocus style={{ flex:1, background:"#07090f", border:"1px solid #1a2f4a", color:"#c4d8ee", borderRadius:6, padding:"3px 8px", fontFamily:mono, fontSize:12, outline:"none" }} />
                       ) : (
-                        <span onClick={() => startEditPrep(a.id, j, p)} style={{ flex:1, fontSize:11, color:"#b0c4d8", fontFamily:mono, cursor:"text" }}>{p || <span style={{ color:"#a0b4c8" }}>Click to edit…</span>}</span>
+                        <span onClick={() => startEditPrep(a.id, j, p)} style={{ flex:1, fontSize:12, color:"#b0c4d8", fontFamily:mono, cursor:"text" }}>{p || <span style={{ color:"#a0b4c8" }}>Click to edit…</span>}</span>
                       )}
-                      <span onClick={() => removePrep(a.id, j)} style={{ fontSize:10, color:"#a0b4c8", cursor:"pointer", paddingLeft:4 }}>✕</span>
+                      <span onClick={() => removePrep(a.id, j)} style={{ fontSize:12, color:"#a0b4c8", cursor:"pointer", paddingLeft:4 }}>✕</span>
                     </div>
                   ))}
                 </div>
@@ -336,13 +336,13 @@ function Goals() {
           return (
             <div key={g.id} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:12, padding:"14px 16px" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                <span style={{ fontSize:9, fontFamily:mono, color:g.color, background:`${g.color}15`, border:`1px solid ${g.color}28`, padding:"2px 7px", borderRadius:4, textTransform:"uppercase", letterSpacing:"0.5px" }}>{g.category}</span>
-                <span style={{ fontSize:9, fontFamily:mono, color:sm.color, display:"flex", alignItems:"center", gap:4 }}>
+                <span style={{ fontSize:12, fontFamily:mono, color:g.color, background:`${g.color}15`, border:`1px solid ${g.color}28`, padding:"2px 7px", borderRadius:4, textTransform:"uppercase", letterSpacing:"0.5px" }}>{g.category}</span>
+                <span style={{ fontSize:12, fontFamily:mono, color:sm.color, display:"flex", alignItems:"center", gap:4 }}>
                   <span style={{ width:5, height:5, borderRadius:"50%", background:sm.color, display:"inline-block" }} />{sm.label}
                 </span>
               </div>
               <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:5, lineHeight:1.3 }}>{g.label}</div>
-              <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{g.note}</div>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{g.note}</div>
             </div>
           );
         })}
@@ -354,7 +354,7 @@ function Goals() {
 // ── Team Member Modal ──────────────────────────────────────────────────────────
 const BLANK_MEMBER = { id:null, name:"", role:"", specialty:"", facility:"", address:"", phone:"", phone24:"", email:"", pcp:false, color:"#4f8ef7" };
 
-const lbl8 = { display:"block", fontSize:10, color:"#a0b4c8", fontFamily:mono, letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
+const lbl8 = { display:"block", fontSize:12, color:"#a0b4c8", fontFamily:mono, letterSpacing:"0.8px", textTransform:"uppercase", marginBottom:5 };
 
 function TeamMemberModal({ member, onSave, onClose }) {
   const [form, setForm] = useState({ ...BLANK_MEMBER, ...member });
@@ -501,7 +501,7 @@ function CareTeam() {
             <div key={t.id || t.name} style={{ background:"#0b1220", border:`1px solid ${isChecked ? "#1a3a5c" : "#1c2a40"}`, borderRadius:12, padding:"14px 18px", display:"flex", alignItems:"center", gap:14, transition:"border-color .15s" }}>
               {/* Checkbox */}
               <div onClick={() => toggleDoctor(t.name)} style={{ width:18, height:18, borderRadius:4, border:`2px solid ${isChecked ? "#4f8ef7" : "#2a3a50"}`, background: isChecked ? "#4f8ef7" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .15s", cursor:"pointer" }}>
-                {isChecked && <span style={{ color:"#fff", fontSize:11, lineHeight:1, fontWeight:700 }}>✓</span>}
+                {isChecked && <span style={{ color:"#fff", fontSize:12, lineHeight:1, fontWeight:700 }}>✓</span>}
               </div>
               {/* Avatar */}
               <div onClick={() => toggleDoctor(t.name)} style={{ width:40, height:40, borderRadius:"50%", background:`${color}18`, border:`1px solid ${color}28`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color, flexShrink:0, cursor:"pointer" }}>
@@ -511,27 +511,27 @@ function CareTeam() {
               <div style={{ flex:1, cursor:"pointer" }} onClick={() => toggleDoctor(t.name)}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:2 }}>
                   <span style={{ fontSize:13, fontWeight:600, color: isChecked ? "#c4d8ee" : "#7a8fa0" }}>{t.name}</span>
-                  {t.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:mono }}>PCP</span>}
+                  {t.pcp && <span style={{ fontSize:12, background:"rgba(79,142,247,.12)", color:"#6ea3ff", border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:mono }}>PCP</span>}
                 </div>
-                <div style={{ fontSize:11, color: isChecked ? "#b0c4d8" : "#5a6e7a" }}>{t.role}{t.specialty ? ` · ${t.specialty}` : ""}</div>
-                <div style={{ fontSize:10, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
+                <div style={{ fontSize:12, color: isChecked ? "#b0c4d8" : "#5a6e7a" }}>{t.role}{t.specialty ? ` · ${t.specialty}` : ""}</div>
+                <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, marginTop:2 }}>{t.facility}</div>
               </div>
               {/* Contact */}
               <div style={{ textAlign:"right", flexShrink:0, marginRight:6 }}>
-                {t.phone && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{displayPhone(t.phone)}</div>}
-                {t.phone24 && <div style={{ fontSize:11, color:"#f87171", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {displayPhone(t.phone24)}</div>}
-                {t.next  && <div style={{ fontSize:10, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>}
+                {t.phone && <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, marginBottom:3 }}>{displayPhone(t.phone)}</div>}
+                {t.phone24 && <div style={{ fontSize:12, color:"#f87171", fontFamily:mono, marginBottom:3, fontWeight:700 }}>24 hr: {displayPhone(t.phone24)}</div>}
+                {t.next  && <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:mono }}>Next: {t.next}</div>}
               </div>
               {/* Edit / Delete */}
               <div style={{ display:"flex", gap:4, flexShrink:0 }}>
                 <button
                   onClick={e => { e.stopPropagation(); setEditingDoc(t); }}
-                  style={{ background:"transparent", border:"1px solid #1c2a40", borderRadius:6, color:"#b0c4d8", fontSize:11, padding:"3px 8px", cursor:"pointer" }}
+                  style={{ background:"transparent", border:"1px solid #1c2a40", borderRadius:6, color:"#b0c4d8", fontSize:12, padding:"3px 8px", cursor:"pointer" }}
                   title="Edit"
                 >✎</button>
                 <button
                   onClick={e => { e.stopPropagation(); setDeleteTarget(t); }}
-                  style={{ background:"transparent", border:"1px solid #1c2a40", borderRadius:6, color:"#b0c4d8", fontSize:11, padding:"3px 8px", cursor:"pointer" }}
+                  style={{ background:"transparent", border:"1px solid #1c2a40", borderRadius:6, color:"#b0c4d8", fontSize:12, padding:"3px 8px", cursor:"pointer" }}
                   title="Remove"
                 >✕</button>
               </div>
@@ -578,9 +578,9 @@ function Preventive() {
       <div key={p.label} style={{ background:"#0b1220", border:"1px solid #1c2a40", borderRadius:10, padding:"12px 14px", marginBottom:8, display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
         <div style={{ flex:1 }}>
           <div style={{ fontSize:13, fontWeight:600, color: p.status === "never" ? "#f87171" : "#c4d8ee", marginBottom:4 }}>{p.label}</div>
-          <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{p.note}</div>
+          <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{p.note}</div>
         </div>
-        <span style={{ fontSize:9, fontFamily:mono, color:sm.color, background:`${sm.color}15`, border:`1px solid ${sm.color}28`, padding:"2px 8px", borderRadius:4, textTransform:"uppercase", letterSpacing:"0.5px", flexShrink:0, marginTop:2 }}>{sm.label}</span>
+        <span style={{ fontSize:12, fontFamily:mono, color:sm.color, background:`${sm.color}15`, border:`1px solid ${sm.color}28`, padding:"2px 8px", borderRadius:4, textTransform:"uppercase", letterSpacing:"0.5px", flexShrink:0, marginTop:2 }}>{sm.label}</span>
       </div>
     );
   };
@@ -601,7 +601,7 @@ function Emergency() {
       {EMERGENCY.map(sec => (
         <div key={sec.level} style={{ background:"#0b1220", border:`1px solid ${sec.color}28`, borderLeft:`3px solid ${sec.color}`, borderRadius:12, padding:"16px 18px", marginBottom:14 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
-            <span style={{ fontSize:9, fontFamily:mono, background:`${sec.color}18`, color:sec.color, border:`1px solid ${sec.color}30`, padding:"3px 9px", borderRadius:4, letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>{sec.level}</span>
+            <span style={{ fontSize:12, fontFamily:mono, background:`${sec.color}18`, color:sec.color, border:`1px solid ${sec.color}30`, padding:"3px 9px", borderRadius:4, letterSpacing:"1px", textTransform:"uppercase", fontWeight:600 }}>{sec.level}</span>
             <span style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{sec.title}</span>
           </div>
           {sec.items.map((item, i) => (
@@ -660,7 +660,7 @@ function Milestones() {
       {milestones.map((m, i) => (
         <div key={m.id || i} style={{ display:"flex", gap:14, marginBottom:14 }}>
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center", width:20, flexShrink:0 }}>
-            <div onClick={() => toggleDone(m.id)} style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${m.done ? "#10b981" : "#98afc4"}`, background: m.done ? "#10b981" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, color:"#fff", flexShrink:0, cursor:"pointer", transition:"all .15s" }}>
+            <div onClick={() => toggleDone(m.id)} style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${m.done ? "#10b981" : "#98afc4"}`, background: m.done ? "#10b981" : "transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#fff", flexShrink:0, cursor:"pointer", transition:"all .15s" }}>
               {m.done ? "✓" : ""}
             </div>
             {i < milestones.length - 1 && <div style={{ flex:1, width:1, background:"#0d1a28", marginTop:4 }} />}
@@ -669,11 +669,11 @@ function Milestones() {
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:5, gap:8 }}>
               <div style={{ fontSize:13, fontWeight:600, color: m.done ? "#b0c4d8" : "#c4d8ee" }}>{m.label}</div>
               <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-                {m.date && <span style={{ fontSize:10, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono }}>{formatDateUS(m.date)}</span>}
-                <span onClick={() => deleteMilestone(m.id)} style={{ fontSize:10, color:"#a0b4c8", cursor:"pointer", lineHeight:1 }} title="Delete">✕</span>
+                {m.date && <span style={{ fontSize:12, color: m.done ? "#a0b4c8" : "#f59e0b", fontFamily:mono }}>{formatDateUS(m.date)}</span>}
+                <span onClick={() => deleteMilestone(m.id)} style={{ fontSize:12, color:"#a0b4c8", cursor:"pointer", lineHeight:1 }} title="Delete">✕</span>
               </div>
             </div>
-            {m.note && <div style={{ fontSize:11, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{m.note}</div>}
+            {m.note && <div style={{ fontSize:12, color:"#98afc4", fontFamily:mono, lineHeight:1.5 }}>{m.note}</div>}
           </div>
         </div>
       ))}
@@ -688,7 +688,7 @@ function Milestones() {
               { label:"Notes", key:"note", placeholder:"Outcome or details (optional)…" },
             ].map(f => (
               <div key={f.key} style={{ marginBottom:12 }}>
-                <label style={{ fontSize:9, color:"#a0b4c8", fontFamily:mono, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>{f.label}</label>
+                <label style={{ fontSize:12, color:"#a0b4c8", fontFamily:mono, letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:4 }}>{f.label}</label>
                 <input className="modal-input" value={newM[f.key]} onChange={e => setNewM(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} onKeyDown={e => e.key === "Enter" && addMilestone()} />
               </div>
             ))}
@@ -716,12 +716,12 @@ function Reference() {
         <div key={sec.title} style={{ marginBottom:10 }}>
           <div onClick={() => setOpen(o => o === sec.title ? null : sec.title)} style={{ background:"#0b1220", border:`1px solid ${open === sec.title ? sec.color + "40" : "#1c2a40"}`, borderLeft:`3px solid ${sec.color}`, borderRadius: open === sec.title ? "12px 12px 0 0" : 12, padding:"12px 16px", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee" }}>{sec.title}</div>
-            <span style={{ fontSize:11, color:"#b0c4d8" }}>{open === sec.title ? "▲" : "▼"}</span>
+            <span style={{ fontSize:12, color:"#b0c4d8" }}>{open === sec.title ? "▲" : "▼"}</span>
           </div>
           {open === sec.title && (
             <div style={{ background:"#0b1220", border:`1px solid ${sec.color}28`, borderLeft:`3px solid ${sec.color}`, borderTop:"none", borderRadius:"0 0 12px 12px", padding:"12px 16px 14px" }}>
               {sec.items.map((item, i) => (
-                <div key={i} style={{ display:"flex", gap:8, fontSize:11.5, color: item.startsWith("  •") ? "#98afc4" : "#7eb8d8", fontFamily:mono, marginBottom:5, alignItems:"flex-start", lineHeight:1.6 }}>
+                <div key={i} style={{ display:"flex", gap:8, fontSize:12, color: item.startsWith("  •") ? "#98afc4" : "#7eb8d8", fontFamily:mono, marginBottom:5, alignItems:"flex-start", lineHeight:1.6 }}>
                   {!item.startsWith("  •") && <span style={{ color:sec.color, flexShrink:0, marginTop:1 }}>▸</span>}
                   {item.startsWith("  •") && <span style={{ width:16, flexShrink:0 }} />}
                   <span>{item.replace(/^  •\s*/,"")}</span>
@@ -742,13 +742,13 @@ export default function CarePlan() {
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0;}
         ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#1a2840;border-radius:4px;}
-        .tab-btn{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid transparent;background:transparent;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
+        .tab-btn{padding:5px 13px;border-radius:20px;font-size:12px;border:1px solid transparent;background:transparent;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
         .tab-btn:hover{color:#7eb8d8;}
         .tab-btn.active{color:#6ea3ff;border-color:#6ea3ff;background:rgba(79,142,247,.08);}
-        .filter-chip{padding:5px 13px;border-radius:20px;font-size:11px;border:1px solid #1c2a40;background:#0b1220;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
+        .filter-chip{padding:5px 13px;border-radius:20px;font-size:12px;border:1px solid #1c2a40;background:#0b1220;color:#b0c4d8;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap;}
         .filter-chip:hover{color:#7eb8d8;border-color:#1a2f4a;}
         .filter-chip.active{color:#6ea3ff;border-color:#6ea3ff;background:rgba(79,142,247,.08);}
-        .add-badge-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:12px;color:#6ea3ff;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;}
+        .add-badge-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:12px;color:#6ea3ff;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;}
         .add-badge-btn:hover{background:rgba(79,142,247,.16);border-color:rgba(79,142,247,.45);}
         .modal-input{width:100%;background:#07090f;border:1px solid #1c2a40;color:#c4d8ee;padding:8px 12px;border-radius:8px;font-family:'Sora',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
         .modal-input::placeholder{color:#a0b4c8;}

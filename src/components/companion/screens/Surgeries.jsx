@@ -18,15 +18,15 @@ export default function Surgeries({ onBack }) {
               {s.date && <Pill color={C.blue}>{fmtShort(s.date)}</Pill>}
             </div>
             {(s.surgeon || s.facility) && (
-              <div style={{ fontSize: 11, color: C.dim, fontFamily: mono, marginBottom: s.outcome || s.notes ? 6 : 0 }}>
+              <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, marginBottom: s.outcome || s.notes ? 6 : 0 }}>
                 {[s.surgeon, s.facility].filter(Boolean).join(" · ")}
               </div>
             )}
-            {s.outcome && <div style={{ fontSize: 11, color: C.green, marginBottom: s.notes ? 4 : 0 }}>Outcome: {s.outcome}</div>}
-            {s.notes && <div style={{ fontSize: 11, color: C.ghost, lineHeight: 1.5 }}>{s.notes}</div>}
+            {s.outcome && <div style={{ fontSize: 12, color: C.green, marginBottom: s.notes ? 4 : 0 }}>Outcome: {s.outcome}</div>}
+            {s.notes && <div style={{ fontSize: 12, color: C.ghost, lineHeight: 1.5 }}>{s.notes}</div>}
           </Card>
         ))}
-        <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "12px 0 20px" }}>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "12px 0 20px" }}>
           Read-only — edit on the web app.
         </div>
       </div>

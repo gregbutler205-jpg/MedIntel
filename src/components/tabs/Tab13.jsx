@@ -48,8 +48,8 @@ function ReportArchiveRow({ showToast }) {
   return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #1c2a40" }}>
       <div>
-        <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>REPORT ARCHIVE</div>
-        <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.6 }}>
+        <div style={{ fontSize:12, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>REPORT ARCHIVE</div>
+        <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.6 }}>
           {folders
             ? <>“{REPORT_ROOT}” is set up in your Drive — imported reports are filed there automatically.{" "}
                 {folders.rootLink && <a href={folders.rootLink} target="_blank" rel="noopener noreferrer" style={{ color:"#7eb8d8" }}>Open folder ↗</a>}</>
@@ -84,13 +84,13 @@ function ApiKeyModal({ current, onSave, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 440 }}>
         <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 6 }}>Anthropic API Key</div>
-        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 16 }}>Stored locally in your browser · never transmitted to any server</div>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 16 }}>Stored locally in your browser · never transmitted to any server</div>
         <input
           value={val}
           onChange={e => setVal(e.target.value)}
           placeholder="sk-ant-api03-..."
           type="password"
-          style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
+          style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none", marginBottom: 16 }}
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
@@ -107,7 +107,7 @@ function PilotTokenModal({ current, onSave, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: 28, width: 440 }}>
         <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#dde8f5", marginBottom: 6 }}>Pilot Access Token</div>
-        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 16, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 16, lineHeight: 1.6 }}>
           Only needed if you were given one when invited to the pilot. Stored locally in your browser.
         </div>
         <input
@@ -115,7 +115,7 @@ function PilotTokenModal({ current, onSave, onClose }) {
           onChange={e => setVal(e.target.value)}
           placeholder="Paste your access token"
           type="password"
-          style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", marginBottom: 16 }}
+          style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none", marginBottom: 16 }}
         />
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "8px 18px", background: "transparent", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'Sora', sans-serif", cursor: "pointer", fontSize: 12 }}>Cancel</button>
@@ -134,11 +134,11 @@ function FaqItem({ q, a }) {
         onClick={() => setOpen(o => !o)}
         style={{ width: "100%", background: "none", border: "none", padding: "10px 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", gap: 10 }}
       >
-        <span style={{ fontSize: 11, color: "#c4d8ee", textAlign: "left", lineHeight: 1.5 }}>{q}</span>
-        <span style={{ fontSize: 11, color: "#6ea3ff", flexShrink: 0 }}>{open ? "▾" : "▸"}</span>
+        <span style={{ fontSize: 12, color: "#c4d8ee", textAlign: "left", lineHeight: 1.5 }}>{q}</span>
+        <span style={{ fontSize: 12, color: "#6ea3ff", flexShrink: 0 }}>{open ? "▾" : "▸"}</span>
       </button>
       {open && (
-        <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.7, paddingBottom: 10, paddingRight: 16 }}>{a}</div>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.7, paddingBottom: 10, paddingRight: 16 }}>{a}</div>
       )}
     </div>
   );
@@ -155,15 +155,15 @@ function ExportTile({ icon, label, sub, onClick }) {
     >
       <div style={{ fontSize: 22, marginBottom: 10 }}>{icon}</div>
       <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55 }}>{sub}</div>
+      <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55 }}>{sub}</div>
     </div>
   );
 }
 
 const cardStyle = { background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 14, padding: "18px 20px" };
-const sectionLbl = { fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 14 };
-const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
-const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 11, cursor: "pointer" };
+const sectionLbl = { fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 14 };
+const btnPrimary = { padding: "8px 14px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", fontSize: 12, cursor: "pointer" };
+const btnGhost   = { padding: "8px 14px", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", fontSize: 12, cursor: "pointer" };
 
 const AI_MODE_KEY = "insina_ai_mode";
 
@@ -525,7 +525,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
       <div style={{ height: 54, background: "#080c14", borderBottom: "1px solid #1c2a40", display: "flex", alignItems: "center", padding: "0 24px", gap: 12, flexShrink: 0 }}>
-        <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>Settings &amp; Backup</div>
+        <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono', monospace" }}>Settings &amp; Backup</div>
         <div style={{ flex: 1 }} />
         <button style={btnPrimary} onClick={handleBackupNow}>Backup Now</button>
       </div>
@@ -533,7 +533,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
       <div style={{ marginBottom: 16 }}>
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.4px" }}>Settings & Backup</h1>
-        <p style={{ fontSize: 11, color: "#98afc4", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>App preferences, data exports, backups, and connected sources</p>
+        <p style={{ fontSize: 12, color: "#98afc4", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>App preferences, data exports, backups, and connected sources</p>
       </div>
 
       {/* UI-21: page selector — backup/export and preferences are separate pages */}
@@ -563,15 +563,15 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               }
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:600, color:"#c4d8ee", marginBottom:2 }}>{googleUser.name}</div>
-                <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{googleUser.email}</div>
+                <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>{googleUser.email}</div>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                 <div style={{ width:6, height:6, borderRadius:"50%", background:"#10b981", boxShadow:"0 0 6px #10b98160" }} />
-                <span style={{ fontSize:10, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>Connected</span>
+                <span style={{ fontSize:12, color:"#2dd4a0", fontFamily:"'DM Mono',monospace" }}>Connected</span>
               </div>
             </div>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:12, borderTop:"1px solid #1c2a40" }}>
-              <div style={{ fontSize:10, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
+              <div style={{ fontSize:12, color:"#98afc4", fontFamily:"'DM Mono',monospace" }}>
                 {syncStatus==="syncing" ? "⟳ Syncing…" :
                  syncStatus==="error"   ? "⚠ Sync failed — check connection" :
                  lastSyncTs             ? `Last synced ${new Date(lastSyncTs).toLocaleDateString("en-US",{month:"short",day:"numeric"})} at ${new Date(lastSyncTs).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` :
@@ -596,8 +596,8 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             {/* Weekly backup status row */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", paddingTop:10, marginTop:10, borderTop:"1px solid #1c2a40" }}>
               <div>
-                <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>WEEKLY SNAPSHOT</div>
-                <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                <div style={{ fontSize:12, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>WEEKLY SNAPSHOT</div>
+                <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                   {(() => {
                     // UI-2: daysAgoLabel never renders "NaN days ago" — a
                     // malformed/JSON-quoted timestamp (how snapshot-restored
@@ -626,12 +626,12 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             <ReportArchiveRow showToast={showToast} />
             {/* Sync diagnostics: key fingerprint + last merge health */}
             <div style={{ paddingTop:10, marginTop:10, borderTop:"1px solid #1c2a40" }}>
-              <div style={{ fontSize:10, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>SYNC DIAGNOSTICS</div>
-              <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.7 }}>
+              <div style={{ fontSize:12, fontWeight:600, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>SYNC DIAGNOSTICS</div>
+              <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", lineHeight:1.7 }}>
                 Vault key fingerprint: <span style={{ color:"#7eb8d8" }}>{vaultFp || "—"}</span> · must match on every device that syncs this record (phone companion shows its own under Sync).
               </div>
               {syncDiag?.failed > 0 && (
-                <div style={{ marginTop:6, fontSize:10.5, color:"#f59e0b", fontFamily:"'DM Mono',monospace", lineHeight:1.7, background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.25)", borderRadius:7, padding:"7px 10px" }}>
+                <div style={{ marginTop:6, fontSize:12, color:"#f59e0b", fontFamily:"'DM Mono',monospace", lineHeight:1.7, background:"rgba(245,158,11,.07)", border:"1px solid rgba(245,158,11,.25)", borderRadius:7, padding:"7px 10px" }}>
                   ⚠ Last sync could not read {syncDiag.failed} item{syncDiag.failed !== 1 ? "s" : ""} from Drive
                   ({(syncDiag.failedKeys || []).slice(0, 4).join(", ")}{(syncDiag.failedKeys || []).length > 4 ? "…" : ""}).
                   This usually means another device holds a different vault key — compare fingerprints, then on the mismatched device use
@@ -649,7 +649,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             <div style={{ display:"flex", alignItems:"center", gap:12 }}>
               <button
                 onClick={onSync}
-                style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 16px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", fontSize:11, cursor:"pointer" }}
+                style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 16px", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:"#6ea3ff", fontFamily:"'DM Mono',monospace", fontSize:12, cursor:"pointer" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -659,9 +659,9 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 </svg>
                 Connect Google Drive
               </button>
-              <span style={{ fontSize:10, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>Free with your Google account · no health data stored on our servers</span>
+              <span style={{ fontSize:12, color:"#4a5c6a", fontFamily:"'DM Mono',monospace" }}>Free with your Google account · no health data stored on our servers</span>
             </div>
-            <div style={{ fontSize:10.5, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginTop:10, lineHeight:1.7 }}>
+            <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace", marginTop:10, lineHeight:1.7 }}>
               No Google account? Creating one is free at accounts.google.com — Drive comes with it.
               {isFolderBackupSupported()
                 ? " Prefer to skip Google entirely? Use Folder Backup below instead."
@@ -693,11 +693,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           ) : (
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
               <div>
-                <div style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>
+                <div style={{ fontSize:12, color:"#a0b4c8", fontFamily:"'DM Mono',monospace", marginBottom:2 }}>
                   Saving encrypted backups to “{folderStatus.name}”
                   {folderStatus.permission !== "granted" && " · permission needed — click Back up now to re-allow"}
                 </div>
-                <div style={{ fontSize:10, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
+                <div style={{ fontSize:12, color:"#6a8090", fontFamily:"'DM Mono',monospace" }}>
                   {(() => {
                     const label = daysAgoLabel(localStorage.getItem("mi_last_folder_backup"), null);
                     return label ? `Last folder backup ${label} · keeps 4 rolling copies` : "No folder backup yet · keeps 4 rolling copies";
@@ -726,16 +726,16 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             { icon: "✎", iconBg: "rgba(167,139,250,.1)", iconBorder: "rgba(167,139,250,.2)", iconColor: "#a78bfa", name: "Manual Entry", sub: "Vitals, meds, symptoms, labs",               status: "Active",  statusColor: "#10b981", mono: false },
           ].map((src, i, arr) => (
             <div key={src.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #1c2a40" : "none" }}>
-              <div style={{ width: 32, height: 32, background: src.iconBg, border: `1px solid ${src.iconBorder}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: src.mono ? 10 : 15, fontFamily: src.mono ? "'DM Mono', monospace" : "inherit", color: src.iconColor, fontWeight: src.mono ? 600 : 400, flexShrink: 0 }}>
+              <div style={{ width: 32, height: 32, background: src.iconBg, border: `1px solid ${src.iconBorder}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: src.mono ? 12 : 15, fontFamily: src.mono ? "'DM Mono', monospace" : "inherit", color: src.iconColor, fontWeight: src.mono ? 600 : 400, flexShrink: 0 }}>
                 {src.icon}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee" }}>{src.name}</div>
-                <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{src.sub}</div>
+                <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{src.sub}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: src.statusColor, boxShadow: src.statusColor === "#10b981" ? `0 0 6px ${src.statusColor}60` : "none" }} />
-                <span style={{ fontSize: 10, color: src.statusColor, fontFamily: "'DM Mono', monospace" }}>{src.status}</span>
+                <span style={{ fontSize: 12, color: src.statusColor, fontFamily: "'DM Mono', monospace" }}>{src.status}</span>
               </div>
             </div>
           ))}
@@ -768,11 +768,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 {liveStats.map(s => (
                   <div key={s.label} style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: 12 }}>
                     <div style={{ fontSize: 20, fontWeight: 700, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.val}</div>
-                    <div style={{ fontSize: 10, color: "#b0c4d8", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
+                    <div style={{ fontSize: 12, color: "#b0c4d8", marginTop: 4, fontFamily: "'DM Mono', monospace" }}>{s.label}</div>
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
                 <span>Local storage used</span><span style={{ color: "#7eb8d8" }}>{usedKB} KB / 5,120 KB</span>
               </div>
               <div style={{ height: 4, background: "#0d1a28", borderRadius: 2, overflow: "hidden" }}>
@@ -789,7 +789,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
           <div style={sectionLbl}>Export Your Data</div>
           <button
             onClick={handleImport}
-            style={{ padding: "6px 14px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+            style={{ padding: "6px 14px", background: "rgba(16,185,129,.10)", border: "1px solid rgba(16,185,129,.3)", borderRadius: 8, color: "#2dd4a0", fontFamily: "'DM Mono',monospace", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
           >
             ↑ Restore from File
           </button>
@@ -822,7 +822,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <div style={sectionLbl}>Help & Support</div>
               <a
                 href="mailto:support@insinahealth.com"
-                style={{ fontSize: 10, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", textDecoration: "none" }}
+                style={{ fontSize: 12, color: "#6ea3ff", fontFamily: "'DM Mono', monospace", textDecoration: "none" }}
               >✉ Contact Support</a>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
@@ -835,13 +835,13 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 <div key={item.label} style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 10, opacity: item.href ? 1 : 0.55 }}>
                   <div style={{ fontSize: 14, color: "#6ea3ff", marginTop: 1, flexShrink: 0 }}>{item.icon}</div>
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: "#c4d8ee", marginBottom: 2 }}>{item.label}</div>
-                    <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>{item.href ? item.sub : item.sub + " — coming soon"}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#c4d8ee", marginBottom: 2 }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>{item.href ? item.sub : item.sub + " — coming soon"}</div>
                   </div>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 10, letterSpacing: "0.5px" }}>FREQUENTLY ASKED QUESTIONS</div>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", marginBottom: 10, letterSpacing: "0.5px" }}>FREQUENTLY ASKED QUESTIONS</div>
             {topics.map((t, i) => (
               <FaqItem key={i} q={t.q} a={t.a} />
             ))}
@@ -862,11 +862,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #1c2a40" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
               <div style={{ flex: 1, fontSize: 12, color: "#7eb8d8" }}>{b.type}</div>
-              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(b.date)}</div>
-              <div style={{ fontSize: 9, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", minWidth: 44, textAlign: "right" }}>{b.size}</div>
+              <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>{formatDateUS(b.date)}</div>
+              <div style={{ fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", minWidth: 44, textAlign: "right" }}>{b.size}</div>
               <span
                 onClick={() => { setRestoreId(b.id); setModal("restore"); }}
-                style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", cursor: "pointer", marginLeft: 8 }}
+                style={{ fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono', monospace", cursor: "pointer", marginLeft: 8 }}
                 title="Restore this backup"
               >↩</span>
             </div>
@@ -893,26 +893,26 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               <div style={sectionLbl}>Backup Preferences &amp; About</div>
 
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-backup frequency</div>
+                <div style={{ fontSize: 12, color: "#7eb8d8", marginBottom: 6 }}>Auto-backup frequency</div>
                 <select
                   value={backupFreq}
                   onChange={e => { setBackupFreq(e.target.value); localStorage.setItem("mi_backup_freq", e.target.value); showToast(`Backup frequency set to ${e.target.value}`); }}
-                  style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+                  style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none", cursor: "pointer" }}
                 >
                   {["Daily", "Weekly", "Monthly", "Never"].map(f => <option key={f}>{f}</option>)}
                 </select>
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Data since</div>
-                <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
+                <div style={{ fontSize: 12, color: "#7eb8d8", marginBottom: 6 }}>Data since</div>
+                <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
                   {oldest}
                 </div>
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>App version</div>
-                <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
+                <div style={{ fontSize: 12, color: "#7eb8d8", marginBottom: 6 }}>App version</div>
+                <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono', monospace" }}>
                   Insina Health v{APP_VERSION}
                 </div>
               </div>
@@ -932,7 +932,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
           {/* Current mode status */}
           <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Current Mode</div>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Current Mode</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <div style={{
                 width: 8, height: 8, borderRadius: "50%",
@@ -943,14 +943,14 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 {currentMode === "advanced" ? "Advanced Mode" : "Standard Mode"}
               </span>
             </div>
-            <div style={{ fontSize: 10, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
+            <div style={{ fontSize: 12, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
               {currentMode === "advanced"
                 ? <>Model: <strong>Claude Opus 4.6</strong><br />Deeper cross-referenced analysis</>
                 : <>Model: <strong>Claude Sonnet 4.6</strong><br />Clear daily-use analysis</>
               }
             </div>
             {currentMode === "advanced" && consentDate && (
-              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #1c2a40", fontSize: 9, color: "#4a5c6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #1c2a40", fontSize: 12, color: "#4a5c6a", fontFamily: "'DM Mono', monospace", lineHeight: 1.5 }}>
                 Consent given: {consentDate}<br />
                 Consent version: v{consentVersion}
               </div>
@@ -959,12 +959,12 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
 
           {/* Switch controls */}
           <div style={{ background: "#07090f", border: "1px solid #1c2a40", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Switch Mode</div>
+            <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono', monospace", letterSpacing: "1px", textTransform: "uppercase", marginBottom: 10 }}>Switch Mode</div>
 
             {currentMode === "advanced" ? (
               // Currently Advanced → show switch to Standard
               <div>
-                <div style={{ fontSize: 11, color: "#7eb8d8", lineHeight: 1.6, marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: "#7eb8d8", lineHeight: 1.6, marginBottom: 12 }}>
                   Switching to Standard Mode is immediate and does not require any action. You can re-enable Advanced Mode at any time.
                 </div>
                 <button
@@ -980,24 +980,24 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                 </button>
                 <button
                   onClick={() => printConsent({ mode: "Advanced", consentDate: consentDate || "—", consentVersion: consentVersion || CONSENT_VERSION })}
-                  style={{ marginTop: 8, background: "none", border: "none", color: "#4a5c6a", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 5 }}
+                  style={{ marginTop: 8, background: "none", border: "none", color: "#4a5c6a", fontSize: 12, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 5 }}
                 ><PrintLabel size={11}>View / reprint consent document</PrintLabel></button>
               </div>
             ) : (
               // Currently Standard → show switch to Advanced with consent
               <div>
-                <div style={{ fontSize: 11, color: "#7eb8d8", lineHeight: 1.6, marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: "#7eb8d8", lineHeight: 1.6, marginBottom: 10 }}>
                   Advanced Mode uses Claude Opus for deeper analysis. Informed consent is required.
                 </div>
                 <button
                   onClick={() => setShowConsentText(p => !p)}
-                  style={{ background: "none", border: "none", color: "#6ea3ff", fontSize: 10, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}
+                  style={{ background: "none", border: "none", color: "#6ea3ff", fontSize: 12, fontFamily: "'DM Mono', monospace", cursor: "pointer", padding: 0, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}
                 >
                   {showConsentText ? "▾" : "▸"} {showConsentText ? "Hide" : "Read"} consent details
                 </button>
                 {showConsentText && (
                   <div style={{ maxHeight: 160, overflowY: "auto", background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 8, padding: "10px 12px", marginBottom: 10 }}>
-                    <ConsentText style={{ fontSize: 10.5 }} />
+                    <ConsentText style={{ fontSize: 12 }} />
                   </div>
                 )}
                 <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, cursor: "pointer" }}>
@@ -1007,7 +1007,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
                     onChange={e => setConsentChecked(e.target.checked)}
                     style={{ marginTop: 2, accentColor: "#6ea3ff", flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: 10.5, color: "#a8c4dc", lineHeight: 1.6 }}>
+                  <span style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.6 }}>
                     I consent to Advanced Mode per the terms above.
                   </span>
                 </label>
@@ -1037,15 +1037,15 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       <div style={{ ...cardStyle, marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div style={sectionLbl}>Lab Category Order</div>
-          <button onClick={resetLabCatOrder} style={{ ...btnGhost, fontSize: 10 }}>↺ Reset to Alphabetical</button>
+          <button onClick={resetLabCatOrder} style={{ ...btnGhost, fontSize: 12 }}>↺ Reset to Alphabetical</button>
         </div>
-        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 14, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 14, lineHeight: 1.6 }}>
           Set the order categories appear in the Labs tab. Use the arrows to move categories up or down.
           Grouping different names for the same test (e.g. FK506 / Tacrolimus) lives in Labs &amp; Trends → Group Tests.
         </div>
         {labCatOrder.map((cat, idx) => (
           <div key={cat} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: idx < labCatOrder.length - 1 ? "1px solid #1c2a40" : "none" }}>
-            <div style={{ width: 18, textAlign: "right", fontSize: 9, color: "#3a5060", fontFamily: "'DM Mono', monospace", flexShrink: 0 }}>{idx + 1}</div>
+            <div style={{ width: 18, textAlign: "right", fontSize: 12, color: "#3a5060", fontFamily: "'DM Mono', monospace", flexShrink: 0 }}>{idx + 1}</div>
             <div style={{ flex: 1, fontSize: 12, color: "#c4d8ee" }}>{cat}</div>
             <div style={{ display: "flex", gap: 4 }}>
               <button
@@ -1071,37 +1071,37 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#dde8f5", marginBottom: 3 }}>Password</div>
-            <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
+            <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
               Your password is the actual encryption key for your data (P-02). Changing it re-wraps
               the key — your data is never re-encrypted or at risk during the change.
             </div>
           </div>
           <button
             onClick={() => { setPinForm({ current: "", next: "", confirm: "" }); setPinError(""); setPinSuccess(false); setModal("changepin"); }}
-            style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#2dd4a0", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
+            style={{ padding: "7px 16px", background: "rgba(16,185,129,.08)", border: "1px solid rgba(16,185,129,.25)", borderRadius: 8, color: "#2dd4a0", fontSize: 12, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
           >
             Change Password
           </button>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Auto-lock after inactivity</div>
+          <div style={{ fontSize: 12, color: "#7eb8d8", marginBottom: 6 }}>Auto-lock after inactivity</div>
           <select
             value={autoLockMin}
             onChange={e => { const v = parseInt(e.target.value, 10); setAutoLockMin(v); setAutoLockMinutes(v); showToast(v === 0 ? "Auto-lock turned off" : `Auto-lock set to ${AUTOLOCK_OPTIONS.find(o => o.value === v)?.label}`); }}
-            style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 11, outline: "none", cursor: "pointer" }}
+            style={{ width: "100%", background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", color: "#a8c4dc", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none", cursor: "pointer" }}
           >
             {AUTOLOCK_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <div style={{ fontSize: 9, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: "#6a8090", fontFamily: "'DM Mono', monospace", marginTop: 5, lineHeight: 1.5 }}>
             Locks when idle and clears your encryption key from memory. Your data is unreadable until you re-enter your password.
           </div>
         </div>
 
         <div>
-          <div style={{ fontSize: 11, color: "#7eb8d8", marginBottom: 6 }}>Pilot access token</div>
+          <div style={{ fontSize: 12, color: "#7eb8d8", marginBottom: 6 }}>Pilot access token</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ flex: 1, background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 11, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
+            <div style={{ flex: 1, background: "#07090f", border: "1px solid #1c2a40", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: pilotToken ? "#b0c4d8" : "#6a8090", fontFamily: "'DM Mono', monospace" }}>
               {pilotToken ? "•".repeat(20) : "Not set — not needed for founder use"}
             </div>
             <button onClick={() => setModal("pilot_token")} style={btnGhost}>{pilotToken ? "Change" : "Set"}</button>
@@ -1113,12 +1113,12 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 14, padding: "18px 20px" }}>
         <div style={sectionLbl}>Legal</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-          <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
+          <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace" }}>
             Terms of Service and Privacy Policy — draft, pending attorney review.
           </div>
           <button
             onClick={() => setModal("legal")}
-            style={{ padding: "7px 16px", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#7eb8d8", fontSize: 11, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
+            style={{ padding: "7px 16px", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 8, color: "#7eb8d8", fontSize: 12, fontFamily: "'DM Mono', monospace", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
           >
             View
           </button>
@@ -1130,20 +1130,20 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
       {/* ══ EXPORT & BACKUP page (Danger Zone — destructive actions, separated) ══ */}
       <div style={{ display: page === "backup" ? "block" : "none" }}>
       <div style={{ background: "#0b1220", border: "1px solid rgba(239,68,68,.2)", borderRadius: 14, padding: "18px 20px" }}>
-        <div style={{ fontSize: 10, color: "rgba(239,68,68,.5)", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
+        <div style={{ fontSize: 12, color: "rgba(239,68,68,.5)", fontFamily: "'DM Mono', monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 12 }}>Danger Zone</div>
         <div style={{ display: "flex", gap: 10 }}>
           <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(239,68,68,.15)", borderRadius: 8, padding: "12px 14px" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#f87171", marginBottom: 4 }}>Clear All Data</div>
-            <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Permanently removes all locally stored records, notes, and settings. Cannot be undone.</div>
-            <button onClick={() => setModal("clear")} style={{ padding: "6px 14px", border: "1px solid rgba(239,68,68,.3)", borderRadius: 6, fontSize: 11, color: "#f87171", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Clear Data</button>
+            <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Permanently removes all locally stored records, notes, and settings. Cannot be undone.</div>
+            <button onClick={() => setModal("clear")} style={{ padding: "6px 14px", border: "1px solid rgba(239,68,68,.3)", borderRadius: 6, fontSize: 12, color: "#f87171", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Clear Data</button>
           </div>
           {/* UI-21: demo controls only in the demo build. The stale "Demo PIN:
               1234" note is gone — PIN auth no longer exists under P-02. */}
           {IS_DEMO_BUILD && (
             <div style={{ flex: 1, background: "#07090f", border: "1px solid rgba(245,158,11,.15)", borderRadius: 8, padding: "12px 14px" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "#f59e0b", marginBottom: 4 }}>Reset to Demo</div>
-              <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Restore the app to the original demo state with sample data. Clears any personal entries.</div>
-              <button onClick={() => setModal("reset")} style={{ padding: "6px 14px", border: "1px solid rgba(245,158,11,.3)", borderRadius: 6, fontSize: 11, color: "#f59e0b", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Reset</button>
+              <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", lineHeight: 1.55, marginBottom: 10 }}>Restore the app to the original demo state with sample data. Clears any personal entries.</div>
+              <button onClick={() => setModal("reset")} style={{ padding: "6px 14px", border: "1px solid rgba(245,158,11,.3)", borderRadius: 6, fontSize: 12, color: "#f59e0b", cursor: "pointer", fontFamily: "'DM Mono', monospace", background: "transparent" }}>Reset</button>
             </div>
           )}
         </div>
@@ -1188,10 +1188,10 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
           <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: "28px 28px 24px", width: "100%", maxWidth: 340, fontFamily: "'Sora', sans-serif" }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>Change Password</div>
-            <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>Re-wraps your encryption key. Your data is not re-encrypted or touched.</div>
+            <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono', monospace", marginBottom: 20 }}>Re-wraps your encryption key. Your data is not re-encrypted or touched.</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Current Password</div>
+              <div style={{ fontSize: 12, color: "#a0b4c8", marginBottom: 6 }}>Current Password</div>
               <PasswordInput
                 value={pinForm.current}
                 onChange={e => setPinForm(f => ({ ...f, current: e.target.value }))}
@@ -1200,7 +1200,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>New Password (12+ characters)</div>
+              <div style={{ fontSize: 12, color: "#a0b4c8", marginBottom: 6 }}>New Password (12+ characters)</div>
               <PasswordInput
                 value={pinForm.next}
                 onChange={e => setPinForm(f => ({ ...f, next: e.target.value }))}
@@ -1209,7 +1209,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "#a0b4c8", marginBottom: 6 }}>Confirm New Password</div>
+              <div style={{ fontSize: 12, color: "#a0b4c8", marginBottom: 6 }}>Confirm New Password</div>
               <PasswordInput
                 value={pinForm.confirm}
                 onChange={e => setPinForm(f => ({ ...f, confirm: e.target.value }))}
@@ -1217,8 +1217,8 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               />
             </div>
 
-            {pinError && <div style={{ fontSize: 11, color: "#f87171", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
-            {pinSuccess && <div style={{ fontSize: 11, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Password updated successfully.</div>}
+            {pinError && <div style={{ fontSize: 12, color: "#f87171", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>{pinError}</div>}
+            {pinSuccess && <div style={{ fontSize: 12, color: "#2dd4a0", fontFamily: "'DM Mono', monospace", marginBottom: 14 }}>✓ Password updated successfully.</div>}
 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setModal(null)} style={{ flex: 1, padding: "9px", background: "transparent", border: "1px solid #1a2f4a", borderRadius: 8, color: "#98afc4", fontSize: 12, cursor: "pointer", fontFamily: "'Sora', sans-serif" }}>Cancel</button>
@@ -1232,11 +1232,11 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
           <div style={{ background: "#0b1220", border: "1px solid #1a2f4a", borderRadius: 16, padding: "28px", width: "100%", maxWidth: 560, maxHeight: "80vh", overflowY: "auto", fontFamily: "'Sora', sans-serif" }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: "#dde8f5", marginBottom: 4 }}>Terms &amp; Privacy</div>
-            <div style={{ fontSize: 10, color: "#f59e0b", fontFamily: "'DM Mono', monospace", marginBottom: 18, background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 6, padding: "6px 10px" }}>
+            <div style={{ fontSize: 12, color: "#f59e0b", fontFamily: "'DM Mono', monospace", marginBottom: 18, background: "rgba(245,158,11,.08)", border: "1px solid rgba(245,158,11,.25)", borderRadius: 6, padding: "6px 10px" }}>
               DRAFT — pending attorney review. Full text: TERMS_OF_SERVICE.md and PRIVACY_POLICY.md in the project repository.
             </div>
 
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>What Insina Health is</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>What Insina Health is</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 16 }}>
               A pre-commercial pilot personal health record app. It is not a medical device and
               does not diagnose, treat, or direct medical care — every AI feature is
@@ -1244,7 +1244,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               Greg Butler's discretion, not to the general public.
             </div>
 
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your data</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your data</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 16 }}>
               Your health record is stored on your device, encrypted under your own password —
               there is no Insina Health server copy and no password reset. When you use AI,
@@ -1256,7 +1256,7 @@ export default function DataBackup({ onNavChange, googleUser, syncStatus = "idle
               time.
             </div>
 
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your responsibility</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#7eb8d8", fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Your responsibility</div>
             <div style={{ fontSize: 12, color: "#a8c4dc", lineHeight: 1.65, marginBottom: 20 }}>
               You are responsible for your password and recovery key — losing both means your
               data cannot be recovered by anyone. Use Insina Health only for your own health

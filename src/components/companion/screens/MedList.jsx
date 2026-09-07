@@ -23,10 +23,10 @@ export default function MedList({ onBack }) {
           <Card key={medId(m)} style={{ marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
               <span style={{ fontSize: 14, color: C.p, fontWeight: 600 }}>{m.name}</span>
-              {m.brand && <span style={{ fontSize: 11, color: C.ghost, fontFamily: mono }}>({m.brand})</span>}
+              {m.brand && <span style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>({m.brand})</span>}
               {m.category && <Pill color={C.dim}>{m.category}</Pill>}
             </div>
-            <div style={{ fontSize: 11, color: C.dim, fontFamily: mono, marginTop: 4, lineHeight: 1.5 }}>{line(m) || "—"}</div>
+            <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, marginTop: 4, lineHeight: 1.5 }}>{line(m) || "—"}</div>
           </Card>
         ))}
 
@@ -36,13 +36,13 @@ export default function MedList({ onBack }) {
             {inactive.map(m => (
               <div key={medId(m)} style={{ border: `1px solid ${C.b2}`, borderRadius: 10, padding: "10px 14px", marginBottom: 6, opacity: 0.55 }}>
                 <div style={{ fontSize: 12, color: C.dim }}>{m.name}{m.brand ? ` (${m.brand})` : ""}</div>
-                <div style={{ fontSize: 10, color: C.ghost, fontFamily: mono }}>{line(m) || "—"}</div>
+                <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>{line(m) || "—"}</div>
               </div>
             ))}
           </>
         )}
 
-        <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "12px 0 20px" }}>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textAlign: "center", padding: "12px 0 20px" }}>
           Full medication management lives on the web app.
         </div>
       </div>

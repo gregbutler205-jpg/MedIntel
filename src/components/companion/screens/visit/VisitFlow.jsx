@@ -115,7 +115,7 @@ function PreVisitBrief({ visit, onStart }) {
     <div style={{ overflowY: "auto", padding: 16 }}>
       <Card style={{ marginBottom: 12 }}>
         <div style={{ fontSize: 15, color: C.p, fontWeight: 600 }}>{visit.apptTitle}</div>
-        <div style={{ fontSize: 11, color: C.s, fontFamily: mono, marginTop: 3 }}>
+        <div style={{ fontSize: 12, color: C.s, fontFamily: mono, marginTop: 3 }}>
           {visit.provider || "—"}{visit.date ? ` · ${relDate(visit.date)} · ${fmtShort(visit.date)}` : ""}
         </div>
       </Card>
@@ -123,7 +123,7 @@ function PreVisitBrief({ visit, onStart }) {
       <Card style={{ marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
           <SL mb={0}>Safety Flags For This Visit</SL>
-          {refining && <span style={{ marginLeft: "auto", fontSize: 9, color: C.ghost, fontFamily: mono }}>✦ tailoring…</span>}
+          {refining && <span style={{ marginLeft: "auto", fontSize: 12, color: C.ghost, fontFamily: mono }}>✦ tailoring…</span>}
         </div>
         {flags.length === 0 ? <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono }}>None on file.</div> : flags.map((f, i) => (
           <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "5px 0" }}>
@@ -132,7 +132,7 @@ function PreVisitBrief({ visit, onStart }) {
           </div>
         ))}
         {hiddenCount > 0 && (
-          <button onClick={() => setShowAll(s => !s)} style={{ background: "none", border: "none", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", padding: "8px 0 0" }}>
+          <button onClick={() => setShowAll(s => !s)} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", padding: "8px 0 0" }}>
             {showAll ? "Show only relevant" : `Show all flags (+${hiddenCount})`}
           </button>
         )}
@@ -151,7 +151,7 @@ function PreVisitBrief({ visit, onStart }) {
         <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
           <SL mb={0}>Consultation Prep</SL>
           {prep && !prepLoading && (
-            <button onClick={runPrep} style={{ marginLeft: "auto", background: "none", border: "none", color: C.blue, fontSize: 10, fontFamily: mono, cursor: "pointer" }}>↻ Regenerate</button>
+            <button onClick={runPrep} style={{ marginLeft: "auto", background: "none", border: "none", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>↻ Regenerate</button>
           )}
         </div>
         {prepLoading ? (
@@ -160,8 +160,8 @@ function PreVisitBrief({ visit, onStart }) {
           <Prose text={prep} />
         ) : (
           <>
-            {prepErr && <div style={{ fontSize: 11, color: C.amber, fontFamily: mono, marginBottom: 8 }}>{prepErr}</div>}
-            <div style={{ fontSize: 11, color: C.dim, marginBottom: 8 }}>
+            {prepErr && <div style={{ fontSize: 12, color: C.amber, fontFamily: mono, marginBottom: 8 }}>{prepErr}</div>}
+            <div style={{ fontSize: 12, color: C.dim, marginBottom: 8 }}>
               {navigator.onLine ? "Tailored prep will appear here." : "You’re offline — here are a few questions from your record. Tailored prep generates when you’re back online."}
             </div>
             {fallbackQuestions.map((q, i) => (
@@ -169,7 +169,7 @@ function PreVisitBrief({ visit, onStart }) {
                 <span style={{ color: C.blue, fontFamily: mono }}>{i + 1}.</span><span style={{ lineHeight: 1.45 }}>{q}</span>
               </div>
             ))}
-            {navigator.onLine && <button onClick={runPrep} style={{ background: "none", border: "none", color: C.blue, fontSize: 11, fontFamily: mono, cursor: "pointer", padding: "8px 0 0" }}>✦ Generate prep</button>}
+            {navigator.onLine && <button onClick={runPrep} style={{ background: "none", border: "none", color: C.blue, fontSize: 12, fontFamily: mono, cursor: "pointer", padding: "8px 0 0" }}>✦ Generate prep</button>}
           </>
         )}
       </Card>
@@ -184,7 +184,7 @@ function Consent({ onChoose, onBack }) {
   return (
     <div style={{ overflowY: "auto", padding: 16 }}>
       <div style={{ background: "#1c1200", border: `1px solid ${C.amber}40`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
-        <div style={{ fontSize: 10, color: C.amber, fontFamily: mono, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>⚠ Always ask first</div>
+        <div style={{ fontSize: 12, color: C.amber, fontFamily: mono, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>⚠ Always ask first</div>
         <div style={{ fontSize: 12, color: "#fcd34d", lineHeight: 1.55 }}>
           Recording laws vary by state — your care spans <b>Mississippi</b> and <b>Louisiana</b>, which have different consent rules. Ask the doctor’s permission before recording.
         </div>
@@ -202,7 +202,7 @@ function Consent({ onChoose, onBack }) {
       <Btn onClick={() => onChoose("declined")} color={C.amber} style={{ marginBottom: 8 }}>Doctor declined — manual notes only</Btn>
       <Btn onClick={() => onChoose("skipped")} color={C.dim} style={{ marginBottom: 16 }}>Skip recording — manual notes only</Btn>
 
-      <button onClick={onBack} style={{ width: "100%", background: "none", border: "none", color: C.ghost, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>← Back to brief</button>
+      <button onClick={onBack} style={{ width: "100%", background: "none", border: "none", color: C.ghost, fontSize: 12, fontFamily: mono, cursor: "pointer" }}>← Back to brief</button>
     </div>
   );
 }

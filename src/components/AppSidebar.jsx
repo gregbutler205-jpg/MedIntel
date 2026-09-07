@@ -70,7 +70,7 @@ function PatientBlock() {
   } catch { /* locked or unset */ }
   return (
     <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--divider)" }}>
-      <div style={{ fontSize: 11, color: "var(--text-label)", fontFamily: "var(--font-mono)", marginBottom: 4 }}>PATIENT</div>
+      <div style={{ fontSize: 12, color: "var(--text-label)", fontFamily: "var(--font-mono)", marginBottom: 4 }}>PATIENT</div>
       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{name}</div>
       {condition && <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{condition}</div>}
     </div>
@@ -145,7 +145,7 @@ export default function AppSidebar({ activeNav, onNav }) {
                 aria-expanded={!isCollapsed}
               >
                 <span>{group.label}</span>
-                <span aria-hidden="true" style={{ fontSize: 10, color: "var(--text-dim)" }}>{isCollapsed ? "▸" : "▾"}</span>
+                <span aria-hidden="true" style={{ fontSize: 12, color: "var(--text-dim)" }}>{isCollapsed ? "▸" : "▾"}</span>
               </button>
               {!isCollapsed && group.ids.map(id => {
                 const item = byId[id];
@@ -200,7 +200,7 @@ export default function AppSidebar({ activeNav, onNav }) {
       </div>
 
       <div style={{ padding: "12px 16px", borderTop: "1px solid var(--divider)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: "#2e5a44", fontFamily: "var(--font-mono)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "#2e5a44", fontFamily: "var(--font-mono)" }}>
           <div className="live-dot" />
           All systems nominal
         </div>

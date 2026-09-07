@@ -60,24 +60,24 @@ const T = {
 };
 
 const inp = { width:"100%", background:"#07090f", border:"1px solid #1a2f4a", borderRadius:6, color:T.s, fontFamily:"'Sora',sans-serif", fontSize:12, padding:"6px 10px", outline:"none", boxSizing:"border-box" };
-const lbl = { fontSize:9, fontFamily:"'DM Mono',monospace", color:T.faint, textTransform:"uppercase", letterSpacing:"1px", display:"block", marginBottom:4 };
+const lbl = { fontSize:12, fontFamily:"'DM Mono',monospace", color:T.faint, textTransform:"uppercase", letterSpacing:"1px", display:"block", marginBottom:4 };
 const card = { background:T.card, border:`1px solid ${T.borderHover}`, borderRadius:14, padding:20 };
 
 // ── Reusable card header ───────────────────────────────────────────────────────
 function CardHeader({ title, editing, onEdit, onSave, onCancel, onAdd }) {
   return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-      <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>{title}</span>
+      <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>{title}</span>
       <div style={{ display:"flex", gap:6 }}>
         {onAdd && !editing && (
-          <button onClick={onAdd} style={{ background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", borderRadius:7, color:T.green, fontFamily:"'Sora',sans-serif", fontSize:11, padding:"4px 11px", cursor:"pointer" }}>+ Add</button>
+          <button onClick={onAdd} style={{ background:"rgba(16,185,129,.08)", border:"1px solid rgba(16,185,129,.25)", borderRadius:7, color:T.green, fontFamily:"'Sora',sans-serif", fontSize:12, padding:"4px 11px", cursor:"pointer" }}>+ Add</button>
         )}
         {editing
           ? <>
-              <button onClick={onCancel} style={{ background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:7, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:11, padding:"4px 11px", cursor:"pointer" }}>Cancel</button>
-              <button onClick={onSave}   style={{ background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:7, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:11, padding:"4px 11px", cursor:"pointer" }}>Save</button>
+              <button onClick={onCancel} style={{ background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:7, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, padding:"4px 11px", cursor:"pointer" }}>Cancel</button>
+              <button onClick={onSave}   style={{ background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:7, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:12, padding:"4px 11px", cursor:"pointer" }}>Save</button>
             </>
-          : <button onClick={onEdit} style={{ background:"transparent", border:`1px solid ${T.borderActive}`, borderRadius:7, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:11, padding:"4px 11px", cursor:"pointer" }}>Edit</button>
+          : <button onClick={onEdit} style={{ background:"transparent", border:`1px solid ${T.borderActive}`, borderRadius:7, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, padding:"4px 11px", cursor:"pointer" }}>Edit</button>
         }
       </div>
     </div>
@@ -92,7 +92,7 @@ function FieldRow({ label, value, editing, field, vals, setVals, options, placeh
   const shown = field === "dob" ? formatDateUS(value) : field === "phone" ? displayPhone(value) : value;
   return (
     <div style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
-      <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
+      <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
       {editing
         ? options
           ? <select value={current} onChange={e => setVals(p => ({ ...p, [field]: e.target.value }))} style={inp}>
@@ -318,8 +318,8 @@ function SideUploader({ side, label, value, busy, onPick, onClear }) {
         <div style={{ position: "relative" }}>
           <img src={value} alt={label} style={{ width: "100%", borderRadius: 8, border: `1px solid ${T.borderActive}`, display: "block" }} />
           <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-            <button onClick={() => ref.current?.click()} style={{ flex: 1, padding: "6px 0", background: "transparent", border: `1px solid ${T.borderHover}`, borderRadius: 7, color: T.dim, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Replace</button>
-            <button onClick={() => onClear(side)} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: T.red, fontFamily: "'Sora',sans-serif", fontSize: 11, cursor: "pointer" }}>Remove</button>
+            <button onClick={() => ref.current?.click()} style={{ flex: 1, padding: "6px 0", background: "transparent", border: `1px solid ${T.borderHover}`, borderRadius: 7, color: T.dim, fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Replace</button>
+            <button onClick={() => onClear(side)} style={{ flex: 1, padding: "6px 0", background: "transparent", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: T.red, fontFamily: "'Sora',sans-serif", fontSize: 12, cursor: "pointer" }}>Remove</button>
           </div>
         </div>
       ) : (
@@ -358,7 +358,7 @@ function CardModal({ card, onSave, onClose }) {
           <SideUploader side="front" label="Front" value={form.front} busy={busy === "front"} onPick={pick} onClear={clear} />
           <SideUploader side="back"  label="Back"  value={form.back}  busy={busy === "back"}  onPick={pick} onClear={clear} />
         </div>
-        {err && <div style={{ fontSize:11, color:T.red, fontFamily:"'DM Mono',monospace", marginBottom:12 }}>{err}</div>}
+        {err && <div style={{ fontSize:12, color:T.red, fontFamily:"'DM Mono',monospace", marginBottom:12 }}>{err}</div>}
         <div style={{ display:"flex", gap:10, justifyContent:"flex-end" }}>
           <button onClick={onClose} style={{ padding:"8px 18px", background:"transparent", border:`1px solid ${T.borderHover}`, borderRadius:8, color:T.dim, fontFamily:"'Sora',sans-serif", fontSize:12, cursor:"pointer" }}>Cancel</button>
           <button onClick={() => { if (!form.label.trim()) { setErr("Give the card a name."); return; } if (!form.front && !form.back) { setErr("Add at least one photo."); return; }
@@ -399,7 +399,7 @@ function CardViewer({ card, side, onClose }) {
           )}
           {img && <button onClick={share} style={{ padding:"9px 18px", background:"rgba(79,142,247,.15)", border:"1px solid rgba(79,142,247,.4)", borderRadius:8, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>⤴ Share / Send</button>}
         </div>
-        {note && <div style={{ textAlign:"center", color:T.ghost, fontSize:11, fontFamily:"'DM Mono',monospace", marginTop:10 }}>{note}</div>}
+        {note && <div style={{ textAlign:"center", color:T.ghost, fontSize:12, fontFamily:"'DM Mono',monospace", marginTop:10 }}>{note}</div>}
       </div>
     </div>
   );
@@ -413,7 +413,7 @@ function CardSelectModal({ cards, onConfirm, onClose }) {
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }}>
       <div style={{ background:T.card, border:`1px solid ${T.borderActive}`, borderRadius:16, padding:26, width:420, maxHeight:"85vh", overflowY:"auto" }}>
         <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:19, color:T.p, marginBottom:6 }}>Include which cards?</div>
-        <div style={{ fontSize:11, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Selected cards are added at the end of the printed profile.</div>
+        <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:16 }}>Selected cards are added at the end of the printed profile.</div>
         {cards.map(c => (
           <label key={c.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 11px", borderRadius:8, background: sel.has(c.id) ? "rgba(79,142,247,.10)" : "#07090f", border:`1px solid ${sel.has(c.id) ? "rgba(79,142,247,.35)" : T.border}`, marginBottom:7, cursor:"pointer" }}>
             <input type="checkbox" checked={sel.has(c.id)} onChange={() => toggle(c.id)} style={{ width:15, height:15 }} />
@@ -773,7 +773,7 @@ export default function ProfileTab() {
         * { box-sizing:border-box; margin:0; padding:0; }
         ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-thumb { background:#1a2840; border-radius:4px; }
         input:focus, select:focus { border-color:#6ea3ff !important; }
-        .icon-btn { background:transparent; border:1px solid #1c2a40; border-radius:6px; color:#b0c4d8; font-size:11px; padding:3px 8px; cursor:pointer; transition:all .15s; }
+        .icon-btn { background:transparent; border:1px solid #1c2a40; border-radius:6px; color:#b0c4d8; font-size:12px; padding:3px 8px; cursor:pointer; transition:all .15s; }
         .icon-btn:hover { border-color:#1a2f4a; color:#7eb8d8; }
         .icon-btn.danger:hover { border-color:rgba(239,68,68,.4); color:#f87171; }
 
@@ -785,7 +785,7 @@ export default function ProfileTab() {
         <div style={{ flex:1 }} />
         <button
           onClick={() => { if (cards.length > 1) setCardSelectOpen(true); else requestReport("profile", () => handlePrint(cards.map(c => c.id))); }}
-          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:11, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
+          style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 14px", background:"rgba(79,142,247,.08)", border:"1px solid rgba(79,142,247,.25)", borderRadius:8, color:T.blue, fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}
         >
           <PrintLabel>Print Profile</PrintLabel>
         </button>
@@ -825,10 +825,10 @@ export default function ProfileTab() {
               if (field === "age" && computedAge != null) {
                 return (
                   <div key={field} style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
-                    <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
+                    <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
                     <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>
                       {computedAge}
-                      <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginLeft:8 }}>
+                      <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginLeft:8 }}>
                         calculated from DOB{edPersonal ? " — edit Date of Birth to change it" : ""}
                       </span>
                     </span>
@@ -838,10 +838,10 @@ export default function ProfileTab() {
               if (field === "weight" && vitalsWeight) {
                 return (
                   <div key={field} style={{ display:"grid", gridTemplateColumns:"130px 1fr", gap:"4px 12px", padding:"7px 0", borderBottom:`1px solid ${T.border}`, alignItems:"start" }}>
-                    <span style={{ fontSize:10, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
+                    <span style={{ fontSize:12, fontFamily:"'DM Mono',monospace", color:T.ghost, textTransform:"uppercase", letterSpacing:".8px", paddingTop:2 }}>{label}</span>
                     <span style={{ fontSize:13, color:T.s, lineHeight:1.45 }}>
                       {vitalsWeightLbs}
-                      <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginLeft:8 }}>
+                      <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginLeft:8 }}>
                         auto from Vitals{vitalsWeightDate ? ` · ${vitalsWeightDate}` : ""}{edPersonal ? " — log a new weight on the Vitals tab to change it" : ""}
                       </span>
                     </span>
@@ -886,15 +886,15 @@ export default function ProfileTab() {
                       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                         {["front","back"].map(side => (
                           <div key={side}>
-                            <div style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4 }}>{side}</div>
+                            <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:4 }}>{side}</div>
                             {c[side]
                               ? <img src={c[side]} alt={`${c.label} ${side}`} onClick={() => setCardViewer({ card:c, side })} style={{ width:"100%", borderRadius:7, border:`1px solid ${T.border}`, cursor:"pointer", display:"block" }} />
-                              : <div style={{ padding:"18px 0", textAlign:"center", border:`1px dashed ${T.border}`, borderRadius:7, color:T.ghost, fontSize:10, fontFamily:"'DM Mono',monospace" }}>none</div>}
+                              : <div style={{ padding:"18px 0", textAlign:"center", border:`1px dashed ${T.border}`, borderRadius:7, color:T.ghost, fontSize:12, fontFamily:"'DM Mono',monospace" }}>none</div>}
                           </div>
                         ))}
                       </div>
                       <button onClick={() => setCardViewer({ card:c, side: c.front ? "front" : "back" })}
-                        style={{ width:"100%", marginTop:10, padding:"7px 0", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:7, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, cursor:"pointer" }}>
+                        style={{ width:"100%", marginTop:10, padding:"7px 0", background:"rgba(79,142,247,.1)", border:"1px solid rgba(79,142,247,.3)", borderRadius:7, color:T.blue, fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, cursor:"pointer" }}>
                         View &amp; Share
                       </button>
                     </div>
@@ -921,12 +921,12 @@ export default function ProfileTab() {
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                         <span style={{ fontSize:13, fontWeight:600, color:T.s }}>{doc.name}</span>
-                        {doc.pcp && <span style={{ fontSize:9, background:"rgba(79,142,247,.12)", color:T.blue, border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
+                        {doc.pcp && <span style={{ fontSize:12, background:"rgba(79,142,247,.12)", color:T.blue, border:"1px solid rgba(79,142,247,.25)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>PCP</span>}
                       </div>
-                      <div style={{ fontSize:11, color:T.m, marginTop:2 }}>{doc.role}{doc.specialty ? ` · ${doc.specialty}` : ""}</div>
-                      <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{doc.facility}</div>
-                      {doc.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:3 }}>{displayPhone(doc.phone)}</div>}
-                      {doc.phone24 && <div style={{ fontSize:11, color:"#f87171", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {displayPhone(doc.phone24)}</div>}
+                      <div style={{ fontSize:12, color:T.m, marginTop:2 }}>{doc.role}{doc.specialty ? ` · ${doc.specialty}` : ""}</div>
+                      <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{doc.facility}</div>
+                      {doc.phone && <div style={{ fontSize:12, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:3 }}>{displayPhone(doc.phone)}</div>}
+                      {doc.phone24 && <div style={{ fontSize:12, color:"#f87171", fontFamily:"'DM Mono',monospace", marginTop:2, fontWeight:700 }}>24 hr: {displayPhone(doc.phone24)}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4, flexShrink:0 }}>
                       <button className="icon-btn" onClick={() => setProviderModal(doc)}>✎</button>
@@ -941,8 +941,8 @@ export default function ProfileTab() {
           {/* ── Conditions — pulled from Conditions tab ── */}
           <div style={card}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Active Conditions</span>
-              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Conditions tab ↗</span>
+              <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Active Conditions</span>
+              <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Conditions tab ↗</span>
             </div>
             {conditions.filter(c => c.status !== "resolved").length === 0
               ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No conditions recorded</div>
@@ -956,7 +956,7 @@ export default function ProfileTab() {
                           <div style={{ fontSize:12, color:T.s }}>{c.name}</div>
                         </div>
                       </div>
-                      <span style={{ fontSize:9, padding:"2px 8px", borderRadius:10, fontFamily:"'DM Mono',monospace", background:`${color}18`, color, border:`1px solid ${color}35` }}>{c.status}</span>
+                      <span style={{ fontSize:12, padding:"2px 8px", borderRadius:10, fontFamily:"'DM Mono',monospace", background:`${color}18`, color, border:`1px solid ${color}35` }}>{c.status}</span>
                     </div>
                   );
                 })
@@ -976,11 +976,11 @@ export default function ProfileTab() {
                         <div style={{ width:5, height:5, borderRadius:"50%", background:c, flexShrink:0 }} />
                         <div>
                           <div style={{ fontSize:12, fontWeight:600, color:"#f87171" }}>{a.name}</div>
-                          <div style={{ fontSize:10, color:T.m, fontFamily:"'DM Mono',monospace" }}>{a.reaction} · {a.severity}</div>
+                          <div style={{ fontSize:12, color:T.m, fontFamily:"'DM Mono',monospace" }}>{a.reaction} · {a.severity}</div>
                         </div>
                         <div style={{ display:"flex", gap:3, marginLeft:4 }}>
-                          <button className="icon-btn" onClick={() => setAllergyModal(a)} style={{ fontSize:10, padding:"2px 6px" }}>✎</button>
-                          <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"allergy", id:a.id, label:a.name })} style={{ fontSize:10, padding:"2px 6px" }}>✕</button>
+                          <button className="icon-btn" onClick={() => setAllergyModal(a)} style={{ fontSize:12, padding:"2px 6px" }}>✎</button>
+                          <button className="icon-btn danger" onClick={() => setDeleteTarget({ type:"allergy", id:a.id, label:a.name })} style={{ fontSize:12, padding:"2px 6px" }}>✕</button>
                         </div>
                       </div>
                     );
@@ -992,8 +992,8 @@ export default function ProfileTab() {
           {/* ── Active Medications — pulled from Medications tab ── */}
           <div style={card}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Active Medications</span>
-              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Medications tab ↗</span>
+              <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Active Medications</span>
+              <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Medications tab ↗</span>
             </div>
             {activeMeds.length === 0
               ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No medications recorded</div>
@@ -1003,10 +1003,10 @@ export default function ProfileTab() {
                       <div style={{ width:6, height:6, borderRadius:"50%", background:m.color || T.blue, flexShrink:0 }} />
                       <div>
                         <span style={{ fontSize:12, color:T.s, fontWeight:500 }}>{m.name}</span>
-                        {m.brand && <span style={{ fontSize:10, color:T.ghost, marginLeft:6, fontFamily:"'DM Mono',monospace" }}>{m.brand}</span>}
+                        {m.brand && <span style={{ fontSize:12, color:T.ghost, marginLeft:6, fontFamily:"'DM Mono',monospace" }}>{m.brand}</span>}
                       </div>
                     </div>
-                    <span style={{ fontSize:11, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{m.dose} · {m.frequency}</span>
+                    <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{m.dose} · {m.frequency}</span>
                   </div>
                 ))
             }
@@ -1025,10 +1025,10 @@ export default function ProfileTab() {
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                         <span style={{ fontSize:13, fontWeight:600, color:T.s }}>{c.name}</span>
-                        {c.primary && <span style={{ fontSize:9, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
+                        {c.primary && <span style={{ fontSize:12, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
                       </div>
-                      <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{c.relationship}</div>
-                      {c.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{displayPhone(c.phone)}</div>}
+                      <div style={{ fontSize:12, color:T.ghost, marginTop:1 }}>{c.relationship}</div>
+                      {c.phone && <div style={{ fontSize:12, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{displayPhone(c.phone)}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4 }}>
                       <button className="icon-btn" onClick={() => setEcModal(c)}>✎</button>
@@ -1050,13 +1050,13 @@ export default function ProfileTab() {
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                         <span style={{ fontSize:13, fontWeight:600, color:T.s }}>{ph.name}</span>
-                        {ph.primary && <span style={{ fontSize:9, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
-                        {ph.type && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{ph.type}</span>}
+                        {ph.primary && <span style={{ fontSize:12, background:"rgba(16,185,129,.1)", color:T.green, border:"1px solid rgba(16,185,129,.2)", borderRadius:10, padding:"1px 7px", fontFamily:"'DM Mono',monospace" }}>Primary</span>}
+                        {ph.type && <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>{ph.type}</span>}
                       </div>
-                      {ph.phone && <div style={{ fontSize:11, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{displayPhone(ph.phone)}{ph.fax ? ` · fax ${displayPhone(ph.fax)}` : ""}</div>}
-                      {ph.address && <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{ph.address}</div>}
-                      {ph.hours && <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{ph.hours}</div>}
-                      {ph.notes && <div style={{ fontSize:11, color:T.dim, marginTop:2 }}>{ph.notes}</div>}
+                      {ph.phone && <div style={{ fontSize:12, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{displayPhone(ph.phone)}{ph.fax ? ` · fax ${displayPhone(ph.fax)}` : ""}</div>}
+                      {ph.address && <div style={{ fontSize:12, color:T.ghost, marginTop:1 }}>{ph.address}</div>}
+                      {ph.hours && <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>{ph.hours}</div>}
+                      {ph.notes && <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>{ph.notes}</div>}
                     </div>
                     <div style={{ display:"flex", gap:4 }}>
                       <button className="icon-btn" onClick={() => setPharmacyModal(ph)}>✎</button>
@@ -1070,8 +1070,8 @@ export default function ProfileTab() {
           {/* ── Procedures (read-only mirror of the Procedures tab + Procedure records) ── */}
           <div style={{ ...card, gridColumn:"1/-1" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Procedures</span>
-              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Procedures tab ↗</span>
+              <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Procedures</span>
+              <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Procedures tab ↗</span>
             </div>
             {allSurgeries.length === 0
               ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No procedures recorded</div>
@@ -1081,11 +1081,11 @@ export default function ProfileTab() {
                       <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue, marginTop:4, flexShrink:0 }} />
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{s.procedure}</div>
-                        <div style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>
+                        <div style={{ fontSize:12, color:T.blue, fontFamily:"'DM Mono',monospace", marginTop:2 }}>
                           {formatDateUS(s.date, "—")}
                           {s.facility ? ` · ${s.facility}` : ""}
                         </div>
-                        {s.surgeon && <div style={{ fontSize:11, color:T.ghost, marginTop:1 }}>{s.surgeon}</div>}
+                        {s.surgeon && <div style={{ fontSize:12, color:T.ghost, marginTop:1 }}>{s.surgeon}</div>}
                       </div>
                     </div>
                   ))}
@@ -1096,8 +1096,8 @@ export default function ProfileTab() {
           {/* ── Diagnostics (read-only mirror of the Diagnostics tab + Imaging records) ── */}
           <div style={{ ...card, gridColumn:"1/-1" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Diagnostics</span>
-              <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Diagnostics tab ↗</span>
+              <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Diagnostics</span>
+              <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Diagnostics tab ↗</span>
             </div>
             {allDiagnostics.length === 0
               ? <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", padding:"16px 0", textAlign:"center" }}>No diagnostic studies recorded — add imaging, EKGs, EMGs, and other studies on the Diagnostics tab.</div>
@@ -1109,17 +1109,17 @@ export default function ProfileTab() {
                         <div style={{ width:8, height:8, borderRadius:"50%", background:"#a78bfa", marginTop:4, flexShrink:0 }} />
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:13, fontWeight:600, color:T.s }}>{d.name || "—"}</div>
-                          <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>
+                          <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:1 }}>
                             {[d.orderedBy && `Ordered by ${d.orderedBy}`, d.readingProvider && `Read by ${d.readingProvider}`, d.facility, d.relatedCondition].filter(Boolean).join(" · ")}
                           </div>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
                           {sanitizeReportUrl(d.reportLink) && (
                             <a href={sanitizeReportUrl(d.reportLink)} target="_blank" rel="noopener noreferrer" className="no-print"
-                              style={{ fontSize:9, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>report ↗</a>
+                              style={{ fontSize:12, color:"#7eb8d8", fontFamily:"'DM Mono',monospace" }}>report ↗</a>
                           )}
-                          <span style={{ fontSize:10, color:T.blue, fontFamily:"'DM Mono',monospace" }}>{dateStr}</span>
-                          {d.fromRecords && <span style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>Records ↗</span>}
+                          <span style={{ fontSize:12, color:T.blue, fontFamily:"'DM Mono',monospace" }}>{dateStr}</span>
+                          {d.fromRecords && <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>Records ↗</span>}
                         </div>
                       </div>
                     );
@@ -1142,8 +1142,8 @@ export default function ProfileTab() {
             return (
               <div style={{ ...card, gridColumn:"1/-1" }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-                  <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Recent Lab Results</span>
-                  {latestDate && <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>
+                  <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Recent Lab Results</span>
+                  {latestDate && <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>
                     Most recent: {new Date(latestDate + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
                   </span>}
                 </div>
@@ -1151,7 +1151,7 @@ export default function ProfileTab() {
                   {featuredLabs.map(({ label, lab }) => {
                     if (!lab) return (
                       <div key={label} style={{ background:"#080c14", border:`1px solid ${T.border}`, borderRadius:8, padding:"10px 12px", opacity:0.45 }}>
-                        <div style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                        <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
                         <div style={{ fontSize:13, color:T.ghost }}>—</div>
                       </div>
                     );
@@ -1159,9 +1159,9 @@ export default function ProfileTab() {
                     const color = isFlag ? T.yellow : T.green;
                     return (
                       <div key={label} style={{ background:"#080c14", border:`1px solid ${isFlag ? "rgba(245,158,11,.3)" : T.border}`, borderRadius:8, padding:"10px 12px" }}>
-                        <div style={{ fontSize:9, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                        <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
                         <div style={{ fontSize:15, fontWeight:700, color, lineHeight:1 }}>{lab.value}</div>
-                        <div style={{ fontSize:8, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{lab.unit || ""}</div>
+                        <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginTop:2 }}>{lab.unit || ""}</div>
                       </div>
                     );
                   })}
@@ -1174,8 +1174,8 @@ export default function ProfileTab() {
           {latestVitals && (
             <div style={{ ...card, gridColumn:"1/-1" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-                <span style={{ fontSize:10, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Latest Vitals</span>
-                <span style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Vitals tab ↗ · {latestVitals.ts ? new Date(latestVitals.ts).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}</span>
+                <span style={{ fontSize:12, letterSpacing:"1.5px", textTransform:"uppercase", color:T.faint, fontFamily:"'DM Mono',monospace" }}>Latest Vitals</span>
+                <span style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace" }}>from Vitals tab ↗ · {latestVitals.ts ? new Date(latestVitals.ts).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—"}</span>
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(140px,1fr))", gap:12 }}>
                 {[
@@ -1187,7 +1187,7 @@ export default function ProfileTab() {
                   ["Heart Rate", (latestVitals.hr ?? latestVitals.pulse) != null ? `${latestVitals.hr ?? latestVitals.pulse} bpm` : null, T.red],
                 ].filter(([,v]) => v).map(([label, value, color]) => (
                   <div key={label} style={{ background:"#080c14", border:`1px solid ${T.border}`, borderRadius:10, padding:"12px 14px" }}>
-                    <div style={{ fontSize:10, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
+                    <div style={{ fontSize:12, color:T.ghost, fontFamily:"'DM Mono',monospace", marginBottom:4 }}>{label}</div>
                     <div style={{ fontSize:16, fontWeight:700, color }}>{value}</div>
                   </div>
                 ))}

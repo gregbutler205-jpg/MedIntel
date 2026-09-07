@@ -19,7 +19,7 @@ function Badge({ type }) {
   const c = TYPE_COLORS[type] || "#4f8ef7";
   return (
     <span style={{
-      fontSize: 9, fontFamily: "'DM Mono',monospace",
+      fontSize: 12, fontFamily: "'DM Mono',monospace",
       background: `${c}18`, color: c, border: `1px solid ${c}30`,
       padding: "2px 7px", borderRadius: 4, letterSpacing: "0.5px",
       textTransform: "uppercase", flexShrink: 0,
@@ -118,10 +118,10 @@ export default function Records({ onNavChange }) {
         .rec-row { padding: 13px 16px; border-bottom: 1px solid #1c2a40; cursor: pointer; transition: background .1s; border-left: 2px solid transparent; }
         .rec-row:hover { background: #0b1220; }
         .rec-row.active { background: #0d1525; border-left-color: #6ea3ff; }
-        .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
+        .filter-chip { padding: 5px 13px; border-radius: 20px; font-size: 12px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .filter-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .filter-chip.active { color: #6ea3ff; border-color: #6ea3ff; background: rgba(79,142,247,.08); }
-        .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 11px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
+        .type-chip { padding: 5px 13px; border-radius: 20px; font-size: 12px; border: 1px solid #1c2a40; background: #0b1220; color: #b0c4d8; cursor: pointer; transition: all .15s; font-family: 'DM Mono',monospace; white-space: nowrap; }
         .type-chip:hover { color: #7eb8d8; border-color: #1a2f4a; }
         .type-chip.active { color: #6ea3ff; border-color: #6ea3ff; background: rgba(79,142,247,.08); }
         .detail-line { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid #1c2a40; font-size: 12px; }
@@ -132,9 +132,9 @@ export default function Records({ onNavChange }) {
         .modal-input { width: 100%; background: #07090f; border: 1px solid #1c2a40; color: #c4d8ee; padding: 8px 12px; border-radius: 8px; font-family: 'Sora',sans-serif; font-size: 12px; outline: none; transition: border-color .15s; }
         .modal-input::placeholder { color: #a0b4c8; }
         .modal-input:focus { border-color: #1a2f4a; }
-        .epic-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 8px; color: #6ea3ff; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; text-decoration: none; }
+        .epic-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 8px; color: #6ea3ff; font-size: 12px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; text-decoration: none; }
         .epic-btn:hover { background: rgba(79,142,247,.15); border-color: rgba(79,142,247,.4); }
-        .add-badge-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 12px; color: #6ea3ff; font-size: 11px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; letter-spacing: 0.3px; }
+        .add-badge-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; background: rgba(79,142,247,.08); border: 1px solid rgba(79,142,247,.25); border-radius: 12px; color: #6ea3ff; font-size: 12px; font-family: 'DM Mono',monospace; cursor: pointer; transition: all .15s; letter-spacing: 0.3px; }
         .add-badge-btn:hover { background: rgba(79,142,247,.16); border-color: rgba(79,142,247,.45); }
       `}</style>
 
@@ -157,7 +157,7 @@ export default function Records({ onNavChange }) {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
+        <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "5px 12px", borderRadius: 6 }}>
           {records.length} records · Epic FHIR
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function Records({ onNavChange }) {
             {f}
           </button>
         ))}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: "#1e4030", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#1e4030", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", display: "inline-block", boxShadow: "0 0 6px #10b981" }} />
           Epic connected
         </div>
@@ -193,10 +193,10 @@ export default function Records({ onNavChange }) {
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7, gap: 8 }}>
                 <Badge type={r.type} />
-                <span style={{ fontSize: 10, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{formatDateUS(r.date)}</span>
+                <span style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", flexShrink: 0 }}>{formatDateUS(r.date)}</span>
               </div>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#c4d8ee", marginBottom: 3, lineHeight: 1.3 }}>{r.title}</div>
-              <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{r.facility}</div>
+              <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{r.facility}</div>
             </div>
           ))}
         </div>
@@ -209,30 +209,30 @@ export default function Records({ onNavChange }) {
             <div style={{ marginBottom: 22 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <Badge type={selected.type} />
-                <span style={{ fontSize: 10, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{formatDateUS(selected.date)}</span>
+                <span style={{ fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{formatDateUS(selected.date)}</span>
               </div>
               <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: 24, color: "#dde8f5", fontWeight: 400, letterSpacing: "-0.3px", marginBottom: 10 }}>
                 {selected.title}
               </h2>
               <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-                {selected.facility && <div style={{ fontSize: 11, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.facility}</div>}
-                {selected.provider && <div style={{ fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{selected.provider}</div>}
+                {selected.facility && <div style={{ fontSize: 12, color: "#b0c4d8", fontFamily: "'DM Mono',monospace" }}>{selected.facility}</div>}
+                {selected.provider && <div style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>{selected.provider}</div>}
                 {/* UI-19: truthful metadata — the old "Open in Epic" pointed at a
                     fake example.com URL; the id is shown as plain text instead. */}
                 {selected.epicId && (
-                  <span style={{ fontSize: 10, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "2px 8px", borderRadius: 5 }}>
+                  <span style={{ fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", padding: "2px 8px", borderRadius: 5 }}>
                     Epic ID: {selected.epicId}
                   </span>
                 )}
                 <button
                   onClick={() => handleAskAI(selected)}
-                  style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 7, color: "#6ea3ff", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                  style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", background: "rgba(79,142,247,.1)", border: "1px solid rgba(79,142,247,.3)", borderRadius: 7, color: "#6ea3ff", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                 >
                   ✦ Ask AI
                 </button>
                 <button
                   onClick={() => setDeleteId(selected.id)}
-                  style={{ padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#f87171", fontSize: 11, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
+                  style={{ padding: "5px 12px", background: "rgba(239,68,68,.1)", border: "1px solid rgba(239,68,68,.3)", borderRadius: 7, color: "#f87171", fontSize: 12, fontFamily: "'DM Mono',monospace", cursor: "pointer" }}
                 >
                   Delete
                 </button>
@@ -240,7 +240,7 @@ export default function Records({ onNavChange }) {
             </div>
 
             {/* UI-19: source line — truthful label, always present */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16, fontSize: 11, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16, fontSize: 12, color: "#98afc4", fontFamily: "'DM Mono',monospace" }}>
               <span>
                 Source: {selected.source || (selected.refDocId ? "Imported from PDF" : selected.epicId ? "Imported from Epic export" : "Entered manually")}
               </span>
@@ -249,19 +249,19 @@ export default function Records({ onNavChange }) {
               )}
               {selected.refDocId && getRefDoc(selected.refDocId) && (
                 <button onClick={() => setShowSourceDoc(s => !s)}
-                  style={{ background: "rgba(167,139,250,.08)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 10px", cursor: "pointer" }}>
+                  style={{ background: "rgba(167,139,250,.08)", border: "1px solid rgba(167,139,250,.3)", borderRadius: 6, color: "#a78bfa", fontSize: 12, fontFamily: "'DM Mono',monospace", padding: "3px 10px", cursor: "pointer" }}>
                   {showSourceDoc ? "Hide source document" : "View source document →"}
                 </button>
               )}
               {/* v1.48.0: original report in the patient's own Drive */}
               {sanitizeReportUrl(selected.reportLink) && (
                 <a href={sanitizeReportUrl(selected.reportLink)} target="_blank" rel="noopener noreferrer"
-                  style={{ color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 10px", textDecoration: "none" }}>
+                  style={{ color: "#7eb8d8", background: "rgba(79,142,247,.08)", border: "1px solid rgba(79,142,247,.25)", borderRadius: 6, fontSize: 12, fontFamily: "'DM Mono',monospace", padding: "3px 10px", textDecoration: "none" }}>
                   Open original report ↗
                 </a>
               )}
               <button onClick={() => editReportLink(selected)}
-                style={{ background: "transparent", border: "none", color: "#4a6a8a", cursor: "pointer", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: 0, textDecoration: "underline" }}>
+                style={{ background: "transparent", border: "none", color: "#4a6a8a", cursor: "pointer", fontSize: 12, fontFamily: "'DM Mono',monospace", padding: 0, textDecoration: "underline" }}>
                 {selected.reportLink ? "edit link" : "add report link"}
               </button>
             </div>
@@ -272,10 +272,10 @@ export default function Records({ onNavChange }) {
               if (!doc) return null;
               return (
                 <div style={{ background: "#0b1220", border: "1px solid rgba(167,139,250,.25)", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-                  <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a78bfa", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a78bfa", fontFamily: "'DM Mono',monospace", marginBottom: 8 }}>
                     Source Document — {doc.name}{doc.addedDate ? ` · added ${formatDateUS(doc.addedDate)}` : ""}
                   </div>
-                  <pre style={{ fontSize: 11, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", whiteSpace: "pre-wrap", lineHeight: 1.6, maxHeight: 300, overflowY: "auto", margin: 0 }}>
+                  <pre style={{ fontSize: 12, color: "#a8c4dc", fontFamily: "'DM Mono',monospace", whiteSpace: "pre-wrap", lineHeight: 1.6, maxHeight: 300, overflowY: "auto", margin: 0 }}>
                     {doc.text || "(no extracted text stored)"}
                   </pre>
                 </div>
@@ -285,7 +285,7 @@ export default function Records({ onNavChange }) {
             {/* Summary — only when there is one (UI-19: no empty headings) */}
             {selected.summary && (
               <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-                <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
+                <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                   Summary
                 </div>
                 <p style={{ fontSize: 13, color: "#a8c4dc", lineHeight: 1.65 }}>{selected.summary}</p>
@@ -294,7 +294,7 @@ export default function Records({ onNavChange }) {
 
             {/* Key details */}
             {(selected.details ?? []).length > 0 && <div style={{ background: "#0b1220", border: "1px solid #1c2a40", borderRadius: 12, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontSize: 9, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
+              <div style={{ fontSize: 12, letterSpacing: "1.5px", textTransform: "uppercase", color: "#a0b4c8", fontFamily: "'DM Mono',monospace", marginBottom: 10 }}>
                 Key Details
               </div>
               {(selected.details ?? []).map((d, i) => {
@@ -311,7 +311,7 @@ export default function Records({ onNavChange }) {
             {/* Tags */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {(selected.tags ?? []).map(t => (
-                <span key={t} style={{ fontSize: 9, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", color: "#98afc4", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
+                <span key={t} style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", background: "#0b1220", border: "1px solid #1c2a40", color: "#98afc4", padding: "3px 9px", borderRadius: 4, letterSpacing: "0.5px" }}>
                   #{t}
                 </span>
               ))}
@@ -320,7 +320,7 @@ export default function Records({ onNavChange }) {
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#a0b4c8", fontSize: 12, fontFamily: "'DM Mono',monospace", gap: 8 }}>
             {records.length === 0
-              ? <><div style={{ fontSize: 24, marginBottom: 8, opacity: 0.4 }}>▤</div><div>No records yet</div><div style={{ fontSize: 10, color: "#6a8090" }}>Import XML or PDF files on the Import Records tab</div></>
+              ? <><div style={{ fontSize: 24, marginBottom: 8, opacity: 0.4 }}>▤</div><div>No records yet</div><div style={{ fontSize: 12, color: "#6a8090" }}>Import XML or PDF files on the Import Records tab</div></>
               : "Select a record to view details"
             }
           </div>
@@ -346,7 +346,7 @@ export default function Records({ onNavChange }) {
               { label: "Date",     key: "date",     placeholder: "e.g. Apr 8, 2026" },
             ].map(({ label, key, placeholder }) => (
               <div key={key} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
+                <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 6 }}>{label}</div>
                 <input
                   className="modal-input"
                   placeholder={placeholder}
@@ -357,7 +357,7 @@ export default function Records({ onNavChange }) {
             ))}
 
             <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 9, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Record Type</div>
+              <div style={{ fontSize: 12, color: "#a0b4c8", fontFamily: "'DM Mono',monospace", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Record Type</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {FILTERS.filter(f => f !== "All").map(f => (
                   <button

@@ -87,15 +87,15 @@ export default function DuringVisit({ visit, onStop }) {
     <div style={{ overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
       {/* Status / timer */}
       <div style={{ textAlign: "center", padding: "24px 0 16px" }}>
-        <div style={{ fontSize: 11, color: C.ghost, fontFamily: mono, marginBottom: 8 }}>
+        <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, marginBottom: 8 }}>
           {phase === "idle" ? (wantsAudio ? "Ready to record" : "Manual notes — no audio")
             : recordingLive ? (paused ? "Paused" : "● Recording") : "Capturing notes"}
         </div>
         <div style={{ fontSize: 44, fontFamily: mono, color: recordingLive && !paused ? C.red : C.p, letterSpacing: "2px" }}>{fmt(sec)}</div>
-        {markers.length > 0 && <div style={{ fontSize: 10, color: C.blue, fontFamily: mono, marginTop: 6 }}>📌 {markers.length} marked moment{markers.length > 1 ? "s" : ""}</div>}
+        {markers.length > 0 && <div style={{ fontSize: 12, color: C.blue, fontFamily: mono, marginTop: 6 }}>📌 {markers.length} marked moment{markers.length > 1 ? "s" : ""}</div>}
       </div>
 
-      {err && <div style={{ fontSize: 11, color: C.amber, fontFamily: mono, textAlign: "center", marginBottom: 12, lineHeight: 1.5 }}>{err}</div>}
+      {err && <div style={{ fontSize: 12, color: C.amber, fontFamily: mono, textAlign: "center", marginBottom: 12, lineHeight: 1.5 }}>{err}</div>}
 
       {/* Primary controls */}
       {phase === "idle" ? (
@@ -119,7 +119,7 @@ export default function DuringVisit({ visit, onStop }) {
       {/* Optional note — never required, never prompted */}
       {phase !== "idle" && (
         <div>
-          <div style={{ fontSize: 9, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
+          <div style={{ fontSize: 12, color: C.dim, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
             Note (optional)
           </div>
           <textarea value={note} onChange={e => setNote(e.target.value)} rows={4} placeholder={wantsAudio ? "Jot a word if you like — not required." : "Type what you want to remember from this visit."}
@@ -128,7 +128,7 @@ export default function DuringVisit({ visit, onStop }) {
       )}
 
       <div style={{ flex: 1 }} />
-      <div style={{ fontSize: 9, color: C.ghost, fontFamily: mono, textAlign: "center", paddingTop: 16 }}>
+      <div style={{ fontSize: 12, color: C.ghost, fontFamily: mono, textAlign: "center", paddingTop: 16 }}>
         Set the phone down. The summary is built afterward, from {wantsAudio ? "the recording" : "your notes"}.
       </div>
     </div>
