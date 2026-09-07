@@ -36,10 +36,10 @@ export default function PasswordInput({ style, ...inputProps }) {
           position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
           width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
           background: "none", border: "none", cursor: "pointer", padding: 0,
-          color: "#3d5a7a", borderRadius: 6,
+          color: "#8fabc7", borderRadius: 6,
         }}
         onMouseEnter={e => { e.currentTarget.style.color = "#7eb8d8"; }}
-        onMouseLeave={e => { e.currentTarget.style.color = "#3d5a7a"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "#8fabc7"; }}
       >
         {visible ? EYE_OFF : EYE}
       </button>
